@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
           <CardHeader className="space-y-5 border-b-2 border-rn-border-strong/50 px-6 py-7 md:px-10 md:py-9">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
               <div
-                className="flex size-14 shrink-0 items-center justify-center rounded-2xl border-2 border-rn-accent-border bg-success font-heading text-lg font-bold text-primary-light shadow-sm md:size-16 md:text-xl"
+                className="flex size-14 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-success font-heading text-lg font-bold text-primary-light shadow-sm md:size-16 md:text-xl"
                 aria-hidden
               >
                 R
@@ -92,7 +92,7 @@ export default function ForgotPasswordPage() {
                   type="email"
                   autoComplete="email"
                   placeholder="deg@eksempel.no"
-                  className="h-12 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
+                  className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
                   {...form.register("email")}
                 />
                 {form.formState.errors.email ? (
@@ -102,23 +102,22 @@ export default function ForgotPasswordPage() {
                 ) : null}
               </div>
               {formError ? (
-                <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive md:text-base">
+                <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive md:text-base">
                   {formError}
                 </p>
               ) : null}
               {info ? (
-                <p className="rounded-lg border border-success/30 bg-success/10 px-3 py-2 text-sm text-success md:text-base">
+                <p className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success md:text-base">
                   {info}
                 </p>
               ) : null}
-              <Button
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                className={cn(
-                  buttonVariants({ variant: "default" }),
-                  "h-12 w-full rounded-xl border-2 border-rn-accent-border bg-success font-heading text-base font-bold text-white shadow-md hover:bg-rn-accent-fill-hover md:h-14 md:text-lg",
-                )}
-              >
+                <Button
+                  type="submit"
+                  variant="success"
+                  size="cta"
+                  disabled={form.formState.isSubmitting}
+                  className="w-full"
+                >
                 {form.formState.isSubmitting
                   ? "Sender …"
                   : "Send tilbakestillingslenke"}

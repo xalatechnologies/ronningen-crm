@@ -72,9 +72,9 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
   --radius-pill: 999px;
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
@@ -94,7 +94,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-base leading-normal text-foreground antialiased;
   }
   html {
     @apply font-sans;
@@ -108,8 +108,13 @@
   }
 }
 
-/* Faktura utskrift: skjul app-shell (sidebar, topbar, main-padding) */
+/* Faktura utskrift / PDF: skjul app-shell og A4 */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm;
+  }
+
   html.invoice-print-shell .flex.min-h-svh > aside {
     display: none !important;
   }
@@ -119,5 +124,29 @@
   html.invoice-print-shell main {
     padding: 0 !important;
     background: white !important;
+  }
+
+  html.invoice-print-shell .invoice-print-surface {
+    background: white !important;
+    padding: 0 !important;
+  }
+
+  html.invoice-print-shell .invoice-print-document {
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    border: none !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+  }
+
+  html.invoice-print-shell .invoice-print-document * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  html.invoice-print-shell .invoice-print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }

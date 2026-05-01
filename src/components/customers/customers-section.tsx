@@ -4,6 +4,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -20,7 +21,7 @@ import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronRight, Plus, Search } from "lucide-react";
+import { ChevronRight, Plus, Search, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
@@ -35,7 +36,7 @@ import type {
 } from "./types";
 
 const customersTableHeadClass =
-  "px-6 py-4 text-sm font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5 md:text-base";
+  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 
 export type { CustomerBookingListItem, PartnerRow } from "./types";
 
@@ -89,14 +90,14 @@ function CustomersToolbar({
   onAdd: () => void;
 }) {
   return (
-    <header className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
+    <div className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
       <AppPageHeader
         className="mb-0"
+        surface="default"
         title="Kunder"
-        description="Kontakter, bookinger og partnere — søk og oppdater fra én oversikt."
         actions={
           <div
-            className="flex w-full min-w-0 flex-col gap-3 md:max-w-none md:flex-row md:items-stretch md:justify-end md:gap-3 lg:gap-4"
+            className="flex w-full min-w-0 flex-col gap-3 md:min-w-0 md:flex-1 md:flex-row md:items-stretch md:justify-end md:gap-3 lg:gap-4"
             role="search"
             aria-label="Kunder — søk og ny kunde"
           >
@@ -109,7 +110,7 @@ function CustomersToolbar({
                 value={query}
                 onChange={(e) => onQueryChange(e.target.value)}
                 placeholder="Søk på navn, e-post eller telefon…"
-                className="h-12 w-full rounded-2xl border-2 border-rn-border-strong bg-background pl-12 text-base text-foreground shadow-sm md:h-14 md:pl-14 md:text-[17px] focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-base text-foreground shadow-sm md:h-14 md:pl-14 md:text-[17px] focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
                 aria-label="Søk kunder"
               />
             </div>
@@ -117,8 +118,8 @@ function CustomersToolbar({
               type="button"
               onClick={onAdd}
               className={cn(
-                buttonVariants({ variant: "default" }),
-                "inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-rn-accent-border bg-success px-6 font-heading text-base font-bold text-white shadow-md hover:bg-rn-accent-fill-hover lg:w-auto lg:min-w-44",
+                buttonVariants({ variant: "success", size: "cta" }),
+                "lg:w-auto lg:min-w-44",
               )}
             >
               <Plus className="size-5" aria-hidden />
@@ -127,7 +128,7 @@ function CustomersToolbar({
           </div>
         }
       />
-    </header>
+    </div>
   );
 }
 
@@ -142,6 +143,9 @@ export function CustomersSection({
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [deleteBusyId, setDeleteBusyId] = useState<string | null>(null);
+  const [customerDeleteTarget, setCustomerDeleteTarget] =
+    useState<CustomerRow | null>(null);
 
   const stats = useMemo(() => aggregateByCustomer(bookings), [bookings]);
 
@@ -201,6 +205,39 @@ export function CustomersSection({
     router.refresh();
   }
 
+  async function performCustomerDelete(id: string) {
+    setDeleteBusyId(id);
+    try {
+      const { error } = await supabase.from("customers").delete().eq("id", id);
+      if (error) {
+        toast.error("Kunne ikke slette", { description: error.message });
+        return;
+      }
+      toast.success("Kunde slettet");
+      if (selectedId === id) setSelectedId(null);
+      router.refresh();
+    } finally {
+      setDeleteBusyId(null);
+    }
+  }
+
+  function requestDeleteCustomer(c: CustomerRow, bookingCount: number) {
+    if (bookingCount > 0) {
+      toast.error("Kan ikke slette kunde", {
+        description: `Kunden har ${bookingCount} ${bookingCount === 1 ? "booking" : "bookinger"}. Slett eller flytt dem først.`,
+      });
+      return;
+    }
+    setCustomerDeleteTarget(c);
+  }
+
+  async function confirmCustomerDelete() {
+    const c = customerDeleteTarget;
+    if (!c) return;
+    setCustomerDeleteTarget(null);
+    await performCustomerDelete(c.id);
+  }
+
   const detailStats = selected
     ? stats.get(selected.id) ?? { count: 0, spent: 0, outstanding: 0 }
     : null;
@@ -209,7 +246,7 @@ export function CustomersSection({
     <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-24 md:pb-8">
       {loadError ? (
         <div
-          className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
           role="alert"
         >
           Kunne ikke laste data: {loadError}
@@ -226,110 +263,128 @@ export function CustomersSection({
               onQueryChange={setQuery}
               onAdd={() => setAddOpen(true)}
             />
-          </div>
-
-          {customers.length === 0 ? (
-            <div
-              className={cn(
-                "flex flex-col items-center justify-center gap-4 overflow-hidden p-12 text-center",
-                RN_CARD_SHELL,
-              )}
-            >
-              <p className="text-base text-muted-foreground md:text-lg">
-                Ingen kunder ennå. Legg til din første kunde for å komme i gang.
-              </p>
-            </div>
-          ) : (
-            <div className={cn("overflow-x-auto", RN_CARD_SHELL)}>
-              <table className="w-full min-w-[720px] text-left text-base">
-                <thead>
-                  <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                    <th className={customersTableHeadClass}>Navn</th>
-                    <th className={customersTableHeadClass}>Telefon</th>
-                    <th className={customersTableHeadClass}>E-post</th>
-                    <th className={customersTableHeadClass}>Bookinger</th>
-                    <th className={customersTableHeadClass}>Totalt brukt</th>
-                    <th
-                      className={cn(
-                        customersTableHeadClass,
-                        "text-right",
-                      )}
-                    >
-                      {" "}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-rn-border-strong/50">
-                  {filtered.map((c) => {
-                    const st = stats.get(c.id) ?? {
-                      count: 0,
-                      spent: 0,
-                      outstanding: 0,
-                    };
-                    const isActive = selectedId === c.id;
-                    return (
-                      <tr
-                        key={c.id}
+            {customers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-4 px-6 py-14 text-center md:px-8 md:py-16">
+                <p className="text-base text-muted-foreground">
+                  Ingen kunder ennå. Legg til din første kunde for å komme i gang.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-base">
+                  <thead>
+                    <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+                      <th className={customersTableHeadClass}>Navn</th>
+                      <th className={customersTableHeadClass}>Telefon</th>
+                      <th className={customersTableHeadClass}>E-post</th>
+                      <th className={customersTableHeadClass}>Bookinger</th>
+                      <th className={customersTableHeadClass}>Totalt brukt</th>
+                      <th
                         className={cn(
-                          "cursor-pointer transition-colors hover:bg-rn-surface-row-hover",
-                          isActive && "bg-rn-surface-row-hover",
+                          customersTableHeadClass,
+                          "w-12 text-right",
                         )}
-                        onClick={() => setSelectedId(c.id)}
                       >
-                        <td className="px-6 py-5 md:px-8 md:py-6">
-                          <div className="flex items-center gap-4">
-                            <div
+                        <span className="sr-only">Handling</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-rn-border-strong/50">
+                    {filtered.map((c) => {
+                      const st = stats.get(c.id) ?? {
+                        count: 0,
+                        spent: 0,
+                        outstanding: 0,
+                      };
+                      const isActive = selectedId === c.id;
+                      return (
+                        <tr
+                          key={c.id}
+                          className={cn(
+                            "cursor-pointer transition-colors hover:bg-rn-surface-row-hover",
+                            isActive && "bg-rn-surface-row-hover",
+                          )}
+                          onClick={() => setSelectedId(c.id)}
+                        >
+                          <td className="px-6 py-5 md:px-8 md:py-6">
+                            <div className="flex items-center gap-4">
+                              <div
+                                className={cn(
+                                  "flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold md:size-11 md:text-base",
+                                  isActive
+                                    ? "bg-rn-surface-gradient-from text-success"
+                                    : "bg-muted text-muted-foreground",
+                                )}
+                              >
+                                {customerInitials(c.name)}
+                              </div>
+                              <span
+                                className={cn(
+                                  "font-heading text-base font-semibold",
+                                  isActive ? "text-success" : "text-foreground",
+                                )}
+                              >
+                                {c.name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 text-muted-foreground md:px-8 md:py-6 md:text-base">
+                            {c.phone ?? "—"}
+                          </td>
+                          <td className="px-6 py-5 text-muted-foreground md:px-8 md:py-6 md:text-base">
+                            {c.email ?? "—"}
+                          </td>
+                          <td className="px-6 py-5 md:px-8 md:py-6">
+                            <span
                               className={cn(
-                                "flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold md:size-11 md:text-base",
-                                isActive
-                                  ? "bg-rn-surface-gradient-from text-success"
+                                "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold md:px-3 md:text-sm",
+                                st.count > 0
+                                  ? "border border-success/25 bg-rn-surface-gradient-from text-success"
                                   : "bg-muted text-muted-foreground",
                               )}
                             >
-                              {customerInitials(c.name)}
-                            </div>
-                            <span
-                              className={cn(
-                                "font-heading text-base font-semibold md:text-lg",
-                                isActive ? "text-success" : "text-foreground",
-                              )}
-                            >
-                              {c.name}
+                              {st.count}{" "}
+                              {st.count === 1 ? "arrangement" : "arrangementer"}
                             </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5 text-muted-foreground md:px-8 md:py-6 md:text-base">
-                          {c.phone ?? "—"}
-                        </td>
-                        <td className="px-6 py-5 text-muted-foreground md:px-8 md:py-6 md:text-base">
-                          {c.email ?? "—"}
-                        </td>
-                        <td className="px-6 py-5 md:px-8 md:py-6">
-                          <span
-                            className={cn(
-                              "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold md:px-3 md:text-sm",
-                              st.count > 0
-                                ? "border border-success/25 bg-rn-surface-gradient-from text-success"
-                                : "bg-muted text-muted-foreground",
-                            )}
+                          </td>
+                          <td className="px-6 py-5 text-base font-bold tabular-nums text-success md:px-8 md:py-6">
+                            {formatNok(st.spent)}
+                          </td>
+                          <td
+                            className="px-6 py-5 text-right md:px-8 md:py-6"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            {st.count}{" "}
-                            {st.count === 1 ? "arrangement" : "arrangementer"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5 text-base font-bold tabular-nums text-success md:px-8 md:py-6 md:text-lg">
-                          {formatNok(st.spent)}
-                        </td>
-                        <td className="px-6 py-5 text-right text-muted-foreground md:px-8 md:py-6">
-                          <ChevronRight className="ml-auto size-5 md:size-6" aria-hidden />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                            <div className="flex items-center justify-end gap-0.5">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                                aria-label={`Slett ${c.name}`}
+                                title={
+                                  st.count > 0
+                                    ? "Kan ikke slette: kunden har bookinger"
+                                    : `Slett ${c.name}`
+                                }
+                                disabled={deleteBusyId != null || st.count > 0}
+                                onClick={() => requestDeleteCustomer(c, st.count)}
+                              >
+                                <Trash2 className="size-4" aria-hidden />
+                              </Button>
+                              <ChevronRight
+                                className="size-5 shrink-0 text-muted-foreground md:size-6"
+                                aria-hidden
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </>
       ) : null}
 
@@ -353,15 +408,67 @@ export function CustomersSection({
               customer={selected}
               stats={detailStats}
               bookings={selectedBookings}
+              deleteBusy={deleteBusyId != null}
               onClose={() => setSelectedId(null)}
+              onDeleteCustomer={() =>
+                requestDeleteCustomer(selected, detailStats.count)
+              }
             />
           ) : null}
         </SheetContent>
       </Sheet>
 
+      <Dialog
+        open={customerDeleteTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setCustomerDeleteTarget(null);
+        }}
+      >
+        <DialogContent
+          showCloseButton
+          className="max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-6 shadow-xl sm:max-w-md"
+        >
+          {customerDeleteTarget ? (
+            <>
+              <DialogHeader className="text-left">
+                <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading">
+                  Slette kunde?
+                </DialogTitle>
+                <DialogDescription className="text-base leading-relaxed text-muted-foreground">
+                  Du er i ferd med å slette «{customerDeleteTarget.name}». Alle
+                  tilknyttede data som bare finnes på denne kunden forsvinner. Dette kan
+                  ikke angres.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 w-full rounded-md border-2 border-rn-border-strong sm:w-auto"
+                  onClick={() => setCustomerDeleteTarget(null)}
+                >
+                  Avbryt
+                </Button>
+                <Button
+                  type="button"
+                  disabled={deleteBusyId != null}
+                  className={cn(
+                    buttonVariants({ variant: "default" }),
+                    "h-11 w-full rounded-md border-2 border-red-200 bg-red-600 font-semibold text-white hover:bg-red-700 sm:w-auto",
+                  )}
+                  onClick={() => void confirmCustomerDelete()}
+                >
+                  Ja, slett kunde
+                </Button>
+              </DialogFooter>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent
-          className="max-w-md rounded-2xl"
+          className="max-w-md rounded-md"
           showCloseButton
         >
           <DialogHeader>
@@ -377,7 +484,7 @@ export function CustomersSection({
               <Label>Navn</Label>
               <Input
                 {...addForm.register("name")}
-                className="h-11 rounded-xl border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
+                className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
               />
               {addForm.formState.errors.name ? (
                 <p className="text-xs text-destructive">
@@ -389,7 +496,7 @@ export function CustomersSection({
               <Label>Telefon</Label>
               <Input
                 {...addForm.register("phone")}
-                className="h-11 rounded-xl border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
+                className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
               />
             </div>
             <div className="space-y-2">
@@ -397,7 +504,7 @@ export function CustomersSection({
               <Input
                 type="email"
                 {...addForm.register("email")}
-                className="h-11 rounded-xl border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
+                className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
               />
             </div>
             <DialogFooter className="gap-2 sm:justify-end">
@@ -408,10 +515,7 @@ export function CustomersSection({
               >
                 Avbryt
               </Button>
-              <Button
-                type="submit"
-                className="border-2 border-rn-accent-border bg-success text-white hover:bg-rn-accent-fill-hover"
-              >
+              <Button type="submit" variant="success" size="cta">
                 Opprett
               </Button>
             </DialogFooter>

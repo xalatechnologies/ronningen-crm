@@ -5,10 +5,7 @@ import { cn } from "@/lib/utils";
 export default function SettingsPage() {
   return (
     <div className="mx-auto w-full max-w-[1440px] pb-24 md:pb-8">
-      <PageShell
-        title="Innstillinger"
-        description="Oversikt over omsetning, bookinger og kommende arrangementer — samlet for beslutningsstøtte. Profil, varslinger og integrasjoner bygges ut her."
-      >
+      <PageShell title="Innstillinger">
         <div
           className={cn(
             "p-8 text-center text-sm text-muted-foreground",

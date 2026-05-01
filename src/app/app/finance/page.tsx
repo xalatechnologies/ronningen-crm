@@ -4,6 +4,14 @@ import type { UserRole } from "@/constants/roles";
 import { canManageFinance } from "@/lib/role-access";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
+function transactionYmd(isoOrDate: string): string {
+  const s = String(isoOrDate ?? "").trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  return s;
+}
+
 type RawTx = {
   id: string;
   property_id: string;
@@ -63,7 +71,7 @@ export default async function FinancePage() {
       category: r.category,
       description: r.description,
       amount: Number(r.amount),
-      transaction_date: r.transaction_date,
+      transaction_date: transactionYmd(r.transaction_date),
     };
   });
 

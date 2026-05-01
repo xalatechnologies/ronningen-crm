@@ -46,6 +46,63 @@ export function effectiveBookingPaymentStatus(
   return "partial";
 }
 
+/** Beløp → paid/remaining/status for vanlig flyt (ikke waived/tvist). */
+export function resolveStandardBookingPaymentFromAmounts(
+  totalNok: number,
+  paidNok: number,
+): {
+  paid: number;
+  remaining: number;
+  paymentStatus: "unpaid" | "partial" | "paid";
+} {
+  const total = totalNok;
+  const inputPaid = Math.min(Math.max(0, paidNok), total);
+  let paid = inputPaid;
+  let remaining = Math.max(0, total - paid);
+  if (total <= 0) {
+    return { paid: 0, remaining: 0, paymentStatus: "paid" };
+  }
+  if (remaining <= 0) {
+    return { paid: total, remaining: 0, paymentStatus: "paid" };
+  }
+  if (paid <= 0) {
+    return { paid: 0, remaining: total, paymentStatus: "unpaid" };
+  }
+  return { paid, remaining, paymentStatus: "partial" };
+}
+
+type PaymentFormSnapshot = {
+  totalNok: number;
+  paidNok: number;
+  paymentStatus: BookingPaymentStatus;
+};
+
+/**
+ * Ved lagring: innbetalt og total styrer beløp. For unpaid/partial/paid utledes
+ * `payment_status` fra beløp slik at fakturaer, kunder og rapporter får riktig state.
+ * waived/disputed/other beholder semantikk unntatt beløp (waived: rest alltid 0).
+ */
+export function resolveBookingPaymentForPersist(
+  data: PaymentFormSnapshot,
+): { paid: number; remaining: number; paymentStatus: BookingPaymentStatus } {
+  const total = data.totalNok;
+  const inputPaid = Math.min(Math.max(0, data.paidNok), total);
+  const ps = data.paymentStatus;
+
+  if (ps === "waived") {
+    const paid = Math.min(inputPaid, total);
+    return { paid, remaining: 0, paymentStatus: "waived" };
+  }
+
+  if (ps === "disputed" || ps === "other") {
+    const paid = inputPaid;
+    const remaining = Math.max(0, total - paid);
+    return { paid, remaining, paymentStatus: ps };
+  }
+
+  return resolveStandardBookingPaymentFromAmounts(data.totalNok, data.paidNok);
+}
+
 /** Skjul fra «utestående fakturaer» når sperret som betalt eller ettergitt. */
 export function hideFromOutstandingInvoices(
   stored: string | null | undefined,

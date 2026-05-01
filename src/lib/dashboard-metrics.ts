@@ -1,6 +1,5 @@
 import type { BookingStatus } from "@/components/bookings/types";
 import type { DashboardMonthlySeries } from "@/components/dashboard/types";
-import { isIncomeTransactionType } from "@/lib/transaction-income";
 
 export function isCancelledBookingStatus(status: string): boolean {
   const x = status.toLowerCase();
@@ -95,8 +94,9 @@ export function invoicedMonthOverMonthDelta(rows: MoneyBooking[], now = new Date
   return pctDelta(prevTotal, curTotal);
 }
 
-export function buildMonthlyIncomeByYear(
-  transactions: { amount: number; type: string; transaction_date: string }[],
+/** Fakturert beløp (total_price) per kalendermåned etter arrangementsdato — matcher dashbordets booking-KPIer. */
+export function buildMonthlyInvoicedByEventYear(
+  rows: MoneyBooking[],
   years: readonly number[],
 ): DashboardMonthlySeries[] {
   const set = new Set(years);
@@ -104,15 +104,15 @@ export function buildMonthlyIncomeByYear(
   for (const y of years) {
     byYear.set(y, Array.from({ length: 12 }, () => 0));
   }
-  for (const t of transactions) {
-    if (!isIncomeTransactionType(t.type)) continue;
-    const d = parseLocalDate(t.transaction_date.slice(0, 10));
+  for (const r of rows) {
+    if (isCancelledBookingStatus(r.status)) continue;
+    const d = parseLocalDate(r.event_date);
     const y = d.getFullYear();
     if (!set.has(y)) continue;
     const m = d.getMonth();
     const arr = byYear.get(y);
     if (!arr) continue;
-    arr[m] += Number(t.amount);
+    arr[m] += Number(r.total_price);
   }
   return years.map((year) => ({
     year,

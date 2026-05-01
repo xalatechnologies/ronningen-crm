@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,7 +70,7 @@ export function LoginForm() {
           <CardHeader className="space-y-5 border-b-2 border-rn-border-strong/50 px-6 py-7 md:px-10 md:py-9">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
               <div
-                className="flex size-14 shrink-0 items-center justify-center rounded-2xl border-2 border-rn-accent-border bg-success font-heading text-lg font-bold text-primary-light shadow-sm md:size-16 md:text-xl"
+                className="flex size-14 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-success font-heading text-lg font-bold text-primary-light shadow-sm md:size-16 md:text-xl"
                 aria-hidden
               >
                 R
@@ -86,7 +86,7 @@ export function LoginForm() {
             </div>
 
             {loginDefaults.email ? (
-              <div className="rounded-xl border-2 border-rn-border-strong/60 bg-muted/35 px-4 py-3 text-sm md:px-5 md:py-4 md:text-base">
+              <div className="rounded-md border-2 border-rn-border-strong/60 bg-muted/35 px-4 py-3 text-sm md:px-5 md:py-4 md:text-base">
                 <p className="font-semibold text-rn-text-heading">
                   Lokal testbruker
                 </p>
@@ -106,7 +106,7 @@ export function LoginForm() {
             ) : null}
 
             {!isSupabasePublicConfigured() ? (
-              <p className="rounded-xl border-2 border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-100">
+              <p className="rounded-md border-2 border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-100">
                 <strong className="font-semibold">Supabase er ikke konfigurert.</strong>{" "}
                 Opprett{" "}
                 <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-xs md:text-sm">
@@ -143,7 +143,7 @@ export function LoginForm() {
                   type="email"
                   autoComplete="email"
                   placeholder="deg@eksempel.no"
-                  className="h-12 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
+                  className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
                   {...form.register("email")}
                 />
                 {form.formState.errors.email ? (
@@ -163,7 +163,7 @@ export function LoginForm() {
                   id="password"
                   type="password"
                   autoComplete="current-password"
-                  className="h-12 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
+                  className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
                   {...form.register("password")}
                 />
                 {form.formState.errors.password ? (
@@ -173,17 +173,16 @@ export function LoginForm() {
                 ) : null}
               </div>
               {formError ? (
-                <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive md:text-base">
+                <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive md:text-base">
                   {formError}
                 </p>
               ) : null}
               <Button
                 type="submit"
+                variant="success"
+                size="cta"
                 disabled={form.formState.isSubmitting}
-                className={cn(
-                  buttonVariants({ variant: "default" }),
-                  "h-12 w-full rounded-xl border-2 border-rn-accent-border bg-success font-heading text-base font-bold text-white shadow-md hover:bg-rn-accent-fill-hover md:h-14 md:text-lg",
-                )}
+                className="w-full"
               >
                 {form.formState.isSubmitting ? "Logger inn …" : "Logg inn"}
               </Button>

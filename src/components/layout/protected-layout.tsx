@@ -10,7 +10,7 @@ export function ProtectedLayout({ children }: { children: ReactNode }) {
       <AppSidebar className="sticky top-0 hidden h-svh shrink-0 md:flex" />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader />
-        <main className="flex min-h-0 flex-1 flex-col px-4 py-5 text-foreground antialiased md:px-8 md:py-8">
+        <main className="flex min-h-0 flex-1 flex-col px-2 py-3 text-foreground antialiased md:px-4 md:py-3 lg:px-3 lg:py-3 xl:px-3 xl:py-3">
           {children}
         </main>
       </div>

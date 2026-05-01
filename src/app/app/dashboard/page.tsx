@@ -6,7 +6,7 @@ import type {
 } from "@/components/dashboard/types";
 import {
   addDays,
-  buildMonthlyIncomeByYear,
+  buildMonthlyInvoicedByEventYear,
   countOverdueUnpaidBookings,
   invoicedMonthOverMonthDelta,
   isCancelledBookingStatus,
@@ -16,7 +16,6 @@ import {
   sumActiveBookingMoney,
   ymd,
 } from "@/lib/dashboard-metrics";
-import { fetchAllTransactionsInDateRange } from "@/lib/supabase/fetch-transactions-in-range";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type RawBooking = {
@@ -52,29 +51,18 @@ async function loadDashboardData(): Promise<DashboardHomeData> {
   const supabase = await createServerSupabaseClient();
   const now = new Date();
   const chartYears = [now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear()] as const;
-  const minYear = chartYears[0];
 
-  const chartEndYear = chartYears[chartYears.length - 1];
-  const [bookingsRes, propRes, txRange] = await Promise.all([
+  const [bookingsRes, propRes] = await Promise.all([
     supabase
       .from("bookings")
       .select(
         "id, event_type, event_date, total_price, paid_amount, remaining_amount, status, customers(name), properties(name)",
       ),
     supabase.from("properties").select("id"),
-    fetchAllTransactionsInDateRange(
-      supabase,
-      `${minYear}-01-01`,
-      `${chartEndYear}-12-31`,
-    ),
   ]);
 
   const loadError =
-    [
-      bookingsRes.error?.message,
-      propRes.error?.message,
-      txRange.error,
-    ]
+    [bookingsRes.error?.message, propRes.error?.message]
       .filter(Boolean)
       .join(" — ") || null;
 
@@ -106,7 +94,7 @@ async function loadDashboardData(): Promise<DashboardHomeData> {
   ).length;
   const propertyCount = propRes.data?.length ?? 0;
 
-  const monthlyByYear = buildMonthlyIncomeByYear(txRange.data, chartYears);
+  const monthlyByYear = buildMonthlyInvoicedByEventYear(moneyRows, chartYears);
 
   const today = startOfToday();
   const todayYmd = ymd(today);

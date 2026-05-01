@@ -1,10 +1,12 @@
 import { UnpaidInvoicesSection } from "@/components/invoices/unpaid-invoices-section";
 import type { UnpaidInvoiceRow } from "@/components/invoices/types";
+import type { UserRole } from "@/constants/roles";
 import {
   effectiveBookingPaymentStatus,
   hideFromOutstandingInvoices,
 } from "@/constants/booking-payment-status";
 import { sortInvoicesByUrgency } from "@/lib/invoice-row-utils";
+import { canManageFinance } from "@/lib/role-access";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type RawBooking = {
@@ -52,6 +54,20 @@ export default async function InvoicesPage() {
   const supabase = await createServerSupabaseClient();
   const todayYmd = toLocalYmd(new Date());
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let canMarkInvoicesPaid = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    canMarkInvoicesPaid = canManageFinance(profile?.role as UserRole | undefined);
+  }
+
   const { data: rawList, error } = await supabase
     .from("bookings")
     .select(
@@ -98,5 +114,11 @@ export default async function InvoicesPage() {
 
   const rows = sortInvoicesByUrgency(rowsUnsorted, todayYmd);
 
-  return <UnpaidInvoicesSection rows={rows} loadError={loadError} />;
+  return (
+    <UnpaidInvoicesSection
+      rows={rows}
+      loadError={loadError}
+      canMarkInvoicesPaid={canMarkInvoicesPaid}
+    />
+  );
 }

@@ -5,10 +5,19 @@ import type {
   BookingStatus,
   BookingsQuickStats,
 } from "@/components/bookings/types";
+import { BookingsMonthCalendar } from "@/components/bookings/bookings-month-calendar";
 import { BookingDetailSheet } from "@/components/bookings/booking-detail-sheet";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
@@ -33,7 +42,7 @@ import { useSupabase } from "@/providers/supabase-provider";
 import { RN_CARD_SHELL, RN_SEGMENT_CONTROL } from "@/lib/rn-ui";
 
 const bookingsTableHeadClass =
-  "text-sm font-semibold tracking-wider text-rn-text-column uppercase md:text-base";
+  "text-base font-semibold tracking-wider text-rn-text-column uppercase";
 
 function formatNok(n: number) {
   return `${new Intl.NumberFormat("nb-NO").format(Math.round(n))} NOK`;
@@ -53,6 +62,17 @@ function pctDelta(prev: number, curr: number): number | null {
   if (prev === 0 && curr === 0) return null;
   if (prev === 0) return null;
   return ((curr - prev) / prev) * 100;
+}
+
+function statusConfirmTitle(next: BookingStatus): string {
+  switch (next) {
+    case "cancelled":
+      return "Avbestille booking?";
+    case "pending":
+      return "Flytte booking til avventer?";
+    default:
+      return "Bekreft handling";
+  }
 }
 
 function computeQuickStats(rows: BookingListRow[]): BookingsQuickStats {
@@ -113,6 +133,105 @@ function computeQuickStats(rows: BookingListRow[]): BookingsQuickStats {
   };
 }
 
+function BookingsFiltersSection({
+  query,
+  setQuery,
+  filter,
+  setFilter,
+  filterCounts,
+}: {
+  query: string;
+  setQuery: (q: string) => void;
+  filter: "all" | "confirmed" | "pending" | "cancelled";
+  setFilter: (f: "all" | "confirmed" | "pending" | "cancelled") => void;
+  filterCounts: {
+    all: number;
+    confirmed: number;
+    pending: number;
+    cancelled: number;
+  };
+}) {
+  return (
+    <section
+      className="border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6"
+      aria-label="Søk og filtrer bookinger"
+    >
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:gap-4">
+        <div className="relative min-w-0 flex-1">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
+            aria-hidden
+          />
+          <Input
+            id="bookings-search"
+            aria-label="Søk blant bookinger etter kunde eller arrangementstype"
+            className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-base text-foreground shadow-sm md:h-14 md:pl-14 md:text-[17px] focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+            placeholder="Kunde eller arrangementstype…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            autoComplete="off"
+          />
+        </div>
+
+        <div
+          className="grid min-w-0 grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:flex lg:flex-1 lg:flex-row lg:flex-wrap lg:items-stretch lg:justify-end lg:gap-2.5 xl:flex-nowrap"
+          role="group"
+          aria-label="Filtrer bookinger etter status"
+        >
+          {(
+            [
+              ["all", "Alle", filterCounts.all, null],
+              ["confirmed", "Bekreftet", filterCounts.confirmed, "emerald"],
+              ["pending", "Avventer", filterCounts.pending, "amber"],
+              ["cancelled", "Avbestilt", filterCounts.cancelled, "rose"],
+            ] as const
+          ).map(([key, label, count, tone]) => {
+            const active = filter === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setFilter(key)}
+                className={cn(
+                  "flex min-h-12 w-full items-center justify-between gap-2 rounded-md border-2 px-3 py-3 text-left transition-all sm:gap-3 sm:px-4 md:min-h-[3.25rem] md:rounded-md md:px-5 md:py-3.5 lg:min-h-14 lg:w-auto lg:min-w-[7rem] lg:flex-1 lg:max-w-[10.5rem] xl:min-w-[7.5rem]",
+                  active
+                    ? "border-rn-accent-border bg-success text-white shadow-md"
+                    : tone === "emerald"
+                      ? "border-emerald-400/90 bg-white text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50"
+                      : tone === "amber"
+                        ? "border-amber-400/90 bg-white text-amber-950 hover:border-amber-500 hover:bg-amber-50"
+                        : tone === "rose"
+                          ? "border-red-400/90 bg-white text-red-950 hover:border-red-500 hover:bg-red-50"
+                          : "border-rn-border-strong bg-white text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
+                )}
+              >
+                <span
+                  className={cn(
+                    "font-heading text-base font-semibold",
+                    active ? "text-white" : undefined,
+                  )}
+                >
+                  {label}
+                </span>
+                <span
+                  className={cn(
+                    "inline-flex min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-sm font-bold tabular-nums md:text-base",
+                    active
+                      ? "border-white/30 bg-white/20 text-white"
+                      : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
+                  )}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function FindBookingsCardHeader({
   view,
   setView,
@@ -124,8 +243,8 @@ function FindBookingsCardHeader({
     <header className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
       <AppPageHeader
         className="mb-0"
+        surface="default"
         title="Bookinger"
-        description="Administrer arrangementer, betaling og status — liste og kalender."
         actions={
           <div className="flex flex-wrap items-center gap-3 lg:shrink-0">
             <div
@@ -139,7 +258,7 @@ function FindBookingsCardHeader({
                 aria-selected={view === "list"}
                 onClick={() => setView("list")}
                 className={cn(
-                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-transparent px-5 py-2.5 text-[15px] font-semibold transition-all outline-none select-none md:min-h-12 md:px-6 md:text-base",
+                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border-2 border-transparent px-5 py-2.5 text-[15px] font-semibold transition-all outline-none select-none md:min-h-12 md:px-6 md:text-base",
                   "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
                   view === "list"
                     ? "border-rn-accent-border bg-success text-white shadow-md"
@@ -155,7 +274,7 @@ function FindBookingsCardHeader({
                 aria-selected={view === "calendar"}
                 onClick={() => setView("calendar")}
                 className={cn(
-                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-transparent px-5 py-2.5 text-[15px] font-semibold transition-all outline-none select-none md:min-h-12 md:px-6 md:text-base",
+                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border-2 border-transparent px-5 py-2.5 text-[15px] font-semibold transition-all outline-none select-none md:min-h-12 md:px-6 md:text-base",
                   "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
                   view === "calendar"
                     ? "border-rn-accent-border bg-success text-white shadow-md"
@@ -168,10 +287,7 @@ function FindBookingsCardHeader({
             </div>
             <Link
               href="/app/bookings/new"
-              className={cn(
-                buttonVariants({ variant: "default" }),
-                "inline-flex h-12 items-center gap-2 rounded-xl border-2 border-rn-accent-border bg-success px-6 font-heading text-base font-bold text-white shadow-md hover:bg-rn-accent-fill-hover",
-              )}
+              className={cn(buttonVariants({ variant: "success", size: "cta" }))}
             >
               <Plus className="size-5" aria-hidden />
               Ny booking
@@ -201,6 +317,12 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
     null,
   );
 
+  const [pendingStatusConfirm, setPendingStatusConfirm] = useState<{
+    id: string;
+    next: BookingStatus;
+    message: string;
+  } | null>(null);
+
   const selectedRow = useMemo(
     () =>
       selectedBookingId
@@ -218,13 +340,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
     }
   }, [selectedBookingId, bookings]);
 
-  async function setBookingStatus(
-    id: string,
-    next: BookingStatus,
-    opts?: { confirmMessage?: string },
-  ) {
-    if (opts?.confirmMessage && !window.confirm(opts.confirmMessage)) return;
-
+  async function runBookingStatusUpdate(id: string, next: BookingStatus) {
     setUpdatingId(id);
     try {
       const { error } = await supabase
@@ -252,6 +368,29 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
     }
   }
 
+  async function setBookingStatus(
+    id: string,
+    next: BookingStatus,
+    opts?: { confirmMessage?: string },
+  ) {
+    if (opts?.confirmMessage) {
+      setPendingStatusConfirm({
+        id,
+        next,
+        message: opts.confirmMessage,
+      });
+      return;
+    }
+    await runBookingStatusUpdate(id, next);
+  }
+
+  async function confirmPendingStatusChange() {
+    const pending = pendingStatusConfirm;
+    if (!pending) return;
+    setPendingStatusConfirm(null);
+    await runBookingStatusUpdate(pending.id, pending.next);
+  }
+
   const quickStats = useMemo(() => computeQuickStats(bookings), [bookings]);
 
   const filterCounts = useMemo(() => {
@@ -271,7 +410,8 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
       rows = rows.filter(
         (r) =>
           r.customer.toLowerCase().includes(q) ||
-          r.eventType.toLowerCase().includes(q),
+          r.eventType.toLowerCase().includes(q) ||
+          (r.festType ?? "").toLowerCase().includes(q),
       );
     }
     if (filter === "confirmed") {
@@ -292,7 +432,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
     <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-24 md:pb-10">
       {loadError ? (
         <div
-          className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
           role="alert"
         >
           Kunne ikke laste bookinger: {loadError}
@@ -302,11 +442,18 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
       {view === "calendar" ? (
         <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
           <FindBookingsCardHeader view={view} setView={setView} />
-          <div className="flex min-h-[360px] items-center justify-center px-6 py-14 md:px-8">
-            <p className="max-w-md text-center text-base leading-relaxed font-medium text-muted-foreground md:text-lg">
-              Kalendervisning kommer. Bytt til liste for oversikt.
-            </p>
-          </div>
+          <BookingsFiltersSection
+            query={query}
+            setQuery={setQuery}
+            filter={filter}
+            setFilter={setFilter}
+            filterCounts={filterCounts}
+          />
+          <BookingsMonthCalendar
+            rows={filtered}
+            totalBookingsCount={bookings.length}
+            onSelectBooking={setSelectedBookingId}
+          />
         </div>
       ) : null}
 
@@ -315,96 +462,14 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
           <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
             <FindBookingsCardHeader view={view} setView={setView} />
 
-            <section
-              className="border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6"
-              aria-label="Søk og filtrer bookinger"
-            >
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:gap-4">
-                <div className="relative min-w-0 flex-1">
-                  <Search
-                    className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
-                    aria-hidden
-                  />
-                  <Input
-                    id="bookings-search"
-                    aria-label="Søk blant bookinger etter kunde eller arrangementstype"
-                    className="h-12 w-full rounded-2xl border-2 border-rn-border-strong bg-background pl-12 text-base text-foreground shadow-sm md:h-14 md:pl-14 md:text-[17px] focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-                    placeholder="Kunde eller arrangementstype…"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    autoComplete="off"
-                  />
-                </div>
+            <BookingsFiltersSection
+              query={query}
+              setQuery={setQuery}
+              filter={filter}
+              setFilter={setFilter}
+              filterCounts={filterCounts}
+            />
 
-                <div
-                  className="grid min-w-0 grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:flex lg:flex-1 lg:flex-row lg:flex-wrap lg:items-stretch lg:justify-end lg:gap-2.5 xl:flex-nowrap"
-                  role="group"
-                  aria-label="Filtrer bookinger etter status"
-                >
-                    {(
-                      [
-                        ["all", "Alle", filterCounts.all, null],
-                        [
-                          "confirmed",
-                          "Bekreftet",
-                          filterCounts.confirmed,
-                          "emerald",
-                        ],
-                        ["pending", "Avventer", filterCounts.pending, "amber"],
-                        [
-                          "cancelled",
-                          "Avbestilt",
-                          filterCounts.cancelled,
-                          "rose",
-                        ],
-                      ] as const
-                    ).map(([key, label, count, tone]) => {
-                      const active = filter === key;
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => setFilter(key)}
-                          className={cn(
-                            "flex min-h-12 w-full items-center justify-between gap-2 rounded-xl border-2 px-3 py-3 text-left transition-all sm:gap-3 sm:px-4 md:min-h-[3.25rem] md:rounded-2xl md:px-5 md:py-3.5 lg:min-h-14 lg:w-auto lg:min-w-[7rem] lg:flex-1 lg:max-w-[10.5rem] xl:min-w-[7.5rem]",
-                            active
-                              ? "border-rn-accent-border bg-success text-white shadow-md"
-                              : tone === "emerald"
-                                ? "border-emerald-400/90 bg-white text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50"
-                                : tone === "amber"
-                                  ? "border-amber-400/90 bg-white text-amber-950 hover:border-amber-500 hover:bg-amber-50"
-                                  : tone === "rose"
-                                    ? "border-red-400/90 bg-white text-red-950 hover:border-red-500 hover:bg-red-50"
-                                    : "border-rn-border-strong bg-white text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              "font-heading text-base font-semibold md:text-lg",
-                              active ? "text-white" : undefined,
-                            )}
-                          >
-                            {label}
-                          </span>
-                          <span
-                            className={cn(
-                              "inline-flex min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-sm font-bold tabular-nums md:text-base",
-                              active
-                                ? "border-white/30 bg-white/20 text-white"
-                                : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
-                            )}
-                          >
-                            {count}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-            </section>
-          </div>
-
-          <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
             <div className="grid grid-cols-12 border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head px-6 py-4 sm:px-8 sm:py-5">
               <div
                 className={cn(
@@ -452,7 +517,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
                       ? "Ingen bookinger ennå"
                       : "Ingen treff i listen"}
                   </p>
-                  <p className="mx-auto max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg">
+                  <p className="mx-auto max-w-lg text-base leading-relaxed text-muted-foreground">
                     {bookings.length === 0
                       ? "Opprett en ny booking for å se den her. Du kan også importere eller legge til kunder fra Kunder."
                       : "Juster søket eller bytt filter (Alle, Bekreftet, …). Nullstill ved å velge «Alle» og tømme søkefeltet."}
@@ -468,7 +533,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
                       "cursor-pointer border-0 outline-none hover:bg-rn-surface-row-hover focus-visible:bg-rn-surface-row-hover focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
                       row.dimmed && "opacity-60",
                     )}
-                    aria-label={`Åpne bookingdetaljer for ${row.customer}`}
+                    aria-label={`Åpne bookingdetaljer for ${row.customer}${row.festType?.trim() ? `, ${row.festType.trim()}` : ""}`}
                     onClick={() => setSelectedBookingId(row.id)}
                   >
                     <div className="col-span-12 flex items-center gap-4 sm:col-span-4">
@@ -481,27 +546,41 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
                         {row.initials}
                       </div>
                       <div>
-                        <h4 className="font-heading text-base font-semibold text-foreground md:text-lg">
+                        <h4 className="font-heading text-base font-semibold text-foreground">
                           {row.customer}
                         </h4>
                         <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground md:text-base">
                           <span>{row.date}</span>
-                          <span className="size-1 rounded-full bg-border" />
+                          <span
+                            className="size-1 shrink-0 rounded-full bg-border"
+                            aria-hidden
+                          />
                           <span className="font-semibold text-success">
                             {row.eventType}
                           </span>
+                          {row.festType?.trim() ? (
+                            <>
+                              <span
+                                className="size-1 shrink-0 rounded-full bg-border"
+                                aria-hidden
+                              />
+                              <span className="font-medium text-foreground">
+                                {row.festType.trim()}
+                              </span>
+                            </>
+                          ) : null}
                         </div>
                       </div>
                     </div>
                     <div className="col-span-12 mt-3 flex items-center gap-2 sm:col-span-2 sm:mt-0">
                       <Users className="size-5 shrink-0 text-muted-foreground md:size-6" aria-hidden />
-                      <span className="text-base font-semibold text-foreground md:text-lg">
+                      <span className="text-base font-semibold text-foreground">
                         {row.guests} gjester
                       </span>
                     </div>
                     <div className="col-span-12 mt-3 text-left sm:col-span-4 sm:mt-0 sm:px-4 sm:text-right">
                       <div className="inline-block text-left sm:text-right">
-                        <div className="text-base font-bold tabular-nums text-foreground md:text-lg">
+                        <div className="text-base font-bold tabular-nums text-foreground">
                           {formatNok(row.totalNok)}
                         </div>
                         {row.paidFraction !== null ? (
@@ -552,7 +631,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
             </div>
 
             <div className="flex flex-col items-stretch justify-between gap-4 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
-              <span className="text-base font-medium text-rn-footer-text md:text-lg">
+              <span className="text-base font-medium text-rn-footer-text">
                 {bookings.length === 0
                   ? "Ingen bookinger"
                   : filtered.length === 0
@@ -565,7 +644,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
                   type="button"
                   variant="outline"
                   size="icon-sm"
-                  className="size-10 rounded-xl border-2 border-rn-border-strong bg-background"
+                  className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
                   disabled
                   aria-label="Forrige side"
                 >
@@ -574,7 +653,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
                 <Button
                   type="button"
                   size="icon-sm"
-                  className="size-10 rounded-xl border-2 border-success bg-success text-primary-foreground"
+                  className="size-10 rounded-md border-2 border-success bg-success text-primary-foreground"
                 >
                   1
                 </Button>
@@ -582,7 +661,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
                   type="button"
                   variant="outline"
                   size="icon-sm"
-                  className="size-10 rounded-xl border-2 border-rn-border-strong bg-background"
+                  className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
                   disabled
                   aria-label="Neste side"
                 >
@@ -592,147 +671,191 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
               ) : null}
             </div>
           </div>
+        </>
+      ) : null}
 
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-8">
-            <div className="flex min-w-0 flex-col justify-between rounded-2xl border-2 border-rn-accent-border bg-success p-7 text-white shadow-rn-hero-success md:p-9">
-              <div className="min-w-0">
-                <div className="mb-5 flex size-12 items-center justify-center rounded-xl border border-white/20 bg-white/12 md:size-14">
-                  <TrendingUp className="size-6 md:size-7" aria-hidden />
-                </div>
-                <h2 className="font-heading text-xl font-bold leading-snug md:text-2xl">
-                  Månedlig omsetning
-                </h2>
-                <p className="mt-3 text-sm leading-relaxed text-white/90 md:text-base">
-                  Fakturert på bookinger i{" "}
-                  <span className="font-semibold text-white">
-                    {quickStats.monthLabel}
-                  </span>
-                  . Sammenlignes med {quickStats.prevMonthLabel}.
-                </p>
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-8">
+          <div className="flex min-w-0 flex-col justify-between rounded-md border-2 border-rn-accent-border bg-success p-7 text-white shadow-rn-hero-success md:p-9">
+            <div className="min-w-0">
+              <div className="mb-5 flex size-12 items-center justify-center rounded-md border border-white/20 bg-white/12 md:size-14">
+                <TrendingUp className="size-6 md:size-7" aria-hidden />
               </div>
-              <div className="mt-10 min-w-0">
-                <div className="break-words text-4xl font-black leading-none tracking-tight md:text-5xl [&_span:last-child]:text-lg [&_span:last-child]:font-semibold [&_span:last-child]:opacity-85 md:[&_span:last-child]:text-2xl">
-                  {formatNokCompact(quickStats.currentMonthRevenue)}
+              <h2 className="font-heading text-xl font-bold leading-snug md:text-2xl">
+                Månedlig omsetning
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-white/90 md:text-base">
+                Fakturert på bookinger i{" "}
+                <span className="font-semibold text-white">
+                  {quickStats.monthLabel}
+                </span>
+                . Sammenlignes med {quickStats.prevMonthLabel}.
+              </p>
+            </div>
+            <div className="mt-10 min-w-0">
+              <div className="break-words text-4xl font-black leading-none tracking-tight md:text-5xl [&_span:last-child]:text-lg [&_span:last-child]:font-semibold [&_span:last-child]:opacity-85 md:[&_span:last-child]:text-2xl">
+                {formatNokCompact(quickStats.currentMonthRevenue)}
+              </div>
+              {quickStats.monthOverMonthPct != null ? (
+                <div
+                  className={cn(
+                    "mt-4 flex items-center gap-2 text-sm font-bold md:text-base",
+                    trendPositive ? "text-emerald-200" : "text-rose-200",
+                  )}
+                >
+                  {trendPositive ? (
+                    <ArrowUpRight className="size-4 shrink-0 md:size-5" aria-hidden />
+                  ) : (
+                    <ArrowDownRight className="size-4 shrink-0 md:size-5" aria-hidden />
+                  )}
+                  <span>
+                    {trendPositive ? "+" : ""}
+                    {quickStats.monthOverMonthPct
+                      .toFixed(1)
+                      .replace(".", ",")}
+                    % fra forrige måned
+                  </span>
                 </div>
-                {quickStats.monthOverMonthPct != null ? (
-                  <div
-                    className={cn(
-                      "mt-4 flex items-center gap-2 text-sm font-bold md:text-base",
-                      trendPositive ? "text-emerald-200" : "text-rose-200",
-                    )}
-                  >
-                    {trendPositive ? (
-                      <ArrowUpRight className="size-4 shrink-0 md:size-5" aria-hidden />
-                    ) : (
-                      <ArrowDownRight className="size-4 shrink-0 md:size-5" aria-hidden />
-                    )}
-                    <span>
-                      {trendPositive ? "+" : ""}
-                      {quickStats.monthOverMonthPct
-                        .toFixed(1)
-                        .replace(".", ",")}
-                      % fra forrige måned
-                    </span>
-                  </div>
-                ) : (
-                  <p className="mt-4 text-sm font-medium text-white/75 md:text-base">
-                    Ingen sammenligning mot forrige måned (manglende grunnlag).
-                  </p>
-                )}
-                <p className="mt-3 text-sm text-white/70">
-                  Forrige måned: {formatNok(quickStats.prevMonthRevenue)}
+              ) : (
+                <p className="mt-4 text-sm font-medium text-white/75 md:text-base">
+                  Ingen sammenligning mot forrige måned (manglende grunnlag).
                 </p>
+              )}
+              <p className="mt-3 text-sm text-white/70">
+                Forrige måned: {formatNok(quickStats.prevMonthRevenue)}
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={cn(
+              "flex flex-col gap-8 md:col-span-2 md:flex-row md:gap-10",
+              RN_CARD_SHELL,
+              "p-7 md:p-9",
+            )}
+          >
+            <div className="min-w-0 flex-1">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
+                  <p className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-sm">
+                    Kalenderdekning
+                  </p>
+                  <p className="font-heading text-3xl font-extrabold text-rn-text-heading tabular-nums md:text-4xl">
+                    {quickStats.calendarFillPct}%
+                  </p>
+                  <p className="mt-3 text-base leading-snug text-muted-foreground md:text-lg">
+                    Av dager i måneden med minst ett arrangement.
+                  </p>
+                </div>
+                <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
+                  <p className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-sm">
+                    Snitt gjester
+                  </p>
+                  <p className="font-heading text-3xl font-extrabold text-rn-text-heading tabular-nums md:text-4xl">
+                    {quickStats.avgGuestsActive ?? "—"}
+                  </p>
+                  <p className="mt-3 text-base text-muted-foreground md:text-lg">
+                    Per booking.
+                  </p>
+                </div>
               </div>
             </div>
-
-            <div
-              className={cn(
-                "flex flex-col gap-8 md:col-span-2 md:flex-row md:gap-10",
-                RN_CARD_SHELL,
-                "p-7 md:p-9",
-              )}
-            >
-              <div className="min-w-0 flex-1">
-                <h2 className="mb-2 font-heading text-xl font-bold text-rn-text-heading md:text-2xl">
-                  Hurtigstatistikk
-                </h2>
-                <p className="mb-6 text-base leading-relaxed text-muted-foreground md:text-lg">
-                  Basert på aktive bookinger (ikke avbestilt). Statusfordeling
-                  (bekreftet, avventer) ser du i filtrene over listen.
+            <div className="flex w-full flex-col justify-between rounded-md border-2 border-success/50 bg-gradient-to-b from-rn-surface-gradient-from to-muted p-6 md:w-[38%] md:max-w-[340px] md:p-8">
+              <div>
+                <p className="text-xs font-semibold tracking-wider text-success uppercase md:text-sm">
+                  Denne måneden
                 </p>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
-                  <div className="rounded-xl border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
-                    <p className="mb-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                      Kalenderdekning
-                    </p>
-                    <p className="font-heading text-2xl font-extrabold text-rn-text-heading tabular-nums md:text-3xl">
-                      {quickStats.calendarFillPct}%
-                    </p>
-                    <p className="mt-3 text-sm leading-snug text-muted-foreground md:text-base">
-                      Av dager i måneden med minst ett arrangement.
-                    </p>
-                  </div>
-                  <div className="rounded-xl border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
-                    <p className="mb-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                      Snitt gjester
-                    </p>
-                    <p className="font-heading text-2xl font-extrabold text-rn-text-heading tabular-nums md:text-3xl">
-                      {quickStats.avgGuestsActive ?? "—"}
-                    </p>
-                    <p className="mt-3 text-sm text-muted-foreground md:text-base">
-                      Per booking.
-                    </p>
-                  </div>
-                </div>
+                <p className="mt-3 font-heading text-4xl font-bold text-success md:text-5xl">
+                  {formatNok(quickStats.currentMonthRevenue)}
+                </p>
               </div>
-              <div className="flex w-full flex-col justify-between rounded-xl border-2 border-success/50 bg-gradient-to-b from-rn-surface-gradient-from to-muted p-6 md:w-[38%] md:max-w-[340px] md:p-8">
-                <div>
-                  <p className="text-[11px] font-semibold tracking-wider text-success uppercase md:text-xs">
-                    Denne måneden
-                  </p>
-                  <p className="mt-3 font-heading text-3xl font-bold text-success md:text-4xl">
-                    {formatNok(quickStats.currentMonthRevenue)}
-                  </p>
+              <div className="mt-8 space-y-3 border-t-2 border-success/20 pt-5">
+                <div className="flex justify-between text-base md:text-lg">
+                  <span className="font-medium text-rn-text-body">
+                    Forrige måned
+                  </span>
+                  <span className="font-bold tabular-nums text-rn-text-heading">
+                    {formatNok(quickStats.prevMonthRevenue)}
+                  </span>
                 </div>
-                <div className="mt-8 space-y-3 border-t-2 border-success/20 pt-5">
-                  <div className="flex justify-between text-sm md:text-base">
-                    <span className="font-medium text-rn-text-body">
-                      Forrige måned
-                    </span>
-                    <span className="font-bold tabular-nums text-rn-text-heading">
-                      {formatNok(quickStats.prevMonthRevenue)}
-                    </span>
-                  </div>
-                  <div className="h-2.5 overflow-hidden rounded-full border border-rn-border-strong/40 bg-white">
-                    <div
-                      className="h-full rounded-full bg-success transition-[width]"
-                      style={{
-                        width: (() => {
-                          const { currentMonthRevenue: c, prevMonthRevenue: p } =
-                            quickStats;
-                          if (c + p === 0) return "0%";
-                          const max = Math.max(c, p, 1);
-                          return `${Math.min(100, Math.round((c / max) * 100))}%`;
-                        })(),
-                      }}
-                    />
-                  </div>
+                <div className="h-2.5 overflow-hidden rounded-full border border-rn-border-strong/40 bg-white">
+                  <div
+                    className="h-full rounded-full bg-success transition-[width]"
+                    style={{
+                      width: (() => {
+                        const { currentMonthRevenue: c, prevMonthRevenue: p } =
+                          quickStats;
+                        if (c + p === 0) return "0%";
+                        const max = Math.max(c, p, 1);
+                        return `${Math.min(100, Math.round((c / max) * 100))}%`;
+                      })(),
+                    }}
+                  />
                 </div>
               </div>
             </div>
           </div>
-        </>
-      ) : null}
+      </div>
 
-      <BookingDetailSheet
-        open={selectedBookingId != null && selectedRow != null}
-        onOpenChange={(open) => {
-          if (!open) setSelectedBookingId(null);
+      <Dialog
+        open={pendingStatusConfirm != null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setPendingStatusConfirm(null);
         }}
-        row={selectedRow}
-        updatingId={updatingId}
-        onSetStatus={setBookingStatus}
-      />
+      >
+        <DialogContent
+          showCloseButton
+          className="z-[100] max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-6 shadow-xl sm:max-w-md"
+        >
+          {pendingStatusConfirm ? (
+            <>
+              <DialogHeader className="text-left">
+                <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading">
+                  {statusConfirmTitle(pendingStatusConfirm.next)}
+                </DialogTitle>
+                <DialogDescription className="text-base leading-relaxed text-muted-foreground">
+                  {pendingStatusConfirm.message}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 w-full rounded-md border-2 border-rn-border-strong sm:w-auto"
+                  onClick={() => setPendingStatusConfirm(null)}
+                >
+                  Avbryt
+                </Button>
+                <Button
+                  type="button"
+                  disabled={updatingId != null}
+                  className={cn(
+                    buttonVariants({ variant: "default" }),
+                    "h-11 w-full rounded-md border-2 border-red-200 bg-red-600 font-semibold text-white hover:bg-red-700 sm:w-auto",
+                  )}
+                  onClick={() => void confirmPendingStatusChange()}
+                >
+                  {pendingStatusConfirm.next === "cancelled"
+                    ? "Ja, avbestill"
+                    : "Bekreft"}
+                </Button>
+              </DialogFooter>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {selectedRow ? (
+        <BookingDetailSheet
+          key={selectedRow.id}
+          open
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setSelectedBookingId(null);
+          }}
+          row={selectedRow}
+          updatingId={updatingId}
+          onSetStatus={setBookingStatus}
+        />
+      ) : null}
 
       <Link
         href="/app/bookings/new"

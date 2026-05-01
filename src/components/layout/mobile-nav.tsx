@@ -2,6 +2,7 @@
 
 import { mainNavigation } from "@/config/navigation";
 import { SIDEBAR_SEGMENT_ICONS } from "@/config/nav-icons";
+import { RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,7 +22,8 @@ export function MobileNavLinks() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-3.5 rounded-xl border-l-[3px] py-3.5 pl-3 pr-3.5 font-heading text-base leading-snug transition-colors outline-none md:gap-4 md:py-4 md:pl-3.5 md:pr-4 md:text-lg",
+              "flex items-center gap-3.5 rounded-md border-l-[3px] py-3.5 pl-3 pr-3.5 transition-colors outline-none md:gap-4 md:py-4 md:pl-3.5 md:pr-4",
+              RN_TEXT_NAV_LINK,
               "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               active
                 ? "border-rn-accent-border bg-rn-surface-gradient-from font-semibold text-success shadow-sm"

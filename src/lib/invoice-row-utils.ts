@@ -5,7 +5,50 @@ export type InvoiceRowFilter =
   | "overdue"
   | "unpaid"
   | "partial"
-  | "upcoming";
+  | "upcoming"
+  | "inkasso";
+
+export const INVOICE_FILTER_SPECS: {
+  id: InvoiceRowFilter;
+  label: string;
+  title: string;
+}[] = [
+  { id: "all", label: "Alle", title: "Alle med restbeløp" },
+  {
+    id: "overdue",
+    label: "Forfalt",
+    title: "Forfallsdato er passert",
+  },
+  {
+    id: "upcoming",
+    label: "Ikke forfalt",
+    title: "Forfall i dag eller senere",
+  },
+  {
+    id: "partial",
+    label: "Delvis betalt",
+    title: "Noe innbetalt, restbeløp igjen",
+  },
+  {
+    id: "unpaid",
+    label: "Ikke betalt",
+    title: "Ingen innbetaling registrert",
+  },
+  {
+    id: "inkasso",
+    label: "Innkasso",
+    title: "Innkassovarsel registrert",
+  },
+];
+
+/** Today's date as `yyyy-mm-dd` in the user's local calendar. */
+export function localCalendarTodayYmd(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 /** yyyy-mm-dd in local calendar (caller should pass consistent today). */
 export function effectiveDueIso(row: UnpaidInvoiceRow): string {
@@ -62,9 +105,20 @@ export function matchesInvoiceFilter(
         !isOverdue(row, todayYmd) &&
         effectiveDueIso(row) >= todayYmd
       );
+    case "inkasso":
+      return Boolean(row.collectionNoticeSentAt);
     default:
       return true;
   }
+}
+
+/** Row count for each filter (same rules as {@link matchesInvoiceFilter}). */
+export function countInvoiceFilter(
+  rows: UnpaidInvoiceRow[],
+  filter: InvoiceRowFilter,
+  todayYmd: string,
+): number {
+  return rows.filter((r) => matchesInvoiceFilter(r, filter, todayYmd)).length;
 }
 
 export function sortInvoicesByUrgency(

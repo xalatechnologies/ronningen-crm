@@ -1,22 +1,17 @@
-import { buttonVariants } from "@/components/ui/button";
-import { AppPageHeader } from "@/components/layout/app-page-header";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import {
-  ChevronRight,
+  AlertTriangle,
+  ShieldCheck,
+  ShieldOff,
   TrendingDown,
   TrendingUp,
+  Wrench,
 } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 
+import { ReportsYearMonthCalendar } from "./reports-year-month-calendar";
 import type { EventTypeBreakdown, ReportsSectionProps } from "./types";
 
 function formatNok(n: number) {
@@ -25,14 +20,6 @@ function formatNok(n: number) {
     currency: "NOK",
     maximumFractionDigits: 0,
   }).format(n);
-}
-
-function formatReportDate(iso: string) {
-  return new Intl.DateTimeFormat("nb-NO", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(`${iso}T12:00:00`));
 }
 
 function eventPillClass(eventType: string) {
@@ -61,34 +48,6 @@ function eventBarClass(i: number) {
   return BAR_BG[i % BAR_BG.length]!;
 }
 
-function UpcomingStatusBadge({
-  status,
-}: {
-  status: "confirmed" | "pending" | "cancelled";
-}) {
-  const pill =
-    "inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase md:px-3 md:py-1.5 md:text-xs";
-  if (status === "confirmed") {
-    return (
-      <span className={cn(pill, "bg-emerald-50 text-emerald-900")}>
-        Bekreftet
-      </span>
-    );
-  }
-  if (status === "pending") {
-    return (
-      <span className={cn(pill, "bg-amber-50 text-amber-900")}>
-        Avventer
-      </span>
-    );
-  }
-  return (
-    <span className={cn(pill, "bg-red-50 text-red-800")}>
-      Avbestilt
-    </span>
-  );
-}
-
 function BreakdownRow({
   row,
   index,
@@ -101,13 +60,13 @@ function BreakdownRow({
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <span
           className={cn(
-            "inline-flex w-fit rounded-full px-3 py-1.5 text-sm font-bold tracking-wide uppercase md:px-4 md:py-2 md:text-base",
+            "inline-flex w-fit rounded-full px-3 py-1.5 text-base font-bold tracking-wide uppercase md:px-4 md:py-2",
             eventPillClass(row.eventType),
           )}
         >
           {row.eventType}
         </span>
-        <span className="text-left text-base font-bold tabular-nums sm:text-right md:text-lg">
+        <span className="text-left text-base font-bold tabular-nums sm:text-right">
           <span className="text-foreground">{row.count}</span>
           <span className="font-semibold text-muted-foreground">
             {" "}
@@ -137,14 +96,15 @@ export function ReportsSection({
   kpis,
   monthlyRevenue,
   eventBreakdown,
-  upcoming,
+  facility,
   reportYear,
+  calendarYearMax,
+  focusMonth,
+  reportsPeriodLabel,
   loadError,
 }: ReportsSectionProps) {
   const paddedCard = (extra?: string) =>
-    cn("rounded-2xl p-6", RN_CARD_SHELL, extra);
-  const flushCard = (extra?: string) =>
-    cn("overflow-hidden", RN_CARD_SHELL, extra);
+    cn("p-6", RN_CARD_SHELL, extra);
 
   const maxMonthlyAmount =
     monthlyRevenue.length > 0
@@ -153,104 +113,209 @@ export function ReportsSection({
 
   return (
     <div className="mx-auto w-full max-w-[1440px] pb-24 md:pb-8">
-      <AppPageHeader
-        title="Rapporter"
-        description="Oversikt over omsetning, bookinger og kommende arrangementer — samlet for beslutningsstøtte."
-      />
-
-      {loadError ? (
+      <div className={cn("mb-8 overflow-hidden", RN_CARD_SHELL)}>
         <div
-          className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-          role="alert"
+          className={cn(
+            "flex flex-col gap-4 px-4 py-4 sm:px-5 sm:py-5 md:flex-row md:items-start md:justify-between md:gap-6 lg:px-6",
+          )}
         >
-          Kunne ikke laste data: {loadError}
-        </div>
-      ) : null}
-
-      <section className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-        <div className={paddedCard()}>
-          <p className="mb-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-            Omsetning
-          </p>
-          <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
-            {formatNok(kpis.revenueYtd)}
-          </p>
-          {kpis.revenueTrendPct != null ? (
-            <div
-              className={cn(
-                "mt-3 flex items-center gap-1 text-xs font-bold",
-                kpis.revenueTrendPct >= 0 ? "text-emerald-600" : "text-destructive",
-              )}
-            >
-              {kpis.revenueTrendPct >= 0 ? (
-                <TrendingUp className="size-4 shrink-0" aria-hidden />
-              ) : (
-                <TrendingDown className="size-4 shrink-0" aria-hidden />
-              )}
-              <span>
-                {kpis.revenueTrendPct >= 0 ? "+" : ""}
-                {kpis.revenueTrendPct.toFixed(1).replace(".", ",")} % vs. fjorår*
-              </span>
-            </div>
-          ) : null}
-        </div>
-
-        <div className={paddedCard()}>
-          <p className="mb-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-            Innbetalt
-          </p>
-          <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
-            {formatNok(kpis.totalPaid)}
-          </p>
-          <div className="mt-4 h-1.5 w-full rounded-full border border-rn-border-strong/30 bg-muted/40">
-            <div
-              className="h-full rounded-full bg-success"
-              style={{ width: `${Math.min(100, Math.round(kpis.paidShare * 100))}%` }}
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-rn-text-heading md:text-4xl">
+            Rapporter
+          </h1>
+          <Suspense
+            fallback={
+              <div
+                className="flex w-full flex-row flex-wrap items-center justify-end gap-2 py-0.5 sm:ml-auto sm:w-auto sm:shrink-0 sm:py-1 md:gap-3"
+                aria-hidden
+              >
+                <div className="h-[3.375rem] w-[5rem] shrink-0 animate-pulse rounded-md bg-muted/60 md:h-[3.625rem] md:w-[5.25rem]" />
+                <div className="h-[3.375rem] w-40 shrink-0 animate-pulse rounded-md bg-muted/60 md:h-[3.625rem] md:w-48" />
+              </div>
+            }
+          >
+            <ReportsYearMonthCalendar
+              reportYear={reportYear}
+              calendarYearMax={calendarYearMax}
             />
+          </Suspense>
+        </div>
+
+        {loadError ? (
+          <div
+            className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
+            role="alert"
+          >
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-base text-destructive">
+              Kunne ikke laste data: {loadError}
+            </div>
           </div>
-        </div>
+        ) : null}
 
-        <div className={paddedCard()}>
-          <p className="mb-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-            Ubetalt
-          </p>
-          <p className="font-heading text-3xl font-extrabold tracking-tight text-destructive tabular-nums sm:text-4xl">
-            {formatNok(kpis.totalUnpaid)}
-          </p>
-          {kpis.totalBooked > 0 ? (
-            <p className="mt-3 text-xs font-medium tabular-nums text-muted-foreground">
-              {(kpis.unpaidShareOfBooked * 100).toFixed(1).replace(".", ",")} % av
-              fakturert
-            </p>
-          ) : null}
-          {kpis.totalUnpaid > 0 ? (
-            <Link
-              href="/app/invoices"
-              className="mt-2 inline-flex text-xs font-semibold text-success underline-offset-2 hover:underline"
-            >
-              Faktura →
-            </Link>
-          ) : null}
-        </div>
+        <section className="border-t border-rn-border-strong/50 px-4 py-6 sm:px-6 md:px-8 md:py-6">
+          <h2 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
+            Omsetning og bookinger
+          </h2>
+          <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 md:gap-x-6">
+            <div className="min-w-0">
+              <p className="mb-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                Omsetning
+              </p>
+              <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
+                {formatNok(kpis.revenueYtd)}
+              </p>
+              {kpis.revenueTrendPct != null ? (
+                <div
+                  className={cn(
+                    "mt-3 flex items-center gap-1 text-xs font-bold",
+                    kpis.revenueTrendPct >= 0 ? "text-emerald-600" : "text-destructive",
+                  )}
+                >
+                  {kpis.revenueTrendPct >= 0 ? (
+                    <TrendingUp className="size-4 shrink-0" aria-hidden />
+                  ) : (
+                    <TrendingDown className="size-4 shrink-0" aria-hidden />
+                  )}
+                  <span>
+                    {kpis.revenueTrendPct >= 0 ? "+" : ""}
+                    {kpis.revenueTrendPct.toFixed(1).replace(".", ",")} %{" "}
+                    {focusMonth != null
+                      ? "mot samme periode i fjor"
+                      : "vs. fjorår"}
+                  </span>
+                </div>
+              ) : null}
+            </div>
 
-        <div className={paddedCard()}>
-          <p className="mb-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-            Bookinger
-          </p>
-          <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
-            {kpis.bookingCount}
-          </p>
-          <p className="mt-3 text-xs font-semibold text-muted-foreground">
-            <span className="text-emerald-600">
-              {kpis.confirmedBookingCount} bekreftet
-            </span>
-            {" · "}
-            <span className="text-amber-700 dark:text-amber-400">
-              {kpis.pendingBookingCount} venter
-            </span>
-          </p>
-        </div>
-      </section>
+            <div className="min-w-0">
+              <p className="mb-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                Innbetalt
+              </p>
+              <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
+                {formatNok(kpis.totalPaid)}
+              </p>
+              <div className="mt-4 h-1.5 w-full rounded-full border border-rn-border-strong/30 bg-muted/40">
+                <div
+                  className="h-full rounded-full bg-success"
+                  style={{ width: `${Math.min(100, Math.round(kpis.paidShare * 100))}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="min-w-0">
+              <p className="mb-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                Ubetalt
+              </p>
+              <p className="font-heading text-3xl font-extrabold tracking-tight text-destructive tabular-nums sm:text-4xl">
+                {formatNok(kpis.totalUnpaid)}
+              </p>
+              {kpis.totalBooked > 0 ? (
+                <p className="mt-3 text-xs font-medium tabular-nums text-muted-foreground">
+                  {(kpis.unpaidShareOfBooked * 100).toFixed(1).replace(".", ",")} % av
+                  fakturert
+                </p>
+              ) : null}
+              {kpis.totalUnpaid > 0 ? (
+                <Link
+                  href="/app/invoices"
+                  className="mt-2 inline-flex text-xs font-semibold text-success underline-offset-2 hover:underline"
+                >
+                  Faktura →
+                </Link>
+              ) : null}
+            </div>
+
+            <div className="min-w-0">
+              <p className="mb-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                Bookinger
+              </p>
+              <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
+                {kpis.bookingCount}
+              </p>
+              <p className="mt-3 text-xs font-semibold text-muted-foreground">
+                <span className="text-emerald-600">
+                  {kpis.confirmedBookingCount} bekreftet
+                </span>
+                {" · "}
+                <span className="text-amber-700 dark:text-amber-400">
+                  {kpis.pendingBookingCount} venter
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-10 border-t border-rn-border-strong/50 pt-8">
+            <h2 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
+              Drift og eiendom
+            </h2>
+            <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-6 lg:grid-cols-5">
+            <div className="min-w-0">
+              <p className="mb-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                I drift
+              </p>
+              <p className="font-heading text-3xl font-extrabold tabular-nums text-emerald-700 sm:text-4xl dark:text-emerald-400">
+                {facility.assetOperationalCount}
+              </p>
+              <p className="mt-2 text-base text-muted-foreground">
+                God / normal tilstand
+              </p>
+            </div>
+            <div className="min-w-0">
+              <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                <Wrench className="size-4 text-amber-700 dark:text-amber-400" aria-hidden />
+                Vedlikehold
+              </div>
+              <p className="font-heading text-3xl font-extrabold tabular-nums text-amber-900 sm:text-4xl dark:text-amber-200">
+                {facility.assetMaintenanceCount}
+              </p>
+              <p className="mt-2 text-base text-muted-foreground">
+                Krever oppfølging
+              </p>
+            </div>
+            <div className="min-w-0">
+              <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                <AlertTriangle className="size-4 text-destructive" aria-hidden />
+                Skal byttes
+              </div>
+              <p className="font-heading text-3xl font-extrabold tabular-nums text-destructive sm:text-4xl">
+                {facility.assetReplaceCount}
+              </p>
+              <p className="mt-2 text-base text-muted-foreground">
+                Utbedring eller erstatning
+              </p>
+            </div>
+            <div className="min-w-0">
+              <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                <ShieldCheck className="size-4 text-success" aria-hidden />
+                Forsikret verdi
+              </div>
+              <p className="font-heading text-2xl font-extrabold tabular-nums text-foreground sm:text-3xl">
+                {formatNok(facility.assetInsuredValueNok)}
+              </p>
+              <p className="mt-2 text-base text-muted-foreground">
+                {facility.assetInsuredLineCount}{" "}
+                {facility.assetInsuredLineCount === 1 ? "linje" : "linjer"} som
+                forsikret
+              </p>
+            </div>
+            <div className="min-w-0">
+              <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                <ShieldOff className="size-4 text-muted-foreground" aria-hidden />
+                Uforsikret verdi
+              </div>
+              <p className="font-heading text-2xl font-extrabold tabular-nums text-foreground sm:text-3xl">
+                {formatNok(facility.assetUninsuredValueNok)}
+              </p>
+              <p className="mt-2 text-base text-muted-foreground">
+                {facility.assetUninsuredLineCount}{" "}
+                {facility.assetUninsuredLineCount === 1
+                  ? "øvrig linje"
+                  : "øvrige linjer"}
+              </p>
+            </div>
+            </div>
+          </div>
+        </section>
+      </div>
 
       <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <section className={paddedCard("lg:col-span-2")}>
@@ -258,8 +323,10 @@ export function ReportsSection({
             <h2 className="font-heading text-lg font-semibold text-foreground">
               Omsetning per måned
             </h2>
-            <span className="rounded-full bg-secondary px-3 py-1 text-[12px] font-semibold tracking-wide text-secondary-foreground uppercase">
-              {reportYear} hittil i år
+            <span className="max-w-[14rem] rounded-full bg-secondary px-3 py-1 text-center text-[11px] font-semibold tracking-wide text-secondary-foreground uppercase sm:max-w-none sm:text-[12px]">
+              {focusMonth != null
+                ? reportsPeriodLabel
+                : `${reportYear} · kalenderår`}
             </span>
           </div>
           <div className="flex h-48 items-end justify-between gap-1.5 px-1 sm:gap-2">
@@ -272,9 +339,22 @@ export function ReportsSection({
               return (
                 <div
                   key={m.monthIndex}
-                  className="group relative flex h-full min-w-0 flex-1 flex-col items-stretch justify-end"
+                  className={cn(
+                    "group relative flex h-full min-w-0 flex-1 flex-col items-stretch justify-end transition-opacity",
+                    focusMonth != null &&
+                      m.monthIndex !== focusMonth &&
+                      "opacity-35",
+                    focusMonth != null &&
+                      m.monthIndex === focusMonth &&
+                      "opacity-100",
+                  )}
                 >
-                  <span className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 rounded border border-rn-accent-border bg-success px-2 py-0.5 text-[10px] whitespace-nowrap text-primary-foreground shadow-md group-hover:block">
+                  <span
+                    className={cn(
+                      "pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 rounded border border-rn-accent-border bg-success px-2 py-0.5 text-[10px] whitespace-nowrap text-primary-foreground shadow-md group-hover:block",
+                      focusMonth === m.monthIndex && "block",
+                    )}
+                  >
                     {formatNok(m.amount)}
                   </span>
                   <div
@@ -283,6 +363,9 @@ export function ReportsSection({
                       hasValue
                         ? "min-h-[4px] bg-emerald-500/90 group-hover:bg-emerald-600"
                         : "h-1 shrink-0 rounded-sm bg-muted/50",
+                      focusMonth === m.monthIndex &&
+                        hasValue &&
+                        "ring-2 ring-success ring-offset-2 ring-offset-background",
                     )}
                     style={
                       hasValue && barPct > 0
@@ -297,7 +380,16 @@ export function ReportsSection({
           </div>
           <div className="mt-4 flex justify-between text-[12px] font-semibold tracking-wide text-muted-foreground uppercase">
             {monthlyRevenue.map((m) => (
-              <span key={m.monthIndex}>{m.label}</span>
+              <span
+                key={m.monthIndex}
+                className={cn(
+                  focusMonth != null &&
+                    m.monthIndex !== focusMonth &&
+                    "opacity-35",
+                )}
+              >
+                {m.label}
+              </span>
             ))}
           </div>
         </section>
@@ -308,7 +400,9 @@ export function ReportsSection({
           </h2>
           {kpis.bookingCount === 0 ? (
             <p className="text-base text-muted-foreground">
-              Ingen aktive bookinger å vise.
+              {focusMonth != null
+                ? "Ingen bookinger med arrangement i denne måneden."
+                : "Ingen aktive bookinger å vise i perioden."}
             </p>
           ) : (
             <div className="flex flex-col gap-8 md:gap-10">
@@ -319,86 +413,6 @@ export function ReportsSection({
           )}
         </section>
       </div>
-
-      <section className={flushCard()}>
-        <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:px-8 md:py-6">
-          <h2 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
-            Kommende bookinger
-          </h2>
-          <Link
-            href="/app/bookings"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "lg" }),
-              "h-12 gap-1.5 self-start rounded-xl px-4 text-base font-bold text-success hover:bg-rn-surface-row-hover hover:text-success sm:self-auto md:h-14 md:px-5 md:text-[17px]",
-            )}
-          >
-            Se alle
-            <ChevronRight className="size-5 md:size-6" aria-hidden />
-          </Link>
-        </div>
-        {upcoming.length === 0 ? (
-          <p className="px-6 py-14 text-center text-base text-muted-foreground md:py-16 md:text-lg">
-            Ingen kommende bookinger funnet.
-          </p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
-                <TableHead className="px-6 py-4 text-sm font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5 md:text-base">
-                  Kunde
-                </TableHead>
-                <TableHead className="px-6 py-4 text-sm font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5 md:text-base">
-                  Dato
-                </TableHead>
-                <TableHead className="px-6 py-4 text-right text-sm font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5 md:text-base">
-                  Status
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {upcoming.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="border-rn-border-strong/40 hover:bg-rn-surface-row-hover"
-                >
-                  <TableCell className="px-6 py-5 md:px-8 md:py-6">
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-primary md:size-11 md:text-base"
-                        aria-hidden
-                      >
-                        {row.initials}
-                      </div>
-                      <span className="text-base font-semibold text-foreground md:text-lg">
-                        {row.customerName}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-5 text-base text-muted-foreground md:px-8 md:py-6 md:text-lg">
-                    {formatReportDate(row.eventDate)}
-                  </TableCell>
-                  <TableCell className="px-6 py-5 text-right md:px-8 md:py-6">
-                    <UpcomingStatusBadge status={row.status} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </section>
-
-      <p className="mt-8 text-center text-xs text-muted-foreground">
-        *Sammenligning: tilsvarende periode i fjor. Avbestilt ekskludert.
-        Omsetning = inntekter i Finans + innbetalt på bookinger etter
-        arrangementsdato (kan overlappe).{" "}
-        <Link href="/app/finance" className="font-medium text-success hover:underline">
-          Finans
-        </Link>
-        {" · "}
-        <Link href="/app/bookings" className="font-medium text-success hover:underline">
-          Bookinger
-        </Link>
-      </p>
     </div>
   );
 }

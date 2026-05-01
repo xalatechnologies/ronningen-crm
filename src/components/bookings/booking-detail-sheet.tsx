@@ -26,23 +26,46 @@ import {
 import {
   BOOKING_PAYMENT_STATUS_LABELS,
   BOOKING_PAYMENT_STATUS_VALUES,
+  resolveBookingPaymentForPersist,
+  resolveStandardBookingPaymentFromAmounts,
 } from "@/constants/booking-payment-status";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Save, X, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useForm, useWatch, Controller, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
 const fieldClass =
-  "h-11 w-full rounded-xl border-2 border-rn-border-strong bg-background px-3.5 text-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
 const selectChevronPad = "pr-10 md:pr-11 appearance-none bg-transparent";
 
 const labelClass =
   "text-[12px] font-semibold uppercase tracking-wider text-rn-text-slate";
+
+function bookingDetailDefaultsFromRow(
+  row: BookingListRow,
+): BookingDetailEditInput {
+  return {
+    customerName: row.customer,
+    phone: row.customerPhone ?? "",
+    email: row.customerEmail ?? "",
+    address: row.customerAddress ?? "",
+    bookingReference: row.bookingReference ?? "",
+    festType: row.festType?.trim() || "Annet",
+    eventType: row.eventTypeForm,
+    eventDate: row.eventDateIso,
+    guestCount: row.guests,
+    totalNok: row.totalNok,
+    paidNok: row.paidNok,
+    paymentStatus: row.paymentStatus,
+    paymentDueDate: row.paymentDueDateIso ?? "",
+    notes: row.notes ?? "",
+  };
+}
 
 function formatNok(n: number) {
   return `${new Intl.NumberFormat("nb-NO").format(Math.round(n))} NOK`;
@@ -99,11 +122,13 @@ export function BookingDetailSheet({
     handleSubmit,
     control,
     reset,
+    setValue,
     formState: { errors },
   } = form;
 
   const totalW = useWatch({ control, name: "totalNok" });
   const paidW = useWatch({ control, name: "paidNok" });
+  const paymentStatusW = useWatch({ control, name: "paymentStatus" });
   const remainingPreview = useMemo(() => {
     const t = Number(totalW);
     const p = Number(paidW);
@@ -111,25 +136,23 @@ export function BookingDetailSheet({
     return Math.max(0, t - Math.min(p, t));
   }, [totalW, paidW]);
 
+  useLayoutEffect(() => {
+    if (!row || !open) return;
+    reset(bookingDetailDefaultsFromRow(row));
+  }, [row, open, reset]);
+
   useEffect(() => {
     if (!row || !open) return;
-    reset({
-      customerName: row.customer,
-      phone: row.customerPhone ?? "",
-      email: row.customerEmail ?? "",
-      address: row.customerAddress ?? "",
-      bookingReference: row.bookingReference ?? "",
-      festType: row.festType?.trim() || "Annet",
-      eventType: row.eventTypeForm,
-      eventDate: row.eventDateIso,
-      guestCount: row.guests,
-      totalNok: row.totalNok,
-      paidNok: row.paidNok,
-      paymentStatus: row.paymentStatus,
-      paymentDueDate: row.paymentDueDateIso ?? "",
-      notes: row.notes ?? "",
-    });
-  }, [row, open, reset]);
+    const ps = paymentStatusW;
+    if (ps === "waived" || ps === "disputed" || ps === "other") return;
+    const t = Number(totalW);
+    const p = Number(paidW);
+    if (!Number.isFinite(t) || !Number.isFinite(p)) return;
+    const next = resolveStandardBookingPaymentFromAmounts(t, p).paymentStatus;
+    if (next !== ps) {
+      setValue("paymentStatus", next, { shouldValidate: true });
+    }
+  }, [row, open, totalW, paidW, paymentStatusW, setValue]);
 
   if (!row) return null;
 
@@ -158,24 +181,12 @@ export function BookingDetailSheet({
         return;
       }
 
-      const total = data.totalNok;
-      const ps = data.paymentStatus;
-      let paid = Math.min(data.paidNok, total);
-      let remaining = Math.max(0, total - paid);
-
-      if (ps === "paid") {
-        paid = total;
-        remaining = 0;
-      } else if (ps === "unpaid") {
-        paid = 0;
-        remaining = total;
-      } else if (ps === "waived") {
-        remaining = 0;
-        paid = Math.min(paid, total);
-      } else {
-        paid = Math.min(paid, total);
-        remaining = Math.max(0, total - paid);
-      }
+      const { paid, remaining, paymentStatus: finalPaymentStatus } =
+        resolveBookingPaymentForPersist({
+          totalNok: data.totalNok,
+          paidNok: data.paidNok,
+          paymentStatus: data.paymentStatus,
+        });
 
       const { error: bookErr } = await supabase
         .from("bookings")
@@ -185,11 +196,11 @@ export function BookingDetailSheet({
           event_type: data.eventType,
           event_date: data.eventDate,
           guest_count: data.guestCount,
-          total_price: total,
+          total_price: data.totalNok,
           paid_amount: paid,
           remaining_amount: remaining,
           payment_due_date: data.paymentDueDate ? data.paymentDueDate : null,
-          payment_status: ps,
+          payment_status: finalPaymentStatus,
           notes: data.notes?.trim() ? data.notes.trim() : null,
         })
         .eq("id", bookingRow.id);
@@ -202,7 +213,7 @@ export function BookingDetailSheet({
       }
 
       toast.success("Endringer lagret");
-      router.refresh();
+      await router.refresh();
     } finally {
       setDetailSaving(false);
     }
@@ -222,7 +233,7 @@ export function BookingDetailSheet({
         return;
       }
       toast.success("Innkassovarsel registrert");
-      router.refresh();
+      await router.refresh();
     } finally {
       setInkassoBusy(false);
     }
@@ -242,7 +253,7 @@ export function BookingDetailSheet({
         return;
       }
       toast.success("Markering fjernet");
-      router.refresh();
+      await router.refresh();
     } finally {
       setInkassoBusy(false);
     }
@@ -262,7 +273,7 @@ export function BookingDetailSheet({
         side="right"
         showCloseButton={false}
         className={cn(
-          "flex h-full w-full max-w-[min(100vw,32rem)] flex-col gap-0 border-l-2 border-rn-border-strong bg-card p-0 sm:max-w-lg",
+          "flex h-full w-full max-w-[min(100vw,48rem)] flex-col gap-0 border-l-2 border-rn-border-strong bg-card p-0 sm:max-w-3xl",
           "shadow-rn-card",
         )}
       >
@@ -278,7 +289,7 @@ export function BookingDetailSheet({
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="shrink-0 rounded-xl border-2 border-transparent hover:border-rn-border-strong/60"
+            className="shrink-0 rounded-md border-2 border-transparent hover:border-rn-border-strong/60"
             aria-label="Lukk"
             onClick={() => onOpenChange(false)}
           >
@@ -415,7 +426,6 @@ export function BookingDetailSheet({
                     id="bde-event-type"
                     {...register("eventType")}
                     className={cn(fieldClass, selectChevronPad, "mt-1.5")}
-                    aria-invalid={!!errors.eventType}
                   >
                     {NEW_BOOKING_EVENT_TYPES.map((opt) => (
                       <option key={opt} value={opt}>
@@ -492,7 +502,6 @@ export function BookingDetailSheet({
                   id="bde-pay-status"
                   {...register("paymentStatus")}
                   className={cn(fieldClass, selectChevronPad, "mt-1.5")}
-                  aria-invalid={!!errors.paymentStatus}
                 >
                   {BOOKING_PAYMENT_STATUS_VALUES.map((v) => (
                     <option key={v} value={v}>
@@ -615,7 +624,7 @@ export function BookingDetailSheet({
 
             <section
               aria-labelledby="booking-inkasso"
-              className="rounded-2xl border-2 border-violet-200/80 bg-violet-50/40 p-4 sm:p-5"
+              className="rounded-md border-2 border-violet-200/80 bg-violet-50/40 p-4 sm:p-5"
             >
               <h3 id="booking-inkasso" className={cn(labelClass, "mb-2")}>
                 Oppfølging og inkasso
@@ -626,7 +635,7 @@ export function BookingDetailSheet({
               </p>
               {bookingRow.collectionNoticeSentAt ? (
                 <div className="mt-4 space-y-3">
-                  <p className="rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-medium text-violet-950">
+                  <p className="rounded-md border border-violet-200 bg-white px-4 py-3 text-sm font-medium text-violet-950">
                     Innkassovarsel registrert{" "}
                     {formatInkassoRegistered(bookingRow.collectionNoticeSentAt)}
                   </p>
@@ -634,7 +643,7 @@ export function BookingDetailSheet({
                     type="button"
                     variant="outline"
                     disabled={busy}
-                    className="h-11 w-full rounded-xl border-2 border-violet-300 font-semibold text-violet-950 hover:bg-violet-100/80"
+                    className="h-11 w-full rounded-md border-2 border-violet-300 font-semibold text-violet-950 hover:bg-violet-100/80"
                     onClick={() => void clearCollectionNotice()}
                   >
                     Fjern markering
@@ -644,7 +653,7 @@ export function BookingDetailSheet({
                 <Button
                   type="button"
                   disabled={busy}
-                  className="mt-4 h-11 w-full rounded-xl border-2 border-violet-400 bg-violet-700 font-semibold text-white hover:bg-violet-800"
+                  className="mt-4 h-11 w-full rounded-md border-2 border-violet-400 bg-violet-700 font-semibold text-white hover:bg-violet-800"
                   onClick={() => void registerCollectionNotice()}
                 >
                   Registrer innkassovarsel sendt
@@ -654,8 +663,16 @@ export function BookingDetailSheet({
 
             <section aria-labelledby="booking-edit-notes">
               <h3 id="booking-edit-notes" className={cn(labelClass, "mb-2")}>
-                Dine notater
+                Notater på bookingen
               </h3>
+              <p
+                id="booking-edit-notes-hint"
+                className="mb-3 text-sm leading-relaxed text-muted-foreground"
+              >
+                Teksten er hentet fra bookingens lagrede notatfelt i databasen
+                (inkl. tekst som ble lagret ved ny bestilling). Du kan redigere
+                den her og oppdatere med «Lagre endringer».
+              </p>
               <Textarea
                 {...register("notes")}
                 rows={6}
@@ -664,7 +681,8 @@ export function BookingDetailSheet({
                   "min-h-32 py-3 text-sm md:text-base",
                 )}
                 aria-invalid={!!errors.notes}
-                placeholder="Skriv dine egne notater her …"
+                aria-describedby="booking-edit-notes-hint"
+                placeholder="Ingen notater lagret. Skriv her hvis du vil legge til mer."
               />
               {errors.notes ? (
                 <p className="mt-1 text-xs text-destructive">
@@ -677,8 +695,10 @@ export function BookingDetailSheet({
           <SheetFooter className="mt-0 flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer/50 p-6 sm:flex-row sm:flex-wrap sm:justify-stretch">
             <Button
               type="submit"
+              variant="success"
+              size="cta"
               disabled={busy}
-              className="h-11 w-full rounded-xl border-2 border-rn-accent-border bg-success font-semibold text-white hover:bg-rn-accent-fill-hover sm:order-first sm:flex-1"
+              className="w-full sm:order-first sm:flex-1"
             >
               <Save className="mr-2 size-4 shrink-0" aria-hidden />
               Lagre endringer
@@ -686,8 +706,10 @@ export function BookingDetailSheet({
             {bookingRow.status === "pending" ? (
               <Button
                 type="button"
+                variant="success"
+                size="cta"
                 disabled={busy}
-                className="h-11 w-full rounded-xl border-2 border-rn-accent-border bg-success font-semibold text-white hover:bg-rn-accent-fill-hover sm:flex-1"
+                className="w-full sm:flex-1"
                 onClick={() => onSetStatus(bookingRow.id, "confirmed")}
               >
                 <CheckCircle2 className="mr-2 size-4 shrink-0" aria-hidden />
@@ -700,7 +722,7 @@ export function BookingDetailSheet({
                 type="button"
                 variant="outline"
                 disabled={busy}
-                className="h-11 w-full rounded-xl border-2 border-red-200 bg-red-50/80 font-semibold text-red-900 hover:border-red-300 hover:bg-red-100 sm:flex-1"
+                className="h-11 w-full rounded-md border-2 border-red-200 bg-red-50/80 font-semibold text-red-900 hover:border-red-300 hover:bg-red-100 sm:flex-1"
                 onClick={() =>
                   onSetStatus(bookingRow.id, "cancelled", {
                     confirmMessage:
@@ -717,7 +739,7 @@ export function BookingDetailSheet({
                 type="button"
                 variant="outline"
                 disabled={busy}
-                className="h-11 w-full rounded-xl border-2 border-rn-border-strong font-semibold sm:flex-1"
+                className="h-11 w-full rounded-md border-2 border-rn-border-strong font-semibold sm:flex-1"
                 onClick={() =>
                   onSetStatus(bookingRow.id, "pending", {
                     confirmMessage:

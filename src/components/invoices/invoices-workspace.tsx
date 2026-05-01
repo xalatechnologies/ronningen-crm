@@ -2,7 +2,7 @@
 
 import type { UnpaidInvoiceRow } from "@/components/invoices/types";
 import { BOOKING_PAYMENT_STATUS_LABELS } from "@/constants/booking-payment-status";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
@@ -14,23 +14,18 @@ import {
   suggestInkassoReview,
 } from "@/lib/invoice-row-utils";
 import { cn } from "@/lib/utils";
+import { useSupabase } from "@/providers/supabase-provider";
 import {
   AlertTriangle,
-  CalendarClock,
+  CheckCircle2,
   ExternalLink,
   FileText,
   Scale,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-
-function localTodayYmd(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
+import { toast } from "sonner";
 
 function formatNok(n: number) {
   return new Intl.NumberFormat("nb-NO", {
@@ -56,26 +51,10 @@ function formatNoticeDate(iso: string) {
   }).format(new Date(iso));
 }
 
-const FILTER_SPECS: {
-  id: InvoiceRowFilter;
-  label: string;
-  title: string;
-}[] = [
-  { id: "all", label: "Alle", title: "Alle med restbeløp" },
-  { id: "overdue", label: "Forf.", title: "Forfalt (forfall passert)" },
-  {
-    id: "upcoming",
-    label: "Ikke forf.",
-    title: "Forfall i dag eller fremover",
-  },
-  { id: "partial", label: "Delv.", title: "Noe innbetalt, rest igjen" },
-  { id: "unpaid", label: "Ubet.", title: "Ingen innbetaling registrert" },
-];
-
 const invoicesTableHeadClass =
-  "px-4 py-3 text-[11px] font-semibold tracking-wider text-rn-text-column uppercase md:px-6 md:py-4 md:text-sm";
+  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const invoicesTableCellClass =
-  "px-4 py-4 align-top md:px-6 md:py-5";
+  "px-6 py-5 align-top md:px-8 md:py-6";
 
 function paidSharePct(row: UnpaidInvoiceRow): number {
   if (row.totalNok <= 0) return 0;
@@ -107,44 +86,51 @@ function DueAndWarnings({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="tabular-nums text-sm font-semibold text-foreground md:text-base">
-        {formatMediumDate(due)}
+    <div className="flex min-w-0 max-w-72 flex-col gap-2">
+      <div>
+        <div className="font-heading text-base font-semibold tabular-nums text-foreground">
+          {formatMediumDate(due)}
+        </div>
+        {customDue ? (
+          <p className="mt-0.5 text-xs text-muted-foreground">Eget forfall</p>
+        ) : null}
       </div>
-      <div className="text-xs text-muted-foreground md:text-sm">
-        {customDue ? "Eget forfall" : "Arr. som referanse"}
+      <div className="flex flex-col items-start gap-1.5">
+        {overdue ? (
+          <Badge
+            variant="destructive"
+            className="h-auto w-fit rounded-md px-2.5 py-1 text-[11px] font-bold leading-snug"
+          >
+            Forfalt · {relLabel}
+          </Badge>
+        ) : rel === 0 ? (
+          <Badge
+            variant="secondary"
+            className="h-auto w-fit rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-900"
+          >
+            Forfall i dag
+          </Badge>
+        ) : (
+          <span className="text-sm leading-snug text-muted-foreground">{relLabel}</span>
+        )}
+        {row.collectionNoticeSentAt ? (
+          <Badge
+            variant="secondary"
+            className="h-auto w-fit max-w-full flex-wrap items-start gap-1 rounded-md border border-violet-200 bg-violet-50 py-1.5 pl-2 pr-2 text-left text-[11px] font-semibold leading-snug text-violet-900"
+          >
+            <Scale className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+            Innkassovarsel registrert {formatNoticeDate(row.collectionNoticeSentAt)}
+          </Badge>
+        ) : suggestInkasso ? (
+          <Badge
+            variant="outline"
+            className="h-auto w-fit max-w-full items-start gap-1 rounded-md border-amber-300 bg-amber-50/80 py-1.5 pl-2 pr-2 text-left text-[11px] font-semibold leading-snug text-amber-950"
+          >
+            <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-700" aria-hidden />
+            Vurder innkassovarsel (14+ dager over forfall)
+          </Badge>
+        ) : null}
       </div>
-      {overdue ? (
-        <Badge variant="destructive" className="h-6 w-fit rounded-lg px-2 text-[11px] font-bold">
-          Forfalt · {relLabel}
-        </Badge>
-      ) : rel === 0 ? (
-        <Badge
-          variant="secondary"
-          className="h-6 w-fit rounded-lg border border-amber-200 bg-amber-50 px-2 text-[11px] font-bold text-amber-900"
-        >
-          Forfall i dag
-        </Badge>
-      ) : (
-        <span className="text-xs text-muted-foreground md:text-sm">{relLabel}</span>
-      )}
-      {row.collectionNoticeSentAt ? (
-        <Badge
-          variant="secondary"
-          className="h-auto w-fit max-w-full flex-wrap items-start gap-1 rounded-lg border border-violet-200 bg-violet-50 py-1.5 pl-2 pr-2 text-left text-[11px] font-semibold text-violet-900"
-        >
-          <Scale className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-          Innkassovarsel registrert {formatNoticeDate(row.collectionNoticeSentAt)}
-        </Badge>
-      ) : suggestInkasso ? (
-        <Badge
-          variant="outline"
-          className="h-auto w-fit max-w-full items-start gap-1 rounded-lg border-amber-300 bg-amber-50/80 py-1.5 pl-2 pr-2 text-left text-[11px] font-semibold text-amber-950"
-        >
-          <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-700" aria-hidden />
-          Vurder innkassovarsel (14+ dager over forfall)
-        </Badge>
-      ) : null}
     </div>
   );
 }
@@ -156,42 +142,43 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
   const badgeClass = (() => {
     switch (row.paymentStatus) {
       case "paid":
-        return "rounded-lg border border-emerald-200 bg-emerald-50 text-[11px] font-bold text-emerald-950";
+        return "rounded-md border border-emerald-200 bg-emerald-50 text-[11px] font-bold text-emerald-950";
       case "unpaid":
-        return "rounded-lg border border-border text-[11px] font-bold";
+        return "rounded-md border border-border text-[11px] font-bold";
       case "partial":
-        return "rounded-lg border border-amber-200 bg-amber-50 text-[11px] font-bold text-amber-950";
+        return "rounded-md border border-amber-200 bg-amber-50 text-[11px] font-bold text-amber-950";
       case "waived":
-        return "rounded-lg border border-slate-300 bg-slate-100 text-[11px] font-bold text-slate-800";
+        return "rounded-md border border-slate-300 bg-slate-100 text-[11px] font-bold text-slate-800";
       case "disputed":
-        return "rounded-lg border border-orange-300 bg-orange-50 text-[11px] font-bold text-orange-950";
+        return "rounded-md border border-orange-300 bg-orange-50 text-[11px] font-bold text-orange-950";
       case "other":
       default:
-        return "rounded-lg border border-violet-200 bg-violet-50 text-[11px] font-bold text-violet-950";
+        return "rounded-md border border-violet-200 bg-violet-50 text-[11px] font-bold text-violet-950";
     }
   })();
 
   const unpaid = row.paidNok <= 0;
 
   return (
-    <div className="flex min-w-[8rem] flex-col gap-2">
-      <div className="flex flex-col items-start gap-1">
-        <Badge variant="outline" className={cn("h-auto px-2 py-1", badgeClass)}>
-          {statusLabel}
-        </Badge>
-        {row.paymentStatus === "partial" ? (
-          <span className="text-[11px] font-semibold text-muted-foreground">
-            {pct}% av total
-          </span>
-        ) : null}
-      </div>
-      <div className="text-sm tabular-nums text-foreground md:text-base">
-        <span className="font-semibold text-success">{formatNok(row.paidNok)}</span>
-        <span className="text-muted-foreground"> av </span>
-        <span>{formatNok(row.totalNok)}</span>
+    <div className="flex min-w-36 max-w-56 flex-col gap-2">
+      <Badge
+        variant="outline"
+        className={cn("h-auto w-fit px-2.5 py-1 text-[11px] font-bold", badgeClass)}
+      >
+        {statusLabel}
+      </Badge>
+      {row.paymentStatus === "partial" ? (
+        <span className="text-xs font-semibold text-muted-foreground">{pct}% betalt</span>
+      ) : null}
+      <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0 tabular-nums">
+        <span className="text-base font-bold text-success">{formatNok(row.paidNok)}</span>
+        <span className="text-sm text-muted-foreground">/</span>
+        <span className="text-base font-semibold text-foreground">
+          {formatNok(row.totalNok)}
+        </span>
       </div>
       <div
-        className="h-2 w-full max-w-[11rem] overflow-hidden rounded-full bg-muted"
+        className="h-2 w-full overflow-hidden rounded-full bg-muted"
         role="progressbar"
         aria-valuenow={pct}
         aria-valuemin={0}
@@ -200,8 +187,8 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
       >
         <div
           className={cn(
-            "h-full rounded-full transition-[width]",
-            unpaid ? "bg-muted-foreground/25" : "bg-success",
+            "h-full min-w-0 rounded-full transition-[width]",
+            unpaid ? "bg-muted-foreground/30" : "bg-success",
           )}
           style={{ width: `${pct}%` }}
         />
@@ -210,22 +197,88 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
   );
 }
 
+function MarkInvoicePaidButton({
+  row,
+  canMark,
+  busyId,
+  onBusyChange,
+}: {
+  row: UnpaidInvoiceRow;
+  canMark: boolean;
+  busyId: string | null;
+  onBusyChange: (id: string | null) => void;
+}) {
+  const supabase = useSupabase();
+  const router = useRouter();
+  const busy = busyId === row.id;
+
+  if (!canMark) return null;
+
+  async function onMarkPaid() {
+    const ok = confirm(
+      `Registrere full betaling for «${row.customerName}»?\n\n` +
+        `Total innbetaling settes til ${formatNok(row.totalNok)}. Restbeløp blir 0 kr.`,
+    );
+    if (!ok) return;
+
+    onBusyChange(row.id);
+    try {
+      const total = row.totalNok;
+      const { error } = await supabase
+        .from("bookings")
+        .update({
+          paid_amount: total,
+          remaining_amount: 0,
+          payment_status: "paid",
+        })
+        .eq("id", row.id);
+
+      if (error) {
+        toast.error("Kunne ikke oppdatere betaling", {
+          description: error.message,
+        });
+        return;
+      }
+
+      toast.success("Bookingen er markert som fullt betalt");
+      router.refresh();
+    } finally {
+      onBusyChange(null);
+    }
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      disabled={busy || row.remainingNok <= 0}
+      title="Registrer at kunden har betalt hele beløpet"
+      className={cn(
+        "h-10 w-full justify-center gap-1.5 rounded-md border-2 border-success/60 bg-success/10 px-3 font-heading text-xs font-bold text-emerald-950 shadow-sm hover:bg-success/20 md:h-11 md:gap-2 md:px-4 md:text-sm dark:text-emerald-100",
+        busy && "opacity-70",
+      )}
+      onClick={() => void onMarkPaid()}
+    >
+      <CheckCircle2 className="size-3.5 shrink-0 md:size-4" aria-hidden />
+      Registrer betalt
+    </Button>
+  );
+}
+
 export type InvoicesWorkspaceProps = {
   rows: UnpaidInvoiceRow[];
+  filter: InvoiceRowFilter;
+  todayYmd: string;
+  canMarkInvoicesPaid?: boolean;
 };
 
-export function InvoicesWorkspace({ rows }: InvoicesWorkspaceProps) {
-  const todayYmd = useMemo(() => localTodayYmd(), []);
-  const [filter, setFilter] = useState<InvoiceRowFilter>("all");
-
-  const stats = useMemo(() => {
-    const overdue = rows.filter((r) => isOverdue(r, todayYmd)).length;
-    const partial = rows.filter((r) => r.paymentStatus === "partial").length;
-    const unpaid = rows.filter((r) => r.paymentStatus === "unpaid").length;
-    const inkassoReg = rows.filter((r) => r.collectionNoticeSentAt).length;
-    return { overdue, partial, unpaid, inkassoReg, total: rows.length };
-  }, [rows, todayYmd]);
-
+export function InvoicesWorkspace({
+  rows,
+  filter,
+  todayYmd,
+  canMarkInvoicesPaid = false,
+}: InvoicesWorkspaceProps) {
+  const [markingBookingId, setMarkingBookingId] = useState<string | null>(null);
   const filtered = useMemo(
     () =>
       rows.filter((r) => matchesInvoiceFilter(r, filter, todayYmd)),
@@ -237,12 +290,12 @@ export function InvoicesWorkspace({ rows }: InvoicesWorkspaceProps) {
       <section className={cn("overflow-hidden", RN_CARD_SHELL)}>
         <div className="flex flex-col items-center gap-4 px-6 py-16 text-center md:gap-5 md:px-8 md:py-20">
           <div
-            className="flex size-16 items-center justify-center rounded-2xl border-2 border-rn-border-strong bg-muted/40 md:size-18"
+            className="flex size-16 items-center justify-center rounded-md border-2 border-rn-border-strong bg-muted/40 md:size-18"
             aria-hidden
           >
             <FileText className="size-8 text-muted-foreground md:size-9" />
           </div>
-          <p className="max-w-md text-base text-muted-foreground md:text-lg">
+          <p className="max-w-md text-base text-muted-foreground">
             Ingen utestående fakturaer. Når en booking har restbeløp, vises den
             her med betalingsstatus, forfall og verktøy for oppfølging.
           </p>
@@ -250,7 +303,7 @@ export function InvoicesWorkspace({ rows }: InvoicesWorkspaceProps) {
             href="/app/bookings"
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "h-12 rounded-xl border-2 border-rn-border-strong px-6 font-heading text-base font-bold",
+              "h-12 rounded-md border-2 border-rn-border-strong px-6 font-heading text-base font-bold",
             )}
           >
             Gå til bookinger
@@ -261,273 +314,160 @@ export function InvoicesWorkspace({ rows }: InvoicesWorkspaceProps) {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div
-        className={cn(
-          "flex flex-col gap-4 p-5 md:gap-5 md:p-6",
-          RN_CARD_SHELL,
-        )}
-      >
-        <div
-          className="flex flex-wrap items-baseline gap-x-1 gap-y-2 md:gap-x-2"
-          aria-label="Tall for utestående fakturaer"
-        >
-          <span
-            className="inline-flex items-center gap-2 tabular-nums"
-            title="Antall utestående fakturaer"
-          >
-            <CalendarClock
-              className="size-5 shrink-0 text-primary md:size-6"
-              aria-hidden
-            />
-            <span className="text-2xl font-extrabold tracking-tight text-foreground md:text-3xl">
-              {stats.total}
-            </span>
-            <span className="text-sm font-semibold tracking-wide text-muted-foreground md:text-base">
-              TOT
-            </span>
-          </span>
-          {stats.overdue > 0 ? (
-            <>
-              <span
-                className="px-1 text-xl font-light text-muted-foreground/60 md:text-2xl"
-                aria-hidden
-              >
-                ·
-              </span>
-              <span
-                className="inline-flex items-baseline gap-1.5 tabular-nums text-red-900"
-                title="Forfalt"
-              >
-                <span className="text-2xl font-extrabold md:text-3xl">
-                  {stats.overdue}
-                </span>
-                <span className="text-sm font-semibold tracking-wide md:text-base">
-                  FORF.
-                </span>
-              </span>
-            </>
-          ) : null}
-          {stats.partial > 0 ? (
-            <>
-              <span
-                className="px-1 text-xl font-light text-muted-foreground/60 md:text-2xl"
-                aria-hidden
-              >
-                ·
-              </span>
-              <span
-                className="inline-flex items-baseline gap-1.5 tabular-nums text-amber-950"
-                title="Delvis betalt"
-              >
-                <span className="text-2xl font-extrabold md:text-3xl">
-                  {stats.partial}
-                </span>
-                <span className="text-sm font-semibold tracking-wide md:text-base">
-                  DELV.
-                </span>
-              </span>
-            </>
-          ) : null}
-          {stats.unpaid > 0 ? (
-            <>
-              <span
-                className="px-1 text-xl font-light text-muted-foreground/60 md:text-2xl"
-                aria-hidden
-              >
-                ·
-              </span>
-              <span
-                className="inline-flex items-baseline gap-1.5 tabular-nums text-foreground"
-                title="Uten innbetaling"
-              >
-                <span className="text-2xl font-extrabold md:text-3xl">
-                  {stats.unpaid}
-                </span>
-                <span className="text-sm font-semibold tracking-wide text-muted-foreground md:text-base">
-                  UBET.
-                </span>
-              </span>
-            </>
-          ) : null}
-          {stats.inkassoReg > 0 ? (
-            <>
-              <span
-                className="px-1 text-xl font-light text-muted-foreground/60 md:text-2xl"
-                aria-hidden
-              >
-                ·
-              </span>
-              <span
-                className="inline-flex items-center gap-2 tabular-nums text-violet-900"
-                title="Innkassovarsel registrert"
-              >
-                <Scale
-                  className="size-5 shrink-0 md:size-6"
-                  aria-hidden
-                />
-                <span className="text-2xl font-extrabold md:text-3xl">
-                  {stats.inkassoReg}
-                </span>
-                <span className="text-sm font-semibold tracking-wide md:text-base">
-                  INK.
-                </span>
-              </span>
-            </>
-          ) : null}
+    <section className={cn("overflow-hidden", RN_CARD_SHELL)}>
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 px-6 py-14 text-center md:py-16">
+          <p className="font-heading text-base font-semibold text-foreground">
+            Ingen treff i filteret
+          </p>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Velg et annet segment over, eller vis alle ubetalte.
+          </p>
         </div>
-
-        <div className="border-t border-rn-border-strong/35 pt-4 md:pt-5">
-          <div
-            role="tablist"
-            aria-label="Filtrer fakturaer"
-            className="flex flex-wrap gap-2 md:gap-3"
-          >
-            {FILTER_SPECS.map((spec) => {
-              const active = filter === spec.id;
-              return (
-                <button
-                  key={spec.id}
-                  type="button"
-                  role="tab"
-                  title={spec.title}
-                  aria-selected={active}
-                  onClick={() => setFilter(spec.id)}
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-[920px] w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+                <th className={invoicesTableHeadClass}>Kunde</th>
+                <th
                   className={cn(
-                    "min-h-12 shrink-0 rounded-2xl border-2 px-5 py-3 text-base font-bold tracking-tight transition-colors md:min-h-14 md:px-7 md:py-3.5 md:text-lg",
-                    active
-                      ? "border-success bg-success/15 text-rn-text-heading shadow-sm"
-                      : "border-rn-border-strong bg-card text-muted-foreground hover:border-rn-border-strong/80 hover:bg-muted/40",
+                    invoicesTableHeadClass,
+                    "hidden lg:table-cell",
                   )}
                 >
-                  {spec.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <section className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        {filtered.length === 0 ? (
-          <div className="px-6 py-14 text-center text-muted-foreground md:py-16">
-            Ingen rader i dette filteret.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-[880px] w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b border-rn-border-strong/50 bg-rn-surface-table-head">
-                  <th className={invoicesTableHeadClass}>Kunde</th>
-                  <th
-                    className={cn(
-                      invoicesTableHeadClass,
-                      "hidden lg:table-cell",
-                    )}
-                  >
-                    Arrangement
-                  </th>
-                  <th className={invoicesTableHeadClass}>Betalt</th>
-                  <th className={invoicesTableHeadClass}>Forfall / varsler</th>
-                  <th
-                    className={cn(
-                      invoicesTableHeadClass,
-                      "hidden text-right md:table-cell",
-                    )}
-                  >
-                    Restbeløp
-                  </th>
-                  <th
-                    className={cn(
-                      "w-[1%] whitespace-nowrap text-right",
-                      invoicesTableHeadClass,
-                    )}
-                  >
-                    <span className="sr-only">Faktura</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((r) => (
-                  <tr
-                    key={r.id}
-                    className="border-b border-rn-border-strong/40 transition-colors hover:bg-rn-surface-row-hover"
-                  >
-                    <td className={invoicesTableCellClass}>
-                      <div className="text-base font-semibold text-foreground md:text-lg">
+                  Arrangement
+                </th>
+                <th className={invoicesTableHeadClass}>Betaling</th>
+                <th className={cn(invoicesTableHeadClass, "min-w-48")}>
+                  Forfall
+                </th>
+                <th
+                  className={cn(
+                    invoicesTableHeadClass,
+                    "hidden text-right md:table-cell",
+                  )}
+                >
+                  Rest
+                </th>
+                <th
+                  className={cn(
+                    "w-[1%] whitespace-nowrap text-right",
+                    invoicesTableHeadClass,
+                  )}
+                >
+                  <span className="sr-only">Faktura og registrer betaling</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-rn-border-strong/50">
+              {filtered.map((r) => (
+                <tr
+                  key={r.id}
+                  className="transition-colors hover:bg-rn-surface-row-hover"
+                >
+                  <td className={invoicesTableCellClass}>
+                    <div className="min-w-0 max-w-64">
+                      <div className="truncate font-heading text-base font-semibold text-foreground">
                         {r.customerName}
                       </div>
                       {r.customerEmail ? (
-                        <div className="mt-1 text-sm text-muted-foreground">
+                        <div className="mt-0.5 truncate text-sm text-muted-foreground">
                           {r.customerEmail}
                         </div>
                       ) : null}
                       <div className="mt-2 text-sm text-muted-foreground lg:hidden">
-                        {r.eventType} · {r.eventDateLabel}
+                        <span className="font-medium text-foreground">
+                          {r.eventType}
+                        </span>
+                        <span className="text-muted-foreground"> · </span>
+                        <span className="tabular-nums">{r.eventDateLabel}</span>
                       </div>
-                      <div className="mt-2 text-base font-bold tabular-nums text-destructive md:hidden">
+                      <div className="mt-2 font-heading text-base font-bold tabular-nums text-destructive md:hidden">
                         {formatNok(r.remainingNok)}
+                        <div className="mt-0.5 text-xs font-normal text-muted-foreground">
+                          å betale
+                        </div>
                       </div>
-                    </td>
-                    <td
-                      className={cn(
-                        invoicesTableCellClass,
-                        "hidden text-sm text-muted-foreground lg:table-cell lg:text-base",
-                      )}
-                    >
-                      <div className="font-semibold text-foreground">
+                    </div>
+                  </td>
+                  <td
+                    className={cn(
+                      invoicesTableCellClass,
+                      "hidden lg:table-cell",
+                    )}
+                  >
+                    <div className="flex min-w-0 max-w-56 flex-col gap-2">
+                      <span className="inline-flex w-fit rounded-md border border-success/30 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-100 md:text-sm">
                         {r.eventType}
+                      </span>
+                      <div className="tabular-nums text-sm text-muted-foreground md:text-base">
+                        {r.eventDateLabel}
                       </div>
-                      <div className="tabular-nums">{r.eventDateLabel}</div>
                       {r.propertyName ? (
-                        <div className="mt-1 text-xs">{r.propertyName}</div>
-                      ) : null}
-                      {r.bookingReference ? (
-                        <div className="mt-1 text-xs text-muted-foreground">
-                          Ref: {r.bookingReference}
+                        <div className="text-xs font-medium text-muted-foreground md:text-sm">
+                          {r.propertyName}
                         </div>
                       ) : null}
-                    </td>
-                    <td className={invoicesTableCellClass}>
-                      <PaymentColumn row={r} />
-                    </td>
-                    <td className={invoicesTableCellClass}>
-                      <DueAndWarnings row={r} todayYmd={todayYmd} />
-                    </td>
-                    <td
-                      className={cn(
-                        invoicesTableCellClass,
-                        "hidden text-right md:table-cell",
-                      )}
-                    >
-                      <span className="text-lg font-bold tabular-nums text-destructive">
+                      {r.bookingReference ? (
+                        <div className="text-xs tabular-nums text-muted-foreground">
+                          Ref.&nbsp;{r.bookingReference}
+                        </div>
+                      ) : null}
+                    </div>
+                  </td>
+                  <td className={invoicesTableCellClass}>
+                    <PaymentColumn row={r} />
+                  </td>
+                  <td className={invoicesTableCellClass}>
+                    <DueAndWarnings row={r} todayYmd={todayYmd} />
+                  </td>
+                  <td
+                    className={cn(
+                      invoicesTableCellClass,
+                      "hidden text-right md:table-cell",
+                    )}
+                  >
+                    <div className="inline-block text-right">
+                      <div className="font-heading text-xl font-bold tabular-nums text-destructive md:text-2xl">
                         {formatNok(r.remainingNok)}
-                      </span>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        totalt {formatNok(r.totalNok)}
                       </div>
-                    </td>
-                    <td className={cn(invoicesTableCellClass, "text-right")}>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Faktura {formatNok(r.totalNok)}
+                      </p>
+                    </div>
+                  </td>
+                  <td className={cn(invoicesTableCellClass, "text-right")}>
+                    <div className="flex min-w-42 flex-col items-stretch gap-2 sm:min-w-44 sm:items-end">
+                      <MarkInvoicePaidButton
+                        row={r}
+                        canMark={canMarkInvoicesPaid}
+                        busyId={markingBookingId}
+                        onBusyChange={setMarkingBookingId}
+                      />
                       <Link
                         href={`/app/invoices/print/${r.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className={cn(
                           buttonVariants({ variant: "outline" }),
-                          "inline-flex h-11 items-center gap-2 rounded-xl border-2 border-rn-border-strong px-4 font-heading text-sm font-bold md:h-12 md:px-5 md:text-base",
+                          "inline-flex h-10 items-center justify-center gap-1.5 rounded-md border-2 border-rn-border-strong px-3 font-heading text-sm font-bold md:h-11 md:gap-2 md:px-4 md:text-base",
                         )}
                       >
                         Faktura
-                        <ExternalLink className="size-4 shrink-0 opacity-70" aria-hidden />
+                        <ExternalLink
+                          className="size-3.5 shrink-0 opacity-70 md:size-4"
+                          aria-hidden
+                        />
                       </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-    </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }

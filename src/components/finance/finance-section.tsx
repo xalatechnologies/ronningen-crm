@@ -5,6 +5,7 @@ import { AppPageHeader } from "@/components/layout/app-page-header";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -20,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { RN_SEGMENT_CONTROL } from "@/lib/rn-ui";
 import {
   transactionFormSchema,
   type TransactionFormInput,
@@ -32,6 +33,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowDownRight,
   ArrowUpRight,
+  Building2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -40,6 +43,7 @@ import {
   Pencil,
   Plus,
   PlusCircle,
+  Tag,
   TrendingDown,
   TrendingUp,
   Wallet,
@@ -53,10 +57,13 @@ import { toast } from "sonner";
 import type { TransactionListItem } from "./types";
 
 const financeTableHeadClass =
-  "px-6 py-4 text-sm font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5 md:text-base";
+  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const financeTableCellClass = "px-6 py-5 md:px-8 md:py-6";
 const filterControlClass =
-  "flex h-12 w-full rounded-xl border-2 border-rn-border-strong bg-card px-4 text-base font-medium focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25";
+  "flex h-12 w-full rounded-md border-2 border-rn-border-strong bg-card px-4 text-base font-medium focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25";
+
+const txDialogFieldLabel =
+  "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs";
 
 export type FinanceSectionProps = {
   transactions: TransactionListItem[];
@@ -86,6 +93,26 @@ function toLocalYmd(d: Date) {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+/** Normalize PostgREST `date` or ISO datetime to `yyyy-MM-dd` for string range checks. */
+function transactionYmd(isoOrDate: string): string {
+  const s = String(isoOrDate ?? "").trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  return s;
+}
+
+function mergeRangeWithYmd(
+  range: { from: string; to: string },
+  ymd: string,
+): { from: string; to: string } {
+  const y = transactionYmd(ymd);
+  let from = transactionYmd(range.from);
+  let to = transactionYmd(range.to);
+  if (from > to) [from, to] = [to, from];
+  if (y && y < from) from = y;
+  if (y && y > to) to = y;
+  return { from, to };
 }
 
 function defaultMonthRange() {
@@ -226,10 +253,15 @@ function TransactionFormInner({
   properties,
   existing = null,
   onClose,
+  onSaved,
 }: {
   properties: { id: string; name: string }[];
   existing?: TransactionListItem | null;
   onClose: () => void;
+  onSaved?: (payload: {
+    transactionDate: string;
+    propertyId: string;
+  }) => void;
 }) {
   const supabase = useSupabase();
   const router = useRouter();
@@ -245,7 +277,10 @@ function TransactionFormInner({
     defaultValues: transactionFormDefaults(properties, existing ?? null),
   });
 
-  const { register, handleSubmit, formState } = form;
+  const { register, handleSubmit, formState, setValue, watch } = form;
+  const txType = watch("type");
+  const transactionDate = watch("transactionDate");
+  const hiddenTransactionDateRegister = register("transactionDate");
 
   async function onSubmit(data: TransactionFormInput) {
     const payload = {
@@ -280,116 +315,247 @@ function TransactionFormInner({
       toast.success("Transaksjon lagret");
     }
 
+    onSaved?.({
+      transactionDate: data.transactionDate,
+      propertyId: data.propertyId,
+    });
+    await router.refresh();
     onClose();
-    router.refresh();
   }
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading md:text-2xl">
-          {isEdit ? "Rediger transaksjon" : "Ny transaksjon"}
-        </DialogTitle>
-      </DialogHeader>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
-          <Label>Lokale</Label>
-          <select
-            className={cn(filterControlClass, "appearance-none bg-background pr-10")}
-            aria-label="Lokale for transaksjonen"
-            {...register("propertyId")}
-          >
-            {properties.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          {formState.errors.propertyId ? (
-            <p className="text-xs text-destructive">
-              {formState.errors.propertyId.message}
-            </p>
-          ) : null}
+      <div className="border-b border-rn-border-strong/50 px-5 pb-4 pt-5 pr-12 sm:px-8 sm:pt-6 sm:pb-5 sm:pr-14">
+        <DialogHeader className="gap-2 text-left">
+          <DialogTitle className="font-heading text-2xl font-bold tracking-tight text-rn-text-heading">
+            {isEdit ? "Rediger transaksjon" : "Ny transaksjon"}
+          </DialogTitle>
+          <DialogDescription className="text-base leading-relaxed text-muted-foreground">
+            {isEdit
+              ? "Oppdater beløp, kategori eller dato. Endringen vises i transaksjonstabellen og påvirker summer i valgt periode."
+              : "Registrer en inntekt eller utgift knyttet til valgt lokale. Beløpet bør stemme med bank eller kvittering."}
+          </DialogDescription>
+        </DialogHeader>
+      </div>
+
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col"
+      >
+        <div className="space-y-6 px-5 py-6 sm:space-y-7 sm:px-8 sm:py-7">
+          <div className="space-y-2">
+            <Label className={txDialogFieldLabel} htmlFor={`tx-property-${categoryListId}`}>
+              Lokale
+            </Label>
+            <div className="relative">
+              <Building2
+                className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              <select
+                className={cn(
+                  filterControlClass,
+                  "appearance-none bg-background py-0 pr-11 pl-12",
+                )}
+                aria-label="Lokale for transaksjonen"
+                {...register("propertyId")}
+                id={`tx-property-${categoryListId}`}
+              >
+                {properties.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                className="pointer-events-none absolute top-1/2 right-3.5 size-5 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+            </div>
+            {formState.errors.propertyId ? (
+              <p className="text-sm text-destructive">
+                {formState.errors.propertyId.message}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <span className={cn(txDialogFieldLabel, "block")}>Type</span>
+            <div
+              className={cn(RN_SEGMENT_CONTROL, "flex w-full gap-1.5 p-1.5")}
+              role="group"
+              aria-label="Type transaksjon"
+            >
+              <input
+                type="radio"
+                value="income"
+                {...register("type")}
+                id={`tx-type-income-${categoryListId}`}
+                className="sr-only"
+              />
+              <label
+                htmlFor={`tx-type-income-${categoryListId}`}
+                className={cn(
+                  "flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border-2 px-4 py-3 font-heading text-base font-semibold transition-all outline-none sm:min-h-11",
+                  txType === "income"
+                    ? "border-rn-accent-border bg-success text-white shadow-md"
+                    : "border-transparent bg-transparent text-foreground hover:bg-muted/60",
+                )}
+              >
+                <TrendingUp className="size-5 shrink-0" aria-hidden />
+                Inntekt
+              </label>
+              <input
+                type="radio"
+                value="expense"
+                {...register("type")}
+                id={`tx-type-expense-${categoryListId}`}
+                className="sr-only"
+              />
+              <label
+                htmlFor={`tx-type-expense-${categoryListId}`}
+                className={cn(
+                  "flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border-2 px-4 py-3 font-heading text-base font-semibold transition-all outline-none sm:min-h-11",
+                  txType === "expense"
+                    ? "border-destructive/60 bg-destructive text-white shadow-md"
+                    : "border-transparent bg-transparent text-foreground hover:bg-muted/60",
+                )}
+              >
+                <TrendingDown className="size-5 shrink-0" aria-hidden />
+                Utgift
+              </label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-5">
+            <div className="space-y-2 sm:col-span-1">
+              <Label className={txDialogFieldLabel} htmlFor={`tx-cat-${categoryListId}`}>
+                Kategori
+              </Label>
+              <div className="relative">
+                <Tag
+                  className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden
+                />
+                <Input
+                  className="h-12 rounded-md border-2 border-rn-border-strong pl-12 text-base md:text-base focus-visible:border-success focus-visible:ring-success/25"
+                  list={categoryListId}
+                  placeholder="Velg eller skriv inn"
+                  {...register("category")}
+                  id={`tx-cat-${categoryListId}`}
+                />
+                <datalist id={categoryListId}>
+                  {CATEGORY_SUGGESTIONS.map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+              </div>
+              {formState.errors.category ? (
+                <p className="text-sm text-destructive">
+                  {formState.errors.category.message}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2 sm:col-span-1">
+              <Label className={txDialogFieldLabel} htmlFor={`tx-amt-${categoryListId}`}>
+                Beløp (NOK)
+              </Label>
+              <div className="relative">
+                <Wallet
+                  className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden
+                />
+                <Input
+                  className={cn(
+                    "h-12 rounded-md border-2 bg-background pl-12 text-base font-semibold tabular-nums transition-colors focus-visible:ring-2 md:text-base",
+                    txType === "expense"
+                      ? "border-destructive/50 focus-visible:border-destructive focus-visible:ring-destructive/20"
+                      : "border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25",
+                  )}
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  {...register("amount")}
+                  id={`tx-amt-${categoryListId}`}
+                />
+              </div>
+              {formState.errors.amount ? (
+                <p className="text-sm text-destructive">
+                  {formState.errors.amount.message}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {txType === "expense"
+                    ? "Utgift reduserer resultat i perioden."
+                    : "Inntekt øker resultat i perioden."}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label
+              className={txDialogFieldLabel}
+              htmlFor={`tx-desc-${categoryListId}`}
+            >
+              Beskrivelse <span className="font-normal normal-case">(valgfritt)</span>
+            </Label>
+            <Input
+              className="h-12 rounded-md border-2 border-rn-border-strong text-base md:text-base focus-visible:border-success focus-visible:ring-success/25"
+              placeholder="F.eks. Leie mai, reparasjon kjøkken"
+              {...register("description")}
+              id={`tx-desc-${categoryListId}`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className={txDialogFieldLabel} htmlFor={`tx-date-${categoryListId}`}>
+              Transaksjonsdato
+            </Label>
+            <DatePickerField
+              id={`tx-date-${categoryListId}`}
+              value={transactionDate}
+              onChange={(ymd) =>
+                setValue("transactionDate", ymd, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                })
+              }
+              variant="toolbar"
+              className="h-12 text-base"
+              aria-invalid={!!formState.errors.transactionDate}
+            />
+            <input
+              type="hidden"
+              {...hiddenTransactionDateRegister}
+              id={`tx-transactionDate-hidden-${categoryListId}`}
+            />
+            {formState.errors.transactionDate ? (
+              <p className="text-sm text-destructive">
+                {formState.errors.transactionDate.message}
+              </p>
+            ) : null}
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label>Type</Label>
-          <select
-            className={cn(filterControlClass, "appearance-none bg-background pr-10")}
-            aria-label="Type transaksjon"
-            {...register("type")}
-          >
-            <option value="income">Inntekt</option>
-            <option value="expense">Utgift</option>
-          </select>
-        </div>
-        <div className="space-y-2">
-          <Label>Kategori</Label>
-          <Input
-            className="h-12 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
-            list={categoryListId}
-            {...register("category")}
-          />
-          <datalist id={categoryListId}>
-            {CATEGORY_SUGGESTIONS.map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
-          {formState.errors.category ? (
-            <p className="text-xs text-destructive">
-              {formState.errors.category.message}
-            </p>
-          ) : null}
-        </div>
-        <div className="space-y-2">
-          <Label>Beskrivelse</Label>
-          <Input
-            className="h-12 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
-            placeholder="Valgfritt"
-            {...register("description")}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Beløp (NOK)</Label>
-          <Input
-            className="h-12 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
-            type="number"
-            min={0}
-            step={1}
-            {...register("amount")}
-          />
-          {formState.errors.amount ? (
-            <p className="text-xs text-destructive">
-              {formState.errors.amount.message}
-            </p>
-          ) : null}
-        </div>
-        <div className="space-y-2">
-          <Label>Dato</Label>
-          <Input
-            className="h-12 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
-            type="date"
-            {...register("transactionDate")}
-          />
-          {formState.errors.transactionDate ? (
-            <p className="text-xs text-destructive">
-              {formState.errors.transactionDate.message}
-            </p>
-          ) : null}
-        </div>
-        <DialogFooter className="gap-2 sm:justify-end">
+
+        <DialogFooter className="mx-0 mb-0 shrink-0 flex-col-reverse gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-5 py-4 sm:flex-row sm:justify-end sm:px-8 sm:py-5">
           <Button
             type="button"
             variant="outline"
-            className="h-12 rounded-xl border-2 border-rn-border-strong px-6 text-base font-semibold"
+            className="h-12 w-full rounded-md border-2 border-rn-border-strong px-6 text-base font-semibold sm:w-auto"
             onClick={onClose}
           >
             Avbryt
           </Button>
           <Button
             type="submit"
-            className="h-12 rounded-xl border-2 border-rn-accent-border bg-success px-6 font-heading text-base font-bold text-white hover:bg-rn-accent-fill-hover"
+            variant="success"
+            size="cta"
+            className="w-full sm:w-auto"
           >
-            {isEdit ? "Oppdater" : "Lagre"}
+            {isEdit ? "Oppdater" : "Lagre transaksjon"}
           </Button>
         </DialogFooter>
       </form>
@@ -409,6 +575,17 @@ export function FinanceSection({
   const [addOpen, setAddOpen] = useState(false);
   const [editRow, setEditRow] = useState<TransactionListItem | null>(null);
 
+  const afterTransactionSaved = useCallback(
+    (payload: { transactionDate: string; propertyId: string }) => {
+      setPage(1);
+      setPropertyId((current) =>
+        current !== "" && current !== payload.propertyId ? "" : current,
+      );
+      setRange((r) => mergeRangeWithYmd(r, payload.transactionDate));
+    },
+    [],
+  );
+
   const setDateFrom = useCallback((from: string) => {
     setRange((r) => ({ ...r, from }));
     setPage(1);
@@ -426,10 +603,8 @@ export function FinanceSection({
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
       if (propertyId && t.property_id !== propertyId) return false;
-      if (
-        t.transaction_date < period.from ||
-        t.transaction_date > period.to
-      ) {
+      const d = transactionYmd(t.transaction_date);
+      if (d < period.from || d > period.to) {
         return false;
       }
       return true;
@@ -451,9 +626,8 @@ export function FinanceSection({
     const { prevStart, prevEnd } = previousPeriodBounds(period.from, period.to);
     const prevRows = transactions.filter((t) => {
       if (propertyId && t.property_id !== propertyId) return false;
-      return (
-        t.transaction_date >= prevStart && t.transaction_date <= prevEnd
-      );
+      const d = transactionYmd(t.transaction_date);
+      return d >= prevStart && d <= prevEnd;
     });
     const curIncome = sumType(filtered, true);
     const curExpense = sumType(filtered, false);
@@ -474,16 +648,22 @@ export function FinanceSection({
 
   const { totalPages, currentPage, pageRows } = pagination;
 
-  const kpiCard = cn(
-    "flex flex-col justify-between p-6",
-    RN_CARD_SHELL,
-  );
+  const kpiTileClass =
+    "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
 
   return (
-    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-24 md:pb-8">
+    <div className="mx-auto flex w-full max-w-[1440px] flex-col pb-24 md:pb-8">
+      {loadError ? (
+        <div
+          className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
+          role="alert"
+        >
+          Kunne ikke laste data: {loadError}
+        </div>
+      ) : null}
       <AppPageHeader
+        className="mb-0"
         title="Finans"
-        description="Inntekter, utgifter og transaksjoner per lokale og periode."
         actions={
           <Button
             type="button"
@@ -496,228 +676,218 @@ export function FinanceSection({
                   ? "Legg til lokaler først"
                   : undefined
             }
-            className={cn(
-              buttonVariants({ variant: "default" }),
-              "h-12 gap-2 rounded-xl border-2 border-rn-accent-border bg-success px-6 font-heading text-base font-bold text-white shadow-md hover:bg-rn-accent-fill-hover",
-            )}
+            className={cn(buttonVariants({ variant: "success", size: "cta" }))}
           >
             <Plus className="size-5" aria-hidden />
             Ny transaksjon
           </Button>
         }
-      />
+        toolbar={
+          <>
+            <section className="flex flex-wrap items-end gap-4 md:gap-5">
+                <div className="min-w-[200px] flex-1 space-y-2">
+                  <Label className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs">
+                    Lokale
+                  </Label>
+                  <select
+                    value={propertyId}
+                    onChange={(e) => {
+                      setPropertyId(e.target.value);
+                      setPage(1);
+                    }}
+                    aria-label="Filtrer transaksjoner etter lokale"
+                    className={filterControlClass}
+                  >
+                    <option value="">Alle lokaler</option>
+                    {properties.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="min-w-[160px] flex-1 space-y-2">
+                  <Label
+                    htmlFor="finance-filter-from"
+                    className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs"
+                  >
+                    Fra dato
+                  </Label>
+                  <DatePickerField
+                    id="finance-filter-from"
+                    value={range.from}
+                    onChange={setDateFrom}
+                    variant="toolbar"
+                    className="h-12 text-base"
+                  />
+                </div>
+                <div className="min-w-[160px] flex-1 space-y-2">
+                  <Label
+                    htmlFor="finance-filter-to"
+                    className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs"
+                  >
+                    Til dato
+                  </Label>
+                  <DatePickerField
+                    id="finance-filter-to"
+                    value={range.to}
+                    onChange={setDateTo}
+                    variant="toolbar"
+                    className="h-12 text-base"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-12 gap-2 rounded-md border-2 border-rn-border-strong px-5 text-base font-semibold"
+                  onClick={() => {
+                    setRange(defaultMonthRange());
+                    setPropertyId("");
+                    setPage(1);
+                  }}
+                >
+                  <Filter className="size-5" aria-hidden />
+                  Denne måneden
+                </Button>
+              </section>
 
-      {loadError ? (
-        <div
-          className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
-          role="alert"
-        >
-          Kunne ikke laste data: {loadError}
-        </div>
-      ) : null}
+            {!loadError && properties.length === 0 ? (
+              <div
+                className="mt-6 border-t border-rn-border-strong/50 pt-6"
+                role="status"
+              >
+                <div className="rounded-md border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-50">
+                  Ingen lokaler er registrert. Uten lokale kan du ikke knytte transaksjoner.
+                  {" "}
+                  <Link
+                    href="/app/assets"
+                    className="font-semibold text-success underline underline-offset-2"
+                  >
+                    Åpne Aktiva
+                  </Link>
+                  {" "}for å legge til lokaler.
+                </div>
+              </div>
+            ) : null}
 
-      {!loadError && properties.length === 0 ? (
-        <div
-          className="rounded-xl border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-50"
-          role="status"
-        >
-          Ingen lokaler er registrert. Uten lokale kan du ikke knytte transaksjoner.
-          {" "}
-          <Link
-            href="/app/assets"
-            className="font-semibold text-success underline underline-offset-2"
-          >
-            Åpne Aktiva
-          </Link>
-          {" "}for å legge til lokaler.
-        </div>
-      ) : null}
+            {range.from > range.to ? (
+              <div className="mt-6 border-t border-rn-border-strong/50 pt-4">
+                <p className="text-sm text-muted-foreground md:text-base">
+                  «Til dato» er før «fra dato» — vi viser likevel alle transaksjoner mellom
+                  disse datoene.
+                </p>
+              </div>
+            ) : null}
 
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <section className="flex flex-wrap items-end gap-4 px-6 py-5 md:gap-5 md:px-8 md:py-6">
-        <div className="min-w-[200px] flex-1 space-y-2">
-          <Label className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs">
-            Lokale
-          </Label>
-          <select
-            value={propertyId}
-            onChange={(e) => {
-              setPropertyId(e.target.value);
-              setPage(1);
-            }}
-            aria-label="Filtrer transaksjoner etter lokale"
-            className={filterControlClass}
-          >
-            <option value="">Alle lokaler</option>
-            {properties.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="min-w-[160px] flex-1 space-y-2">
-          <Label
-            htmlFor="finance-filter-from"
-            className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs"
-          >
-            Fra dato
-          </Label>
-          <DatePickerField
-            id="finance-filter-from"
-            value={range.from}
-            onChange={setDateFrom}
-            variant="toolbar"
-            className="h-12 text-base"
-          />
-        </div>
-        <div className="min-w-[160px] flex-1 space-y-2">
-          <Label
-            htmlFor="finance-filter-to"
-            className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs"
-          >
-            Til dato
-          </Label>
-          <DatePickerField
-            id="finance-filter-to"
-            value={range.to}
-            onChange={setDateTo}
-            variant="toolbar"
-            className="h-12 text-base"
-          />
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-12 gap-2 rounded-xl border-2 border-rn-border-strong px-5 text-base font-semibold"
-          onClick={() => {
-            setRange(defaultMonthRange());
-            setPropertyId("");
-            setPage(1);
-          }}
-        >
-          <Filter className="size-5" aria-hidden />
-          Denne måneden
-        </Button>
-      </section>
-      </div>
-
-      {range.from > range.to ? (
-        <p className="text-sm text-muted-foreground md:text-base">
-          «Til dato» er før «fra dato» — vi viser likevel alle transaksjoner mellom
-          disse datoene.
-        </p>
-      ) : null}
-
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className={kpiCard}>
-          <div className="mb-3 flex items-start justify-between">
-            <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-              Inntekter
-            </span>
-            <TrendingUp
-              className="size-9 rounded-lg bg-success/15 p-2 text-success md:size-10"
-              aria-hidden
-            />
-          </div>
-          <p className="font-heading text-3xl font-extrabold text-success tabular-nums sm:text-4xl">
-            {formatNok(income)}
-          </p>
-          {comparison.dIncome != null ? (
-            <p
-              className={cn(
-                "mt-3 flex items-center gap-1 text-sm font-semibold md:text-base",
-                comparison.dIncome >= 0 ? "text-success" : "text-destructive",
-              )}
+            <section
+              className="mt-6 border-t border-rn-border-strong/50 pt-6 sm:pt-8"
+              aria-label="Nøkkeltall finans"
             >
-              {comparison.dIncome >= 0 ? (
-                <ArrowUpRight className="size-4 md:size-5" aria-hidden />
+              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3">
+            <div className={kpiTileClass}>
+              <div className="mb-3 flex items-start justify-between">
+                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  Inntekter
+                </span>
+                <TrendingUp
+                  className="size-9 rounded-md bg-success/15 p-2 text-success md:size-10"
+                  aria-hidden
+                />
+              </div>
+              <p className="font-heading text-3xl font-extrabold text-success tabular-nums sm:text-4xl">
+                {formatNok(income)}
+              </p>
+              {comparison.dIncome != null ? (
+                <p
+                  className={cn(
+                    "mt-3 flex items-center gap-1 text-sm font-semibold md:text-base",
+                    comparison.dIncome >= 0 ? "text-success" : "text-destructive",
+                  )}
+                >
+                  {comparison.dIncome >= 0 ? (
+                    <ArrowUpRight className="size-4 md:size-5" aria-hidden />
+                  ) : (
+                    <ArrowDownRight className="size-4 md:size-5" aria-hidden />
+                  )}
+                  {Math.abs(comparison.dIncome).toFixed(1)}% vs. forrige periode
+                </p>
               ) : (
-                <ArrowDownRight className="size-4 md:size-5" aria-hidden />
+                <p className="mt-3 text-sm text-muted-foreground md:text-base">—</p>
               )}
-              {Math.abs(comparison.dIncome).toFixed(1)}% vs. forrige periode
-            </p>
-          ) : (
-            <p className="mt-3 text-sm text-muted-foreground md:text-base">—</p>
-          )}
-        </div>
+            </div>
 
-        <div className={kpiCard}>
-          <div className="mb-3 flex items-start justify-between">
-            <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-              Utgifter
-            </span>
-            <TrendingDown
-              className="size-9 rounded-lg bg-destructive/15 p-2 text-destructive md:size-10"
-              aria-hidden
-            />
-          </div>
-          <p className="font-heading text-3xl font-extrabold text-rn-text-heading tabular-nums sm:text-4xl">
-            {formatNok(expense)}
-          </p>
-          {comparison.dExpense != null ? (
-            <p
-              className={cn(
-                "mt-3 flex items-center gap-1 text-sm font-semibold md:text-base",
-                comparison.dExpense <= 0 ? "text-success" : "text-destructive",
-              )}
-            >
-              {comparison.dExpense <= 0 ? (
-                <ArrowDownRight className="size-4 md:size-5" aria-hidden />
+            <div className={kpiTileClass}>
+              <div className="mb-3 flex items-start justify-between">
+                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  Utgifter
+                </span>
+                <TrendingDown
+                  className="size-9 rounded-md bg-destructive/15 p-2 text-destructive md:size-10"
+                  aria-hidden
+                />
+              </div>
+              <p className="font-heading text-3xl font-extrabold text-rn-text-heading tabular-nums sm:text-4xl">
+                {formatNok(expense)}
+              </p>
+              {comparison.dExpense != null ? (
+                <p
+                  className={cn(
+                    "mt-3 flex items-center gap-1 text-sm font-semibold md:text-base",
+                    comparison.dExpense <= 0 ? "text-success" : "text-destructive",
+                  )}
+                >
+                  {comparison.dExpense <= 0 ? (
+                    <ArrowDownRight className="size-4 md:size-5" aria-hidden />
+                  ) : (
+                    <ArrowUpRight className="size-4 md:size-5" aria-hidden />
+                  )}
+                  {Math.abs(comparison.dExpense).toFixed(1)}% vs. forrige periode
+                </p>
               ) : (
-                <ArrowUpRight className="size-4 md:size-5" aria-hidden />
+                <p className="mt-3 text-sm text-muted-foreground md:text-base">—</p>
               )}
-              {Math.abs(comparison.dExpense).toFixed(1)}% vs. forrige periode
-            </p>
-          ) : (
-            <p className="mt-3 text-sm text-muted-foreground md:text-base">—</p>
-          )}
-        </div>
+            </div>
 
-        <div
-          className={cn(
-            kpiCard,
-            "border-rn-accent-border bg-success text-white shadow-rn-hero-success",
-          )}
-        >
-          <div className="mb-3 flex items-start justify-between">
-            <span className="text-[11px] font-semibold tracking-wider text-white/80 uppercase">
-              Resultat
-            </span>
-            <Wallet
-              className="size-9 rounded-lg bg-white/10 p-2 text-primary-light md:size-10"
-              aria-hidden
-            />
+            <div className="flex flex-col justify-between rounded-md border-2 border-rn-accent-border bg-success p-6 text-white shadow-rn-hero-success">
+              <div className="mb-3 flex items-start justify-between">
+                <span className="text-[11px] font-semibold tracking-wider text-white/80 uppercase">
+                  Resultat
+                </span>
+                <Wallet
+                  className="size-9 rounded-md bg-white/10 p-2 text-primary-light md:size-10"
+                  aria-hidden
+                />
+              </div>
+              <p
+                className={cn(
+                  "font-heading text-3xl font-extrabold tabular-nums sm:text-4xl",
+                  net >= 0 ? "text-white" : "text-red-200",
+                )}
+              >
+                {net >= 0 ? "+" : ""}
+                {formatNok(net)}
+              </p>
+              {margin != null ? (
+                <p className="mt-3 text-sm font-semibold text-primary-light md:text-base">
+                  Netto margin: {margin.toFixed(1)} %
+                </p>
+              ) : (
+                <p className="mt-3 text-sm text-white/80 md:text-base">Ingen inntekt i perioden</p>
+              )}
+            </div>
           </div>
-          <p
-            className={cn(
-              "font-heading text-3xl font-extrabold tabular-nums sm:text-4xl",
-              net >= 0 ? "text-white" : "text-red-200",
-            )}
-          >
-            {net >= 0 ? "+" : ""}
-            {formatNok(net)}
-          </p>
-          {margin != null ? (
-            <p className="mt-3 text-sm font-semibold text-primary-light md:text-base">
-              Netto margin: {margin.toFixed(1)} %
-            </p>
-          ) : (
-            <p className="mt-3 text-sm text-white/80 md:text-base">Ingen inntekt i perioden</p>
-          )}
-        </div>
-      </section>
+            </section>
 
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:px-8 md:py-6">
-          <h2 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
-            Transaksjoner
-          </h2>
-          <div className="flex gap-2">
+            <div className="mt-6 border-t border-rn-border-strong/50 pt-6 sm:pt-8">
+              <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong pb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:pb-6">
+                <h2 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
+                  Transaksjoner
+                </h2>
+                <div className="flex gap-2">
             <Button
               type="button"
               variant="outline"
-              className="size-12 shrink-0 rounded-xl border-2 border-rn-border-strong"
+              className="size-12 shrink-0 rounded-md border-2 border-rn-border-strong"
               onClick={() => downloadTransactionsCsv(filtered)}
               disabled={filtered.length === 0}
               aria-label="Last ned CSV"
@@ -728,7 +898,7 @@ export function FinanceSection({
         </div>
 
         {filtered.length === 0 ? (
-          <div className="space-y-3 p-8 text-center text-base text-muted-foreground md:p-10 md:text-lg">
+          <div className="space-y-3 p-8 text-center text-base text-muted-foreground md:p-10">
             <p>Ingen transaksjoner i valgt periode.</p>
             {properties.length === 0 ? (
               <p>
@@ -790,7 +960,7 @@ export function FinanceSection({
                     <TableCell
                       className={cn(
                         financeTableCellClass,
-                        "max-w-[220px] text-base font-semibold text-rn-text-heading md:text-lg",
+                        "max-w-[220px] text-base font-semibold text-rn-text-heading",
                       )}
                     >
                       <span className="line-clamp-2">
@@ -833,7 +1003,7 @@ export function FinanceSection({
                     <TableCell
                       className={cn(
                         financeTableCellClass,
-                        "text-right text-base font-bold tabular-nums md:text-lg",
+                        "text-right text-base font-bold tabular-nums",
                         inc ? "text-success" : "text-destructive",
                       )}
                     >
@@ -848,7 +1018,7 @@ export function FinanceSection({
                           type="button"
                           variant="ghost"
                           size="icon-sm"
-                          className="size-10 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
+                          className="size-10 shrink-0 rounded-md text-muted-foreground hover:text-foreground"
                           aria-label={`Rediger transaksjon ${formatDisplayDate(r.transaction_date)}`}
                           onClick={() => setEditRow(r)}
                         >
@@ -864,7 +1034,7 @@ export function FinanceSection({
         )}
 
         {filtered.length > 0 ? (
-          <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 text-base font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6 md:text-lg">
+          <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 text-base font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
             <span>
               Viser {pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0}–
               {Math.min(currentPage * PAGE_SIZE, filtered.length)} av{" "}
@@ -874,7 +1044,7 @@ export function FinanceSection({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 gap-1 rounded-xl border-2 border-rn-border-strong px-4 text-base font-semibold"
+                className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
                 disabled={currentPage <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
@@ -887,7 +1057,7 @@ export function FinanceSection({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 gap-1 rounded-xl border-2 border-rn-border-strong px-4 text-base font-semibold"
+                className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
@@ -897,15 +1067,22 @@ export function FinanceSection({
             </div>
           </div>
         ) : null}
-      </div>
+            </div>
+            </>
+          }
+        />
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="max-w-md rounded-2xl" showCloseButton>
+        <DialogContent
+          className="w-[calc(100%-1.25rem)] max-w-lg gap-0 overflow-hidden rounded-md border-2 border-rn-border-strong bg-card p-0 text-foreground shadow-xl sm:max-w-xl"
+          showCloseButton
+        >
           {addOpen && properties.length > 0 ? (
             <TransactionFormInner
               key="create-transaction"
               properties={properties}
               existing={null}
+              onSaved={afterTransactionSaved}
               onClose={() => setAddOpen(false)}
             />
           ) : null}
@@ -918,12 +1095,16 @@ export function FinanceSection({
           if (!open) setEditRow(null);
         }}
       >
-        <DialogContent className="max-w-md rounded-2xl" showCloseButton>
+        <DialogContent
+          className="w-[calc(100%-1.25rem)] max-w-lg gap-0 overflow-hidden rounded-md border-2 border-rn-border-strong bg-card p-0 text-foreground shadow-xl sm:max-w-xl"
+          showCloseButton
+        >
           {editRow && properties.length > 0 ? (
             <TransactionFormInner
               key={editRow.id}
               properties={properties}
               existing={editRow}
+              onSaved={afterTransactionSaved}
               onClose={() => setEditRow(null)}
             />
           ) : null}

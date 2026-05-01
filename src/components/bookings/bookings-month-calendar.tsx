@@ -1,0 +1,412 @@
+"use client";
+
+import type { BookingListRow, BookingStatus } from "@/components/bookings/types";
+import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
+import { ChevronLeft, ChevronRight, Users } from "lucide-react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
+
+const WEEKDAYS_NB = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"] as const;
+
+function pad2(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+function formatNokShort(n: number) {
+  return `${new Intl.NumberFormat("nb-NO").format(Math.round(n))} NOK`;
+}
+
+/** Bakgrunn for hele dagen — samme prioritering som statusfarger (pending synlig). */
+function dayCellFillClass(bookings: BookingListRow[]): string {
+  if (bookings.length === 0) return "";
+  const active = bookings.filter((b) => b.status !== "cancelled");
+  if (active.length === 0) {
+    return "bg-rose-100/85 ring-1 ring-inset ring-rose-300/40";
+  }
+  if (active.some((b) => b.status === "pending")) {
+    return "bg-amber-100/85 ring-1 ring-inset ring-amber-400/35";
+  }
+  return "bg-emerald-100/85 ring-1 ring-inset ring-emerald-400/35";
+}
+
+function bookingRowButtonClass(status: BookingStatus) {
+  switch (status) {
+    case "confirmed":
+      return "text-emerald-950 hover:bg-white/55 focus-visible:ring-emerald-600/50";
+    case "pending":
+      return "text-amber-950 hover:bg-white/55 focus-visible:ring-amber-600/50";
+    case "cancelled":
+      return "text-rose-900/90 line-through decoration-rose-700/70 hover:bg-white/40 focus-visible:ring-rose-500/40";
+    default:
+      return "text-foreground hover:bg-white/50";
+  }
+}
+
+function BookingCalendarHoverPreview({
+  row,
+  hideFooter,
+}: {
+  row: BookingListRow;
+  hideFooter?: boolean;
+}) {
+  return (
+    <div className="space-y-2 text-left">
+      <div>
+        <p className="font-heading text-sm font-bold text-rn-text-heading md:text-base">
+          {row.customer}
+        </p>
+        <p className="mt-0.5 text-xs text-muted-foreground tabular-nums md:text-sm">
+          {row.date}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <BookingStatusBadge status={row.status} />
+      </div>
+      <div className="space-y-1 border-t border-border pt-2 text-xs md:text-sm">
+        <p>
+          <span className="font-semibold text-rn-text-body">Arrangement:</span>{" "}
+          <span className="text-foreground">{row.eventType}</span>
+          {row.festType?.trim() ? (
+            <>
+              {" "}
+              · <span className="font-medium">{row.festType.trim()}</span>
+            </>
+          ) : null}
+        </p>
+        <p className="flex items-center gap-1.5">
+          <Users className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+          <span>
+            <span className="font-semibold text-rn-text-body">Gjester:</span>{" "}
+            {row.guests}
+          </span>
+        </p>
+        <p>
+          <span className="font-semibold text-rn-text-body">Beløp:</span>{" "}
+          <span className="tabular-nums font-semibold text-foreground">
+            {formatNokShort(row.totalNok)}
+          </span>
+          {row.paidLabel ? (
+            <span className="text-muted-foreground">
+              {" "}
+              · {row.paidLabel}
+            </span>
+          ) : null}
+        </p>
+      </div>
+      {hideFooter ? null : (
+        <p className="text-[10px] leading-snug text-muted-foreground md:text-xs">
+          Klikk for full detalj
+        </p>
+      )}
+    </div>
+  );
+}
+
+function DayBookingsHoverPopupContent({ bookings }: { bookings: BookingListRow[] }) {
+  if (bookings.length === 0) return null;
+  if (bookings.length === 1) {
+    return <BookingCalendarHoverPreview row={bookings[0]} />;
+  }
+  return (
+    <div className="max-h-[min(70vh,22rem)] space-y-0 overflow-y-auto text-left">
+      <p className="mb-2 text-xs font-semibold text-muted-foreground">
+        {bookings.length} bookinger denne dagen
+      </p>
+      {bookings.map((row, i) => (
+        <div
+          key={row.id}
+          className={cn(i > 0 && "mt-3 border-t border-border pt-3")}
+        >
+          <BookingCalendarHoverPreview row={row} hideFooter />
+        </div>
+      ))}
+      <p className="mt-3 text-[10px] leading-snug text-muted-foreground md:text-xs">
+        Klikk på en booking for full detalj
+      </p>
+    </div>
+  );
+}
+
+export function BookingsMonthCalendar({
+  rows,
+  totalBookingsCount,
+  onSelectBooking,
+}: {
+  rows: BookingListRow[];
+  /** Alle bookinger (ufiltrert), for tom tilstandstekst. */
+  totalBookingsCount: number;
+  onSelectBooking: (id: string) => void;
+}) {
+  const [cursor, setCursor] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+
+  const year = cursor.getFullYear();
+  const monthIndex = cursor.getMonth();
+
+  const monthLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat("nb-NO", {
+        month: "long",
+        year: "numeric",
+      }).format(cursor),
+    [cursor],
+  );
+
+  const rowsInMonth = useMemo(() => {
+    const prefix = `${year}-${pad2(monthIndex + 1)}`;
+    return rows.filter((r) => r.eventDateIso.startsWith(prefix));
+  }, [rows, year, monthIndex]);
+
+  const byDay = useMemo(() => {
+    const m = new Map<string, BookingListRow[]>();
+    for (const r of rowsInMonth) {
+      const d = r.eventDateIso;
+      const list = m.get(d) ?? [];
+      list.push(r);
+      m.set(d, list);
+    }
+    for (const list of m.values()) {
+      list.sort((a, b) => a.customer.localeCompare(b.customer, "nb"));
+    }
+    return m;
+  }, [rowsInMonth]);
+
+  const { daysInMonth, startPad, todayYmd } = useMemo(() => {
+    const first = new Date(year, monthIndex, 1);
+    const dim = new Date(year, monthIndex + 1, 0).getDate();
+    const start = (first.getDay() + 6) % 7;
+    const t = new Date();
+    const ty = `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`;
+    return { daysInMonth: dim, startPad: start, todayYmd: ty };
+  }, [year, monthIndex]);
+
+  function prevMonth() {
+    setCursor(new Date(year, monthIndex - 1, 1));
+  }
+
+  function nextMonth() {
+    setCursor(new Date(year, monthIndex + 1, 1));
+  }
+
+  function goToday() {
+    const d = new Date();
+    setCursor(new Date(d.getFullYear(), d.getMonth(), 1));
+  }
+
+  const filteredCount = rows.length;
+
+  const emptyMonthMessage =
+    rowsInMonth.length === 0
+      ? totalBookingsCount === 0
+        ? "Ingen bookinger ennå."
+        : filteredCount === 0
+          ? "Ingen treff med søk eller filter."
+          : "Ingen bookinger i denne måneden."
+      : null;
+
+  const headerCells = WEEKDAYS_NB.map((wd) => (
+    <div
+      key={wd}
+      className="bg-rn-surface-table-head px-1 py-2 text-center text-[10px] font-bold tracking-wider text-rn-text-column uppercase sm:px-2 md:text-xs"
+    >
+      {wd}
+    </div>
+  ));
+
+  const dayCells: ReactNode[] = [];
+
+  for (let i = 0; i < startPad; i++) {
+    dayCells.push(
+      <div
+        key={`pad-${i}`}
+        className="min-h-[5.5rem] bg-rn-surface-segment/35 sm:min-h-[6.5rem] md:min-h-[7.5rem]"
+      />,
+    );
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const ymd = `${year}-${pad2(monthIndex + 1)}-${pad2(day)}`;
+    const dayBookings = byDay.get(ymd) ?? [];
+    const isToday = ymd === todayYmd;
+
+    const hasBookings = dayBookings.length > 0;
+
+    const cellClass = cn(
+      "flex min-h-[5.5rem] flex-col gap-1 p-1 sm:min-h-[6.5rem] md:min-h-[7.5rem] md:p-1.5",
+      hasBookings ? dayCellFillClass(dayBookings) : "bg-card",
+      isToday &&
+        cn("ring-2 ring-inset ring-success", !hasBookings && "bg-success/5"),
+    );
+
+    const dayInner = (
+      <>
+        <div
+          className={cn(
+            "flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold sm:size-7 sm:text-sm md:size-8 md:text-base",
+            isToday
+              ? "bg-success text-white shadow-sm"
+              : hasBookings
+                ? "bg-white/55 text-rn-text-heading shadow-sm backdrop-blur-[2px]"
+                : "text-rn-text-heading",
+          )}
+        >
+          {day}
+        </div>
+        <div
+          className={cn(
+            "flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain rounded-md [-webkit-overflow-scrolling:touch]",
+            hasBookings && "min-h-[2.25rem] px-0.5 py-0.5",
+          )}
+        >
+          {dayBookings.map((b) => (
+            <button
+              key={b.id}
+              type="button"
+              className={cn(
+                "w-full rounded-md px-1 py-0.5 text-left text-[10px] font-semibold leading-tight transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-0 sm:text-[11px] md:px-1.5 md:py-1 md:text-xs",
+                bookingRowButtonClass(b.status),
+                b.dimmed && "opacity-60",
+              )}
+              onClick={() => onSelectBooking(b.id)}
+              aria-label={`${b.customer}, ${b.date}${b.festType?.trim() ? `, ${b.festType.trim()}` : ""}`}
+            >
+              <span className="line-clamp-2">{b.customer}</span>
+            </button>
+          ))}
+        </div>
+      </>
+    );
+
+    dayCells.push(
+      hasBookings ? (
+        <PopoverPrimitive.Root key={ymd} modal={false}>
+          <PopoverPrimitive.Trigger
+            openOnHover
+            delay={180}
+            closeDelay={220}
+            nativeButton={false}
+            aria-label={`${dayBookings.length} booking${dayBookings.length === 1 ? "" : "er"} ${day}. dato: vis detaljer ved peker, klikk navn for å åpne.`}
+            render={(props) => (
+              <div
+                {...props}
+                className={cn(
+                  props.className,
+                  cellClass,
+                  "cursor-default text-left outline-none focus-visible:ring-2 focus-visible:ring-success/40 focus-visible:ring-offset-0",
+                )}
+              >
+                {dayInner}
+              </div>
+            )}
+          />
+          <PopoverPrimitive.Portal>
+            <PopoverPrimitive.Positioner
+              className="isolate z-80 outline-none"
+              positionMethod="fixed"
+              side="top"
+              align="center"
+              sideOffset={10}
+              collisionAvoidance={{
+                side: "shift",
+                align: "shift",
+                fallbackAxisSide: "none",
+              }}
+            >
+              <PopoverPrimitive.Popup
+                initialFocus={(openType) => openType === "keyboard"}
+                className={cn(
+                  "max-w-[min(20rem,calc(100vw-1.5rem))] origin-(--transform-origin) rounded-md border-2 border-rn-border-strong bg-popover p-3 text-popover-foreground shadow-rn-card outline-none",
+                  "pointer-events-none select-none",
+                  "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+                )}
+              >
+                <DayBookingsHoverPopupContent bookings={dayBookings} />
+              </PopoverPrimitive.Popup>
+            </PopoverPrimitive.Positioner>
+          </PopoverPrimitive.Portal>
+        </PopoverPrimitive.Root>
+      ) : (
+        <div key={ymd} className={cellClass}>
+          {dayInner}
+        </div>
+      ),
+    );
+  }
+
+  const tail = dayCells.length % 7;
+  if (tail !== 0) {
+    for (let i = 0; i < 7 - tail; i++) {
+      dayCells.push(
+        <div
+          key={`trail-${i}`}
+          className="min-h-[5.5rem] bg-rn-surface-segment/35 sm:min-h-[6.5rem] md:min-h-[7.5rem]"
+        />,
+      );
+    }
+  }
+
+  return (
+    <div className="border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="font-heading text-xl font-bold capitalize tracking-tight text-rn-text-heading md:text-2xl">
+          {monthLabel}
+        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 rounded-md border-2 border-rn-border-strong px-4 text-sm font-semibold"
+            onClick={goToday}
+          >
+            I dag
+          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
+              onClick={prevMonth}
+              aria-label="Forrige måned"
+            >
+              <ChevronLeft className="size-[18px]" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
+              onClick={nextMonth}
+              aria-label="Neste måned"
+            >
+              <ChevronRight className="size-[18px]" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto pb-1">
+        <div
+          className="min-w-[280px] overflow-hidden rounded-md border-2 border-rn-border-strong bg-border/80 shadow-sm"
+          aria-label={`Bookinger, ${monthLabel}`}
+        >
+          <div className="grid grid-cols-7 gap-px">
+            {headerCells}
+            {dayCells}
+          </div>
+        </div>
+      </div>
+
+      {emptyMonthMessage ? (
+        <p className="mt-5 text-center text-base text-muted-foreground">
+          {emptyMonthMessage}
+        </p>
+      ) : null}
+    </div>
+  );
+}

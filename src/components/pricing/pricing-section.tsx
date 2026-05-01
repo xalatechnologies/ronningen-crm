@@ -22,7 +22,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { canManageFinance } from "@/lib/role-access";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
   pricingPackageFormSchema,
   type PricingPackageFormInput,
@@ -47,7 +46,7 @@ import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
 const pricingTableHeadClass =
-  "px-6 py-4 text-sm font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5 md:text-base";
+  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const pricingTableCellClass = "px-6 py-5 md:px-8 md:py-6";
 
 type PackageRow = Database["public"]["Tables"]["packages"]["Row"];
@@ -202,7 +201,7 @@ function PricingCatalogFields({
         <div className="space-y-2">
           <Label>Navn</Label>
           <Input
-            className="h-12 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
+            className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
             {...register("name")}
           />
           {formState.errors.name ? (
@@ -214,7 +213,7 @@ function PricingCatalogFields({
         <div className="space-y-2">
           <Label>Beskrivelse / punkter</Label>
           <Textarea
-            className="min-h-28 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
+            className="min-h-28 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
             placeholder="Valgfri undertittel først (uten – foran), deretter ett punkt per linje med – foran."
             {...register("description")}
           />
@@ -222,7 +221,7 @@ function PricingCatalogFields({
         <div className="space-y-2">
           <Label>Pris (NOK)</Label>
           <Input
-            className="h-12 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
+            className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
             type="number"
             min={0}
             step={100}
@@ -246,10 +245,7 @@ function PricingCatalogFields({
           <Button type="button" variant="outline" onClick={onClose}>
             Avbryt
           </Button>
-          <Button
-            type="submit"
-            className="border-2 border-rn-accent-border bg-success text-white hover:bg-rn-accent-fill-hover"
-          >
+          <Button type="submit" variant="success" size="cta">
             {isEdit ? "Lagre" : "Opprett"}
           </Button>
         </DialogFooter>
@@ -271,7 +267,7 @@ function PricingCatalogDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-2xl" showCloseButton>
+      <DialogContent className="max-w-md rounded-md" showCloseButton>
         {open ? (
           <PricingCatalogFields
             key={row?.id ?? `new-${kind}`}
@@ -322,52 +318,48 @@ export function PricingSection({
   }, [sortedPackages]);
 
   const packageCardLight = cn(
-    "relative flex min-h-[420px] flex-col overflow-hidden rounded-2xl border-2 border-stone-200 bg-card p-7 shadow-sm transition-all md:p-8",
+    "relative flex min-h-[420px] flex-col overflow-hidden rounded-md border-2 border-stone-200 bg-card p-9 shadow-sm transition-all sm:p-10 md:p-11 lg:p-12",
   );
   const packageCardDark = cn(
-    "relative flex min-h-[420px] flex-col overflow-hidden rounded-2xl border-2 border-stone-800 bg-stone-900 p-7 text-white shadow-xl ring-1 ring-white/10 md:p-8",
+    "relative flex min-h-[420px] flex-col overflow-hidden rounded-md border-2 border-stone-800 bg-stone-900 p-9 text-white shadow-xl ring-1 ring-white/10 sm:p-10 md:p-11 lg:p-12",
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-24 md:pb-8">
-      <AppPageHeader
-        title="Priser"
-        description="Administrer pakkenivåer og tilleggstjenester. Priser brukes som referanse i katalog og ved booking."
-        actions={
-          <Button
-            type="button"
-            onClick={() => setPackageDialog({ open: true, row: null })}
-            disabled={!canEdit}
-            title={
-              !canEdit
-                ? "Krever eier-, admin- eller regnskapstilgang"
-                : undefined
-            }
-            className={cn(
-              buttonVariants({ variant: "default" }),
-              "h-12 gap-2 rounded-xl border-2 border-rn-accent-border bg-success px-6 font-heading text-base font-bold text-white shadow-md hover:bg-rn-accent-fill-hover",
-            )}
+    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-10 pb-24 sm:gap-12 md:gap-14 md:pb-8">
+      <div className="flex flex-col">
+        {loadError ? (
+          <div
+            className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
+            role="alert"
           >
-            <Plus className="size-5" aria-hidden />
-            Ny pakke
-          </Button>
-        }
-      />
-
-      {loadError ? (
-        <div
-          className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
-          role="alert"
-        >
-          Kunne ikke laste priser: {loadError}
-        </div>
-      ) : null}
-
-      <section>
-        <h2 className="mb-6 font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
-          Pakkenivåer
-        </h2>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 xl:gap-8">
+            Kunne ikke laste priser: {loadError}
+          </div>
+        ) : null}
+        <AppPageHeader
+          className="mb-0"
+          title="Priser"
+          actions={
+            <Button
+              type="button"
+              onClick={() => setPackageDialog({ open: true, row: null })}
+              disabled={!canEdit}
+              title={
+                !canEdit
+                  ? "Krever eier-, admin- eller regnskapstilgang"
+                  : undefined
+              }
+              className={cn(buttonVariants({ variant: "success", size: "cta" }))}
+            >
+              <Plus className="size-5" aria-hidden />
+              Ny pakke
+            </Button>
+          }
+          toolbar={
+            <>
+              <h2 className="mb-8 font-heading text-xl font-bold tracking-tight text-rn-text-heading md:mb-10 md:text-2xl">
+                Pakkenivåer
+              </h2>
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-10 xl:grid-cols-3 xl:gap-12">
         {sortedPackages.map((pkg) => {
           const { tagline, features } = parsePackageDescription(pkg.description);
           const isPopular = pkg.id === popularId;
@@ -393,7 +385,7 @@ export function PricingSection({
                 <button
                   type="button"
                   className={cn(
-                    "absolute top-4 left-4 z-10 rounded-lg p-2.5 transition-colors",
+                    "absolute top-4 left-4 z-10 rounded-md p-2.5 transition-colors",
                     isPopular
                       ? "text-white/70 hover:bg-white/10 hover:text-white"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -485,39 +477,39 @@ export function PricingSection({
           );
         })}
       </div>
-      </section>
 
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:px-8 md:py-6">
-          <h3 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
-            Tilleggstjenester
-          </h3>
-          <Button
-            type="button"
-            variant="ghost"
-            className={cn(
-              "h-12 gap-2 self-start rounded-xl px-4 text-base font-bold text-success hover:bg-rn-surface-row-hover hover:text-success sm:self-auto md:px-5",
-            )}
-            onClick={() => setServiceDialog({ open: true, row: null })}
-            disabled={!canEdit}
-            title={
-              !canEdit
-                ? "Krever eier-, admin- eller regnskapstilgang"
-                : undefined
-            }
-          >
-            <Plus className="size-5" aria-hidden />
-            Ny tjeneste
-          </Button>
-        </div>
+              <div className="mt-8 border-t border-rn-border-strong/50 pt-8 sm:mt-10 sm:pt-10">
+                <div className="flex flex-col gap-4 border-b-2 border-rn-border-strong pb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:pb-8">
+                  <h3 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
+                    Tilleggstjenester
+                  </h3>
+                  <Button
+                    type="button"
+                    onClick={() => setServiceDialog({ open: true, row: null })}
+                    disabled={!canEdit}
+                    title={
+                      !canEdit
+                        ? "Krever eier-, admin- eller regnskapstilgang"
+                        : undefined
+                    }
+                    className={cn(
+                      buttonVariants({ variant: "success", size: "cta" }),
+                      "shrink-0 self-start sm:self-auto",
+                    )}
+                  >
+                    <Plus className="size-5" aria-hidden />
+                    Ny tjeneste
+                  </Button>
+                </div>
 
-        {services.length === 0 ? (
-          <p className="p-8 text-center text-base text-muted-foreground md:p-10 md:text-lg">
-            Ingen tilleggstjenester. Aktive rader her vises som valgfrie tillegg
-            på Ny booking (navn og pris kan du endre når som helst).
-          </p>
-        ) : (
-          <Table>
+                {services.length === 0 ? (
+                  <p className="py-8 text-center text-base text-muted-foreground md:py-12 lg:py-14">
+                    Ingen tilleggstjenester. Aktive rader her vises som valgfrie
+                    tillegg på Ny booking (navn og pris kan du endre når som
+                    helst).
+                  </p>
+                ) : (
+                  <Table>
             <TableHeader>
               <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
                 <TableHead className={pricingTableHeadClass}>Tjeneste</TableHead>
@@ -542,10 +534,10 @@ export function PricingSection({
                       className={cn(pricingTableCellClass, "whitespace-normal")}
                     >
                       <div className="flex items-center gap-4">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-success/20 bg-rn-surface-gradient-from text-success md:size-11">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-success/20 bg-rn-surface-gradient-from text-success md:size-11">
                           <Icon className="size-5 md:size-6" aria-hidden />
                         </div>
-                        <span className="font-heading text-base font-semibold text-success md:text-lg">
+                        <span className="font-heading text-base font-semibold text-success">
                           {svc.name}
                         </span>
                       </div>
@@ -556,7 +548,7 @@ export function PricingSection({
                         "whitespace-normal text-muted-foreground",
                       )}
                     >
-                      <span className="text-base md:text-lg">
+                      <span className="text-base">
                         {formatNok(svc.price)}
                       </span>
                       {svc.description?.trim() ? (
@@ -588,7 +580,7 @@ export function PricingSection({
                         type="button"
                         variant="ghost"
                         size="icon-sm"
-                        className="size-11 rounded-lg text-muted-foreground disabled:opacity-40 md:size-12"
+                        className="size-11 rounded-md text-muted-foreground disabled:opacity-40 md:size-12"
                         disabled={!canEdit}
                         title={
                           !canEdit
@@ -608,7 +600,11 @@ export function PricingSection({
               })}
             </TableBody>
           </Table>
-        )}
+                )}
+              </div>
+            </>
+          }
+        />
       </div>
 
       <PricingCatalogDialog

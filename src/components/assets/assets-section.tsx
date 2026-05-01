@@ -5,6 +5,7 @@ import { AppPageHeader } from "@/components/layout/app-page-header";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -26,6 +27,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import {
+  type AssetStatusBucket,
+  assetInsuranceBucket,
+  assetRowInsuranceIsCovered,
+  assetStatusBucket,
+} from "@/lib/asset-status-bucket";
 import { assetFormSchema, type AssetFormInput } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -34,6 +41,7 @@ import {
   Armchair,
   Box,
   Building2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Coffee,
@@ -42,24 +50,54 @@ import {
   Package,
   Plus,
   Search,
-  ShieldCheck,
   Snowflake,
-  TrendingUp,
   Wrench,
   Wind,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useId,
+  useMemo,
+  useState,
+  type ComponentPropsWithoutRef,
+} from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
 import type { AssetListItem } from "./types";
 
 const assetsTableHeadClass =
-  "px-6 py-4 text-sm font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5 md:text-base";
+  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const assetsTableCellClass = "px-6 py-5 md:px-8 md:py-6";
 const assetFormControlClass =
-  "flex h-12 w-full rounded-xl border-2 border-rn-border-strong bg-background px-4 text-base font-medium focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25";
+  "flex h-12 w-full rounded-md border-2 border-rn-border-strong bg-background px-4 text-base font-medium focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25";
+
+const AssetFormSelect = forwardRef<
+  HTMLSelectElement,
+  ComponentPropsWithoutRef<"select">
+>(function AssetFormSelect({ className, children, ...props }, ref) {
+  return (
+    <div className="relative">
+      <select
+        ref={ref}
+        className={cn(
+          assetFormControlClass,
+          "cursor-pointer appearance-none bg-background pr-11",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </select>
+      <ChevronDown
+        className="pointer-events-none absolute top-1/2 right-3.5 size-5 -translate-y-1/2 text-muted-foreground"
+        aria-hidden
+      />
+    </div>
+  );
+});
 
 export type AssetsSectionProps = {
   assets: AssetListItem[];
@@ -71,7 +109,7 @@ export type AssetsSectionProps = {
 
 const PAGE_SIZE = 20;
 
-const STATUS_QUICK_FILTERS: { id: "all" | StatusBucket; label: string }[] = [
+const STATUS_QUICK_FILTERS: { id: "all" | AssetStatusBucket; label: string }[] = [
   { id: "all", label: "Alle" },
   { id: "operational", label: "I drift" },
   { id: "maintenance", label: "Vedlikehold" },
@@ -94,43 +132,8 @@ function formatNok(n: number) {
   }).format(n);
 }
 
-type StatusBucket = "operational" | "maintenance" | "replace";
-
-function statusBucket(condition: string | null): StatusBucket {
-  const c = (condition ?? "").toLowerCase();
-  if (
-    c.includes("utmerket") ||
-    c.includes("excellent") ||
-    c.includes("god") ||
-    c.includes("good") ||
-    c.includes("ny") ||
-    !c
-  ) {
-    return "operational";
-  }
-  if (
-    c.includes("fair") ||
-    c.includes("akseptabel") ||
-    c.includes("middels") ||
-    c.includes("vedlikehold") ||
-    c.includes("maintenance")
-  ) {
-    return "maintenance";
-  }
-  if (
-    c.includes("dårlig") ||
-    c.includes("poor") ||
-    c.includes("bytt") ||
-    c.includes("replace") ||
-    c.includes("avvik")
-  ) {
-    return "replace";
-  }
-  return "maintenance";
-}
-
 function conditionPillClass(condition: string | null) {
-  const b = statusBucket(condition);
+  const b = assetStatusBucket(condition);
   if (b === "operational")
     return "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200";
   if (b === "maintenance")
@@ -142,28 +145,18 @@ function insurancePresentation(status: string | null): {
   safeLabel: string;
   tone: "ok" | "warn" | "bad";
 } {
-  const raw = (status ?? "").trim();
-  const s = raw.toLowerCase();
-  if (!raw || s === "ukjent") {
-    return { safeLabel: "Ukjent", tone: "warn" };
-  }
-  if (
-    s.includes("forsikret") ||
-    s.includes("insured") ||
-    s.includes("ja") ||
-    s === "yes"
-  ) {
+  const bucket = assetInsuranceBucket(status);
+  if (bucket === "covered") {
     return { safeLabel: "Forsikret", tone: "ok" };
   }
-  if (
-    s.includes("ikke forsikret") ||
-    s.includes("not insured") ||
-    s.includes("nei") ||
-    s === "no"
-  ) {
+  if (bucket === "excluded") {
     return { safeLabel: "Ikke forsikret", tone: "bad" };
   }
-  return { safeLabel: raw, tone: "warn" };
+  if (bucket === "unknown") {
+    return { safeLabel: "Ukjent", tone: "warn" };
+  }
+  const raw = (status ?? "").replaceAll("\u00a0", " ").trim();
+  return { safeLabel: raw || "Ukjent", tone: "warn" };
 }
 
 function csvEscape(s: string) {
@@ -218,20 +211,31 @@ const INSURANCE_PRESETS = [
 function AssetFormFields({
   properties,
   row,
+  suggestedPropertyId,
   onClose,
 }: {
   properties: { id: string; name: string }[];
   row: AssetListItem | null;
+  /** Når ny rad: forhåndsvelg lokale fra aktiv liste-filter. */
+  suggestedPropertyId?: string;
   onClose: () => void;
 }) {
   const supabase = useSupabase();
   const router = useRouter();
   const isEdit = row != null;
 
+  const defaultProperty =
+    row?.property_id ??
+    (suggestedPropertyId &&
+    properties.some((p) => p.id === suggestedPropertyId)
+      ? suggestedPropertyId
+      : properties[0]?.id) ??
+    "";
+
   const form = useForm<AssetFormInput>({
     resolver: zodResolver(assetFormSchema) as Resolver<AssetFormInput>,
     defaultValues: {
-      propertyId: row?.property_id ?? properties[0]?.id ?? "",
+      propertyId: defaultProperty,
       name: row?.name ?? "",
       quantity: row?.quantity ?? 1,
       value: row?.value ?? 0,
@@ -239,6 +243,13 @@ function AssetFormFields({
       insuranceStatus: row?.insurance_status ?? "Ukjent",
     },
   });
+
+  const idProperty = useId();
+  const idName = useId();
+  const idQty = useId();
+  const idValue = useId();
+  const idCondition = useId();
+  const idInsurance = useId();
 
   const conditionOptions = useMemo(() => {
     const c = row?.condition?.trim();
@@ -257,6 +268,7 @@ function AssetFormFields({
   }, [row?.insurance_status]);
 
   const { register, handleSubmit, formState, setValue, watch } = form;
+  const { isSubmitting } = formState;
   const conditionVal = watch("condition");
   const insuranceVal = watch("insuranceStatus");
 
@@ -300,123 +312,187 @@ function AssetFormFields({
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading md:text-2xl">
+      <DialogHeader className="space-y-0 border-b border-rn-border-strong/60 pb-5 pr-10 text-left sm:pr-12">
+        <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading sm:text-2xl">
           {title}
         </DialogTitle>
+        <DialogDescription className="sr-only">
+          {isEdit ? "Skjema for å oppdatere aktivum." : "Skjema for å registrere nytt aktivum."}
+        </DialogDescription>
       </DialogHeader>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
-          <Label>Lokale</Label>
-          <select
-            className={cn(assetFormControlClass, "appearance-none bg-background pr-10")}
-            aria-label="Lokale"
-            {...register("propertyId")}
-          >
-            {properties.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          {formState.errors.propertyId ? (
-            <p className="text-xs text-destructive">
-              {formState.errors.propertyId.message}
-            </p>
-          ) : null}
-        </div>
-        <div className="space-y-2">
-          <Label>Navn</Label>
-          <Input
-            className="h-12 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
-            {...register("name")}
-          />
-          {formState.errors.name ? (
-            <p className="text-xs text-destructive">
-              {formState.errors.name.message}
-            </p>
-          ) : null}
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col gap-6 pt-6"
+      >
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Antall</Label>
-            <Input
-              className="h-12 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
-              type="number"
-              min={0}
-              {...register("quantity")}
-            />
-            {formState.errors.quantity ? (
-              <p className="text-xs text-destructive">
-                {formState.errors.quantity.message}
+            <Label
+              htmlFor={idProperty}
+              className="text-sm font-semibold text-foreground"
+            >
+              Lokale
+            </Label>
+            <AssetFormSelect
+              id={idProperty}
+              aria-invalid={!!formState.errors.propertyId}
+              aria-label="Lokale"
+              {...register("propertyId")}
+            >
+              {properties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </AssetFormSelect>
+            {formState.errors.propertyId ? (
+              <p className="text-sm text-destructive" role="alert">
+                {formState.errors.propertyId.message}
               </p>
             ) : null}
           </div>
           <div className="space-y-2">
-            <Label>Verdi (NOK)</Label>
+            <Label htmlFor={idName} className="text-sm font-semibold text-foreground">
+              Navn
+            </Label>
             <Input
-              className="h-12 rounded-xl border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
-              type="number"
-              min={0}
-              step={100}
-              {...register("value")}
+              id={idName}
+              aria-invalid={!!formState.errors.name}
+              className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
+              {...register("name")}
             />
-            {formState.errors.value ? (
-              <p className="text-xs text-destructive">
-                {formState.errors.value.message}
+            {formState.errors.name ? (
+              <p className="text-sm text-destructive" role="alert">
+                {formState.errors.name.message}
               </p>
-            ) : (
-              <p className="text-sm text-muted-foreground md:text-base">
-                Total for linjen (ofte antall × enhetsverdi) — brukes i sum og
-                forsikringsoversikt.
-              </p>
-            )}
+            ) : null}
           </div>
         </div>
-        <div className="space-y-2">
-          <Label>Tilstand</Label>
-          <select
-            className={cn(assetFormControlClass, "appearance-none bg-background pr-10")}
-            aria-label="Tilstand"
-            value={conditionVal ?? ""}
-            onChange={(e) => setValue("condition", e.target.value)}
-          >
-            {conditionOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor={idQty} className="text-sm font-semibold text-foreground">
+                Antall
+              </Label>
+              <Input
+                id={idQty}
+                aria-invalid={!!formState.errors.quantity}
+                className="h-12 rounded-md border-2 border-rn-border-strong text-base tabular-nums focus-visible:border-success focus-visible:ring-success/25"
+                type="number"
+                min={0}
+                step={1}
+                inputMode="numeric"
+                {...register("quantity", {
+                  setValueAs: (v) => {
+                    if (v === "" || v == null) return 0;
+                    const n = Number(v);
+                    return Number.isFinite(n) ? n : 0;
+                  },
+                })}
+              />
+              {formState.errors.quantity ? (
+                <p className="text-sm text-destructive" role="alert">
+                  {formState.errors.quantity.message}
+                </p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={idValue} className="text-sm font-semibold text-foreground">
+                Verdi{" "}
+                <span className="font-normal text-muted-foreground">(NOK)</span>
+              </Label>
+              <Input
+                id={idValue}
+                aria-invalid={!!formState.errors.value}
+                className="h-12 rounded-md border-2 border-rn-border-strong text-base tabular-nums focus-visible:border-success focus-visible:ring-success/25"
+                min={0}
+                step={100}
+                type="number"
+                inputMode="numeric"
+                {...register("value", {
+                  setValueAs: (v) => {
+                    if (v === "" || v == null) return 0;
+                    const n = Number(v);
+                    return Number.isFinite(n) ? n : 0;
+                  },
+                })}
+              />
+              {formState.errors.value ? (
+                <p className="text-sm text-destructive" role="alert">
+                  {formState.errors.value.message}
+                </p>
+              ) : null}
+            </div>
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label>Forsikring</Label>
-          <select
-            className={cn(assetFormControlClass, "appearance-none bg-background pr-10")}
-            aria-label="Forsikringsstatus"
-            value={insuranceVal ?? ""}
-            onChange={(e) => setValue("insuranceStatus", e.target.value)}
-          >
-            {insuranceOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label
+                htmlFor={idCondition}
+                className="text-sm font-semibold text-foreground"
+              >
+                Tilstand
+              </Label>
+              <AssetFormSelect
+                id={idCondition}
+                aria-label="Tilstand"
+                value={conditionVal ?? ""}
+                onChange={(e) => setValue("condition", e.target.value)}
+              >
+                {conditionOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </AssetFormSelect>
+            </div>
+            <div className="space-y-2">
+              <Label
+                htmlFor={idInsurance}
+                className="text-sm font-semibold text-foreground"
+              >
+                Forsikring
+              </Label>
+              <AssetFormSelect
+                id={idInsurance}
+                aria-label="Forsikringsstatus"
+                value={insuranceVal ?? ""}
+                onChange={(e) => setValue("insuranceStatus", e.target.value)}
+              >
+                {insuranceOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </AssetFormSelect>
+            </div>
+          </div>
         </div>
-        <DialogFooter className="gap-2 sm:justify-end">
+
+        <DialogFooter className="-mx-6 -mb-6 mt-2 gap-3 border-t border-rn-border-strong/60 bg-muted/40 px-6 py-4 sm:-mx-6 sm:justify-end">
           <Button
             type="button"
             variant="outline"
-            className="h-12 rounded-xl border-2 border-rn-border-strong px-6 text-base font-semibold"
+            className="h-12 rounded-md border-2 border-rn-border-strong px-6 text-base font-semibold"
             onClick={onClose}
+            disabled={isSubmitting}
           >
             Avbryt
           </Button>
           <Button
             type="submit"
-            className="h-12 rounded-xl border-2 border-rn-accent-border bg-success px-6 font-heading text-base font-bold text-white hover:bg-rn-accent-fill-hover"
+            variant="success"
+            size="cta"
+            disabled={isSubmitting}
+            className="disabled:opacity-60"
           >
-            {isEdit ? "Lagre" : "Opprett"}
+            {isSubmitting
+              ? "Lagrer …"
+              : isEdit
+                ? "Lagre"
+                : "Opprett aktivum"}
           </Button>
         </DialogFooter>
       </form>
@@ -436,7 +512,7 @@ export function AssetsSection({
   const [query, setQuery] = useState("");
   const [propertyId, setPropertyId] = useState("");
   const [statusFilter, setStatusFilter] = useState<
-    "all" | StatusBucket
+    "all" | AssetStatusBucket
   >("all");
   const [page, setPage] = useState(1);
   const [dialog, setDialog] = useState<{
@@ -448,7 +524,7 @@ export function AssetsSection({
     const q = query.trim().toLowerCase();
     return assets.filter((a) => {
       if (propertyId && a.property_id !== propertyId) return false;
-      if (statusFilter !== "all" && statusBucket(a.condition) !== statusFilter) {
+      if (statusFilter !== "all" && assetStatusBucket(a.condition) !== statusFilter) {
         return false;
       }
       if (q) {
@@ -492,30 +568,26 @@ export function AssetsSection({
     let totalValue = 0;
     let totalUnits = 0;
     let insuredValue = 0;
-    let insuredRowCount = 0;
+    let uninsuredValue = 0;
     const counts = { operational: 0, maintenance: 0, replace: 0 };
     for (const a of assets) {
       const v = Number(a.value);
       const q = Number(a.quantity);
       totalValue += v;
       totalUnits += q;
-      counts[statusBucket(a.condition)] += 1;
-      if (insurancePresentation(a.insurance_status).tone === "ok") {
+      counts[assetStatusBucket(a.condition)] += 1;
+      if (assetRowInsuranceIsCovered(a.insurance_status)) {
         insuredValue += v;
-        insuredRowCount += 1;
+      } else {
+        uninsuredValue += v;
       }
     }
-    const attentionRows = counts.maintenance + counts.replace;
-    const insuredPct =
-      totalValue > 0 ? Math.round((insuredValue / totalValue) * 100) : null;
     return {
       totalValue,
       totalUnits,
       counts,
       insuredValue,
-      insuredRowCount,
-      attentionRows,
-      insuredPct,
+      uninsuredValue,
       rowCount: assets.length,
     };
   }, [assets]);
@@ -546,225 +618,131 @@ export function AssetsSection({
 
   return (
     <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-24 md:pb-8">
-      <AppPageHeader
-        title="Aktiva"
-        description="Inventar og verdivurdering per lokale — tilstand og forsikring."
-        actions={
-          <Button
-            type="button"
-            onClick={() => setDialog({ open: true, row: null })}
-            disabled={!canEdit || properties.length === 0}
-            title={
-              !canEdit
-                ? "Krever eier- eller administrator-tilgang"
-                : properties.length === 0
-                  ? "Legg til lokaler først"
-                  : undefined
-            }
-            className={cn(
-              buttonVariants({ variant: "default" }),
-              "h-12 gap-2 rounded-xl border-2 border-rn-accent-border bg-success px-6 font-heading text-base font-bold text-white shadow-md hover:bg-rn-accent-fill-hover",
-            )}
-          >
-            <Plus className="size-5" aria-hidden />
-            Nytt aktivum
-          </Button>
-        }
-      />
-
-      {loadError ? (
-        <div
-          className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
-          role="alert"
-        >
-          Kunne ikke laste data: {loadError}
-        </div>
-      ) : null}
-
-      {!loadError && properties.length === 0 ? (
-        <div
-          className="rounded-xl border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-50"
-          role="status"
-        >
-          Det finnes ingen lokaler ennå. Aktiva må knyttes til et lokale — legg inn
-          eiendommer i databasen (eller kontakt administrator) før du registrerer
-          inventar.
-        </div>
-      ) : null}
-
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div
-          className={cn(
-            RN_CARD_SHELL,
-            "relative flex flex-col justify-between overflow-hidden p-6 md:p-7",
-          )}
-        >
-          <div
-            className="pointer-events-none absolute -top-12 -right-12 size-48 rounded-full bg-rn-surface-gradient-from opacity-40"
-            aria-hidden
-          />
-          <div className="relative">
-            <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs">
-              <TrendingUp className="size-4 text-success md:size-5" aria-hidden />
-              Total verdi
-            </div>
-            <p className="font-heading text-3xl font-extrabold text-success tabular-nums sm:text-4xl">
-              {formatNok(stats.totalValue)}
-            </p>
-            <p className="mt-3 text-sm text-muted-foreground md:text-base">
-              Summen av «Verdi (NOK)» per rad — ikke antall × enhetspris med mindre du
-              legger det inn slik i hver rad.
-            </p>
-          </div>
-          <div className="relative mt-4 flex flex-wrap gap-2">
-            <span className="rounded-full border border-success/25 bg-rn-surface-gradient-from px-3 py-1.5 text-xs font-semibold text-success md:text-sm">
-              {stats.rowCount} {stats.rowCount === 1 ? "post" : "poster"}
-            </span>
-            <span className="rounded-full border border-rn-border-strong/60 bg-muted/40 px-3 py-1.5 text-xs font-medium text-foreground md:text-sm">
-              {stats.totalUnits} enheter
-            </span>
-          </div>
-          {hasActiveFilters ? (
-            <div className="relative mt-3 rounded-xl border border-rn-border-strong/60 bg-muted/30 px-3 py-2 text-sm md:text-base">
-              <span className="font-semibold text-rn-text-heading">Utvalg: </span>
-              {formatNok(filteredStats.totalValue)}
-              <span className="text-muted-foreground"> · </span>
-              {filteredStats.totalUnits} enheter
-              <span className="text-muted-foreground">
-                {" "}
-                ({filtered.length}{" "}
-                {filtered.length === 1 ? "post" : "poster"})
-              </span>
-            </div>
-          ) : null}
-        </div>
-
-        <div className={cn(RN_CARD_SHELL, "flex flex-col gap-4 p-6 md:p-7")}>
-          <h3 className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs">
-            Tilstand
-          </h3>
-          <div className="space-y-3 text-sm md:text-base">
-            <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <span
-                  className="size-2.5 shrink-0 rounded-full bg-emerald-500 md:size-3"
-                  aria-hidden
-                />
-                I drift
-              </span>
-              <span className="font-heading text-xl font-bold text-foreground tabular-nums md:text-2xl">
-                {stats.counts.operational}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <span
-                  className="size-2.5 shrink-0 rounded-full bg-amber-500 md:size-3"
-                  aria-hidden
-                />
-                Vedlikehold
-              </span>
-              <span className="font-heading text-xl font-bold text-foreground tabular-nums md:text-2xl">
-                {stats.counts.maintenance}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <span
-                  className="size-2.5 shrink-0 rounded-full bg-red-500 md:size-3"
-                  aria-hidden
-                />
-                Bytte
-              </span>
-              <span className="font-heading text-xl font-bold text-foreground tabular-nums md:text-2xl">
-                {stats.counts.replace}
-              </span>
-            </div>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-1 h-12 w-full gap-2 rounded-xl border-2 border-rn-border-strong text-base font-semibold"
-            onClick={() => {
-              setStatusFilter("maintenance");
-              setPage(1);
-            }}
-          >
-            <Wrench className="size-5" aria-hidden />
-            Vis vedlikehold
-          </Button>
-        </div>
-
-        <div className={cn(RN_CARD_SHELL, "flex flex-col gap-3 p-6 md:p-7")}>
-          <div className="flex items-center gap-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs">
-            <ShieldCheck className="size-4 text-success md:size-5" aria-hidden />
-            Forsikring
-          </div>
-          <p className="font-heading text-3xl font-extrabold text-foreground tabular-nums sm:text-4xl">
-            {formatNok(stats.insuredValue)}
-          </p>
-          <p className="text-sm text-muted-foreground md:text-base">
-            {stats.insuredRowCount} av {stats.rowCount}{" "}
-            {stats.rowCount === 1 ? "linje" : "linjer"} markert som forsikret
-            {stats.insuredPct != null ? (
-              <>
-                {" "}
-                <span className="text-foreground">({stats.insuredPct}% av verdi)</span>
-              </>
-            ) : null}
-          </p>
-        </div>
-
-        <div
-          className={cn(
-            RN_CARD_SHELL,
-            "flex flex-col justify-between gap-4 p-6 md:p-7",
-            stats.attentionRows > 0 &&
-              "border-2 border-amber-500/45 bg-amber-500/[0.07]",
-          )}
-        >
-          <div>
-            <h3 className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs">
-              Oppfølging
-            </h3>
-            {stats.attentionRows > 0 ? (
-              <p className="mt-3 text-base text-foreground md:text-lg">
-                <span className="font-heading text-3xl font-bold tabular-nums text-amber-900 sm:text-4xl dark:text-amber-100">
-                  {stats.attentionRows}
-                </span>{" "}
-                aktiva trenger vedlikehold eller utskifting.
-              </p>
-            ) : (
-              <p className="mt-3 text-sm text-muted-foreground md:text-base">
-                Ingen aktiva er markert som vedlikehold eller bytte.
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-12 rounded-xl border-2 border-rn-border-strong text-base font-semibold"
-              onClick={() => {
-                setStatusFilter("replace");
-                setPage(1);
-              }}
-            >
-              Vis bytteliste
-            </Button>
-            {hasActiveFilters ? (
+      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+        <div className="px-4 pt-4 pb-3 sm:px-5 sm:pt-5 sm:pb-4 lg:px-6">
+          <AppPageHeader
+            className="mb-0 gap-3 md:gap-4"
+            surface="default"
+            title="Aktiva"
+            actions={
               <Button
                 type="button"
-                variant="ghost"
-                className="h-12 rounded-xl text-base font-medium text-muted-foreground hover:text-foreground"
-                onClick={resetFilters}
+                onClick={() => setDialog({ open: true, row: null })}
+                disabled={!canEdit || properties.length === 0}
+                title={
+                  !canEdit
+                    ? "Krever eier- eller administrator-tilgang"
+                    : properties.length === 0
+                      ? "Legg til lokaler først"
+                      : undefined
+                }
+                className={cn(buttonVariants({ variant: "success", size: "cta" }))}
               >
-                Nullstill filtre
+                <Plus className="size-5" aria-hidden />
+                Nytt aktivum
               </Button>
-            ) : null}
-          </div>
+            }
+          />
         </div>
-      </section>
+
+        {loadError ? (
+          <div
+            className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
+            role="alert"
+          >
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base">
+              Kunne ikke laste data: {loadError}
+            </div>
+          </div>
+        ) : null}
+
+        {!loadError && properties.length === 0 ? (
+          <div
+            className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
+            role="status"
+          >
+            <div className="rounded-md border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-50">
+              Det finnes ingen lokaler ennå. Aktiva må knyttes til et lokale — legg inn
+              eiendommer i databasen (eller kontakt administrator) før du registrerer
+              inventar.
+            </div>
+          </div>
+        ) : null}
+
+        {!loadError && properties.length > 0 && assets.length > 0 ? (
+          <section
+            className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
+            aria-label="Sammendrag aktiva"
+          >
+            <div className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  Total verdi
+                </p>
+                <p className="font-heading text-3xl font-extrabold text-success tabular-nums sm:text-4xl">
+                  {formatNok(stats.totalValue)}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {stats.rowCount}{" "}
+                  {stats.rowCount === 1 ? "registrering" : "registreringer"} ·{" "}
+                  {stats.totalUnits}{" "}
+                  {stats.totalUnits === 1 ? "enhet" : "enheter"}
+                </p>
+              </div>
+              <dl className="grid grid-cols-2 gap-x-8 gap-y-5 sm:items-end sm:gap-x-10 md:grid-cols-3 lg:grid-cols-5 lg:gap-x-8 xl:gap-x-12">
+                <div>
+                  <dt className="text-sm font-medium text-muted-foreground md:text-base">
+                    I drift
+                  </dt>
+                  <dd className="font-heading text-2xl font-bold tabular-nums text-foreground md:text-3xl">
+                    {stats.counts.operational}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-muted-foreground md:text-base">
+                    Vedlikehold
+                  </dt>
+                  <dd className="font-heading text-2xl font-bold tabular-nums text-foreground md:text-3xl">
+                    {stats.counts.maintenance}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-muted-foreground md:text-base">
+                    Bytte
+                  </dt>
+                  <dd className="font-heading text-2xl font-bold tabular-nums text-foreground md:text-3xl">
+                    {stats.counts.replace}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-muted-foreground md:text-base">
+                    Forsikret verdi
+                  </dt>
+                  <dd className="font-heading text-2xl font-bold tabular-nums text-foreground md:text-3xl">
+                    {formatNok(stats.insuredValue)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-muted-foreground md:text-base">
+                    Uforsikret verdi
+                  </dt>
+                  <dd className="font-heading text-2xl font-bold tabular-nums text-foreground md:text-3xl">
+                    {formatNok(stats.uninsuredValue)}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+            {hasActiveFilters ? (
+              <p className="mt-4 border-t border-rn-border-strong/60 pt-4 text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Filtrert:</span>{" "}
+                {formatNok(filteredStats.totalValue)} · {filteredStats.totalUnits}{" "}
+                enheter ({filtered.length}{" "}
+                {filtered.length === 1 ? "linje" : "linjer"})
+              </p>
+            ) : null}
+          </section>
+        ) : null}
+      </div>
 
       <section
         className={cn(
@@ -772,137 +750,137 @@ export function AssetsSection({
           RN_CARD_SHELL,
         )}
       >
-        <div className="flex flex-nowrap items-center gap-3 overflow-x-auto border-b-2 border-rn-border-strong bg-card px-6 py-5 sm:gap-4 md:px-8 md:py-6">
-          <div className="flex shrink-0 items-baseline gap-2 pr-1">
-            <h2 className="font-heading text-xl font-bold whitespace-nowrap text-rn-text-heading md:text-2xl">
-              Inventar
-            </h2>
-            {assets.length === 0 ? (
-              <span className="hidden text-base text-muted-foreground sm:inline md:text-lg">
-                Ingen data
-              </span>
-            ) : (
-              <span className="text-base whitespace-nowrap text-muted-foreground md:text-lg">
-                <span className="font-semibold text-foreground">
-                  {filtered.length}{" "}
-                  {filtered.length === 1 ? "post" : "poster"}
+        <div className="border-b-2 border-rn-border-strong bg-card px-4 py-3 sm:px-6 md:px-8 md:py-4">
+          <div className="flex min-h-11 flex-nowrap items-center gap-2 overflow-x-auto sm:min-h-12 sm:gap-3 md:gap-4">
+            <div className="flex shrink-0 items-center gap-2 pr-1">
+              <h2 className="font-heading text-lg font-bold tracking-tight text-rn-text-heading whitespace-nowrap md:text-xl">
+                Inventar
+              </h2>
+              {assets.length === 0 ? (
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                  Ingen data
                 </span>
-                {hasActiveFilters ? (
-                  <span>
-                    {" "}
-                    <span className="text-muted-foreground">
-                      av {assets.length}
-                    </span>
-                  </span>
-                ) : null}
-              </span>
-            )}
-          </div>
+              ) : hasActiveFilters ? (
+                <span
+                  className="text-sm tabular-nums text-muted-foreground whitespace-nowrap"
+                  title="Synlige av totalt antall linjer"
+                >
+                  {filtered.length}/{assets.length}
+                </span>
+              ) : null}
+            </div>
 
-          <div className="relative min-w-40 flex-1 basis-48">
-            <Search
-              className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground"
-              aria-hidden
-            />
-            <Input
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Søk …"
-              title="Søk i navn, lokale, tilstand eller forsikring"
-              className="h-12 rounded-xl border-2 border-rn-border-strong bg-background pl-12 text-base focus-visible:border-success focus-visible:ring-success/25"
-              aria-label="Søk i inventar"
-            />
-          </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong px-3 text-sm font-semibold sm:h-12 sm:px-4 sm:text-base"
+                disabled={filtered.length === 0}
+                onClick={() => downloadAssetsCsv(filtered)}
+                aria-label="Last ned synlige rader som CSV"
+                title="Last ned synlige rader som CSV"
+              >
+                <Download className="size-4 shrink-0 sm:size-5" aria-hidden />
+                CSV
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 shrink-0 rounded-md border-2 border-rn-border-strong px-4 text-sm font-semibold sm:h-12 sm:text-base"
+                disabled={!hasActiveFilters}
+                title={
+                  hasActiveFilters
+                    ? "Fjern søk, lokalefilter og tilstandsfilter"
+                    : "Ingen aktive filtre"
+                }
+                onClick={resetFilters}
+              >
+                Nullstill
+              </Button>
+            </div>
 
-          <div className="relative w-[min(100%,16rem)] shrink-0 sm:w-56">
-            <Building2
-              className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground"
-              aria-hidden
-            />
-            <select
-              value={propertyId}
-              onChange={(e) => {
-                setPropertyId(e.target.value);
-                setPage(1);
-              }}
-              aria-label="Filtrer etter lokale"
-              className="h-12 w-full min-w-0 cursor-pointer rounded-xl border-2 border-rn-border-strong bg-background py-0 pr-4 pl-12 text-base font-medium focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25"
-            >
-              <option value="">Alle lokaler</option>
-              {properties.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
+            <div className="relative min-w-[min(100%,12rem)] flex-1 basis-48">
+              <Search
+                className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground sm:left-4"
+                aria-hidden
+              />
+              <Input
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Søk …"
+                title="Søk i navn, lokale, tilstand eller forsikring"
+                className="h-11 w-full min-w-[10rem] rounded-md border-2 border-rn-border-strong bg-background pl-11 text-base sm:h-12 sm:pl-12 focus-visible:border-success focus-visible:ring-success/25"
+                aria-label="Søk i inventar"
+              />
+            </div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="size-12 shrink-0 rounded-xl border-2 border-rn-border-strong"
-              disabled={filtered.length === 0}
-              onClick={() => downloadAssetsCsv(filtered)}
-              aria-label="Last ned synlige rader som CSV"
-              title="Last ned CSV"
-            >
-              <Download className="size-5" aria-hidden />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-12 whitespace-nowrap rounded-xl border-2 border-rn-border-strong px-4 text-base font-semibold"
-              disabled={!hasActiveFilters}
-              title={
-                hasActiveFilters
-                  ? "Fjern søk, lokalefilter og tilstandsfilter"
-                  : "Ingen aktive filtre"
-              }
-              onClick={resetFilters}
-            >
-              Nullstill filter
-            </Button>
-          </div>
-        </div>
+            <div className="relative w-40 shrink-0 sm:w-48">
+              <Building2
+                className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground sm:left-4"
+                aria-hidden
+              />
+              <select
+                value={propertyId}
+                onChange={(e) => {
+                  setPropertyId(e.target.value);
+                  setPage(1);
+                }}
+                aria-label="Filtrer etter lokale"
+                className="h-11 w-full cursor-pointer appearance-none rounded-md border-2 border-rn-border-strong bg-background py-0 pr-10 pl-11 text-base font-medium sm:h-12 sm:pl-12 focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25"
+              >
+                <option value="">Alle lokaler</option>
+                {properties.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+            </div>
 
-        <div className="flex flex-wrap items-center gap-2 border-b-2 border-rn-border-strong bg-muted/25 px-6 py-4 sm:gap-3 md:px-8 md:py-5">
-          <span className="mr-1 shrink-0 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs">
-            Tilstand
-          </span>
-          {STATUS_QUICK_FILTERS.map((opt) => (
-            <Button
-              key={opt.id}
-              type="button"
-              variant={statusFilter === opt.id ? "default" : "outline"}
-              className={cn(
-                "h-11 rounded-xl border-2 px-4 text-sm font-semibold md:h-12 md:text-base",
-                statusFilter === opt.id
-                  ? "border-rn-accent-border bg-success text-white hover:bg-rn-accent-fill-hover"
-                  : "border-rn-border-strong",
-              )}
-              onClick={() => {
-                setStatusFilter(opt.id);
-                setPage(1);
-              }}
-            >
-              {opt.label}
-            </Button>
-          ))}
+            <div className="relative w-36 shrink-0 sm:w-44">
+              <Wrench
+                className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground sm:left-4"
+                aria-hidden
+              />
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as "all" | AssetStatusBucket);
+                  setPage(1);
+                }}
+                aria-label="Filtrer etter tilstand"
+                className="h-11 w-full cursor-pointer appearance-none rounded-md border-2 border-rn-border-strong bg-background py-0 pr-10 pl-11 text-base font-medium sm:h-12 sm:pl-12 focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25"
+              >
+                {STATUS_QUICK_FILTERS.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+            </div>
+          </div>
         </div>
 
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-4 px-6 py-16 text-center md:gap-5 md:px-8 md:py-20">
             <div
-              className="flex size-16 items-center justify-center rounded-2xl border-2 border-rn-border-strong bg-muted/40 md:size-18"
+              className="flex size-16 items-center justify-center rounded-md border-2 border-rn-border-strong bg-muted/40 md:size-18"
               aria-hidden
             >
               <Package className="size-8 text-muted-foreground md:size-9" />
             </div>
-            <p className="max-w-sm text-base text-muted-foreground md:text-lg">
+            <p className="max-w-sm text-base text-muted-foreground">
               {assets.length === 0 ? (
                 <>
                   Ingen aktiva i registeret ennå.
@@ -968,10 +946,10 @@ export function AssetsSection({
                   >
                     <TableCell className={assetsTableCellClass}>
                       <div className="flex items-center gap-3">
-                        <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-success/20 bg-rn-surface-gradient-from text-success md:size-12">
+                        <div className="flex size-11 shrink-0 items-center justify-center rounded-md border border-success/20 bg-rn-surface-gradient-from text-success md:size-12">
                           <Icon className="size-5 md:size-6" aria-hidden />
                         </div>
-                        <span className="text-base font-semibold text-success md:text-lg">
+                        <span className="text-base font-semibold text-success">
                           {a.name}
                         </span>
                       </div>
@@ -995,7 +973,7 @@ export function AssetsSection({
                     <TableCell
                       className={cn(
                         assetsTableCellClass,
-                        "text-base font-semibold text-success md:text-lg",
+                        "text-base font-semibold text-success",
                       )}
                     >
                       {formatNok(Number(a.value))}
@@ -1044,7 +1022,7 @@ export function AssetsSection({
                               type="button"
                               variant="ghost"
                               size="icon-sm"
-                              className="size-10 rounded-xl text-muted-foreground md:size-11"
+                              className="size-10 rounded-md text-muted-foreground md:size-11"
                               aria-label={`Handlinger for ${a.name}`}
                             />
                           }
@@ -1078,18 +1056,15 @@ export function AssetsSection({
         )}
 
         {filtered.length > 0 ? (
-          <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 text-base text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6 md:text-lg">
+          <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 text-base text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
             <span>
               Viser {pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0}–
               {Math.min(currentPage * PAGE_SIZE, filtered.length)} av{" "}
               {filtered.length}
               {statusFilter !== "all"
-                ? ` · status: ${
-                    statusFilter === "maintenance"
-                      ? "vedlikehold"
-                      : statusFilter === "operational"
-                        ? "i drift"
-                        : "bytte"
+                ? ` · ${
+                    STATUS_QUICK_FILTERS.find((o) => o.id === statusFilter)
+                      ?.label ?? statusFilter
                   }`
                 : null}
             </span>
@@ -1097,7 +1072,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 gap-1 rounded-xl border-2 border-rn-border-strong px-4 text-base font-semibold"
+                className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
                 disabled={currentPage <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
@@ -1110,7 +1085,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 gap-1 rounded-xl border-2 border-rn-border-strong px-4 text-base font-semibold"
+                className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
@@ -1129,13 +1104,19 @@ export function AssetsSection({
           else setDialog((s) => ({ ...s, open: true }));
         }}
       >
-        <DialogContent className="max-w-md rounded-2xl" showCloseButton>
+        <DialogContent
+          className="max-h-[90vh] max-w-lg gap-0 overflow-y-auto rounded-md border-2 border-rn-border-strong/60 bg-card p-6 text-base shadow-xl sm:max-w-xl md:max-w-2xl md:p-8"
+          showCloseButton
+        >
           {dialog.open ? (
             properties.length > 0 ? (
               <AssetFormFields
                 key={dialog.row?.id ?? "new"}
                 properties={properties}
                 row={dialog.row}
+                suggestedPropertyId={
+                  dialog.row ? undefined : propertyId || undefined
+                }
                 onClose={() => setDialog({ open: false, row: null })}
               />
             ) : (
@@ -1153,7 +1134,7 @@ export function AssetsSection({
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-12 rounded-xl border-2 border-rn-border-strong px-6 text-base font-semibold"
+                    className="h-12 rounded-md border-2 border-rn-border-strong px-6 text-base font-semibold"
                     onClick={() => setDialog({ open: false, row: null })}
                   >
                     Lukk

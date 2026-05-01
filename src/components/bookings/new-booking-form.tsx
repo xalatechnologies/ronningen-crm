@@ -35,7 +35,7 @@ import {
 import { toast } from "sonner";
 
 const fieldClass =
-  "h-11 w-full rounded-xl border-2 border-rn-border-strong bg-background px-3.5 text-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
 const sectionIconWrap = "text-rn-text-slate";
 
@@ -400,7 +400,7 @@ export function NewBookingForm({
 
       {existingCustomer ? (
         <div
-          className="rounded-xl border-2 border-success/35 bg-success/5 px-4 py-3 text-sm text-rn-text-body"
+          className="rounded-md border-2 border-success/35 bg-success/5 px-4 py-3 text-sm text-rn-text-body"
           role="status"
         >
           Ny booking for eksisterende kunde — navn, telefon og e-post kan ikke
@@ -431,7 +431,7 @@ export function NewBookingForm({
               type="button"
               variant="outline"
               size="sm"
-              className="mt-2 rounded-lg border-success/40 text-success hover:bg-success/10"
+              className="mt-2 rounded-md border-success/40 text-success hover:bg-success/10"
               onClick={goToBookingsNow}
             >
               Gå til bookinger
@@ -477,7 +477,7 @@ export function NewBookingForm({
                 <Button
                   type="button"
                   variant="secondary"
-                  className="h-11 shrink-0 gap-2 rounded-xl border-2 border-rn-border-strong md:h-12"
+                  className="h-11 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong md:h-12"
                   onClick={copyBookingId}
                 >
                   <Copy className="size-4" aria-hidden />
@@ -749,7 +749,7 @@ export function NewBookingForm({
               </Label>
               <div className="flex flex-col gap-3">
                 {noActivePackages ? (
-                  <p className="rounded-xl border-2 border-dashed border-rn-border-strong bg-rn-surface-wash px-4 py-3 text-sm text-rn-text-body">
+                  <p className="rounded-md border-2 border-dashed border-rn-border-strong bg-rn-surface-wash px-4 py-3 text-sm text-rn-text-body">
                     Ingen aktive pakker. Gå til{" "}
                     <Link
                       href="/app/pricing"
@@ -766,7 +766,7 @@ export function NewBookingForm({
                       <label
                         key={pkg.id}
                         className={cn(
-                          "flex cursor-pointer items-center rounded-xl border-2 p-4 transition-colors",
+                          "flex cursor-pointer items-center rounded-md border-2 p-4 transition-colors",
                           selectedPackageId === pkg.id
                             ? "border-success bg-success/5 shadow-sm"
                             : "border-rn-border-strong hover:bg-rn-surface-row-hover",
@@ -813,7 +813,7 @@ export function NewBookingForm({
                 navn og pris der.
               </p>
               {bookingAddons.length === 0 ? (
-                <p className="rounded-xl border-2 border-dashed border-rn-border-strong bg-rn-surface-wash px-4 py-3 text-sm text-rn-text-body">
+                <p className="rounded-md border-2 border-dashed border-rn-border-strong bg-rn-surface-wash px-4 py-3 text-sm text-rn-text-body">
                   Ingen aktive tillegg. Gå til{" "}
                   <Link
                     href="/app/pricing"
@@ -830,7 +830,7 @@ export function NewBookingForm({
                     return (
                       <label
                         key={addon.id}
-                        className="flex cursor-pointer items-start gap-3 rounded-xl border-2 border-transparent p-3 transition-colors hover:border-rn-border-strong hover:bg-rn-surface-row-hover"
+                        className="flex cursor-pointer items-start gap-3 rounded-md border-2 border-transparent p-3 transition-colors hover:border-rn-border-strong hover:bg-rn-surface-row-hover"
                       >
                         <input
                           type="checkbox"
@@ -984,18 +984,16 @@ export function NewBookingForm({
             href="/app/bookings"
             className={cn(
               buttonVariants({ variant: "ghost" }),
-              "rounded-xl font-semibold text-rn-text-body hover:text-rn-text-heading",
+              "rounded-md font-semibold text-rn-text-body hover:text-rn-text-heading",
             )}
           >
             Avbryt
           </Link>
           <Button
             type="submit"
+            variant="success"
+            size="cta"
             disabled={isSubmitting || noActivePackages || !!savedBookingId}
-            className={cn(
-              buttonVariants({ variant: "default" }),
-              "h-11 rounded-xl border-2 border-rn-accent-border bg-success px-8 font-heading text-base font-bold text-white shadow-md hover:bg-rn-accent-fill-hover md:h-12",
-            )}
           >
             {isSubmitting ? "Lagrer…" : "Lagre booking"}
           </Button>

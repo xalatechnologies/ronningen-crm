@@ -43,7 +43,7 @@ export type DatePickerFieldProps = {
   id?: string;
   disabled?: boolean;
   className?: string;
-  /** Match finance toolbar controls (h-11, rounded-xl, border-2) */
+  /** Match finance toolbar controls (h-11, rounded-md, border-2) */
   variant?: "toolbar" | "default";
   "aria-invalid"?: boolean;
 };
@@ -76,12 +76,12 @@ export function DatePickerField({
   const triggerClasses =
     variant === "toolbar"
       ? cn(
-          "flex h-11 w-full items-center justify-start gap-2 rounded-xl border-2 border-rn-border-strong bg-card px-4 text-left text-sm font-medium text-foreground shadow-sm outline-none transition-colors",
+          "flex h-11 w-full items-center justify-start gap-2 rounded-md border-2 border-rn-border-strong bg-card px-4 text-left text-sm font-medium text-foreground shadow-sm outline-none transition-colors",
           "hover:bg-muted/40 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25",
           "disabled:pointer-events-none disabled:opacity-50",
         )
       : cn(
-          "flex h-11 w-full items-center gap-2 rounded-lg border border-input bg-background px-3 text-left text-sm outline-none",
+          "flex h-11 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-left text-sm outline-none",
           "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
         );
 
@@ -121,7 +121,7 @@ export function DatePickerField({
           <PopoverPrimitive.Popup
             initialFocus={(openType) => openType === "keyboard"}
             className={cn(
-              "origin-(--transform-origin) rounded-xl border-2 border-rn-border-strong bg-popover p-3 text-popover-foreground shadow-lg outline-none",
+              "origin-(--transform-origin) rounded-md border-2 border-rn-border-strong bg-popover p-3 text-popover-foreground shadow-lg outline-none",
               "data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
             )}
           >
@@ -130,7 +130,7 @@ export function DatePickerField({
                 type="button"
                 variant="outline"
                 size="icon-sm"
-                className="size-11 shrink-0 rounded-xl border-2 border-rn-border-strong"
+                className="size-11 shrink-0 rounded-md border-2 border-rn-border-strong"
                 aria-label="Forrige måned"
                 onClick={() => setViewMonth((m) => addMonths(m, -1))}
               >
@@ -143,7 +143,7 @@ export function DatePickerField({
                 type="button"
                 variant="outline"
                 size="icon-sm"
-                className="size-11 shrink-0 rounded-xl border-2 border-rn-border-strong"
+                className="size-11 shrink-0 rounded-md border-2 border-rn-border-strong"
                 aria-label="Neste måned"
                 onClick={() => setViewMonth((m) => addMonths(m, 1))}
               >
@@ -184,7 +184,7 @@ export function DatePickerField({
                       setOpen(false);
                     }}
                     className={cn(
-                      "flex size-11 items-center justify-center rounded-xl text-sm font-medium transition-colors",
+                      "flex size-11 items-center justify-center rounded-md text-sm font-medium transition-colors",
                       outOfRange &&
                         "cursor-not-allowed opacity-25 hover:bg-transparent",
                       !inMonth && !outOfRange && "text-muted-foreground/40",

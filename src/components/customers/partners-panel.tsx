@@ -5,6 +5,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -20,19 +21,19 @@ import {
 } from "@/lib/validations";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
-
-const partnersTableHeadClass =
-  "px-6 py-4 text-sm font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5 md:text-base";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronRight, Plus, Search, X } from "lucide-react";
+import { ChevronRight, Plus, Search, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm, type Resolver, type UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 
+const partnersTableHeadClass =
+  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+
 const fieldClass =
-  "h-11 w-full rounded-xl border-2 border-rn-border-strong bg-background px-3.5 text-sm shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
 const selectPad = "pr-10 appearance-none bg-transparent";
 
@@ -132,7 +133,11 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [deleteBusyId, setDeleteBusyId] = useState<string | null>(null);
+  const [partnerDeleteTarget, setPartnerDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const addForm = useForm<PartnerFormInput>({
     resolver: zodResolver(partnerFormSchema) as Resolver<PartnerFormInput>,
@@ -236,32 +241,40 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
     router.refresh();
   }
 
-  async function onDeletePartner() {
-    if (!selectedId) return;
-    if (
-      !confirm(
-        "Slette denne partneren? Dette kan ikke angres.",
-      )
-    ) {
-      return;
-    }
-    setDeleting(true);
+  async function performPartnerDelete(id: string) {
+    setDeleteBusyId(id);
     try {
-      const { error } = await supabase.from("partners").delete().eq("id", selectedId);
+      const { error } = await supabase.from("partners").delete().eq("id", id);
       if (error) {
         toast.error("Kunne ikke slette", { description: error.message });
         return;
       }
       toast.success("Partner slettet");
-      setSelectedId(null);
+      if (selectedId === id) setSelectedId(null);
       router.refresh();
     } finally {
-      setDeleting(false);
+      setDeleteBusyId(null);
     }
   }
 
+  function requestDeletePartner(id: string, displayName: string) {
+    setPartnerDeleteTarget({ id, name: displayName });
+  }
+
+  async function confirmPartnerDelete() {
+    const target = partnerDeleteTarget;
+    if (!target) return;
+    setPartnerDeleteTarget(null);
+    await performPartnerDelete(target.id);
+  }
+
+  function onDeletePartner() {
+    if (!selected) return;
+    requestDeletePartner(selectedId!, selected.name);
+  }
+
   return (
-    <div className="flex flex-col gap-4">
+    <>
       <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
         <header className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
           <div
@@ -282,7 +295,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Søk partner…"
-                  className="h-12 w-full rounded-2xl border-2 border-rn-border-strong bg-background pl-12 text-base text-foreground shadow-sm md:h-14 md:pl-14 md:text-[17px] focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                  className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-base text-foreground shadow-sm md:h-14 md:pl-14 md:text-[17px] focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
                   aria-label="Søk partnere"
                 />
               </div>
@@ -290,8 +303,8 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
                 type="button"
                 onClick={() => setAddOpen(true)}
                 className={cn(
-                  buttonVariants({ variant: "default" }),
-                  "inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-rn-accent-border bg-success px-6 font-heading text-base font-bold text-white shadow-md hover:bg-rn-accent-fill-hover lg:w-auto lg:min-w-44",
+                  buttonVariants({ variant: "success", size: "cta" }),
+                  "lg:w-auto lg:min-w-44",
                 )}
               >
                 <Plus className="size-5" aria-hidden />
@@ -300,82 +313,96 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
             </div>
           </div>
         </header>
-      </div>
 
-      {partners.length === 0 ? (
-        <div
-          className={cn(
-            "flex flex-col items-center justify-center gap-3 overflow-hidden p-10 text-center",
-            RN_CARD_SHELL,
-          )}
-        >
-          <p className="text-base text-muted-foreground md:text-lg">
-            Ingen partnere registrert ennå. Legg til catering, dekor, renhold
-            eller andre.
-          </p>
-        </div>
-      ) : (
-        <div className={cn("overflow-x-auto", RN_CARD_SHELL)}>
-          <table className="w-full min-w-[640px] text-left text-base">
-            <thead>
-              <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                <th className={partnersTableHeadClass}>Kategori</th>
-                <th className={partnersTableHeadClass}>Navn</th>
-                <th className={partnersTableHeadClass}>Telefon</th>
-                <th className={partnersTableHeadClass}>E-post</th>
-                <th className={cn(partnersTableHeadClass, "text-right")}>
-                  {" "}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-rn-border-strong/50">
-              {filtered.map((p) => {
-                const active = selectedId === p.id;
-                return (
-                  <tr
-                    key={p.id}
-                    className={cn(
-                      "cursor-pointer transition-colors hover:bg-rn-surface-row-hover",
-                      active && "bg-rn-surface-row-hover",
-                    )}
-                    onClick={() => openEdit(p)}
-                  >
-                    <td className="px-6 py-5 md:px-8 md:py-6">
-                      <span
+        {partners.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center md:px-8 md:py-16">
+            <p className="text-base text-muted-foreground">
+              Ingen partnere registrert ennå. Legg til catering, dekor, renhold
+              eller andre.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-base">
+              <thead>
+                <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+                  <th className={partnersTableHeadClass}>Kategori</th>
+                  <th className={partnersTableHeadClass}>Navn</th>
+                  <th className={partnersTableHeadClass}>Telefon</th>
+                  <th className={partnersTableHeadClass}>E-post</th>
+                  <th className={cn(partnersTableHeadClass, "w-12 text-right")}>
+                    <span className="sr-only">Handling</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-rn-border-strong/50">
+                {filtered.map((p) => {
+                  const active = selectedId === p.id;
+                  return (
+                    <tr
+                      key={p.id}
+                      className={cn(
+                        "cursor-pointer transition-colors hover:bg-rn-surface-row-hover",
+                        active && "bg-rn-surface-row-hover",
+                      )}
+                      onClick={() => openEdit(p)}
+                    >
+                      <td className="px-6 py-5 md:px-8 md:py-6">
+                        <span
+                          className={cn(
+                            "inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold md:px-3 md:text-sm",
+                            active
+                              ? "border-success/35 bg-rn-surface-gradient-from text-success"
+                              : "border-rn-border-strong bg-rn-surface-segment text-rn-text-body",
+                          )}
+                        >
+                          {partnerCategoryLabelNb(p.category)}
+                        </span>
+                      </td>
+                      <td
                         className={cn(
-                          "inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold md:px-3 md:text-sm",
-                          active
-                            ? "border-success/35 bg-rn-surface-gradient-from text-success"
-                            : "border-rn-border-strong bg-rn-surface-segment text-rn-text-body",
+                          "px-6 py-5 font-heading text-base font-semibold md:px-8 md:py-6",
+                          active ? "text-success" : "text-foreground",
                         )}
                       >
-                        {partnerCategoryLabelNb(p.category)}
-                      </span>
-                    </td>
-                    <td
-                      className={cn(
-                        "px-6 py-5 font-heading text-base font-semibold md:px-8 md:py-6 md:text-lg",
-                        active ? "text-success" : "text-foreground",
-                      )}
-                    >
-                      {p.name}
-                    </td>
-                    <td className="px-6 py-5 text-muted-foreground md:px-8 md:py-6 md:text-base">
-                      {p.phone ?? "—"}
-                    </td>
-                    <td className="px-6 py-5 text-muted-foreground md:px-8 md:py-6 md:text-base">
-                      {p.email ?? "—"}
-                    </td>
-                    <td className="px-6 py-5 text-right text-muted-foreground md:px-8 md:py-6">
-                      <ChevronRight className="ml-auto size-5 md:size-6" aria-hidden />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                        {p.name}
+                      </td>
+                      <td className="px-6 py-5 text-muted-foreground md:px-8 md:py-6 md:text-base">
+                        {p.phone ?? "—"}
+                      </td>
+                      <td className="px-6 py-5 text-muted-foreground md:px-8 md:py-6 md:text-base">
+                        {p.email ?? "—"}
+                      </td>
+                      <td
+                        className="px-6 py-5 text-right md:px-8 md:py-6"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-end gap-0.5">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10"
+                            aria-label={`Slett ${p.name}`}
+                            disabled={deleteBusyId != null}
+                            onClick={() => requestDeletePartner(p.id, p.name)}
+                          >
+                            <Trash2 className="size-4" aria-hidden />
+                          </Button>
+                          <ChevronRight
+                            className="size-5 shrink-0 text-muted-foreground md:size-6"
+                            aria-hidden
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       <Sheet
         open={selectedId != null && selected != null}
@@ -401,7 +428,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  className="rounded-xl border-2 border-transparent hover:border-rn-border-strong/60"
+                  className="rounded-md border-2 border-transparent hover:border-rn-border-strong/60"
                   aria-label="Lukk"
                   onClick={() => setSelectedId(null)}
                 >
@@ -416,18 +443,15 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
                   <PartnerFields form={editForm} idPrefix="edit" />
                 </div>
                 <div className="flex flex-col gap-2 border-t-2 border-rn-border-strong bg-rn-surface-footer/50 p-6">
-                  <Button
-                    type="submit"
-                    className="h-12 rounded-xl border-2 border-rn-accent-border bg-success text-base font-semibold text-white hover:bg-rn-accent-fill-hover"
-                  >
+                  <Button type="submit" variant="success" size="cta" className="w-full">
                     Lagre
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={deleting}
-                    className="h-12 rounded-xl border-2 border-destructive/40 text-base text-destructive hover:bg-destructive/10"
-                    onClick={() => void onDeletePartner()}
+                    disabled={deleteBusyId != null}
+                    className="h-12 rounded-md border-2 border-destructive/40 text-base text-destructive hover:bg-destructive/10"
+                    onClick={() => onDeletePartner()}
                   >
                     Slett partner
                   </Button>
@@ -438,8 +462,55 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
         </SheetContent>
       </Sheet>
 
+      <Dialog
+        open={partnerDeleteTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setPartnerDeleteTarget(null);
+        }}
+      >
+        <DialogContent
+          showCloseButton
+          className="max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-6 shadow-xl sm:max-w-md"
+        >
+          {partnerDeleteTarget ? (
+            <>
+              <DialogHeader className="text-left">
+                <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading">
+                  Slette partner?
+                </DialogTitle>
+                <DialogDescription className="text-base leading-relaxed text-muted-foreground">
+                  Du er i ferd med å slette «{partnerDeleteTarget.name}». Dette kan
+                  ikke angres.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 w-full rounded-md border-2 border-rn-border-strong sm:w-auto"
+                  onClick={() => setPartnerDeleteTarget(null)}
+                >
+                  Avbryt
+                </Button>
+                <Button
+                  type="button"
+                  disabled={deleteBusyId != null}
+                  className={cn(
+                    buttonVariants({ variant: "default" }),
+                    "h-11 w-full rounded-md border-2 border-red-200 bg-red-600 font-semibold text-white hover:bg-red-700 sm:w-auto",
+                  )}
+                  onClick={() => void confirmPartnerDelete()}
+                >
+                  Ja, slett partner
+                </Button>
+              </DialogFooter>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="max-w-md rounded-2xl" showCloseButton>
+        <DialogContent className="max-w-md rounded-md" showCloseButton>
           <DialogHeader>
             <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading md:text-2xl">
               Ny partner
@@ -454,16 +525,13 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
               <Button type="button" variant="outline" onClick={() => setAddOpen(false)}>
                 Avbryt
               </Button>
-              <Button
-                type="submit"
-                className="border-2 border-rn-accent-border bg-success text-white hover:bg-rn-accent-fill-hover"
-              >
+              <Button type="submit" variant="success" size="cta">
                 Registrer
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

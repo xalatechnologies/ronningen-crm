@@ -27,7 +27,6 @@ import {
   Clock,
   ExternalLink,
   LayoutDashboard,
-  Plus,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -38,6 +37,27 @@ function formatNok(n: number) {
     currency: "NOK",
     maximumFractionDigits: 0,
   }).format(n);
+}
+
+/** Kortere etikett over stolper (unngår overflow i smale kolonner). */
+function formatNokChartAxis(n: number) {
+  if (n === 0) return "0 kr";
+  if (n >= 1_000_000) {
+    const m = n / 1_000_000;
+    const s = m >= 10 ? m.toFixed(0) : m.toFixed(1).replace(".", ",");
+    return `${s} mill.`;
+  }
+  if (n >= 1000) {
+    const k = n / 1000;
+    const s =
+      k >= 100
+        ? k.toFixed(0)
+        : k >= 10
+          ? k.toFixed(0)
+          : k.toFixed(1).replace(".", ",");
+    return `${s} k`;
+  }
+  return formatNok(n);
 }
 
 function dashboardEventPillClass(eventType: string) {
@@ -83,7 +103,7 @@ function DashboardUpcomingStatusBadge({
 }
 
 const tableHeadClass =
-  "px-6 py-4 text-sm font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5 md:text-base";
+  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const tableCellClass = "px-6 py-5 md:px-8 md:py-6";
 
 const NB_MONTH_SHORT = [
@@ -128,17 +148,20 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
   }, [data.monthlyByYear, chartYear]);
 
   const chartBars = useMemo(() => {
-    const max = Math.max(1, ...chartMonthAmounts);
+    const max = Math.max(0, ...chartMonthAmounts);
+    const scaleMax = max > 0 ? max : 1;
     const now = new Date();
     const highlightMonth =
       chartYear === now.getFullYear() ? now.getMonth() : -1;
     return chartMonthAmounts.map((amount, i) => {
-      const rawPct = (amount / max) * 100;
-      const heightPct = amount > 0 ? Math.max(10, rawPct) : 6;
+      const rawPct = (amount / scaleMax) * 100;
+      const hasValue = amount > 0;
+      const heightPct = hasValue ? Math.max(14, rawPct) : 0;
       return {
         key: `m-${i}`,
         label: NB_MONTH_SHORT[i] ?? "",
         amount,
+        hasValue,
         heightPct,
         highlight: i === highlightMonth,
       };
@@ -161,120 +184,112 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
       ? "Registrer lokaler under Aktiva"
       : `${kpis.propertyCount} lokal${kpis.propertyCount !== 1 ? "er" : ""} i systemet`;
 
+  const kpiTileClass =
+    "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
+
   return (
     <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-8">
-      <div className="flex flex-col gap-4">
-        <AppPageHeader
-          className="mb-0"
-          title="Oversikt"
-          description="Oversikt over omsetning, bookinger og kommende arrangementer — samlet for beslutningsstøtte."
-        />
+      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+        <div className="px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
+          <AppPageHeader
+            className="mb-0"
+            surface="default"
+            title="Oversikt"
+          />
+        </div>
         {data.loadError ? (
           <div
-            className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
+            className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
             role="alert"
           >
-            Noe gikk galt ved lasting: {data.loadError}
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base">
+              Noe gikk galt ved lasting: {data.loadError}
+            </div>
           </div>
         ) : null}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div
-            className={cn(
-              "flex flex-col justify-between rounded-2xl p-6",
-              RN_CARD_SHELL,
-            )}
-          >
-            <div className="mb-3 flex items-start justify-between">
-              <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                Totalt fakturert
-              </span>
-              <div className="rounded-lg bg-accent p-2">
-                <LayoutDashboard className="size-5 text-primary" aria-hidden />
+        <section
+          className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
+          aria-label="Nøkkeltall"
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+            <div className={kpiTileClass}>
+              <div className="mb-3 flex items-start justify-between">
+                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  Totalt fakturert
+                </span>
+                <div className="rounded-md bg-accent p-2">
+                  <LayoutDashboard className="size-5 text-primary" aria-hidden />
+                </div>
+              </div>
+              <div>
+                <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
+                  {formatNok(kpis.totalInvoicedNok)}
+                </p>
+                <p className="mt-3 text-xs font-medium text-muted-foreground md:text-sm">
+                  {formatPctDelta(kpis.invoicedMonthDeltaPct)}
+                </p>
               </div>
             </div>
-            <div>
-              <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
-                {formatNok(kpis.totalInvoicedNok)}
-              </p>
-              <p className="mt-3 text-xs font-medium text-muted-foreground md:text-sm">
-                {formatPctDelta(kpis.invoicedMonthDeltaPct)}
-              </p>
-            </div>
-          </div>
 
-          <div
-            className={cn(
-              "flex flex-col justify-between rounded-2xl p-6",
-              RN_CARD_SHELL,
-            )}
-          >
-            <div className="mb-3 flex items-start justify-between">
-              <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                Betalt
-              </span>
-              <div className="rounded-lg bg-accent p-2">
-                <CheckCircle2 className="size-5 text-primary" aria-hidden />
+            <div className={kpiTileClass}>
+              <div className="mb-3 flex items-start justify-between">
+                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  Betalt
+                </span>
+                <div className="rounded-md bg-accent p-2">
+                  <CheckCircle2 className="size-5 text-primary" aria-hidden />
+                </div>
+              </div>
+              <div>
+                <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
+                  {formatNok(kpis.totalPaidNok)}
+                </p>
+                <p className="mt-3 text-xs font-medium text-muted-foreground md:text-sm">
+                  {paidShareLabel}
+                </p>
               </div>
             </div>
-            <div>
-              <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
-                {formatNok(kpis.totalPaidNok)}
-              </p>
-              <p className="mt-3 text-xs font-medium text-muted-foreground md:text-sm">
-                {paidShareLabel}
-              </p>
-            </div>
-          </div>
 
-          <div
-            className={cn(
-              "flex flex-col justify-between rounded-2xl p-6",
-              RN_CARD_SHELL,
-            )}
-          >
-            <div className="mb-3 flex items-start justify-between">
-              <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                Ubetalt
-              </span>
-              <div className="rounded-lg bg-rn-danger-soft p-2">
-                <Clock className="size-5 text-rn-danger-ink" aria-hidden />
+            <div className={kpiTileClass}>
+              <div className="mb-3 flex items-start justify-between">
+                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  Ubetalt
+                </span>
+                <div className="rounded-md bg-rn-danger-soft p-2">
+                  <Clock className="size-5 text-rn-danger-ink" aria-hidden />
+                </div>
+              </div>
+              <div>
+                <p className="font-heading text-3xl font-extrabold tracking-tight text-destructive tabular-nums sm:text-4xl">
+                  {formatNok(kpis.totalUnpaidNok)}
+                </p>
+                <p className="mt-3 flex items-center gap-1 text-xs font-medium text-destructive md:text-sm">
+                  <AlertCircle className="size-3.5 shrink-0" aria-hidden />
+                  {overdueLabel}
+                </p>
               </div>
             </div>
-            <div>
-              <p className="font-heading text-3xl font-extrabold tracking-tight text-destructive tabular-nums sm:text-4xl">
-                {formatNok(kpis.totalUnpaidNok)}
-              </p>
-              <p className="mt-3 flex items-center gap-1 text-xs font-medium text-destructive md:text-sm">
-                <AlertCircle className="size-3.5 shrink-0" aria-hidden />
-                {overdueLabel}
-              </p>
-            </div>
-          </div>
 
-          <div
-            className={cn(
-              "flex flex-col justify-between rounded-2xl p-6",
-              RN_CARD_SHELL,
-            )}
-          >
-            <div className="mb-3 flex items-start justify-between">
-              <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                Bookinger
-              </span>
-              <div className="rounded-lg bg-accent p-2">
-                <CalendarCheck className="size-5 text-primary" aria-hidden />
+            <div className={kpiTileClass}>
+              <div className="mb-3 flex items-start justify-between">
+                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  Bookinger
+                </span>
+                <div className="rounded-md bg-accent p-2">
+                  <CalendarCheck className="size-5 text-primary" aria-hidden />
+                </div>
+              </div>
+              <div>
+                <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
+                  {kpis.activeBookingCount}
+                </p>
+                <p className="mt-3 text-xs font-medium text-muted-foreground md:text-sm">
+                  {venuesLabel}
+                </p>
               </div>
             </div>
-            <div>
-              <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
-                {kpis.activeBookingCount}
-              </p>
-              <p className="mt-3 text-xs font-medium text-muted-foreground md:text-sm">
-                {venuesLabel}
-              </p>
-            </div>
           </div>
-        </div>
+        </section>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -282,10 +297,10 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
           <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:px-8 md:py-6">
             <div>
               <h2 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
-                Månedlig inntekt
+                Månedlig omsetning
               </h2>
               <p className="mt-1 text-xs text-muted-foreground md:text-sm">
-                Summert fra Finans (inntektstransaksjoner)
+                Fakturert beløp per måned etter arrangementsdato (aktive bookinger)
               </p>
             </div>
             <Select
@@ -295,7 +310,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               <SelectTrigger
                 aria-label="Velg år for diagrammet"
                 className={cn(
-                  "h-12 min-w-[8.5rem] rounded-xl border-2 border-rn-border-strong bg-rn-surface-segment px-4 font-heading text-base font-semibold shadow-rn-segment-inset",
+                  "h-12 min-w-[8.5rem] rounded-md border-2 border-rn-border-strong bg-rn-surface-segment px-4 font-heading text-base font-semibold shadow-rn-segment-inset",
                   "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 data-popup-open:border-rn-accent-border",
                 )}
               >
@@ -316,40 +331,58 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
           </div>
           <div className="border-t border-rn-border-strong/35 px-3 py-4 md:px-5 md:py-5">
             <div
-              className="mb-3 flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between"
+              className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between"
               aria-hidden
             >
-              <span className="text-xs font-medium text-muted-foreground md:text-sm">
-                Per måned · {chartYear}
+              <span className="text-xs font-semibold text-foreground md:text-sm">
+                Fakturert per måned · {chartYear}
               </span>
               <span className="text-[11px] tabular-nums text-muted-foreground md:text-xs">
-                Maks {formatNok(Math.max(...chartMonthAmounts, 0))}
+                Høyeste: {formatNok(Math.max(...chartMonthAmounts, 0))}
               </span>
             </div>
             <div
-              className="flex h-[min(16rem,calc(100vw-4rem))] min-h-[11.5rem] w-full items-end gap-0.5 sm:gap-1 md:gap-1.5"
+              className="flex h-[min(20rem,calc(100vw-4rem))] min-h-[13.5rem] w-full items-stretch gap-0.5 sm:gap-1 md:gap-1.5"
               role="img"
-              aria-label={`Stolpediagram for inntekt per måned i ${chartYear}`}
+              aria-label={`Stolpediagram for fakturert omsetning per arrangementsmåned i ${chartYear}. Beløp vises over hver stolpe.`}
             >
               {chartBars.map((bar) => (
                 <div
                   key={bar.key}
-                  className="group flex h-full min-h-0 min-w-0 flex-1 flex-col justify-end"
+                  className="flex h-full min-h-0 min-w-0 flex-1 flex-col justify-end"
                 >
-                  <div className="relative flex h-full w-full min-h-0 flex-col justify-end">
-                    <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded border border-rn-accent-border bg-success px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-md group-hover:block">
-                      {formatNok(bar.amount)}
-                    </span>
-                    <div
+                  <div className="flex min-h-0 flex-1 flex-col justify-end gap-1">
+                    <span
                       className={cn(
-                        "w-full min-h-1 rounded-t-md transition-colors",
-                        bar.highlight
-                          ? "bg-success shadow-sm"
-                          : "bg-emerald-500/50 hover:bg-emerald-600/70 dark:bg-emerald-500/35 dark:hover:bg-emerald-500/55",
+                        "line-clamp-2 min-h-8 px-px text-center text-[9px] font-semibold leading-tight tracking-tight tabular-nums sm:text-[10px] md:min-h-0 md:text-[11px]",
+                        bar.hasValue
+                          ? "text-foreground"
+                          : "text-muted-foreground",
                       )}
-                      style={{ height: `${bar.heightPct}%` }}
                       title={`${bar.label}: ${formatNok(bar.amount)}`}
-                    />
+                    >
+                      {formatNokChartAxis(bar.amount)}
+                    </span>
+                    <div className="relative flex min-h-[7rem] flex-1 flex-col justify-end border-b-2 border-rn-border-strong/55 sm:min-h-[8.5rem] md:min-h-[10rem]">
+                      {bar.hasValue ? (
+                        <div
+                          className={cn(
+                            "w-full min-h-[6px] rounded-t-md transition-colors",
+                            bar.highlight
+                              ? "bg-success shadow-md ring-2 ring-success/30 ring-offset-1 ring-offset-background"
+                              : "bg-emerald-500/80 hover:bg-emerald-600 dark:bg-emerald-500/60 dark:hover:bg-emerald-500",
+                          )}
+                          style={{ height: `${bar.heightPct}%` }}
+                          title={`${bar.label}: ${formatNok(bar.amount)}`}
+                        />
+                      ) : (
+                        <div
+                          className="h-1.5 w-full shrink-0 rounded-sm bg-muted-foreground/25"
+                          title={`${bar.label}: ${formatNok(bar.amount)}`}
+                          aria-hidden
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -375,7 +408,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
 
         <div
           className={cn(
-            "flex flex-col rounded-2xl border-2 border-rn-danger-surface bg-rn-danger-surface/30 p-6 shadow-rn-card md:p-8",
+            "flex flex-col rounded-md border-2 border-rn-danger-surface bg-rn-danger-surface/30 p-6 shadow-rn-card md:p-8",
           )}
         >
           <div className="mb-6 flex items-center gap-2 md:mb-8 md:gap-3">
@@ -396,13 +429,13 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               data.paymentAlerts.map((a) => (
                 <div
                   key={a.bookingId}
-                  className="flex flex-col gap-3 rounded-xl border-2 border-rn-border-strong/60 bg-card/90 p-4 shadow-sm md:p-5"
+                  className="flex flex-col gap-3 rounded-md border-2 border-rn-border-strong/60 bg-card/90 p-4 shadow-sm md:p-5"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <span className="min-w-0 text-base font-semibold text-foreground md:text-lg">
+                    <span className="min-w-0 text-base font-semibold text-foreground">
                       {a.title}
                     </span>
-                    <span className="shrink-0 text-base font-bold tabular-nums text-destructive md:text-lg">
+                    <span className="shrink-0 text-base font-bold tabular-nums text-destructive">
                       {formatNok(a.amountNok)}
                     </span>
                   </div>
@@ -424,7 +457,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
           </div>
           <Link
             href="/app/invoices"
-            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-rn-accent-border bg-rn-danger-ink font-heading text-base font-bold text-primary-foreground shadow-md transition-colors hover:bg-rn-danger-ink/90"
+            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md border-2 border-rn-accent-border bg-rn-danger-ink font-heading text-base font-bold text-primary-foreground shadow-md transition-colors hover:bg-rn-danger-ink/90"
           >
             Gå til fakturaer
             <ExternalLink className="size-4" aria-hidden />
@@ -433,23 +466,6 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
       </div>
 
       <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:px-8 md:py-6">
-          <div className="min-w-0 max-w-2xl">
-            <h2 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
-              Kommende bookinger
-            </h2>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground md:text-base">
-              Ikke-avbestilte arrangementer de neste 30 dagene (fra og med i dag)
-            </p>
-          </div>
-          <Link
-            href="/app/bookings/new"
-            className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl border-2 border-rn-accent-border bg-success px-6 font-heading text-base font-bold text-white shadow-md transition-colors hover:bg-rn-accent-fill-hover"
-          >
-            <Plus className="size-5" aria-hidden />
-            Ny booking
-          </Link>
-        </div>
         <Table>
           <TableHeader>
             <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
@@ -468,7 +484,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="px-6 py-12 text-center text-base text-muted-foreground md:py-16 md:text-lg"
+                  className="px-6 py-12 text-center text-base text-muted-foreground md:py-16"
                 >
                   Ingen kommende bookinger i vinduet.{" "}
                   <Link
@@ -487,7 +503,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                 >
                   <TableCell className={cn(tableCellClass, "whitespace-normal")}>
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-base font-semibold text-foreground md:text-lg">
+                      <span className="text-base font-semibold text-foreground">
                         {row.dateLabel}
                       </span>
                       <span className="text-sm text-muted-foreground md:text-base">
@@ -503,7 +519,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                       >
                         {row.initials}
                       </div>
-                      <span className="text-base font-semibold text-foreground md:text-lg">
+                      <span className="text-base font-semibold text-foreground">
                         {row.customer}
                       </span>
                     </div>
@@ -521,7 +537,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   <TableCell
                     className={cn(
                       tableCellClass,
-                      "whitespace-normal text-base text-muted-foreground md:text-lg",
+                      "whitespace-normal text-base text-muted-foreground",
                     )}
                   >
                     {row.venue}

@@ -19,7 +19,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { APP_NAME } from "@/config/app";
-import { ROLE_DISPLAY_LABELS } from "@/constants/roles";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -48,16 +47,10 @@ function avatarUrlFromUser(user: ReturnType<typeof useAuthUser>["user"]) {
 }
 
 export function AppHeader({ children }: { children?: ReactNode }) {
-  const { user, loading, role } = useAuthUser();
+  const { user, loading } = useAuthUser();
   const supabase = useSupabase();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  const displayName = useMemo(() => {
-    const meta = user?.user_metadata?.full_name;
-    if (typeof meta === "string" && meta.trim()) return meta.trim();
-    return user?.email ?? "";
-  }, [user]);
 
   const initials = useMemo(
     () => initialsFromUser(user?.email, user?.user_metadata?.full_name),
@@ -70,8 +63,6 @@ export function AppHeader({ children }: { children?: ReactNode }) {
   useEffect(() => {
     setAvatarBroken(false);
   }, [avatarUrl]);
-
-  const roleLabel = role ? ROLE_DISPLAY_LABELS[role] : "";
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -121,23 +112,13 @@ export function AppHeader({ children }: { children?: ReactNode }) {
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              "flex min-w-0 max-w-full items-center gap-3 rounded-xl border-2 border-transparent py-1.5 pr-1.5 pl-2 outline-none transition-colors",
+              "flex shrink-0 items-center gap-2 rounded-md border-2 border-transparent py-1.5 pr-1 pl-1 outline-none transition-colors",
               "hover:bg-muted/45 focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               "disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-muted/30",
             )}
             disabled={loading}
             aria-label="Konto og utlogging"
           >
-            <span className="flex min-w-0 flex-1 flex-col text-right sm:items-end sm:pr-1">
-              <span className="w-full truncate font-heading text-base font-semibold leading-snug tracking-tight text-rn-text-heading">
-                {loading ? "…" : displayName || "—"}
-              </span>
-              {roleLabel ? (
-                <span className="mt-0.5 text-xs font-bold tracking-wider text-rn-text-slate uppercase">
-                  {roleLabel}
-                </span>
-              ) : null}
-            </span>
             {avatarUrl && !avatarBroken ? (
               <img
                 src={avatarUrl}
@@ -164,7 +145,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
           <DropdownMenuContent
             align="end"
             sideOffset={8}
-            className="min-w-64 max-w-[min(100vw-1.5rem,20rem)] rounded-xl border-2 border-rn-border-strong bg-popover p-2.5 text-base shadow-rn-card"
+            className="min-w-64 max-w-[min(100vw-1.5rem,20rem)] rounded-md border-2 border-rn-border-strong bg-popover p-2.5 text-base shadow-rn-card"
           >
             <DropdownMenuGroup>
               <DropdownMenuLabel className="px-3 py-2 font-heading text-sm font-semibold text-foreground truncate md:px-3.5 md:py-2.5 md:text-base">
@@ -172,7 +153,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-2 bg-border" />
               <DropdownMenuItem
-                className="px-3 py-2.5 font-heading text-base font-bold md:px-3.5 md:py-3 md:text-lg"
+                className="px-3 py-2.5 font-heading text-base font-bold md:px-3.5 md:py-3"
                 onSelect={() => void signOut()}
               >
                 Logg ut

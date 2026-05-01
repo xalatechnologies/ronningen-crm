@@ -24,6 +24,7 @@ import {
   History,
   PartyPopper,
   StickyNote,
+  Trash2,
   Wallet,
   X,
 } from "lucide-react";
@@ -81,6 +82,8 @@ type CustomerDrawerBodyProps = {
   stats: { count: number; spent: number; outstanding: number };
   bookings: CustomerBookingListItem[];
   onClose: () => void;
+  onDeleteCustomer: () => void;
+  deleteBusy?: boolean;
 };
 
 export function CustomerDrawerBody({
@@ -88,6 +91,8 @@ export function CustomerDrawerBody({
   stats: s,
   bookings,
   onClose,
+  onDeleteCustomer,
+  deleteBusy = false,
 }: CustomerDrawerBodyProps) {
   const supabase = useSupabase();
   const router = useRouter();
@@ -168,7 +173,7 @@ export function CustomerDrawerBody({
     <>
       <SheetHeader className="flex-row justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head p-8">
         <div className="flex flex-1 items-center gap-4 pr-10">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl border-2 border-rn-accent-border bg-success text-xl font-bold text-white shadow-md">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-success text-xl font-bold text-white shadow-md">
             {customerInitials(customer.name)}
           </div>
           <div className="min-w-0">
@@ -210,7 +215,7 @@ export function CustomerDrawerBody({
                   Navn
                 </Label>
                 <Input
-                  className="h-11 rounded-xl border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
+                  className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
                   {...editForm.register("name")}
                   aria-invalid={!!editForm.formState.errors.name}
                 />
@@ -225,7 +230,7 @@ export function CustomerDrawerBody({
                   Telefon
                 </Label>
                 <Input
-                  className="h-11 rounded-xl border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
+                  className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
                   {...editForm.register("phone")}
                 />
               </div>
@@ -234,7 +239,7 @@ export function CustomerDrawerBody({
                   E-post
                 </Label>
                 <Input
-                  className="h-11 rounded-xl border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
+                  className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
                   type="email"
                   {...editForm.register("email")}
                 />
@@ -243,7 +248,7 @@ export function CustomerDrawerBody({
                 <Button
                   type="button"
                   variant="outline"
-                  className="flex-1 rounded-xl"
+                  className="flex-1 rounded-md"
                   onClick={() => {
                     setEditingProfile(false);
                     editForm.reset({
@@ -257,7 +262,9 @@ export function CustomerDrawerBody({
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 rounded-xl border-2 border-rn-accent-border bg-success text-white hover:bg-rn-accent-fill-hover"
+                  variant="success"
+                  size="cta"
+                  className="flex-1"
                   disabled={savingProfile}
                 >
                   {savingProfile ? "Lagrer…" : "Lagre"}
@@ -266,7 +273,7 @@ export function CustomerDrawerBody({
             </form>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border-2 border-rn-border-strong bg-rn-surface-segment p-4">
+              <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-4">
                 <p className="mb-1 text-[10px] font-bold text-muted-foreground uppercase">
                   Telefon
                 </p>
@@ -274,7 +281,7 @@ export function CustomerDrawerBody({
                   {customer.phone ?? "—"}
                 </p>
               </div>
-              <div className="rounded-xl border-2 border-rn-border-strong bg-rn-surface-segment p-4">
+              <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-4">
                 <p className="mb-1 text-[10px] font-bold text-muted-foreground uppercase">
                   E-post
                 </p>
@@ -294,7 +301,7 @@ export function CustomerDrawerBody({
             </h3>
           </div>
           <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="flex-1 rounded-2xl border-2 border-success/15 bg-rn-surface-gradient-from p-5">
+            <div className="flex-1 rounded-md border-2 border-success/15 bg-rn-surface-gradient-from p-5">
               <p className="mb-1 text-[10px] font-bold text-success/70 uppercase">
                 Totalt brukt
               </p>
@@ -302,7 +309,7 @@ export function CustomerDrawerBody({
                 {formatNok(s.spent)}
               </p>
             </div>
-            <div className="flex-1 rounded-2xl border-2 border-rn-border-strong bg-card p-5 shadow-sm">
+            <div className="flex-1 rounded-md border-2 border-rn-border-strong bg-card p-5 shadow-sm">
               <p className="mb-1 text-[10px] font-bold text-muted-foreground uppercase">
                 Utestående
               </p>
@@ -342,10 +349,10 @@ export function CustomerDrawerBody({
               {bookings.slice(0, 8).map((b) => (
                 <div
                   key={b.id}
-                  className="flex cursor-default items-center justify-between rounded-xl border-2 border-rn-border-strong bg-card p-4 transition-shadow hover:shadow-sm"
+                  className="flex cursor-default items-center justify-between rounded-md border-2 border-rn-border-strong bg-card p-4 transition-shadow hover:shadow-sm"
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-rn-surface-gradient-from">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-rn-surface-gradient-from">
                       {bookingIconForType(b.event_type)}
                     </span>
                     <div className="min-w-0">
@@ -379,7 +386,7 @@ export function CustomerDrawerBody({
             <Textarea
               value={notesDraft}
               onChange={(e) => setNotesDraft(e.target.value)}
-              className="min-h-32 resize-none rounded-xl border-2 border-rn-border-strong p-4 text-sm focus-visible:border-success focus-visible:ring-success/25"
+              className="min-h-32 resize-none rounded-md border-2 border-rn-border-strong p-4 text-sm focus-visible:border-success focus-visible:ring-success/25"
               placeholder="Legg til notat om kunden…"
             />
             <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] font-bold text-muted-foreground uppercase">
@@ -389,25 +396,42 @@ export function CustomerDrawerBody({
         </section>
       </div>
 
-      <SheetFooter className="flex-row gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer/50 p-6">
+      <SheetFooter className="flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer/50 p-6">
+        <div className="flex flex-row gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-12 flex-1 rounded-md border-2 border-rn-border-strong bg-background font-semibold"
+            onClick={() => setEditingProfile(true)}
+            disabled={editingProfile}
+          >
+            Rediger profil
+          </Button>
+          <Link
+            href={`/app/bookings/new?customerId=${customer.id}`}
+            className={cn(
+              buttonVariants({ variant: "success", size: "cta" }),
+              "flex-1",
+            )}
+          >
+            Ny booking
+          </Link>
+        </div>
         <Button
           type="button"
           variant="outline"
-          className="h-12 flex-1 rounded-xl border-2 border-rn-border-strong bg-background font-semibold"
-          onClick={() => setEditingProfile(true)}
-          disabled={editingProfile}
+          disabled={deleteBusy || s.count > 0 || editingProfile}
+          title={
+            s.count > 0
+              ? "Kan ikke slette: kunden har bookinger"
+              : "Slett kunde permanent"
+          }
+          className="h-12 w-full rounded-md border-2 border-destructive/40 text-base font-semibold text-destructive hover:bg-destructive/10"
+          onClick={onDeleteCustomer}
         >
-          Rediger profil
+          <Trash2 className="mr-2 size-4 shrink-0" aria-hidden />
+          Slett kunde
         </Button>
-        <Link
-          href={`/app/bookings/new?customerId=${customer.id}`}
-          className={cn(
-            buttonVariants({ variant: "default" }),
-            "h-12 flex-1 rounded-xl border-2 border-rn-accent-border bg-success font-semibold text-white hover:bg-rn-accent-fill-hover",
-          )}
-        >
-          Ny booking
-        </Link>
       </SheetFooter>
     </>
   );
