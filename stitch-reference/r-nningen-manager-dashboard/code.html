@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rønningen Manager Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#e2e3df",
+                    "on-primary-container": "#85b098",
+                    "surface-dim": "#d9dad7",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "inverse-on-surface": "#f0f1ee",
+                    "on-secondary-container": "#5c6462",
+                    "background": "#f9faf6",
+                    "on-error": "#ffffff",
+                    "secondary-fixed-dim": "#c0c8c5",
+                    "inverse-surface": "#2f312f",
+                    "error": "#ba1a1a",
+                    "primary-container": "#1a4331",
+                    "tertiary-fixed-dim": "#f7b7b4",
+                    "on-surface-variant": "#414944",
+                    "surface": "#f9faf6",
+                    "surface-container-high": "#e8e8e5",
+                    "outline-variant": "#c1c8c2",
+                    "secondary-container": "#d9e1de",
+                    "tertiary": "#401a1a",
+                    "on-secondary-fixed": "#161d1c",
+                    "on-primary-fixed": "#002114",
+                    "outline": "#717973",
+                    "surface-tint": "#3e6752",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed-variant": "#673a39",
+                    "error-container": "#ffdad6",
+                    "primary": "#002d1c",
+                    "surface-container-low": "#f3f4f0",
+                    "on-surface": "#1a1c1a",
+                    "on-background": "#1a1c1a",
+                    "inverse-primary": "#a4d0b8",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed-variant": "#404846",
+                    "on-tertiary-fixed": "#331010",
+                    "surface-variant": "#e2e3df",
+                    "tertiary-container": "#5a2f2e",
+                    "on-primary-fixed-variant": "#264e3c",
+                    "secondary-fixed": "#dce4e1",
+                    "on-tertiary-container": "#d29694",
+                    "primary-fixed": "#c0edd3",
+                    "primary-fixed-dim": "#a4d0b8",
+                    "secondary": "#58605e",
+                    "surface-bright": "#f9faf6",
+                    "tertiary-fixed": "#ffdad8",
+                    "surface-container": "#eeeeeb"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "gutter": "24px",
+                    "md": "16px",
+                    "sm": "8px",
+                    "xl": "40px",
+                    "lg": "24px",
+                    "base": "4px",
+                    "margin": "32px"
+            },
+            "fontFamily": {
+                    "h1": ["Manrope"],
+                    "h2": ["Manrope"],
+                    "body-lg": ["Inter"],
+                    "label": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                    "label": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f9faf6;
+        }
+        .card-shadow {
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-sm text-on-surface">
+<!-- Navigation Drawer -->
+<aside class="fixed left-0 top-0 h-full w-64 z-50 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 hidden md:flex flex-col h-full space-y-2 pt-6">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container flex items-center justify-center">
+<img alt="Manager Portrait" class="w-full h-full object-cover" data-alt="A professional studio portrait of a Norwegian business manager in a minimalist office setting. The lighting is soft and natural, emphasizing a calm and confident demeanor. The color palette is composed of soft whites, greys, and deep emerald accents, reflecting a high-end corporate identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzVxA2GdAfYllWMdll9tNJLKdjY0HEHBQfaUC02WqsgFdWWSuEllCHtSnXe3JibITqaavojjI8aKzk0Fqy920P1Zlt_vEfHnYLsNrfnv9usXdna2ncDCPcyWotHgZGaETOpcAbYLuMf5nj24ph0ot0V0gl-vmlAZDFQXWevKXvljpXJZHyxjPjkMxRBrPwCFSEDpnHT8P8n7WHBZmYZQ7A0J5qd3dTw8W5h4a1y_CLjD908co4Xx7cxqnomRAoEiNkQBjpaczyUq4t"/>
+</div>
+<div>
+<h2 class="font-bold text-emerald-900 dark:text-emerald-50 text-sm">Rønningen Manager</h2>
+<p class="text-xs text-slate-500">Admin Console</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 bg-emerald-50/50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-300 border-l-4 border-emerald-900 dark:border-emerald-500 font-bold px-4 py-3 transition-all active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-['Manrope'] text-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-['Manrope'] text-sm">Revenue</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-['Manrope'] text-sm">Bookings</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-['Manrope'] text-sm">Clients</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 border-l-4 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-['Manrope'] text-sm">Reports</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Wrapper -->
+<main class="md:ml-64 min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-0 md:left-64 z-40 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-[0px_4px_20px_rgba(0,0,0,0.03)] flex justify-between items-center w-full px-6 py-3">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-emerald-900">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-lg font-extrabold text-emerald-900 dark:text-emerald-50 tracking-tight font-['Manrope']">Rønningen Manager</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex flex-col items-end mr-2">
+<span class="font-['Manrope'] text-sm font-medium tracking-tight text-emerald-900 dark:text-emerald-400">Erik Rønningen</span>
+<span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Primary Owner</span>
+</div>
+<div class="w-8 h-8 rounded-full ring-2 ring-emerald-50 bg-slate-200 overflow-hidden">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A sharp, detailed avatar image of a modern professional male in his 30s. He has a friendly yet authoritative expression, set against a solid, soft mint green background. The style is clean, modern, and high-fidelity, perfectly matching a professional management software ecosystem." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCs6Z9qY2l6tIsZ_5aOcTV3BZl2WBlscM8kZHrHdFkSV2Dtp2E3NJrIdaB1uSqk834LsyyT5r5-nqurs1qzaaXIbWqaXRH8IoWCwCUSI9_QKHoMDol8x_1c8aov7f_MX_5g-zgsMSB4_NXJkMtpSbSNd6IQL3nFlhuRXBybZY_MGK6WHY496Hzsagae9qEalCxMkY6WZkW8wTMpnKjQBDEBGK6UabI1VucRaL5v08vgDakpkEf2dOHlFufWs-BoC60SnFmuK1Iu7fl"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="pt-24 pb-12 px-6 max-w-[1440px] mx-auto">
+<!-- Bento KPI Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<!-- KPI 1 -->
+<div class="bg-white border border-slate-100 rounded-xl p-6 card-shadow flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="text-slate-400 text-label font-label uppercase">Total Revenue</span>
+<div class="bg-emerald-50 p-2 rounded-lg">
+<span class="material-symbols-outlined text-emerald-900 text-lg" data-icon="payments">payments</span>
+</div>
+</div>
+<div>
+<h3 class="text-h2 font-h2 text-primary">$45,000</h3>
+<p class="text-xs text-emerald-600 font-medium flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-xs" data-icon="trending_up">trending_up</span>
+                            +12% from last month
+                        </p>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="bg-white border border-slate-100 rounded-xl p-6 card-shadow flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="text-slate-400 text-label font-label uppercase">Paid Amount</span>
+<div class="bg-emerald-50 p-2 rounded-lg">
+<span class="material-symbols-outlined text-emerald-900 text-lg" data-icon="check_circle">check_circle</span>
+</div>
+</div>
+<div>
+<h3 class="text-h2 font-h2 text-primary">$38,000</h3>
+<p class="text-xs text-slate-400 font-medium mt-1">84% of total billed</p>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="bg-white border border-slate-100 rounded-xl p-6 card-shadow flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="text-slate-400 text-label font-label uppercase">Unpaid Amount</span>
+<div class="bg-tertiary-fixed p-2 rounded-lg">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="pending_actions">pending_actions</span>
+</div>
+</div>
+<div>
+<h3 class="text-h2 font-h2 text-primary">$7,000</h3>
+<p class="text-xs text-error font-medium flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-xs" data-icon="error">error</span>
+                            5 overdue invoices
+                        </p>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="bg-white border border-slate-100 rounded-xl p-6 card-shadow flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="text-slate-400 text-label font-label uppercase">Total Bookings</span>
+<div class="bg-emerald-50 p-2 rounded-lg">
+<span class="material-symbols-outlined text-emerald-900 text-lg" data-icon="event_available">event_available</span>
+</div>
+</div>
+<div>
+<h3 class="text-h2 font-h2 text-primary">124</h3>
+<p class="text-xs text-slate-400 font-medium mt-1">Across 4 venues</p>
+</div>
+</div>
+</div>
+<!-- Dashboard Centerpiece: Revenue Chart & Alerts -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+<!-- Monthly Revenue Chart -->
+<div class="lg:col-span-2 bg-white border border-slate-100 rounded-xl card-shadow overflow-hidden">
+<div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+<h3 class="font-h2 text-body-lg text-primary">Monthly Revenue Dynamics</h3>
+<div class="flex gap-2">
+<button class="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-900">Yearly</button>
+<button class="text-xs font-semibold px-3 py-1 rounded-full text-slate-400 hover:bg-slate-50 transition-colors">Monthly</button>
+</div>
+</div>
+<div class="p-6 relative h-[320px]">
+<!-- Simulated Chart Content -->
+<div class="absolute inset-x-6 bottom-12 top-6 flex items-end justify-between">
+<div class="w-[8%] bg-secondary-container rounded-t-lg transition-all hover:bg-on-primary-container" style="height: 45%;"></div>
+<div class="w-[8%] bg-secondary-container rounded-t-lg transition-all hover:bg-on-primary-container" style="height: 60%;"></div>
+<div class="w-[8%] bg-secondary-container rounded-t-lg transition-all hover:bg-on-primary-container" style="height: 55%;"></div>
+<div class="w-[8%] bg-secondary-container rounded-t-lg transition-all hover:bg-on-primary-container" style="height: 80%;"></div>
+<div class="w-[8%] bg-secondary-container rounded-t-lg transition-all hover:bg-on-primary-container" style="height: 95%;"></div>
+<div class="w-[8%] bg-primary-container rounded-t-lg transition-all" style="height: 85%;"></div>
+<div class="w-[8%] bg-secondary-container rounded-t-lg transition-all hover:bg-on-primary-container" style="height: 70%;"></div>
+<div class="w-[8%] bg-secondary-container rounded-t-lg transition-all hover:bg-on-primary-container" style="height: 65%;"></div>
+</div>
+<!-- Chart Labels -->
+<div class="absolute inset-x-6 bottom-4 flex justify-between text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
+<span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span class="text-emerald-900 font-extrabold">Jun</span><span>Jul</span><span>Aug</span>
+</div>
+</div>
+</div>
+<!-- Unpaid Bookings Alert Section -->
+<div class="bg-error-container/30 border border-error-container rounded-xl p-6 card-shadow flex flex-col">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-error" data-icon="notification_important">notification_important</span>
+<h3 class="font-h2 text-body-lg text-tertiary">Payment Alerts</h3>
+</div>
+<div class="space-y-4 flex-1">
+<div class="bg-white/60 p-4 rounded-lg border border-error-container/50 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<span class="font-bold text-sm text-primary">Andersson Wedding</span>
+<span class="text-error font-bold text-sm">$3,200</span>
+</div>
+<div class="flex justify-between items-center text-xs text-on-secondary-container">
+<span>Due: Oct 12, 2023</span>
+<span class="bg-error-container text-error px-2 py-0.5 rounded-full text-[10px] font-bold">OVERDUE</span>
+</div>
+</div>
+<div class="bg-white/60 p-4 rounded-lg border border-error-container/50 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<span class="font-bold text-sm text-primary">Nordic Tech Gala</span>
+<span class="text-error font-bold text-sm">$1,850</span>
+</div>
+<div class="flex justify-between items-center text-xs text-on-secondary-container">
+<span>Due: Oct 15, 2023</span>
+<span class="bg-error-container text-error px-2 py-0.5 rounded-full text-[10px] font-bold">OVERDUE</span>
+</div>
+</div>
+<div class="bg-white/60 p-4 rounded-lg border border-error-container/50 flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<span class="font-bold text-sm text-primary">Solberg Birthday</span>
+<span class="text-error font-bold text-sm">$950</span>
+</div>
+<div class="flex justify-between items-center text-xs text-on-secondary-container">
+<span>Due: Oct 18, 2023</span>
+<span class="bg-secondary-container text-slate-600 px-2 py-0.5 rounded-full text-[10px] font-bold">DUE TODAY</span>
+</div>
+</div>
+</div>
+<button class="mt-6 w-full py-3 bg-tertiary text-on-tertiary rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">
+                        Send All Reminders
+                    </button>
+</div>
+</div>
+<!-- Upcoming Bookings Table -->
+<div class="bg-white border border-slate-100 rounded-xl card-shadow overflow-hidden">
+<div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+<div>
+<h3 class="font-h2 text-body-lg text-primary">Upcoming Bookings</h3>
+<p class="text-xs text-slate-400 mt-1">Confirmed events for the next 30 days</p>
+</div>
+<button class="bg-emerald-50 text-emerald-900 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-emerald-100 transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                        New Booking
+                    </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-slate-50 text-slate-400 text-[11px] font-bold uppercase tracking-widest">
+<th class="px-6 py-4">Date &amp; Time</th>
+<th class="px-6 py-4">Customer</th>
+<th class="px-6 py-4">Event Type</th>
+<th class="px-6 py-4">Venue</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-50">
+<tr class="hover:bg-slate-50/50 transition-colors">
+<td class="px-6 py-5">
+<div class="flex flex-col">
+<span class="font-bold text-sm text-primary">Oct 24, 2023</span>
+<span class="text-xs text-slate-400">14:00 - 22:00</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-900 font-bold text-xs">HK</div>
+<span class="font-medium text-sm text-primary">Hanne Knudsen</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 bg-surface-container text-slate-600 rounded-md text-[11px] font-bold">Wedding</span>
+</td>
+<td class="px-6 py-5">
+<span class="text-sm text-slate-500">The Grand Hall</span>
+</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 bg-emerald-50 text-emerald-900 rounded-full text-[10px] font-extrabold uppercase tracking-tight">Confirmed</span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/50 transition-colors">
+<td class="px-6 py-5">
+<div class="flex flex-col">
+<span class="font-bold text-sm text-primary">Oct 26, 2023</span>
+<span class="text-xs text-slate-400">09:00 - 17:00</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">NN</div>
+<span class="font-medium text-sm text-primary">Nordic Net Corp</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 bg-surface-container text-slate-600 rounded-md text-[11px] font-bold">Corporate</span>
+</td>
+<td class="px-6 py-5">
+<span class="text-sm text-slate-500">Meeting Suite A</span>
+</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 bg-emerald-50 text-emerald-900 rounded-full text-[10px] font-extrabold uppercase tracking-tight">Confirmed</span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/50 transition-colors">
+<td class="px-6 py-5">
+<div class="flex flex-col">
+<span class="font-bold text-sm text-primary">Oct 30, 2023</span>
+<span class="text-xs text-slate-400">18:00 - 23:00</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-900 font-bold text-xs">EL</div>
+<span class="font-medium text-sm text-primary">Erik Larsen</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 bg-surface-container text-slate-600 rounded-md text-[11px] font-bold">Private Party</span>
+</td>
+<td class="px-6 py-5">
+<span class="text-sm text-slate-500">The Terrace</span>
+</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 bg-secondary-container text-secondary rounded-full text-[10px] font-extrabold uppercase tracking-tight">Pending Deposit</span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-center">
+<button class="text-xs font-bold text-emerald-900 hover:underline">View All Bookings</button>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB for Quick Actions -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105 active:scale-95 z-50">
+<span class="material-symbols-outlined text-2xl" data-icon="add">add</span>
+</button>
+</body></html>

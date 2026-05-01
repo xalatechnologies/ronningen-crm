@@ -1,0 +1,123 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "../styles/tokens.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-heading);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary-light: var(--rn-primary-light);
+  --color-primary-soft: var(--rn-primary-soft);
+  --color-success: var(--rn-success);
+  --color-danger: var(--rn-danger);
+  --color-accent-blue: var(--rn-accent-blue);
+  --color-text-secondary: var(--rn-text-secondary);
+  --color-text-muted: var(--rn-text-muted);
+  --color-rn-border-strong: var(--rn-border-strong);
+  --color-rn-border-strong-hover: var(--rn-border-strong-hover);
+  --color-rn-text-heading: var(--rn-text-heading);
+  --color-rn-text-body: var(--rn-text-body);
+  --color-rn-text-ink: var(--rn-text-ink);
+  --color-rn-text-slate: var(--rn-text-slate);
+  --color-rn-text-column: var(--rn-text-column);
+  --color-rn-surface-segment: var(--rn-surface-segment);
+  --color-rn-surface-table-head: var(--rn-surface-table-head);
+  --color-rn-surface-row-hover: var(--rn-surface-row-hover);
+  --color-rn-surface-footer: var(--rn-surface-footer);
+  --color-rn-surface-wash: var(--rn-surface-wash);
+  --color-rn-surface-gradient-from: var(--rn-surface-gradient-from);
+  --color-rn-accent-border: var(--rn-accent-border);
+  --color-rn-accent-fill-hover: var(--rn-accent-fill-hover);
+  --color-rn-badge-border: var(--rn-badge-border);
+  --color-rn-badge-surface: var(--rn-badge-surface);
+  --color-rn-footer-text: var(--rn-footer-text);
+  --color-rn-danger-soft: var(--rn-danger-soft);
+  --color-rn-danger-surface: var(--rn-danger-surface);
+  --color-rn-danger-ink: var(--rn-danger-ink);
+  --shadow-rn-card: var(--rn-shadow-card);
+  --shadow-rn-segment-inset: var(--rn-shadow-segment-inset);
+  --shadow-rn-hero-success: var(--rn-shadow-hero-success);
+  --color-divider: var(--rn-divider);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --spacing-scale-1: 4px;
+  --spacing-scale-2: 8px;
+  --spacing-scale-3: 12px;
+  --spacing-scale-4: 16px;
+  --spacing-scale-6: 24px;
+  --spacing-scale-8: 32px;
+  --width-sidebar: var(--sidebar-width);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@layer utilities {
+  .font-heading {
+    font-family:
+      var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+/* Faktura utskrift: skjul app-shell (sidebar, topbar, main-padding) */
+@media print {
+  html.invoice-print-shell .flex.min-h-svh > aside {
+    display: none !important;
+  }
+  html.invoice-print-shell .flex.min-h-svh > div > header {
+    display: none !important;
+  }
+  html.invoice-print-shell main {
+    padding: 0 !important;
+    background: white !important;
+  }
+}
