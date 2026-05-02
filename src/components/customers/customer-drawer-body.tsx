@@ -171,7 +171,7 @@ export function CustomerDrawerBody({
 
   return (
     <>
-      <SheetHeader className="flex-row justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head p-8">
+      <SheetHeader className="flex-row justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head px-8 pt-8 pb-4">
         <div className="flex flex-1 items-center gap-4 pr-10">
           <div className="flex size-14 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-success text-xl font-bold text-white shadow-md">
             {customerInitials(customer.name)}
@@ -197,13 +197,25 @@ export function CustomerDrawerBody({
         </Button>
       </SheetHeader>
 
-      <div className="custom-scrollbar max-h-[calc(100vh-200px)] flex-1 space-y-8 overflow-y-auto p-8">
+      <div className="custom-scrollbar max-h-[calc(100vh-200px)] flex-1 space-y-8 overflow-y-auto px-8 pb-8 pt-4">
         <section>
-          <div className="mb-4 flex items-center gap-2">
-            <Contact className="size-4 text-primary" aria-hidden />
-            <h3 className="font-heading text-xs font-bold tracking-widest text-muted-foreground uppercase">
-              Kontakt
-            </h3>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Contact className="size-4 text-primary" aria-hidden />
+              <h3 className="font-heading text-xs font-bold tracking-widest text-muted-foreground uppercase">
+                Kontakt
+              </h3>
+            </div>
+            {!editingProfile ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-8 shrink-0 px-2 text-xs font-semibold text-primary hover:bg-primary/5"
+                onClick={() => setEditingProfile(true)}
+              >
+                Rediger
+              </Button>
+            ) : null}
           </div>
           {editingProfile ? (
             <form
@@ -272,7 +284,7 @@ export function CustomerDrawerBody({
               </div>
             </form>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-4">
               <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-4">
                 <p className="mb-1 text-[10px] font-bold text-muted-foreground uppercase">
                   Telefon
@@ -397,26 +409,15 @@ export function CustomerDrawerBody({
       </div>
 
       <SheetFooter className="flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer/50 p-6">
-        <div className="flex flex-row gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-12 flex-1 rounded-md border-2 border-rn-border-strong bg-background font-semibold"
-            onClick={() => setEditingProfile(true)}
-            disabled={editingProfile}
-          >
-            Rediger profil
-          </Button>
-          <Link
-            href={`/app/bookings/new?customerId=${customer.id}`}
-            className={cn(
-              buttonVariants({ variant: "success", size: "cta" }),
-              "flex-1",
-            )}
-          >
-            Ny booking
-          </Link>
-        </div>
+        <Link
+          href={`/app/bookings/new?customerId=${customer.id}`}
+          className={cn(
+            buttonVariants({ variant: "success", size: "cta" }),
+            "w-full",
+          )}
+        >
+          Ny booking
+        </Link>
         <Button
           type="button"
           variant="outline"

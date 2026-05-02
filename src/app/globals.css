@@ -96,6 +96,7 @@
   --spacing-app-gap: calc(0.8rem * var(--app-spacing-scale));
   --text-app-xs: calc(13px * var(--app-type-scale));
   --text-app-sm: calc(14px * var(--app-type-scale));
+  --text-app-control: var(--app-control-font-size);
   --text-app-base: calc(18px * var(--app-read-type-scale));
   --text-app-md: calc(19px * var(--app-type-scale));
   --text-app-lg: calc(21px * var(--app-type-scale));
@@ -121,15 +122,84 @@
     line-height: var(--line-height-base);
     @apply bg-background text-foreground antialiased;
   }
-  h1,
-  h2,
-  h3,
-  h4 {
+  /** Semantic headings — aligned with `.app-title` / `.app-section-title` / `.app-card-title`; classes override. */
+  h1 {
+    font-family:
+      var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(28px * var(--app-type-scale));
+    font-weight: 600;
     line-height: var(--line-height-heading);
+    letter-spacing: -0.01em;
+    color: var(--foreground);
+  }
+  h2 {
+    font-family:
+      var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(24px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: var(--line-height-heading);
+    color: var(--rn-text-heading);
+  }
+  h3 {
+    font-family:
+      var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(20px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: var(--line-height-heading);
+    color: var(--rn-text-heading);
+  }
+  h4 {
+    font-family:
+      var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    line-height: var(--line-height-heading);
+    color: var(--rn-text-heading);
+  }
+  h5 {
+    font-family:
+      var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(16px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: var(--line-height-heading);
+    color: var(--rn-text-heading);
+  }
+  h6 {
+    font-family:
+      var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--text-app-sm);
+    font-weight: 600;
+    line-height: var(--line-height-heading);
+    color: var(--rn-text-heading);
+  }
+  p {
+    font-size: inherit;
+    line-height: var(--line-height-base);
+  }
+  /** Matches `--text-app-sm`; `.app-meta` stays 13px for table headers etc. */
+  small {
+    font-size: var(--text-app-sm);
+    line-height: 1.45;
+  }
+  strong {
+    font-weight: 600;
+  }
+  label {
+    font-size: var(--text-app-xs);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+    color: var(--foreground);
   }
 }
 
 @layer utilities {
+  /**
+   * Typography utilities — prefer this order: headings (`.app-title`, `.app-section-title`, …) →
+   * body/read (`.app-text*`, `text-app-base`, uses `--app-read-type-scale`) →
+   * meta (`.app-meta`, `.app-label`, uses `--app-type-scale`) →
+   * controls (`text-app-control`, form primitives).
+   */
   .font-heading {
     font-family:
       var(--font-heading), ui-sans-serif, system-ui, sans-serif;
@@ -248,7 +318,7 @@
 
   @media (min-width: 768px) {
     .app-main-nav-link {
-      font-size: calc(18px * var(--app-type-scale));
+      font-size: var(--font-size-base);
     }
   }
 
@@ -315,7 +385,7 @@
 
   @media (min-width: 768px) {
     .bookings-list-workspace [role="tablist"] [role="tab"] {
-      font-size: calc(18px * var(--app-type-scale));
+      font-size: var(--font-size-base);
     }
   }
 
@@ -397,45 +467,26 @@
     font-size: calc(17px * var(--app-read-type-scale));
   }
 
-  .customers-page-workspace .customers-row-name {
-    font-size: calc(21px * var(--app-type-scale));
-    line-height: 1.25;
-  }
-
-  .customers-page-workspace .customers-row-meta {
-    font-size: calc(16px * var(--app-read-type-scale));
-  }
-
-  .customers-page-workspace .customers-row-metric {
-    font-size: calc(20px * var(--app-read-type-scale));
-  }
-
-  .customers-page-workspace .customers-partners-row-name {
-    font-size: calc(20px * var(--app-type-scale));
-    line-height: 1.25;
-  }
-
-  .customers-page-workspace .customers-partners-row-meta {
-    font-size: calc(16px * var(--app-read-type-scale));
-  }
-
-  .customers-page-workspace .customers-booking-count-pill {
-    font-size: calc(14px * var(--app-type-scale));
-  }
-
-  @media (min-width: 768px) {
-    .customers-page-workspace .customers-booking-count-pill {
-      font-size: calc(15px * var(--app-type-scale));
-    }
-  }
-
+  .customers-page-workspace .customers-row-name,
+  .customers-page-workspace .customers-partners-row-name,
+  .customers-page-workspace .customers-row-meta,
+  .customers-page-workspace .customers-partners-row-meta,
+  .customers-page-workspace .customers-row-metric,
+  .customers-page-workspace .customers-booking-count-pill,
   .customers-page-workspace .customers-partners-category-pill {
-    font-size: calc(13px * var(--app-type-scale));
+    font-size: calc(17px * var(--app-read-type-scale));
+    line-height: 1.4;
   }
 
   @media (min-width: 768px) {
+    .customers-page-workspace .customers-row-name,
+    .customers-page-workspace .customers-partners-row-name,
+    .customers-page-workspace .customers-row-meta,
+    .customers-page-workspace .customers-partners-row-meta,
+    .customers-page-workspace .customers-row-metric,
+    .customers-page-workspace .customers-booking-count-pill,
     .customers-page-workspace .customers-partners-category-pill {
-      font-size: calc(14px * var(--app-type-scale));
+      font-size: calc(18px * var(--app-read-type-scale));
     }
   }
 
@@ -582,35 +633,25 @@
     font-size: calc(26px * var(--app-type-scale));
   }
 
-  .finance-page-workspace .finance-row-date {
-    font-size: calc(16px * var(--app-read-type-scale));
-  }
-
-  .finance-page-workspace .finance-row-desc {
-    font-size: calc(18px * var(--app-type-scale));
-    line-height: 1.3;
-  }
-
-  .finance-page-workspace .finance-row-meta {
-    font-size: calc(16px * var(--app-read-type-scale));
-  }
-
+  .finance-page-workspace .finance-row-date,
+  .finance-page-workspace .finance-row-desc,
+  .finance-page-workspace .finance-row-meta,
+  .finance-page-workspace .finance-row-type,
+  .finance-page-workspace .finance-row-amount,
   .finance-page-workspace .finance-category-pill {
-    font-size: calc(13px * var(--app-type-scale));
+    font-size: calc(17px * var(--app-read-type-scale));
+    line-height: 1.4;
   }
 
   @media (min-width: 768px) {
+    .finance-page-workspace .finance-row-date,
+    .finance-page-workspace .finance-row-desc,
+    .finance-page-workspace .finance-row-meta,
+    .finance-page-workspace .finance-row-type,
+    .finance-page-workspace .finance-row-amount,
     .finance-page-workspace .finance-category-pill {
-      font-size: calc(14px * var(--app-type-scale));
+      font-size: calc(18px * var(--app-read-type-scale));
     }
-  }
-
-  .finance-page-workspace .finance-row-type {
-    font-size: calc(16px * var(--app-type-scale));
-  }
-
-  .finance-page-workspace .finance-row-amount {
-    font-size: calc(18px * var(--app-read-type-scale));
   }
 
   .finance-page-workspace .finance-page-footer {
@@ -682,7 +723,7 @@
   }
 
   .invoices-page-workspace .invoices-due-date {
-    font-size: calc(18px * var(--app-type-scale));
+    font-size: var(--font-size-base);
     line-height: 1.3;
   }
 
@@ -709,7 +750,7 @@
   }
 
   .invoices-page-workspace .invoices-payment-major {
-    font-size: calc(18px * var(--app-type-scale));
+    font-size: var(--font-size-base);
     font-variant-numeric: tabular-nums;
   }
 
@@ -871,45 +912,39 @@
     font-size: calc(17px * var(--app-read-type-scale));
   }
 
-  .assets-page-workspace .assets-row-name {
-    font-size: calc(18px * var(--app-type-scale));
-    font-weight: 600;
-    line-height: 1.3;
+  .assets-page-workspace .assets-row-name,
+  .assets-page-workspace .assets-row-meta,
+  .assets-page-workspace .assets-row-qty,
+  .assets-page-workspace .assets-row-value,
+  .assets-page-workspace .assets-condition-pill,
+  .assets-page-workspace .assets-insurance-pill {
+    font-size: calc(17px * var(--app-read-type-scale));
+    line-height: 1.4;
   }
 
-  .assets-page-workspace .assets-row-meta {
-    font-size: calc(16px * var(--app-read-type-scale));
-    line-height: 1.45;
+  @media (min-width: 768px) {
+    .assets-page-workspace .assets-row-name,
+    .assets-page-workspace .assets-row-meta,
+    .assets-page-workspace .assets-row-qty,
+    .assets-page-workspace .assets-row-value,
+    .assets-page-workspace .assets-condition-pill,
+    .assets-page-workspace .assets-insurance-pill {
+      font-size: calc(18px * var(--app-read-type-scale));
+    }
+  }
+
+  .assets-page-workspace .assets-row-name {
+    font-weight: 600;
   }
 
   .assets-page-workspace .assets-row-qty {
-    font-size: calc(16px * var(--app-type-scale));
     font-weight: 500;
     font-variant-numeric: tabular-nums;
   }
 
-  @media (min-width: 768px) {
-    .assets-page-workspace .assets-row-qty {
-      font-size: calc(17px * var(--app-type-scale));
-    }
-  }
-
   .assets-page-workspace .assets-row-value {
-    font-size: calc(18px * var(--app-type-scale));
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-  }
-
-  .assets-page-workspace .assets-condition-pill,
-  .assets-page-workspace .assets-insurance-pill {
-    font-size: calc(13px * var(--app-type-scale));
-  }
-
-  @media (min-width: 768px) {
-    .assets-page-workspace .assets-condition-pill,
-    .assets-page-workspace .assets-insurance-pill {
-      font-size: calc(14px * var(--app-type-scale));
-    }
   }
 
   .assets-page-workspace .assets-empty-hint {
@@ -1033,7 +1068,7 @@
   }
 
   .reports-page-workspace .reports-breakdown-stats {
-    font-size: calc(18px * var(--app-type-scale));
+    font-size: var(--font-size-base);
     line-height: 1.35;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -1051,7 +1086,7 @@
   }
 
   .reports-page-workspace .reports-filter-trigger {
-    font-size: calc(18px * var(--app-type-scale));
+    font-size: var(--font-size-base);
   }
 
   .reports-page-workspace .reports-filter-item {

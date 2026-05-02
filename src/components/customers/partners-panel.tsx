@@ -395,10 +395,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
                         <td className="customers-partners-row-meta px-6 py-5 text-muted-foreground md:px-8 md:py-6">
                           {p.email ?? "—"}
                         </td>
-                        <td
-                          className="px-6 py-5 text-right md:px-8 md:py-6"
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                        <td className="px-6 py-5 text-right md:px-8 md:py-6">
                           <div className="flex items-center justify-end gap-0.5">
                             <Button
                               type="button"
@@ -407,7 +404,10 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
                               className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10"
                               aria-label={`Slett ${p.name}`}
                               disabled={deleteBusyId != null}
-                              onClick={() => requestDeletePartner(p.id, p.name)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                requestDeletePartner(p.id, p.name);
+                              }}
                             >
                               <Trash2 className="size-4" aria-hidden />
                             </Button>

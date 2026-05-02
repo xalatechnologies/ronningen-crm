@@ -33,6 +33,9 @@
   --app-input-min-height: 44px;
   --app-button-min-height: 40px;
 
+  /** Inputs, default buttons, selects — `--app-type-scale` only (not read boost). */
+  --app-control-font-size: calc(15.25px * var(--app-type-scale));
+
   --font-size-base: calc(18px * var(--app-type-scale));
   --line-height-base: 1.55;
   --line-height-heading: 1.3;

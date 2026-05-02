@@ -38,7 +38,7 @@ import type {
 const CUSTOMERS_PAGE_SIZE = 4;
 
 const customersTableHeadClass =
-  "customers-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+  "customers-table-head whitespace-nowrap px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 
 export type { CustomerBookingListItem, PartnerRow } from "./types";
 
@@ -345,7 +345,7 @@ export function CustomersSection({
                           <td className="px-6 py-5 md:px-8 md:py-6">
                             <span
                               className={cn(
-                                "customers-booking-count-pill inline-flex items-center font-semibold tabular-nums",
+                                "customers-booking-count-pill inline-flex items-center tabular-nums",
                                 st.count > 0
                                   ? "text-success"
                                   : "text-muted-foreground",
@@ -357,10 +357,7 @@ export function CustomersSection({
                           <td className="customers-row-metric px-6 py-5 font-bold tabular-nums text-success md:px-8 md:py-6">
                             {formatNok(st.spent)}
                           </td>
-                          <td
-                            className="px-6 py-5 text-right md:px-8 md:py-6"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <td className="px-6 py-5 text-right md:px-8 md:py-6">
                             <div className="flex items-center justify-end gap-0.5">
                               <Button
                                 type="button"
@@ -374,7 +371,10 @@ export function CustomersSection({
                                     : `Slett ${c.name}`
                                 }
                                 disabled={deleteBusyId != null || st.count > 0}
-                                onClick={() => requestDeleteCustomer(c, st.count)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  requestDeleteCustomer(c, st.count);
+                                }}
                               >
                                 <Trash2 className="size-4" aria-hidden />
                               </Button>

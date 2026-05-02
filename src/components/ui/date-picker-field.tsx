@@ -72,12 +72,12 @@ export function DatePickerField({
   const triggerClasses =
     variant === "toolbar"
       ? cn(
-          "flex h-[max(var(--app-input-min-height),var(--app-tap-target-min))] w-full items-center justify-start gap-2 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card px-4 text-left text-[length:calc(15.25px*var(--app-type-scale))] font-medium text-foreground shadow-sm outline-none transition-colors",
+          "flex h-[max(var(--app-input-min-height),var(--app-tap-target-min))] w-full items-center justify-start gap-2 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card px-4 text-left text-app-control font-medium text-foreground shadow-sm outline-none transition-colors",
           "hover:bg-muted/40 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25",
           "disabled:pointer-events-none disabled:opacity-50",
         )
       : cn(
-          "flex h-[max(var(--app-input-min-height),var(--app-tap-target-min))] w-full items-center gap-2 rounded-[length:var(--app-radius)] border border-input bg-background px-3 text-left text-[length:calc(15.25px*var(--app-type-scale))] outline-none",
+          "flex h-[max(var(--app-input-min-height),var(--app-tap-target-min))] w-full items-center gap-2 rounded-[length:var(--app-radius)] border border-input bg-background px-3 text-left text-app-control outline-none",
           "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
         );
 
@@ -123,7 +123,7 @@ export function DatePickerField({
           <PopoverPrimitive.Popup
             initialFocus={(openType) => openType === "keyboard"}
             className={cn(
-              "origin-(--transform-origin) rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-3 text-[length:calc(15.25px*var(--app-type-scale))] text-popover-foreground shadow-lg outline-none",
+              "origin-(--transform-origin) rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-3 text-app-control text-popover-foreground shadow-lg outline-none",
               "data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
             )}
           >
@@ -138,7 +138,7 @@ export function DatePickerField({
               >
                 <ChevronLeft className="size-4" aria-hidden />
               </Button>
-              <span className="min-w-0 truncate px-1 text-center text-[length:calc(15.25px*var(--app-type-scale))] font-semibold capitalize">
+              <span className="min-w-0 truncate px-1 text-center text-app-control font-semibold capitalize">
                 {format(viewMonth, "LLLL yyyy", { locale: nb })}
               </span>
               <Button
