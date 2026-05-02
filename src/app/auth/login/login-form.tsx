@@ -37,7 +37,7 @@ export function LoginForm() {
     setFormError(null);
     if (!isSupabasePublicConfigured()) {
       setFormError(
-        "Supabase URL og anon-nøkkel mangler. Kopier .env.example til .env.local, sett NEXT_PUBLIC_SUPABASE_URL og NEXT_PUBLIC_SUPABASE_ANON_KEY fra prosjektet (Settings → API), og start npm run dev på nytt.",
+        "Supabase URL og offentlig API-nøkkel mangler. Opprett .env.local med NEXT_PUBLIC_SUPABASE_URL og enten NEXT_PUBLIC_SUPABASE_ANON_KEY (eldre JWT) eller NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (ny «Publishable»-nøkkel) fra Supabase (Settings → API), og start npm run dev på nytt.",
       );
       return;
     }
@@ -112,7 +112,7 @@ export function LoginForm() {
                 <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-xs md:text-sm">
                   .env.local
                 </code>{" "}
-                med{" "}
+                i prosjektmappen med{" "}
                 <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-xs md:text-sm">
                   NEXT_PUBLIC_SUPABASE_URL
                 </code>{" "}
@@ -120,7 +120,13 @@ export function LoginForm() {
                 <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-xs md:text-sm">
                   NEXT_PUBLIC_SUPABASE_ANON_KEY
                 </code>{" "}
-                fra Supabase (Settings → API), og start dev-serveren på nytt.
+                (eldre JWT) eller{" "}
+                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-xs md:text-sm">
+                  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+                </code>{" "}
+                (ny «Publishable»-nøkkel fra Supabase), hentet under Settings → API. Deretter{" "}
+                <strong className="font-semibold">start dev-serveren på nytt</strong>{" "}
+                slik at Next.js leser inn variablene.
               </p>
             ) : null}
           </CardHeader>

@@ -2,24 +2,21 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { isAuthPath, isProtectedPath } from "@/config/routes";
+import {
+  getSupabasePublicEnvForClient,
+  isSupabasePublicConfigured,
+} from "@/lib/supabase/public-env";
 
 import type { Database } from "@/types/database.types";
-
-const PLACEHOLDER_URL = "https://placeholder.supabase.co";
-const PLACEHOLDER_ANON =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.supabase-ssr-build-placeholder";
 
 let missingMiddlewareEnvWarned = false;
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
 
-  const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const envAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-  const url = envUrl && envUrl.length > 0 ? envUrl : PLACEHOLDER_URL;
-  const anon = envAnon && envAnon.length > 0 ? envAnon : PLACEHOLDER_ANON;
+  const { url, key: anon } = getSupabasePublicEnvForClient();
 
-  if (!envUrl || !envAnon) {
+  if (!isSupabasePublicConfigured()) {
     if (
       !missingMiddlewareEnvWarned &&
       (isProtectedPath(request.nextUrl.pathname) ||
@@ -27,7 +24,7 @@ export async function updateSession(request: NextRequest) {
     ) {
       missingMiddlewareEnvWarned = true;
       console.warn(
-        "[supabase] Missing public Supabase env — auth middleware uses placeholder; set keys for real sessions",
+        "[supabase] Missing public Supabase env — set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
       );
     }
   }
