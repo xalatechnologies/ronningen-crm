@@ -10,12 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -46,11 +40,12 @@ import {
   ChevronRight,
   Coffee,
   Download,
-  MoreVertical,
   Package,
+  Pencil,
   Plus,
   Search,
   Snowflake,
+  Trash2,
   Wrench,
   Wind,
 } from "lucide-react";
@@ -913,9 +908,12 @@ export function AssetsSection({
                   Forsikring
                 </TableHead>
                 <TableHead
-                  className={cn("w-12 text-right sm:w-14", assetsTableHeadClass)}
+                  className={cn(
+                    "min-w-[5.5rem] px-3 py-4 text-right sm:min-w-28 md:px-8 md:py-5",
+                    assetsTableHeadClass,
+                  )}
                 >
-                  <span className="sr-only">Handlinger</span>
+                  <span className="sr-only">Rediger eller slett</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -1005,38 +1003,30 @@ export function AssetsSection({
                       className={cn(assetsTableCellClass, "text-right")}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              className="size-10 rounded-md text-muted-foreground md:size-11"
-                              aria-label={`Handlinger for ${a.name}`}
-                            />
-                          }
+                      <div className="flex items-center justify-end gap-0.5">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          disabled={!canEdit}
+                          className="size-10 shrink-0 rounded-md text-muted-foreground hover:text-foreground disabled:opacity-40"
+                          aria-label={`Rediger ${a.name}`}
+                          onClick={() => setDialog({ open: true, row: a })}
                         >
-                          <MoreVertical className="size-5" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="min-w-36">
-                          <DropdownMenuItem
-                            disabled={!canEdit}
-                            onSelect={() =>
-                              setDialog({ open: true, row: a })
-                            }
-                          >
-                            Rediger
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={!canEdit}
-                            variant="destructive"
-                            onSelect={() => void deleteAsset(a.id, a.name)}
-                          >
-                            Slett
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          <Pencil className="size-5" aria-hidden />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          disabled={!canEdit}
+                          className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                          aria-label={`Slett ${a.name}`}
+                          onClick={() => void deleteAsset(a.id, a.name)}
+                        >
+                          <Trash2 className="size-5" aria-hidden />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

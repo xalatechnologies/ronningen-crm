@@ -44,6 +44,7 @@ import {
   Plus,
   PlusCircle,
   Tag,
+  Trash2,
   TrendingDown,
   TrendingUp,
   Wallet,
@@ -569,11 +570,17 @@ export function FinanceSection({
   loadError,
   canManageTransactions,
 }: FinanceSectionProps) {
+  const supabase = useSupabase();
+  const router = useRouter();
   const [range, setRange] = useState(defaultMonthRange);
   const [propertyId, setPropertyId] = useState("");
   const [page, setPage] = useState(1);
   const [addOpen, setAddOpen] = useState(false);
   const [editRow, setEditRow] = useState<TransactionListItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TransactionListItem | null>(
+    null,
+  );
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const afterTransactionSaved = useCallback(
     (payload: { transactionDate: string; propertyId: string }) => {
@@ -647,6 +654,32 @@ export function FinanceSection({
   const margin = income > 0 ? (net / income) * 100 : null;
 
   const { totalPages, currentPage, pageRows } = pagination;
+
+  async function confirmDeleteTransaction() {
+    const row = deleteTarget;
+    if (!row) return;
+    setDeleteBusy(true);
+    try {
+      const { error } = await supabase
+        .from("transactions")
+        .delete()
+        .eq("id", row.id);
+
+      if (error) {
+        toast.error("Kunne ikke slette transaksjon", {
+          description: error.message,
+        });
+        return;
+      }
+
+      toast.success("Transaksjon slettet");
+      setDeleteTarget(null);
+      setEditRow((cur) => (cur?.id === row.id ? null : cur));
+      await router.refresh();
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
 
   const kpiTileClass =
     "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
@@ -942,8 +975,8 @@ export function FinanceSection({
                   Beløp
                 </TableHead>
                 {canManageTransactions ? (
-                  <TableHead className="w-16 px-3 py-4 text-right sm:w-18 md:py-5">
-                    <span className="sr-only">Rediger</span>
+                  <TableHead className="min-w-[5.5rem] px-3 py-4 text-right sm:min-w-28 md:py-5">
+                    <span className="sr-only">Rediger eller slett</span>
                   </TableHead>
                 ) : null}
               </TableRow>
@@ -1020,17 +1053,29 @@ export function FinanceSection({
                       </span>
                     </TableCell>
                     {canManageTransactions ? (
-                      <TableCell className="w-16 px-3 py-5 text-right sm:w-18 md:px-4 md:py-6">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          className="size-10 shrink-0 rounded-md text-muted-foreground hover:text-foreground"
-                          aria-label={`Rediger transaksjon ${formatDisplayDate(r.transaction_date)}`}
-                          onClick={() => setEditRow(r)}
-                        >
-                          <Pencil className="size-5" aria-hidden />
-                        </Button>
+                      <TableCell className="min-w-[5.5rem] px-2 py-5 text-right sm:min-w-28 sm:px-3 md:py-6">
+                        <div className="flex items-center justify-end gap-0.5">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="size-10 shrink-0 rounded-md text-muted-foreground hover:text-foreground"
+                            aria-label={`Rediger transaksjon ${formatDisplayDate(r.transaction_date)}`}
+                            onClick={() => setEditRow(r)}
+                          >
+                            <Pencil className="size-5" aria-hidden />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10"
+                            aria-label={`Slett transaksjon ${formatDisplayDate(r.transaction_date)}`}
+                            onClick={() => setDeleteTarget(r)}
+                          >
+                            <Trash2 className="size-5" aria-hidden />
+                          </Button>
+                        </div>
                       </TableCell>
                     ) : null}
                   </TableRow>
@@ -1115,6 +1160,56 @@ export function FinanceSection({
               onSaved={afterTransactionSaved}
               onClose={() => setEditRow(null)}
             />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={deleteTarget != null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen && !deleteBusy) setDeleteTarget(null);
+        }}
+      >
+        <DialogContent
+          showCloseButton
+          className="max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-6 shadow-xl sm:max-w-md"
+        >
+          {deleteTarget ? (
+            <>
+              <DialogHeader className="text-left">
+                <DialogTitle className="app-card-title">
+                  Slette transaksjon?
+                </DialogTitle>
+                <DialogDescription className="text-app-base leading-relaxed text-muted-foreground">
+                  {formatDisplayDate(deleteTarget.transaction_date)} ·{" "}
+                  {deleteTarget.description?.trim() || "Uten beskrivelse"} ·{" "}
+                  {rowIsIncome(deleteTarget.type) ? "+" : "−"}
+                  {formatNok(Number(deleteTarget.amount))}. Dette kan ikke angres.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 w-full rounded-md border-2 border-rn-border-strong sm:w-auto"
+                  disabled={deleteBusy}
+                  onClick={() => setDeleteTarget(null)}
+                >
+                  Avbryt
+                </Button>
+                <Button
+                  type="button"
+                  disabled={deleteBusy}
+                  className={cn(
+                    buttonVariants({ variant: "default" }),
+                    "h-11 w-full rounded-md border-2 border-red-200 bg-red-600 font-semibold text-white hover:bg-red-700 sm:w-auto",
+                  )}
+                  onClick={() => void confirmDeleteTransaction()}
+                >
+                  {deleteBusy ? "Sletter…" : "Ja, slett"}
+                </Button>
+              </DialogFooter>
+            </>
           ) : null}
         </DialogContent>
       </Dialog>

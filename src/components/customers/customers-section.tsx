@@ -454,7 +454,7 @@ export function CustomersSection({
           side="right"
           showCloseButton={false}
           className={cn(
-            "w-full max-w-[min(100vw,450px)] gap-0 border-l-2 border-rn-border-strong bg-card p-0 sm:max-w-[450px]",
+            "w-full max-w-[min(100vw,36rem)] gap-0 border-l-2 border-rn-border-strong bg-card p-0 sm:max-w-[36rem]",
             "shadow-rn-card",
           )}
         >

@@ -5,8 +5,16 @@ import type {
   BookingStatus,
 } from "@/components/bookings/types";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -32,7 +40,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Save, X, XCircle } from "lucide-react";
+import { CheckCircle2, Save, Trash2, X, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useForm, useWatch, Controller, type Resolver } from "react-hook-form";
@@ -81,6 +89,8 @@ export type BookingDetailSheetProps = {
     next: BookingStatus,
     opts?: { confirmMessage?: string },
   ) => void;
+  /** Owner/admin — permanent delete matches RLS. */
+  canDeleteBooking?: boolean;
 };
 
 export function BookingDetailSheet({
@@ -89,11 +99,14 @@ export function BookingDetailSheet({
   row,
   updatingId,
   onSetStatus,
+  canDeleteBooking = false,
 }: BookingDetailSheetProps) {
   const supabase = useSupabase();
   const router = useRouter();
   const [detailSaving, setDetailSaving] = useState(false);
   const [inkassoBusy, setInkassoBusy] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const form = useForm<BookingDetailEditInput>({
     resolver: zodResolver(
@@ -154,12 +167,19 @@ export function BookingDetailSheet({
     }
   }, [row, open, totalW, paidW, paymentStatusW, setValue]);
 
+  useEffect(() => {
+    if (!open) setDeleteDialogOpen(false);
+  }, [open]);
+
   if (!row) return null;
 
   const bookingRow = row;
 
   const busy =
-    updatingId === bookingRow.id || detailSaving || inkassoBusy;
+    updatingId === bookingRow.id ||
+    detailSaving ||
+    inkassoBusy ||
+    deleteBusy;
 
   async function onSave(data: BookingDetailEditInput) {
     setDetailSaving(true);
@@ -259,6 +279,30 @@ export function BookingDetailSheet({
     }
   }
 
+  async function performDeleteBooking() {
+    setDeleteBusy(true);
+    try {
+      const { error } = await supabase
+        .from("bookings")
+        .delete()
+        .eq("id", bookingRow.id);
+
+      if (error) {
+        toast.error("Kunne ikke slette booking", {
+          description: error.message,
+        });
+        return;
+      }
+
+      toast.success("Booking slettet");
+      setDeleteDialogOpen(false);
+      onOpenChange(false);
+      await router.refresh();
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
+
   function formatInkassoRegistered(iso: string) {
     return new Intl.DateTimeFormat("nb-NO", {
       day: "numeric",
@@ -268,12 +312,13 @@ export function BookingDetailSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
         showCloseButton={false}
         className={cn(
-          "flex h-full w-full max-w-[min(100vw,48rem)] flex-col gap-0 border-l-2 border-rn-border-strong bg-card p-0 sm:max-w-3xl",
+          "flex h-full w-full max-w-[min(100vw,72rem)] flex-col gap-0 border-l-2 border-rn-border-strong bg-card p-0 sm:max-w-6xl",
           "shadow-rn-card",
         )}
       >
@@ -750,9 +795,66 @@ export function BookingDetailSheet({
                 Til avventer
               </Button>
             ) : null}
+            {canDeleteBooking ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                className="h-11 w-full rounded-md border-2 border-destructive/40 text-base font-semibold text-destructive hover:bg-destructive/10 sm:w-full"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Trash2 className="mr-2 size-4 shrink-0" aria-hidden />
+                Slett booking
+              </Button>
+            ) : null}
           </SheetFooter>
         </form>
       </SheetContent>
     </Sheet>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onOpenChange={(nextOpen) => {
+          if (!deleteBusy) setDeleteDialogOpen(nextOpen);
+        }}
+      >
+        <DialogContent
+          showCloseButton
+          className="z-[100] max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-6 shadow-xl sm:max-w-md"
+        >
+          <DialogHeader className="text-left">
+            <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading">
+              Slette booking?
+            </DialogTitle>
+            <DialogDescription className="text-base leading-relaxed text-muted-foreground">
+              «{bookingRow.customer}», {bookingRow.date}. Dette kan ikke angres.
+              Kunden beholdes i Kunder.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 w-full rounded-md border-2 border-rn-border-strong sm:w-auto"
+              disabled={deleteBusy}
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Avbryt
+            </Button>
+            <Button
+              type="button"
+              disabled={deleteBusy}
+              className={cn(
+                buttonVariants({ variant: "default" }),
+                "h-11 w-full rounded-md border-2 border-red-200 bg-red-600 font-semibold text-white hover:bg-red-700 sm:w-auto",
+              )}
+              onClick={() => void performDeleteBooking()}
+            >
+              {deleteBusy ? "Sletter…" : "Ja, slett booking"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -5,6 +5,8 @@ import type {
 } from "@/components/bookings/types";
 import { effectiveBookingPaymentStatus } from "@/constants/booking-payment-status";
 import { normalizeBookingAudience } from "@/lib/booking-audience";
+import { canManageBookings } from "@/lib/role-access";
+import { fetchProfileRole } from "@/lib/supabase/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type RawBooking = {
@@ -93,6 +95,12 @@ function paidLabelAndFraction(
 export default async function BookingsPage() {
   const supabase = await createServerSupabaseClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const profileRole = user ? await fetchProfileRole(supabase, user.id) : null;
+  const canDeleteBookings = canManageBookings(profileRole);
+
   const { data: rawList, error } = await supabase
     .from("bookings")
     .select(
@@ -152,5 +160,11 @@ export default async function BookingsPage() {
     };
   });
 
-  return <BookingsList bookings={bookings} loadError={loadError} />;
+  return (
+    <BookingsList
+      bookings={bookings}
+      loadError={loadError}
+      canDeleteBookings={canDeleteBookings}
+    />
+  );
 }

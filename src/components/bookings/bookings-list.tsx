@@ -304,9 +304,15 @@ function FindBookingsCardHeader({
 export type BookingsListProps = {
   bookings: BookingListRow[];
   loadError: string | null;
+  /** Owner/admin — matches RLS for bookings delete. */
+  canDeleteBookings?: boolean;
 };
 
-export function BookingsList({ bookings, loadError }: BookingsListProps) {
+export function BookingsList({
+  bookings,
+  loadError,
+  canDeleteBookings = false,
+}: BookingsListProps) {
   const supabase = useSupabase();
   const router = useRouter();
   const [view, setView] = useState<"list" | "calendar">("list");
@@ -676,7 +682,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
               <div className="mb-5 flex size-12 items-center justify-center rounded-md border border-white/20 bg-white/12 md:size-14">
                 <TrendingUp className="size-6 md:size-7" aria-hidden />
               </div>
-              <h2 className="font-heading text-xl font-bold leading-snug md:text-2xl">
+              <h2 className="font-heading text-xl font-bold leading-snug text-white md:text-2xl">
                 Månedlig omsetning
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-white/90 md:text-base">
@@ -850,6 +856,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
           row={selectedRow}
           updatingId={updatingId}
           onSetStatus={setBookingStatus}
+          canDeleteBooking={canDeleteBookings}
         />
       ) : null}
 
