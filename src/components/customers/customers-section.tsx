@@ -21,7 +21,7 @@ import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronRight, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
@@ -35,8 +35,10 @@ import type {
   PartnerRow,
 } from "./types";
 
+const CUSTOMERS_PAGE_SIZE = 4;
+
 const customersTableHeadClass =
-  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+  "customers-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 
 export type { CustomerBookingListItem, PartnerRow } from "./types";
 
@@ -46,15 +48,6 @@ export type CustomersSectionProps = {
   bookings: CustomerBookingListItem[];
   loadError: string | null;
 };
-
-function customerInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (
-    (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-  );
-}
 
 function formatNok(n: number) {
   return new Intl.NumberFormat("nb-NO", {
@@ -91,11 +84,12 @@ function CustomersToolbar({
 }) {
   return (
     <div className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
-      <AppPageHeader
-        className="mb-0"
-        surface="default"
-        title="Kunder"
-        actions={
+      <div className="customers-page-hero">
+        <AppPageHeader
+          className="mb-0"
+          surface="default"
+          title="Kunder"
+          actions={
           <div
             className="flex w-full min-w-0 flex-col gap-3 md:min-w-0 md:flex-1 md:flex-row md:items-stretch md:justify-end md:gap-3 lg:gap-4"
             role="search"
@@ -107,10 +101,11 @@ function CustomersToolbar({
                 aria-hidden
               />
               <Input
+                id="customers-search"
                 value={query}
                 onChange={(e) => onQueryChange(e.target.value)}
                 placeholder="Søk på navn, e-post eller telefon…"
-                className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-base text-foreground shadow-sm md:h-14 md:pl-14 md:text-[17px] focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
                 aria-label="Søk kunder"
               />
             </div>
@@ -127,7 +122,8 @@ function CustomersToolbar({
             </Button>
           </div>
         }
-      />
+        />
+      </div>
     </div>
   );
 }
@@ -141,6 +137,7 @@ export function CustomersSection({
   const supabase = useSupabase();
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [customersPage, setCustomersPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [deleteBusyId, setDeleteBusyId] = useState<string | null>(null);
@@ -159,6 +156,22 @@ export function CustomersSection({
       return hay.includes(q);
     });
   }, [customers, query]);
+
+  const pagination = useMemo(() => {
+    const totalPages = Math.max(
+      1,
+      Math.ceil(filtered.length / CUSTOMERS_PAGE_SIZE),
+    );
+    const currentPage = Math.min(Math.max(1, customersPage), totalPages);
+    const start = (currentPage - 1) * CUSTOMERS_PAGE_SIZE;
+    return {
+      totalPages,
+      currentPage,
+      pageRows: filtered.slice(start, start + CUSTOMERS_PAGE_SIZE),
+    };
+  }, [filtered, customersPage]);
+
+  const { totalPages, currentPage, pageRows } = pagination;
 
   const selected = useMemo(
     () => customers.find((c) => c.id === selectedId) ?? null,
@@ -243,7 +256,7 @@ export function CustomersSection({
     : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-24 md:pb-8">
+    <div className="customers-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
       {loadError ? (
         <div
           className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
@@ -255,42 +268,49 @@ export function CustomersSection({
 
       {!loadError ? (
         <>
-          <PartnersPanel partners={partners} />
-
-          <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+          <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
+            <PartnersPanel partners={partners} />
+          </div>
+          <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
             <CustomersToolbar
               query={query}
-              onQueryChange={setQuery}
+              onQueryChange={(v) => {
+                setQuery(v);
+                setCustomersPage(1);
+              }}
               onAdd={() => setAddOpen(true)}
             />
             {customers.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-4 px-6 py-14 text-center md:px-8 md:py-16">
-                <p className="text-base text-muted-foreground">
+                <p className="customers-empty-hint text-muted-foreground">
                   Ingen kunder ennå. Legg til din første kunde for å komme i gang.
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[720px] text-left text-base">
-                  <thead>
-                    <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                      <th className={customersTableHeadClass}>Navn</th>
-                      <th className={customersTableHeadClass}>Telefon</th>
-                      <th className={customersTableHeadClass}>E-post</th>
-                      <th className={customersTableHeadClass}>Bookinger</th>
-                      <th className={customersTableHeadClass}>Totalt brukt</th>
-                      <th
-                        className={cn(
-                          customersTableHeadClass,
-                          "w-12 text-right",
-                        )}
-                      >
-                        <span className="sr-only">Handling</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-rn-border-strong/50">
-                    {filtered.map((c) => {
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[720px] text-left text-app-base">
+                    <thead>
+                      <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+                        <th className={customersTableHeadClass}>Navn</th>
+                        <th className={customersTableHeadClass}>Telefon</th>
+                        <th className={customersTableHeadClass}>E-post</th>
+                        <th className={customersTableHeadClass}>Bookinger</th>
+                        <th className={customersTableHeadClass}>
+                          Totalt brukt
+                        </th>
+                        <th
+                          className={cn(
+                            customersTableHeadClass,
+                            "w-12 text-right",
+                          )}
+                        >
+                          <span className="sr-only">Handling</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-rn-border-strong/50">
+                      {pageRows.map((c) => {
                       const st = stats.get(c.id) ?? {
                         count: 0,
                         spent: 0,
@@ -307,47 +327,34 @@ export function CustomersSection({
                           onClick={() => setSelectedId(c.id)}
                         >
                           <td className="px-6 py-5 md:px-8 md:py-6">
-                            <div className="flex items-center gap-4">
-                              <div
-                                className={cn(
-                                  "flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold md:size-11 md:text-base",
-                                  isActive
-                                    ? "bg-rn-surface-gradient-from text-success"
-                                    : "bg-muted text-muted-foreground",
-                                )}
-                              >
-                                {customerInitials(c.name)}
-                              </div>
-                              <span
-                                className={cn(
-                                  "font-heading text-base font-semibold",
-                                  isActive ? "text-success" : "text-foreground",
-                                )}
-                              >
-                                {c.name}
-                              </span>
-                            </div>
+                            <span
+                              className={cn(
+                                "customers-row-name font-heading font-semibold",
+                                isActive ? "text-success" : "text-foreground",
+                              )}
+                            >
+                              {c.name}
+                            </span>
                           </td>
-                          <td className="px-6 py-5 text-muted-foreground md:px-8 md:py-6 md:text-base">
+                          <td className="customers-row-meta px-6 py-5 text-muted-foreground md:px-8 md:py-6">
                             {c.phone ?? "—"}
                           </td>
-                          <td className="px-6 py-5 text-muted-foreground md:px-8 md:py-6 md:text-base">
+                          <td className="customers-row-meta px-6 py-5 text-muted-foreground md:px-8 md:py-6">
                             {c.email ?? "—"}
                           </td>
                           <td className="px-6 py-5 md:px-8 md:py-6">
                             <span
                               className={cn(
-                                "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold md:px-3 md:text-sm",
+                                "customers-booking-count-pill inline-flex items-center font-semibold tabular-nums",
                                 st.count > 0
-                                  ? "border border-success/25 bg-rn-surface-gradient-from text-success"
-                                  : "bg-muted text-muted-foreground",
+                                  ? "text-success"
+                                  : "text-muted-foreground",
                               )}
                             >
-                              {st.count}{" "}
-                              {st.count === 1 ? "arrangement" : "arrangementer"}
+                              {st.count}
                             </span>
                           </td>
-                          <td className="px-6 py-5 text-base font-bold tabular-nums text-success md:px-8 md:py-6">
+                          <td className="customers-row-metric px-6 py-5 font-bold tabular-nums text-success md:px-8 md:py-6">
                             {formatNok(st.spent)}
                           </td>
                           <td
@@ -372,17 +379,66 @@ export function CustomersSection({
                                 <Trash2 className="size-4" aria-hidden />
                               </Button>
                               <ChevronRight
-                                className="size-5 shrink-0 text-muted-foreground md:size-6"
+                                className="size-6 shrink-0 text-muted-foreground md:size-7"
                                 aria-hidden
                               />
                             </div>
                           </td>
                         </tr>
                       );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {filtered.length > 0 ? (
+                  <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
+                    <span>
+                      Viser{" "}
+                      {pageRows.length
+                        ? (currentPage - 1) * CUSTOMERS_PAGE_SIZE + 1
+                        : 0}
+                      –
+                      {Math.min(
+                        currentPage * CUSTOMERS_PAGE_SIZE,
+                        filtered.length,
+                      )}{" "}
+                      av {filtered.length}
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
+                        disabled={currentPage <= 1}
+                        onClick={() =>
+                          setCustomersPage((p) => Math.max(1, p - 1))
+                        }
+                      >
+                        <ChevronLeft className="size-5" aria-hidden />
+                        Forrige
+                      </Button>
+                      <span className="flex items-center px-2 tabular-nums">
+                        Side {currentPage} / {totalPages}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
+                        disabled={currentPage >= totalPages}
+                        onClick={() =>
+                          setCustomersPage((p) =>
+                            Math.min(totalPages, p + 1),
+                          )
+                        }
+                      >
+                        Neste
+                        <ChevronRight className="size-5" aria-hidden />
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+              </>
             )}
           </div>
         </>

@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { useSupabase } from "@/providers/supabase-provider";
@@ -42,7 +42,7 @@ import { useSupabase } from "@/providers/supabase-provider";
 import { RN_CARD_SHELL, RN_SEGMENT_CONTROL } from "@/lib/rn-ui";
 
 const bookingsTableHeadClass =
-  "text-base font-semibold tracking-wider text-rn-text-column uppercase";
+  "bookings-list-table-head font-semibold tracking-wider text-rn-text-column uppercase";
 
 function formatNok(n: number) {
   return `${new Intl.NumberFormat("nb-NO").format(Math.round(n))} NOK`;
@@ -153,7 +153,7 @@ function BookingsFiltersSection({
 }) {
   return (
     <section
-      className="border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6"
+      className="bookings-list-filters border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6"
       aria-label="Søk og filtrer bookinger"
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:gap-4">
@@ -165,7 +165,7 @@ function BookingsFiltersSection({
           <Input
             id="bookings-search"
             aria-label="Søk blant bookinger etter kunde eller arrangementstype"
-            className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-base text-foreground shadow-sm md:h-14 md:pl-14 md:text-[17px] focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+            className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
             placeholder="Kunde eller arrangementstype…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -195,7 +195,7 @@ function BookingsFiltersSection({
                 className={cn(
                   "flex min-h-12 w-full items-center justify-between gap-2 rounded-md border-2 px-3 py-3 text-left transition-all sm:gap-3 sm:px-4 md:min-h-[3.25rem] md:rounded-md md:px-5 md:py-3.5 lg:min-h-14 lg:w-auto lg:min-w-[7rem] lg:flex-1 lg:max-w-[10.5rem] xl:min-w-[7.5rem]",
                   active
-                    ? "border-rn-accent-border bg-success text-white shadow-md"
+                    ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
                     : tone === "emerald"
                       ? "border-emerald-400/90 bg-white text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50"
                       : tone === "amber"
@@ -207,17 +207,17 @@ function BookingsFiltersSection({
               >
                 <span
                   className={cn(
-                    "font-heading text-base font-semibold",
-                    active ? "text-white" : undefined,
+                    "font-heading text-app-base font-semibold",
+                    active ? "!text-white" : undefined,
                   )}
                 >
                   {label}
                 </span>
                 <span
                   className={cn(
-                    "inline-flex min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-sm font-bold tabular-nums md:text-base",
+                    "bookings-list-filter-count inline-flex min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-app-sm font-bold tabular-nums md:text-app-base",
                     active
-                      ? "border-white/30 bg-white/20 text-white"
+                      ? "border-white/30 bg-white/20 !text-white"
                       : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
                   )}
                 >
@@ -241,11 +241,12 @@ function FindBookingsCardHeader({
 }) {
   return (
     <header className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
-      <AppPageHeader
-        className="mb-0"
-        surface="default"
-        title="Bookinger"
-        actions={
+      <div className="bookings-list-hero">
+        <AppPageHeader
+          className="mb-0"
+          surface="default"
+          title="Bookinger"
+          actions={
           <div className="flex flex-wrap items-center gap-3 lg:shrink-0">
             <div
               className={RN_SEGMENT_CONTROL}
@@ -258,10 +259,10 @@ function FindBookingsCardHeader({
                 aria-selected={view === "list"}
                 onClick={() => setView("list")}
                 className={cn(
-                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border-2 border-transparent px-5 py-2.5 text-[15px] font-semibold transition-all outline-none select-none md:min-h-12 md:px-6 md:text-base",
+                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border-2 border-transparent px-5 py-2.5 text-app-sm font-semibold transition-all outline-none select-none md:min-h-12 md:px-6 md:text-app-base",
                   "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
                   view === "list"
-                    ? "border-rn-accent-border bg-success text-white shadow-md"
+                    ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
                     : "text-rn-text-body hover:border-rn-badge-border hover:bg-white",
                 )}
               >
@@ -274,10 +275,10 @@ function FindBookingsCardHeader({
                 aria-selected={view === "calendar"}
                 onClick={() => setView("calendar")}
                 className={cn(
-                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border-2 border-transparent px-5 py-2.5 text-[15px] font-semibold transition-all outline-none select-none md:min-h-12 md:px-6 md:text-base",
+                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border-2 border-transparent px-5 py-2.5 text-app-sm font-semibold transition-all outline-none select-none md:min-h-12 md:px-6 md:text-app-base",
                   "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
                   view === "calendar"
-                    ? "border-rn-accent-border bg-success text-white shadow-md"
+                    ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
                     : "text-rn-text-body hover:border-rn-badge-border hover:bg-white",
                 )}
               >
@@ -294,7 +295,8 @@ function FindBookingsCardHeader({
             </Link>
           </div>
         }
-      />
+        />
+      </div>
     </header>
   );
 }
@@ -330,15 +332,6 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
         : null,
     [bookings, selectedBookingId],
   );
-
-  useEffect(() => {
-    if (
-      selectedBookingId &&
-      !bookings.some((b) => b.id === selectedBookingId)
-    ) {
-      setSelectedBookingId(null);
-    }
-  }, [selectedBookingId, bookings]);
 
   async function runBookingStatusUpdate(id: string, next: BookingStatus) {
     setUpdatingId(id);
@@ -429,7 +422,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
     quickStats.monthOverMonthPct >= 0;
 
   return (
-    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-24 md:pb-10">
+    <div className="flex w-full flex-col gap-8 pb-24 md:pb-10">
       {loadError ? (
         <div
           className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
@@ -440,7 +433,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
       ) : null}
 
       {view === "calendar" ? (
-        <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+        <div className={cn("bookings-list-workspace overflow-hidden", RN_CARD_SHELL)}>
           <FindBookingsCardHeader view={view} setView={setView} />
           <BookingsFiltersSection
             query={query}
@@ -459,7 +452,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
 
       {view === "list" ? (
         <>
-          <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+          <div className={cn("bookings-list-workspace overflow-hidden", RN_CARD_SHELL)}>
             <FindBookingsCardHeader view={view} setView={setView} />
 
             <BookingsFiltersSection
@@ -512,12 +505,12 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
             <div className="divide-y divide-rn-border-strong/50">
               {filtered.length === 0 ? (
                 <div className="space-y-4 px-6 py-16 text-center sm:px-10 sm:py-20 md:px-8">
-                  <p className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
+                  <p className="bookings-list-empty-title font-heading font-bold tracking-tight text-rn-text-heading">
                     {bookings.length === 0
                       ? "Ingen bookinger ennå"
                       : "Ingen treff i listen"}
                   </p>
-                  <p className="mx-auto max-w-lg text-base leading-relaxed text-muted-foreground">
+                  <p className="bookings-list-empty-body mx-auto max-w-lg text-muted-foreground">
                     {bookings.length === 0
                       ? "Opprett en ny booking for å se den her. Du kan også importere eller legge til kunder fra Kunder."
                       : "Juster søket eller bytt filter (Alle, Bekreftet, …). Nullstill ved å velge «Alle» og tømme søkefeltet."}
@@ -539,17 +532,17 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
                     <div className="col-span-12 flex items-center gap-4 sm:col-span-4">
                       <div
                         className={cn(
-                          "flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full font-heading text-sm font-semibold md:size-11 md:text-base",
+                          "flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full font-heading text-base font-semibold md:size-12 md:text-app-lg",
                           row.avatarClass,
                         )}
                       >
                         {row.initials}
                       </div>
                       <div>
-                        <h4 className="font-heading text-base font-semibold text-foreground">
+                        <h4 className="bookings-list-row-title font-heading font-semibold text-foreground">
                           {row.customer}
                         </h4>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground md:text-base">
+                        <div className="bookings-list-row-meta mt-1 flex flex-wrap items-center gap-2 text-muted-foreground">
                           <span>{row.date}</span>
                           <span
                             className="size-1 shrink-0 rounded-full bg-border"
@@ -573,14 +566,14 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
                       </div>
                     </div>
                     <div className="col-span-12 mt-3 flex items-center gap-2 sm:col-span-2 sm:mt-0">
-                      <Users className="size-5 shrink-0 text-muted-foreground md:size-6" aria-hidden />
-                      <span className="text-base font-semibold text-foreground">
+                      <Users className="size-6 shrink-0 text-muted-foreground md:size-7" aria-hidden />
+                      <span className="bookings-list-row-metric font-semibold text-foreground">
                         {row.guests} gjester
                       </span>
                     </div>
                     <div className="col-span-12 mt-3 text-left sm:col-span-4 sm:mt-0 sm:px-4 sm:text-right">
                       <div className="inline-block text-left sm:text-right">
-                        <div className="text-base font-bold tabular-nums text-foreground">
+                        <div className="bookings-list-row-amount font-bold tabular-nums text-foreground">
                           {formatNok(row.totalNok)}
                         </div>
                         {row.paidFraction !== null ? (
@@ -600,7 +593,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
                             </div>
                             <span
                               className={cn(
-                                "text-xs font-bold md:text-sm",
+                                "bookings-list-row-paid font-bold",
                                 row.paidFraction >= 1
                                   ? "text-emerald-700"
                                   : "text-amber-600",
@@ -610,7 +603,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
                             </span>
                           </div>
                         ) : (
-                          <div className="mt-1 text-xs font-bold text-muted-foreground uppercase md:text-sm">
+                          <div className="bookings-list-row-paid mt-1 font-bold text-muted-foreground uppercase">
                             {row.paidLabel}
                           </div>
                         )}
@@ -618,10 +611,13 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
                     </div>
                     <div className="col-span-12 mt-3 flex items-center justify-between gap-2 sm:col-span-2 sm:mt-0 sm:justify-end">
                       <div className="flex min-w-0 flex-col items-start gap-2 sm:items-end">
-                        <BookingStatusBadge status={row.status} />
+                        <BookingStatusBadge
+                          className="bookings-list-status-pill"
+                          status={row.status}
+                        />
                       </div>
                       <ChevronRight
-                        className="size-5 shrink-0 text-muted-foreground md:size-6"
+                        className="size-6 shrink-0 text-muted-foreground md:size-7"
                         aria-hidden
                       />
                     </div>
@@ -631,7 +627,7 @@ export function BookingsList({ bookings, loadError }: BookingsListProps) {
             </div>
 
             <div className="flex flex-col items-stretch justify-between gap-4 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
-              <span className="text-base font-medium text-rn-footer-text">
+              <span className="bookings-list-footer-caption font-medium text-rn-footer-text">
                 {bookings.length === 0
                   ? "Ingen bookinger"
                   : filtered.length === 0

@@ -19,12 +19,12 @@ export function AppSidebar({ className }: { className?: string }) {
         className,
       )}
     >
-      <div className="px-4 pb-7 pt-7 md:px-5 md:pb-8 md:pt-8">
+      <div className="flex shrink-0 flex-col gap-[length:var(--spacing-app-gap)] px-[length:calc(var(--app-card-padding)*0.45)] pb-[length:calc(var(--app-card-padding)*0.75)] pt-[length:var(--app-card-padding)] md:px-[length:calc(var(--app-card-padding)*0.55)] md:pb-[length:var(--app-card-padding)] md:pt-[length:calc(var(--app-card-padding)+0.25rem)]">
         <div className="flex items-center gap-3.5 md:gap-4">
           <Link
             href="/app/dashboard"
             className={cn(
-              "relative flex size-14 shrink-0 overflow-hidden rounded-md border-2 border-rn-accent-border bg-black shadow-sm md:size-16",
+              "relative flex size-14 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-black shadow-sm md:size-16",
             )}
             aria-label={`${APP_NAME} — gå til oversikt`}
           >
@@ -38,17 +38,17 @@ export function AppSidebar({ className }: { className?: string }) {
             />
           </Link>
           <div className="min-w-0">
-            <p className="font-heading text-base font-bold tracking-tight text-rn-text-heading">
+            <p className="font-heading text-app-base font-bold tracking-tight text-rn-text-heading">
               {APP_NAME}
             </p>
-            <p className="text-base font-medium text-rn-text-slate">
+            <p className="text-app-xs font-medium text-rn-text-slate">
               Admin
             </p>
           </div>
         </div>
       </div>
       <nav
-        className="flex flex-1 flex-col gap-2 px-2 py-4 pb-8 md:gap-2.5 md:px-3"
+        className="flex min-h-0 flex-1 flex-col gap-[length:var(--spacing-app-gap)] px-[length:calc(var(--app-card-padding)*0.35)] pb-[length:var(--app-card-padding)] pt-0 md:gap-[length:var(--spacing-app-gap)] md:px-[length:calc(var(--app-card-padding)*0.45)]"
         aria-label="Hovedmeny"
       >
         {mainNavigation.map((item) => {
@@ -62,7 +62,7 @@ export function AppSidebar({ className }: { className?: string }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3.5 rounded-r-md border-l-[3px] py-3.5 pl-3 pr-3.5 transition-all outline-none select-none md:gap-4 md:py-4 md:pl-3.5 md:pr-4",
+                "flex min-h-[max(2.75rem,var(--app-tap-target-min))] items-center gap-[length:var(--spacing-app-gap)] rounded-[length:var(--app-radius)] border-l-[3px] py-[length:calc(var(--app-card-padding)*0.55)] pl-3 pr-[length:calc(var(--app-card-padding)*0.55)] transition-all outline-none select-none md:gap-[length:var(--spacing-app-gap)] md:py-[length:calc(var(--app-card-padding)*0.65)] md:pl-[length:calc(var(--app-card-padding)*0.45)] md:pr-[length:calc(var(--app-card-padding)*0.65)]",
                 RN_TEXT_NAV_LINK,
                 "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 active

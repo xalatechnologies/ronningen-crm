@@ -9,9 +9,13 @@ export function PageShell({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="app-section">
       <AppPageHeader title={title} />
-      {children ? <div className="flex flex-col gap-4">{children}</div> : null}
+      {children ? (
+        <div className="flex flex-col gap-[length:var(--spacing-app-gap)]">
+          {children}
+        </div>
+      ) : null}
     </div>
   );
 }

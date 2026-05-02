@@ -69,8 +69,10 @@ import { toast } from "sonner";
 import type { AssetListItem } from "./types";
 
 const assetsTableHeadClass =
-  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+  "assets-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const assetsTableCellClass = "px-6 py-5 md:px-8 md:py-6";
+const assetsKpiStatTileClass =
+  "flex flex-col gap-2 rounded-lg border border-rn-border-strong/50 bg-muted/25 px-4 py-3.5 sm:gap-2.5 sm:px-4 sm:py-4 md:px-5 md:py-5";
 const assetFormControlClass =
   "flex h-12 w-full rounded-md border-2 border-rn-border-strong bg-background px-4 text-base font-medium focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25";
 
@@ -617,9 +619,15 @@ export function AssetsSection({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-24 md:pb-8">
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <div className="px-4 pt-4 pb-3 sm:px-5 sm:pt-5 sm:pb-4 lg:px-6">
+    <div className="assets-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
+      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
+        <div
+          className={cn(
+            "assets-page-header border-b-2 border-rn-border-strong bg-card/80",
+            "px-[length:var(--app-card-padding)] sm:px-[length:calc(var(--app-card-padding)+0.25rem)] md:px-[length:calc(var(--app-card-padding)+0.5rem)] lg:px-[length:calc(var(--app-card-padding)+0.75rem)]",
+            "py-6 md:py-7",
+          )}
+        >
           <AppPageHeader
             className="mb-0 gap-3 md:gap-4"
             surface="default"
@@ -650,7 +658,7 @@ export function AssetsSection({
             className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
             role="alert"
           >
-            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base">
+            <div className="assets-load-error rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive">
               Kunne ikke laste data: {loadError}
             </div>
           </div>
@@ -661,7 +669,7 @@ export function AssetsSection({
             className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
             role="status"
           >
-            <div className="rounded-md border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-50">
+            <div className="assets-setup-hint rounded-md border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-amber-950 dark:text-amber-50">
               Det finnes ingen lokaler ennå. Aktiva må knyttes til et lokale — legg inn
               eiendommer i databasen (eller kontakt administrator) før du registrerer
               inventar.
@@ -671,69 +679,57 @@ export function AssetsSection({
 
         {!loadError && properties.length > 0 && assets.length > 0 ? (
           <section
-            className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
+            className="assets-kpi-summary border-t border-rn-border-strong/50 px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 lg:px-8"
             aria-label="Sammendrag aktiva"
           >
-            <div className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-              <div>
-                <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                  Total verdi
-                </p>
-                <p className="font-heading text-3xl font-extrabold text-success tabular-nums sm:text-4xl">
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12 xl:gap-16">
+              <div className="min-w-0 shrink-0 lg:max-w-md">
+                <p className="assets-kpi-label">Total verdi</p>
+                <p className="assets-kpi-value mt-2 font-heading text-success">
                   {formatNok(stats.totalValue)}
                 </p>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="assets-kpi-caption mt-3 text-muted-foreground">
                   {stats.rowCount}{" "}
                   {stats.rowCount === 1 ? "registrering" : "registreringer"} ·{" "}
                   {stats.totalUnits}{" "}
                   {stats.totalUnits === 1 ? "enhet" : "enheter"}
                 </p>
               </div>
-              <dl className="grid grid-cols-2 gap-x-8 gap-y-5 sm:items-end sm:gap-x-10 md:grid-cols-3 lg:grid-cols-5 lg:gap-x-8 xl:gap-x-12">
-                <div>
-                  <dt className="text-sm font-medium text-muted-foreground md:text-base">
-                    I drift
-                  </dt>
-                  <dd className="font-heading text-2xl font-bold tabular-nums text-foreground md:text-3xl">
+              <dl className="grid min-w-0 flex-1 grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-5 lg:gap-4 xl:gap-5">
+                <div className={assetsKpiStatTileClass}>
+                  <dt className="assets-stat-label">I drift</dt>
+                  <dd className="assets-stat-value font-heading text-foreground">
                     {stats.counts.operational}
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-sm font-medium text-muted-foreground md:text-base">
-                    Vedlikehold
-                  </dt>
-                  <dd className="font-heading text-2xl font-bold tabular-nums text-foreground md:text-3xl">
+                <div className={assetsKpiStatTileClass}>
+                  <dt className="assets-stat-label">Vedlikehold</dt>
+                  <dd className="assets-stat-value font-heading text-foreground">
                     {stats.counts.maintenance}
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-sm font-medium text-muted-foreground md:text-base">
-                    Bytte
-                  </dt>
-                  <dd className="font-heading text-2xl font-bold tabular-nums text-foreground md:text-3xl">
+                <div className={assetsKpiStatTileClass}>
+                  <dt className="assets-stat-label">Bytte</dt>
+                  <dd className="assets-stat-value font-heading text-foreground">
                     {stats.counts.replace}
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-sm font-medium text-muted-foreground md:text-base">
-                    Forsikret verdi
-                  </dt>
-                  <dd className="font-heading text-2xl font-bold tabular-nums text-foreground md:text-3xl">
+                <div className={assetsKpiStatTileClass}>
+                  <dt className="assets-stat-label">Forsikret verdi</dt>
+                  <dd className="assets-stat-value font-heading text-foreground">
                     {formatNok(stats.insuredValue)}
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-sm font-medium text-muted-foreground md:text-base">
-                    Uforsikret verdi
-                  </dt>
-                  <dd className="font-heading text-2xl font-bold tabular-nums text-foreground md:text-3xl">
+                <div className={assetsKpiStatTileClass}>
+                  <dt className="assets-stat-label">Uforsikret verdi</dt>
+                  <dd className="assets-stat-value font-heading text-foreground">
                     {formatNok(stats.uninsuredValue)}
                   </dd>
                 </div>
               </dl>
             </div>
             {hasActiveFilters ? (
-              <p className="mt-4 border-t border-rn-border-strong/60 pt-4 text-sm text-muted-foreground">
+              <p className="assets-filter-hint mt-8 border-t border-rn-border-strong/60 pt-6 text-muted-foreground">
                 <span className="font-medium text-foreground">Filtrert:</span>{" "}
                 {formatNok(filteredStats.totalValue)} · {filteredStats.totalUnits}{" "}
                 enheter ({filtered.length}{" "}
@@ -742,27 +738,21 @@ export function AssetsSection({
             ) : null}
           </section>
         ) : null}
-      </div>
 
-      <section
-        className={cn(
-          "overflow-hidden",
-          RN_CARD_SHELL,
-        )}
-      >
-        <div className="border-b-2 border-rn-border-strong bg-card px-4 py-3 sm:px-6 md:px-8 md:py-4">
+        <div className="min-w-0">
+          <div className="border-t-2 border-b-2 border-rn-border-strong/50 bg-card px-4 py-3 sm:px-6 md:px-8 md:py-4">
           <div className="flex min-h-11 flex-nowrap items-center gap-2 overflow-x-auto sm:min-h-12 sm:gap-3 md:gap-4">
             <div className="flex shrink-0 items-center gap-2 pr-1">
-              <h2 className="font-heading text-lg font-bold tracking-tight text-rn-text-heading whitespace-nowrap md:text-xl">
+              <h2 className="assets-inventory-title font-heading font-bold tracking-tight text-rn-text-heading whitespace-nowrap">
                 Inventar
               </h2>
               {assets.length === 0 ? (
-                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                <span className="assets-toolbar-meta text-muted-foreground whitespace-nowrap">
                   Ingen data
                 </span>
               ) : hasActiveFilters ? (
                 <span
-                  className="text-sm tabular-nums text-muted-foreground whitespace-nowrap"
+                  className="assets-toolbar-meta tabular-nums text-muted-foreground whitespace-nowrap"
                   title="Synlige av totalt antall linjer"
                 >
                   {filtered.length}/{assets.length}
@@ -774,7 +764,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong px-3 text-sm font-semibold sm:h-12 sm:px-4 sm:text-base"
+                className="assets-toolbar-btn h-11 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong px-3 font-semibold sm:h-12 sm:px-4"
                 disabled={filtered.length === 0}
                 onClick={() => downloadAssetsCsv(filtered)}
                 aria-label="Last ned synlige rader som CSV"
@@ -786,7 +776,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 shrink-0 rounded-md border-2 border-rn-border-strong px-4 text-sm font-semibold sm:h-12 sm:text-base"
+                className="assets-toolbar-btn h-11 shrink-0 rounded-md border-2 border-rn-border-strong px-4 font-semibold sm:h-12"
                 disabled={!hasActiveFilters}
                 title={
                   hasActiveFilters
@@ -812,7 +802,7 @@ export function AssetsSection({
                 }}
                 placeholder="Søk …"
                 title="Søk i navn, lokale, tilstand eller forsikring"
-                className="h-11 w-full min-w-[10rem] rounded-md border-2 border-rn-border-strong bg-background pl-11 text-base sm:h-12 sm:pl-12 focus-visible:border-success focus-visible:ring-success/25"
+                className="assets-search-input h-11 w-full min-w-[10rem] rounded-md border-2 border-rn-border-strong bg-background pl-11 sm:h-12 sm:pl-12 focus-visible:border-success focus-visible:ring-success/25"
                 aria-label="Søk i inventar"
               />
             </div>
@@ -829,7 +819,7 @@ export function AssetsSection({
                   setPage(1);
                 }}
                 aria-label="Filtrer etter lokale"
-                className="h-11 w-full cursor-pointer appearance-none rounded-md border-2 border-rn-border-strong bg-background py-0 pr-10 pl-11 text-base font-medium sm:h-12 sm:pl-12 focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25"
+                className="assets-filter-select h-11 w-full cursor-pointer appearance-none rounded-md border-2 border-rn-border-strong bg-background py-0 pr-10 pl-11 font-medium sm:h-12 sm:pl-12 focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25"
               >
                 <option value="">Alle lokaler</option>
                 {properties.map((p) => (
@@ -856,7 +846,7 @@ export function AssetsSection({
                   setPage(1);
                 }}
                 aria-label="Filtrer etter tilstand"
-                className="h-11 w-full cursor-pointer appearance-none rounded-md border-2 border-rn-border-strong bg-background py-0 pr-10 pl-11 text-base font-medium sm:h-12 sm:pl-12 focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25"
+                className="assets-filter-select h-11 w-full cursor-pointer appearance-none rounded-md border-2 border-rn-border-strong bg-background py-0 pr-10 pl-11 font-medium sm:h-12 sm:pl-12 focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25"
               >
                 {STATUS_QUICK_FILTERS.map((opt) => (
                   <option key={opt.id} value={opt.id}>
@@ -880,7 +870,7 @@ export function AssetsSection({
             >
               <Package className="size-8 text-muted-foreground md:size-9" />
             </div>
-            <p className="max-w-sm text-base text-muted-foreground">
+            <p className="assets-empty-hint max-w-sm text-muted-foreground">
               {assets.length === 0 ? (
                 <>
                   Ingen aktiva i registeret ennå.
@@ -949,7 +939,7 @@ export function AssetsSection({
                         <div className="flex size-11 shrink-0 items-center justify-center rounded-md border border-success/20 bg-rn-surface-gradient-from text-success md:size-12">
                           <Icon className="size-5 md:size-6" aria-hidden />
                         </div>
-                        <span className="text-base font-semibold text-success">
+                        <span className="assets-row-name text-success">
                           {a.name}
                         </span>
                       </div>
@@ -957,7 +947,7 @@ export function AssetsSection({
                     <TableCell
                       className={cn(
                         assetsTableCellClass,
-                        "text-sm text-muted-foreground md:text-base",
+                        "assets-row-meta text-muted-foreground",
                       )}
                     >
                       {a.propertyName ?? "—"}
@@ -965,7 +955,7 @@ export function AssetsSection({
                     <TableCell
                       className={cn(
                         assetsTableCellClass,
-                        "text-center text-sm font-medium tabular-nums md:text-base",
+                        "assets-row-qty text-center",
                       )}
                     >
                       {a.quantity}
@@ -973,7 +963,7 @@ export function AssetsSection({
                     <TableCell
                       className={cn(
                         assetsTableCellClass,
-                        "text-base font-semibold text-success",
+                        "assets-row-value text-success",
                       )}
                     >
                       {formatNok(Number(a.value))}
@@ -981,7 +971,7 @@ export function AssetsSection({
                     <TableCell className={assetsTableCellClass}>
                       <span
                         className={cn(
-                          "inline-flex rounded-full px-3 py-1 text-[11px] font-bold md:text-xs",
+                          "assets-condition-pill inline-flex rounded-full px-3 py-1 font-bold",
                           conditionPillClass(a.condition),
                         )}
                       >
@@ -991,7 +981,7 @@ export function AssetsSection({
                     <TableCell className={assetsTableCellClass}>
                       <span
                         className={cn(
-                          "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold md:text-xs",
+                          "assets-insurance-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-bold",
                           ins.tone === "ok" &&
                             "border border-success/25 bg-success/15 text-success",
                           ins.tone === "bad" && "bg-destructive/15 text-destructive",
@@ -1056,7 +1046,7 @@ export function AssetsSection({
         )}
 
         {filtered.length > 0 ? (
-          <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 text-base text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
+          <div className="assets-page-footer flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
             <span>
               Viser {pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0}–
               {Math.min(currentPage * PAGE_SIZE, filtered.length)} av{" "}
@@ -1072,7 +1062,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
+                className="assets-toolbar-btn h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 font-semibold"
                 disabled={currentPage <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
@@ -1085,7 +1075,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
+                className="assets-toolbar-btn h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 font-semibold"
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
@@ -1095,7 +1085,8 @@ export function AssetsSection({
             </div>
           </div>
         ) : null}
-      </section>
+        </div>
+      </div>
 
       <Dialog
         open={dialog.open}

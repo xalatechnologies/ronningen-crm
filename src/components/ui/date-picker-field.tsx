@@ -65,10 +65,6 @@ export function DatePickerField({
     startOfMonth(selected),
   );
 
-  React.useEffect(() => {
-    setViewMonth(startOfMonth(parseYmd(value)));
-  }, [value]);
-
   const monthStart = startOfMonth(viewMonth);
   const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
   const days = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
@@ -76,17 +72,23 @@ export function DatePickerField({
   const triggerClasses =
     variant === "toolbar"
       ? cn(
-          "flex h-11 w-full items-center justify-start gap-2 rounded-md border-2 border-rn-border-strong bg-card px-4 text-left text-sm font-medium text-foreground shadow-sm outline-none transition-colors",
+          "flex h-[max(var(--app-input-min-height),var(--app-tap-target-min))] w-full items-center justify-start gap-2 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card px-4 text-left text-[length:calc(15.25px*var(--app-type-scale))] font-medium text-foreground shadow-sm outline-none transition-colors",
           "hover:bg-muted/40 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25",
           "disabled:pointer-events-none disabled:opacity-50",
         )
       : cn(
-          "flex h-11 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-left text-sm outline-none",
+          "flex h-[max(var(--app-input-min-height),var(--app-tap-target-min))] w-full items-center gap-2 rounded-[length:var(--app-radius)] border border-input bg-background px-3 text-left text-[length:calc(15.25px*var(--app-type-scale))] outline-none",
           "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
         );
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
+    <PopoverPrimitive.Root
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) setViewMonth(startOfMonth(parseYmd(value)));
+      }}
+    >
       <PopoverPrimitive.Trigger
         id={id}
         disabled={disabled}
@@ -121,7 +123,7 @@ export function DatePickerField({
           <PopoverPrimitive.Popup
             initialFocus={(openType) => openType === "keyboard"}
             className={cn(
-              "origin-(--transform-origin) rounded-md border-2 border-rn-border-strong bg-popover p-3 text-popover-foreground shadow-lg outline-none",
+              "origin-(--transform-origin) rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-3 text-[length:calc(15.25px*var(--app-type-scale))] text-popover-foreground shadow-lg outline-none",
               "data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
             )}
           >
@@ -130,20 +132,20 @@ export function DatePickerField({
                 type="button"
                 variant="outline"
                 size="icon-sm"
-                className="size-11 shrink-0 rounded-md border-2 border-rn-border-strong"
+                className="size-11 min-h-[max(2.75rem,var(--app-tap-target-min))] min-w-[max(2.75rem,var(--app-tap-target-min))] shrink-0 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong"
                 aria-label="Forrige måned"
                 onClick={() => setViewMonth((m) => addMonths(m, -1))}
               >
                 <ChevronLeft className="size-4" aria-hidden />
               </Button>
-              <span className="min-w-0 truncate px-1 text-center text-sm font-semibold capitalize">
+              <span className="min-w-0 truncate px-1 text-center text-[length:calc(15.25px*var(--app-type-scale))] font-semibold capitalize">
                 {format(viewMonth, "LLLL yyyy", { locale: nb })}
               </span>
               <Button
                 type="button"
                 variant="outline"
                 size="icon-sm"
-                className="size-11 shrink-0 rounded-md border-2 border-rn-border-strong"
+                className="size-11 min-h-[max(2.75rem,var(--app-tap-target-min))] min-w-[max(2.75rem,var(--app-tap-target-min))] shrink-0 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong"
                 aria-label="Neste måned"
                 onClick={() => setViewMonth((m) => addMonths(m, 1))}
               >
@@ -155,7 +157,7 @@ export function DatePickerField({
               {["ma", "ti", "on", "to", "fr", "lø", "sø"].map((d) => (
                 <div
                   key={d}
-                  className="flex size-11 items-center justify-center text-[10px] font-bold uppercase tracking-wide text-muted-foreground"
+                  className="flex size-11 items-center justify-center app-meta font-bold tracking-wide text-muted-foreground uppercase"
                 >
                   {d}
                 </div>
@@ -184,13 +186,13 @@ export function DatePickerField({
                       setOpen(false);
                     }}
                     className={cn(
-                      "flex size-11 items-center justify-center rounded-md text-sm font-medium transition-colors",
+                      "flex size-11 min-h-[max(2.75rem,var(--app-tap-target-min))] min-w-[max(2.75rem,var(--app-tap-target-min))] items-center justify-center rounded-[length:var(--app-radius)] text-app-sm font-medium transition-colors",
                       outOfRange &&
                         "cursor-not-allowed opacity-25 hover:bg-transparent",
                       !inMonth && !outOfRange && "text-muted-foreground/40",
                       isSelected &&
                         !outOfRange &&
-                        "border-2 border-success bg-success text-white shadow-sm",
+                        "border-2 border-success bg-success !text-white shadow-sm [&_svg]:!text-white",
                       !isSelected &&
                         inMonth &&
                         !outOfRange &&

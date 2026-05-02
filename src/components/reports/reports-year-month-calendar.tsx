@@ -17,10 +17,9 @@ import { REPORTS_CALENDAR_MIN_YEAR } from "./types";
 const MONTH_ALL = "alle";
 
 const selectTriggerBaseClass = cn(
-  "data-[size=default]:h-[3.375rem] data-[size=default]:min-h-[3.375rem] md:data-[size=default]:h-[3.625rem] md:data-[size=default]:min-h-[3.625rem]",
-  "rounded-md border-2 border-rn-border-strong bg-background py-2 font-heading text-lg font-semibold leading-snug shadow-sm md:text-xl",
-  "focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25 focus-visible:ring-offset-0 data-popup-open:border-rn-accent-border",
-  "[&_svg]:size-4 md:[&_svg]:size-5",
+  "reports-filter-trigger !h-12 !min-h-12 rounded-md border-2 border-rn-border-strong bg-rn-surface-segment px-3 py-2 font-heading font-semibold leading-snug shadow-rn-segment-inset md:px-4",
+  "focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 data-popup-open:border-rn-accent-border",
+  "[&_svg]:size-4",
 );
 
 const yearSelectTriggerClass = cn(
@@ -136,7 +135,7 @@ export function ReportsYearMonthCalendar({
             <SelectItem
               key={y}
               value={String(y)}
-              className="py-2.5 font-heading text-lg font-semibold tabular-nums md:py-3 md:text-xl"
+              className="reports-filter-item py-2.5 font-heading font-semibold tabular-nums"
             >
               {y}
             </SelectItem>
@@ -158,7 +157,7 @@ export function ReportsYearMonthCalendar({
         >
           <SelectItem
             value={MONTH_ALL}
-            className="py-2.5 font-heading text-lg font-semibold md:py-3 md:text-xl"
+            className="reports-filter-item py-2.5 font-heading font-semibold"
           >
             Hele året
           </SelectItem>
@@ -166,7 +165,7 @@ export function ReportsYearMonthCalendar({
             <SelectItem
               key={i + 1}
               value={String(i + 1)}
-              className="py-2.5 font-heading text-lg font-semibold capitalize md:py-3 md:text-xl"
+              className="py-2.5 font-heading reports-filter-item font-semibold capitalize"
             >
               {name}
             </SelectItem>

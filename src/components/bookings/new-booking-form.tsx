@@ -367,7 +367,7 @@ export function NewBookingForm({
   const noActivePackages = sortedPackages.length === 0;
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] space-y-5 pb-12 md:space-y-6 md:pb-8">
+    <div className="mx-auto w-full space-y-5 pb-12 md:space-y-6 md:pb-8">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
         <Link
           href="/app/bookings"
@@ -411,7 +411,9 @@ export function NewBookingForm({
       ) : null}
 
       <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+        {/* RHF handleSubmit uses internal refs; keep handler passed as its callback. */}
         <form
+          // eslint-disable-next-line react-hooks/refs -- react-hook-form integration
           onSubmit={handleSubmit((values) =>
             submitBooking(values as NewBookingFormInput),
           )}

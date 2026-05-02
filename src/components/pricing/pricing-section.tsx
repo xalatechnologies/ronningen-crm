@@ -2,6 +2,7 @@
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AppPageHeader } from "@/components/layout/app-page-header";
+import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
   Dialog,
   DialogContent,
@@ -46,7 +47,7 @@ import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
 const pricingTableHeadClass =
-  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+  "pricing-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-4";
 const pricingTableCellClass = "px-6 py-5 md:px-8 md:py-6";
 
 type PackageRow = Database["public"]["Tables"]["packages"]["Row"];
@@ -318,48 +319,58 @@ export function PricingSection({
   }, [sortedPackages]);
 
   const packageCardLight = cn(
-    "relative flex min-h-[420px] flex-col overflow-hidden rounded-md border-2 border-stone-200 bg-card p-9 shadow-sm transition-all sm:p-10 md:p-11 lg:p-12",
+    "relative flex min-h-[420px] flex-col overflow-hidden rounded-md border-2 border-rn-border-strong bg-card p-9 shadow-sm transition-all sm:p-10 md:p-11 lg:p-12",
   );
   const packageCardDark = cn(
-    "relative flex min-h-[420px] flex-col overflow-hidden rounded-md border-2 border-stone-800 bg-stone-900 p-9 text-white shadow-xl ring-1 ring-white/10 sm:p-10 md:p-11 lg:p-12",
+    "relative flex min-h-[420px] flex-col overflow-hidden rounded-md border-2 border-stone-500 bg-stone-900 p-9 text-white shadow-xl ring-1 ring-white/15 sm:p-10 md:p-11 lg:p-12",
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-10 pb-24 sm:gap-12 md:gap-14 md:pb-8">
-      <div className="flex flex-col">
-        {loadError ? (
-          <div
-            className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
-            role="alert"
-          >
-            Kunne ikke laste priser: {loadError}
-          </div>
-        ) : null}
-        <AppPageHeader
-          className="mb-0"
-          title="Priser"
-          actions={
-            <Button
-              type="button"
-              onClick={() => setPackageDialog({ open: true, row: null })}
-              disabled={!canEdit}
-              title={
-                !canEdit
-                  ? "Krever eier-, admin- eller regnskapstilgang"
-                  : undefined
-              }
-              className={cn(buttonVariants({ variant: "success", size: "cta" }))}
-            >
-              <Plus className="size-5" aria-hidden />
-              Ny pakke
-            </Button>
-          }
-          toolbar={
-            <>
-              <h2 className="mb-8 font-heading text-xl font-bold tracking-tight text-rn-text-heading md:mb-10 md:text-2xl">
-                Pakkenivåer
-              </h2>
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-10 xl:grid-cols-3 xl:gap-12">
+    <div className="mx-auto flex w-full flex-col gap-8 pb-8">
+      <div className="pricing-page-workspace flex w-full flex-col gap-8">
+      {loadError ? (
+        <div
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-app-base"
+          role="alert"
+        >
+          Kunne ikke laste priser: {loadError}
+        </div>
+      ) : null}
+      <div className={cn("min-w-0 overflow-x-hidden", RN_CARD_SHELL)}>
+        <div
+          className={cn(
+            "pricing-page-header border-b-2 border-rn-border-strong bg-card/80",
+            "px-[length:var(--app-card-padding)] sm:px-[length:calc(var(--app-card-padding)+0.25rem)] md:px-[length:calc(var(--app-card-padding)+0.5rem)] lg:px-[length:calc(var(--app-card-padding)+0.75rem)]",
+            "py-6 md:py-7",
+          )}
+        >
+          <AppPageHeader
+            className="mb-0"
+            surface="default"
+            title="Priser"
+            actions={
+              <Button
+                type="button"
+                onClick={() => setPackageDialog({ open: true, row: null })}
+                disabled={!canEdit}
+                title={
+                  !canEdit
+                    ? "Krever eier-, admin- eller regnskapstilgang"
+                    : undefined
+                }
+                className={cn(buttonVariants({ variant: "success", size: "cta" }))}
+              >
+                <Plus className="size-5" aria-hidden />
+                Ny pakke
+              </Button>
+            }
+          />
+        </div>
+        <div className="min-w-0 px-[length:var(--app-card-padding)] py-[length:calc(var(--app-card-padding)*0.85)] sm:px-[length:calc(var(--app-card-padding)+0.25rem)] sm:py-[length:calc(var(--app-card-padding)*0.95)] md:px-[length:calc(var(--app-card-padding)+0.5rem)] md:py-[length:var(--app-card-padding)] lg:px-[length:calc(var(--app-card-padding)+0.75rem)]">
+          <h2 className="pricing-section-title app-section-title mb-6 md:mb-8">
+            Pakkenivåer
+          </h2>
+          <div className="grid min-w-0 grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 md:gap-8 xl:grid-cols-3 xl:gap-10">
         {sortedPackages.map((pkg) => {
           const { tagline, features } = parsePackageDescription(pkg.description);
           const isPopular = pkg.id === popularId;
@@ -377,7 +388,7 @@ export function PricingSection({
               )}
             >
               {isPopular ? (
-                <span className="absolute top-4 right-4 z-10 rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-bold tracking-wide text-stone-900 shadow-sm md:text-xs">
+                <span className="absolute top-4 right-4 z-10 rounded-full bg-amber-500 px-2.5 py-1 pricing-popular-badge font-bold tracking-wide text-stone-900 shadow-sm">
                   Mest populær
                 </span>
               ) : null}
@@ -400,29 +411,37 @@ export function PricingSection({
               <div className={cn("pr-2", canEdit && "pl-11")}>
                 <span
                   className={cn(
-                    "mb-3 block text-[11px] font-semibold tracking-wider text-stone-500 uppercase md:text-xs",
+                    "pricing-package-tier-label mb-3 block font-semibold tracking-wider text-stone-500 uppercase",
                     isPopular && "text-stone-400",
                   )}
                 >
                   {pkg.name.toUpperCase()}
                 </span>
-                <div className="font-heading text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
+                <div>
                   {priceOnRequest ? (
-                    <span className={isPopular ? "text-white" : "text-stone-900"}>
+                    <p
+                      className={cn(
+                        "pricing-package-price-alt font-heading font-semibold leading-tight tracking-tight text-balance",
+                        isPopular ? "text-white" : "text-stone-900",
+                      )}
+                    >
                       Pris etter avtale
-                    </span>
+                    </p>
                   ) : (
-                    <span
-                      className={isPopular ? "text-white" : "text-stone-900"}
+                    <p
+                      className={cn(
+                        "pricing-package-price leading-tight",
+                        isPopular ? "text-white" : "text-stone-900",
+                      )}
                     >
                       {formatNok(pkg.price)}
-                    </span>
+                    </p>
                   )}
                 </div>
                 {tagline ? (
                   <p
                     className={cn(
-                      "mt-3 text-sm leading-relaxed md:text-base",
+                      "pricing-package-body mt-3 leading-relaxed",
                       isPopular ? "text-stone-300" : "text-muted-foreground",
                     )}
                   >
@@ -432,15 +451,15 @@ export function PricingSection({
               </div>
               <div
                 className={cn(
-                  "my-5 shrink-0 border-t",
-                  isPopular ? "border-white/15" : "border-stone-200",
+                  "my-5 shrink-0 border-t-2",
+                  isPopular ? "border-white/30" : "border-rn-border-strong/70",
                 )}
               />
               {features.length > 0 ? (
                 <ul
                   className={cn(
-                    "mb-8 flex-1 divide-y text-sm leading-snug md:text-base",
-                    isPopular ? "divide-white/10" : "divide-stone-200",
+                    "pricing-package-list mb-8 flex-1 divide-y leading-snug",
+                    isPopular ? "divide-white/20" : "divide-rn-border-strong/55",
                   )}
                 >
                   {features.map((line, i) => (
@@ -453,7 +472,7 @@ export function PricingSection({
                     >
                       <CheckCircle2
                         className={cn(
-                          "mt-0.5 size-[18px] shrink-0 md:size-5",
+                          "mt-0.5 size-5 shrink-0 md:size-6",
                           checkClass,
                         )}
                         aria-hidden
@@ -465,7 +484,7 @@ export function PricingSection({
               ) : (
                 <p
                   className={cn(
-                    "mb-8 flex-1 text-sm leading-relaxed md:text-base",
+                    "pricing-package-body mb-8 flex-1 leading-relaxed",
                     isPopular ? "text-stone-400" : "text-muted-foreground",
                   )}
                 >
@@ -478,9 +497,9 @@ export function PricingSection({
         })}
       </div>
 
-              <div className="mt-8 border-t border-rn-border-strong/50 pt-8 sm:mt-10 sm:pt-10">
+              <div className="mt-8 border-t-2 border-rn-border-strong/80 pt-8 sm:mt-10 sm:pt-10">
                 <div className="flex flex-col gap-4 border-b-2 border-rn-border-strong pb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:pb-8">
-                  <h3 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
+                  <h3 className="pricing-services-title app-section-title">
                     Tilleggstjenester
                   </h3>
                   <Button
@@ -503,7 +522,7 @@ export function PricingSection({
                 </div>
 
                 {services.length === 0 ? (
-                  <p className="py-8 text-center text-base text-muted-foreground md:py-12 lg:py-14">
+                  <p className="pricing-empty-services py-8 text-center text-muted-foreground md:py-12 lg:py-14">
                     Ingen tilleggstjenester. Aktive rader her vises som valgfrie
                     tillegg på Ny booking (navn og pris kan du endre når som
                     helst).
@@ -534,10 +553,10 @@ export function PricingSection({
                       className={cn(pricingTableCellClass, "whitespace-normal")}
                     >
                       <div className="flex items-center gap-4">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-success/20 bg-rn-surface-gradient-from text-success md:size-11">
-                          <Icon className="size-5 md:size-6" aria-hidden />
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-success/20 bg-rn-surface-gradient-from text-success md:size-12">
+                          <Icon className="size-5 md:size-7" aria-hidden />
                         </div>
-                        <span className="font-heading text-base font-semibold text-success">
+                        <span className="pricing-service-name font-heading font-semibold text-success">
                           {svc.name}
                         </span>
                       </div>
@@ -548,15 +567,15 @@ export function PricingSection({
                         "whitespace-normal text-muted-foreground",
                       )}
                     >
-                      <span className="text-base">
+                      <span className="pricing-service-price text-app-base tabular-nums">
                         {formatNok(svc.price)}
                       </span>
                       {svc.description?.trim() ? (
-                        <span className="mt-1 block text-sm text-muted-foreground md:text-base">
+                        <span className="pricing-service-desc mt-1 block text-muted-foreground">
                           {svc.description}
                         </span>
                       ) : (
-                        <span className="mt-1 block text-sm text-muted-foreground md:text-base">
+                        <span className="pricing-service-desc mt-1 block text-muted-foreground">
                           Fast pris
                         </span>
                       )}
@@ -564,7 +583,7 @@ export function PricingSection({
                     <TableCell className={pricingTableCellClass}>
                       <span
                         className={cn(
-                          "inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase md:px-3 md:py-1.5 md:text-xs",
+                          "pricing-service-status-pill inline-flex rounded-full px-2.5 py-1 font-bold tracking-wide uppercase md:px-3 md:py-1.5",
                           svc.active
                             ? "border border-success/25 bg-success/15 text-success"
                             : "bg-muted text-muted-foreground",
@@ -602,9 +621,8 @@ export function PricingSection({
           </Table>
                 )}
               </div>
-            </>
-          }
-        />
+        </div>
+      </div>
       </div>
 
       <PricingCatalogDialog

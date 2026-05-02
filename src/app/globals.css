@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "../styles/tokens.css";
+@import "../styles/display-density.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -86,18 +87,45 @@
   --spacing-scale-4: 16px;
   --spacing-scale-6: 24px;
   --spacing-scale-8: 32px;
-  --width-sidebar: var(--sidebar-width);
+  --width-sidebar: var(--app-sidebar-width);
+  --height-app-control: var(--app-control-height);
+  --height-app-header: var(--app-header-height);
+  --spacing-app-page: var(--app-page-padding-desktop);
+  --spacing-app-card: var(--app-card-padding);
+  --spacing-app-section: calc(1.6rem * var(--app-spacing-scale));
+  --spacing-app-gap: calc(0.8rem * var(--app-spacing-scale));
+  --text-app-xs: calc(13px * var(--app-type-scale));
+  --text-app-sm: calc(14px * var(--app-type-scale));
+  --text-app-base: calc(18px * var(--app-read-type-scale));
+  --text-app-md: calc(19px * var(--app-type-scale));
+  --text-app-lg: calc(21px * var(--app-type-scale));
+  --text-app-xl: calc(25px * var(--app-type-scale));
+  --text-app-2xl: calc(29px * var(--app-type-scale));
+  --text-app-3xl: calc(35px * var(--app-type-scale));
+  --width-app-sidebar: var(--app-sidebar-width);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-base leading-normal text-foreground antialiased;
-  }
   html {
+    font-size: var(--font-size-base);
     @apply font-sans;
+  }
+  body {
+    font-family:
+      var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    /* Slightly larger than rem root so default text matches read tokens. */
+    font-size: calc(18px * var(--app-read-type-scale));
+    line-height: var(--line-height-base);
+    @apply bg-background text-foreground antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    line-height: var(--line-height-heading);
   }
 }
 
@@ -105,6 +133,1011 @@
   .font-heading {
     font-family:
       var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .app-page {
+    width: 100%;
+    max-width: var(--app-content-max-width);
+    margin-inline: auto;
+    padding-inline: var(--app-page-padding-mobile);
+  }
+
+  @media (min-width: 768px) {
+    .app-page {
+      padding-inline: var(--app-page-padding-tablet);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .app-page {
+      padding-inline: var(--app-page-padding-desktop);
+    }
+  }
+
+  .app-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-app-section);
+    width: 100%;
+  }
+
+  .app-card {
+    border-radius: var(--app-radius);
+    padding: var(--app-card-padding);
+  }
+
+  .app-grid {
+    display: grid;
+    gap: var(--spacing-app-gap);
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    .app-grid[data-cols-tablet="2"],
+    .app-grid.app-grid-cols-tablet-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .app-grid[data-cols-desktop="2"],
+    .app-grid.app-grid-cols-desktop-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .app-title {
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(28px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--foreground);
+  }
+
+  .app-section-title {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(24px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--rn-text-heading);
+  }
+
+  .app-card-title {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(20px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--rn-text-heading);
+  }
+
+  .app-text {
+    font-size: calc(18px * var(--app-read-type-scale));
+    font-weight: 400;
+    line-height: 1.55;
+    color: var(--foreground);
+  }
+
+  .app-text-secondary {
+    font-size: calc(13px * var(--app-read-type-scale));
+    line-height: 1.55;
+    color: var(--rn-text-body);
+  }
+
+  .app-text-muted {
+    font-size: calc(13px * var(--app-read-type-scale));
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+
+  .app-label {
+    font-size: calc(13px * var(--app-type-scale));
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+    color: var(--foreground);
+  }
+
+  /**
+   * Hovedmeny (sidebar + mobil sheet) — avstemt mot filter-/kontroll-copy i
+   * arbeidsflater (f.eks. Bookinger-faner).
+   */
+  .app-main-nav-link {
+    font-size: calc(17px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .app-main-nav-link {
+      font-size: calc(18px * var(--app-type-scale));
+    }
+  }
+
+  .app-kpi {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(34px * var(--app-type-scale));
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--foreground);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /**
+   * Dashboard «Oversikt» — larger KPI copy only on that page (scoped via wrapper
+   * `.dashboard-oversikt-card`).
+   */
+  .dashboard-oversikt-card .dashboard-oversikt-hero .app-title {
+    font-size: calc(32px * var(--app-type-scale));
+  }
+
+  .dashboard-kpi-label {
+    font-size: calc(14px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.07em;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+  }
+
+  .dashboard-kpi-value {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(40px * var(--app-type-scale));
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dashboard-kpi-caption {
+    font-size: calc(15px * var(--app-read-type-scale));
+    line-height: 1.5;
+    font-weight: 500;
+  }
+
+  /**
+   * Bookinger (liste/kalender) — større typografi kun her, samme idé som Oversikt.
+   */
+  .bookings-list-table-head {
+    font-size: calc(14px * var(--app-type-scale));
+  }
+
+  .bookings-list-workspace .bookings-list-table-head {
+    font-size: calc(15px * var(--app-type-scale));
+  }
+
+  .bookings-list-workspace .bookings-list-hero .app-title {
+    font-size: calc(32px * var(--app-type-scale));
+  }
+
+  .bookings-list-workspace [role="tablist"] [role="tab"] {
+    font-size: calc(16px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .bookings-list-workspace [role="tablist"] [role="tab"] {
+      font-size: calc(18px * var(--app-type-scale));
+    }
+  }
+
+  .bookings-list-workspace #bookings-search {
+    font-size: calc(17px * var(--app-read-type-scale));
+  }
+
+  .bookings-list-workspace .bookings-list-filters span.font-heading.text-app-base {
+    font-size: calc(17px * var(--app-type-scale));
+  }
+
+  .bookings-list-workspace .bookings-list-filter-count {
+    font-size: calc(15px * var(--app-type-scale));
+  }
+
+  .bookings-list-workspace .bookings-list-row-title {
+    font-size: calc(21px * var(--app-type-scale));
+    line-height: 1.25;
+  }
+
+  .bookings-list-workspace .bookings-list-row-meta {
+    font-size: calc(16px * var(--app-read-type-scale));
+    line-height: 1.45;
+  }
+
+  .bookings-list-workspace .bookings-list-row-metric {
+    font-size: calc(18px * var(--app-read-type-scale));
+  }
+
+  .bookings-list-workspace .bookings-list-row-amount {
+    font-size: calc(20px * var(--app-read-type-scale));
+  }
+
+  .bookings-list-workspace .bookings-list-row-paid {
+    font-size: calc(15px * var(--app-read-type-scale));
+  }
+
+  .bookings-list-workspace .bookings-list-footer-caption {
+    font-size: calc(17px * var(--app-read-type-scale));
+  }
+
+  .bookings-list-workspace .bookings-list-empty-title {
+    font-size: calc(22px * var(--app-type-scale));
+  }
+
+  .bookings-list-workspace .bookings-list-empty-body {
+    font-size: calc(17px * var(--app-read-type-scale));
+    line-height: 1.55;
+  }
+
+  .bookings-list-workspace .bookings-list-status-pill {
+    font-size: calc(13px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .bookings-list-workspace .bookings-list-status-pill {
+      font-size: calc(14px * var(--app-type-scale));
+    }
+  }
+
+  /**
+   * Kunder + partnere — samme hovedtittel som Finans / Fakturaer / Aktiva / Priser.
+   */
+  .customers-table-head {
+    font-size: calc(14px * var(--app-type-scale));
+  }
+
+  .customers-page-workspace .customers-table-head {
+    font-size: calc(15px * var(--app-type-scale));
+  }
+
+  .customers-page-workspace .customers-page-hero .app-title,
+  .customers-page-workspace .customers-partners-hero.app-title {
+    font-size: calc(32px * var(--app-type-scale));
+  }
+
+  .customers-page-workspace #customers-search,
+  .customers-page-workspace #partners-search {
+    font-size: calc(17px * var(--app-read-type-scale));
+  }
+
+  .customers-page-workspace .customers-row-name {
+    font-size: calc(21px * var(--app-type-scale));
+    line-height: 1.25;
+  }
+
+  .customers-page-workspace .customers-row-meta {
+    font-size: calc(16px * var(--app-read-type-scale));
+  }
+
+  .customers-page-workspace .customers-row-metric {
+    font-size: calc(20px * var(--app-read-type-scale));
+  }
+
+  .customers-page-workspace .customers-partners-row-name {
+    font-size: calc(20px * var(--app-type-scale));
+    line-height: 1.25;
+  }
+
+  .customers-page-workspace .customers-partners-row-meta {
+    font-size: calc(16px * var(--app-read-type-scale));
+  }
+
+  .customers-page-workspace .customers-booking-count-pill {
+    font-size: calc(14px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .customers-page-workspace .customers-booking-count-pill {
+      font-size: calc(15px * var(--app-type-scale));
+    }
+  }
+
+  .customers-page-workspace .customers-partners-category-pill {
+    font-size: calc(13px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .customers-page-workspace .customers-partners-category-pill {
+      font-size: calc(14px * var(--app-type-scale));
+    }
+  }
+
+  .customers-page-workspace .customers-empty-hint {
+    font-size: calc(17px * var(--app-read-type-scale));
+    line-height: 1.55;
+  }
+
+  /**
+   * Priser — større typografi (samme mønster som Kunder / Bookinger).
+   */
+  .pricing-page-workspace .pricing-page-header .app-title {
+    font-size: calc(32px * var(--app-type-scale));
+  }
+
+  .pricing-page-workspace .pricing-section-title.app-section-title {
+    font-size: calc(28px * var(--app-type-scale));
+  }
+
+  .pricing-page-workspace .pricing-services-title.app-section-title {
+    font-size: calc(26px * var(--app-type-scale));
+  }
+
+  .pricing-page-workspace .pricing-table-head {
+    font-size: calc(15px * var(--app-type-scale));
+    line-height: 1.35;
+  }
+
+  .pricing-page-workspace .pricing-package-tier-label {
+    font-size: calc(14px * var(--app-type-scale));
+    letter-spacing: 0.08em;
+  }
+
+  .pricing-page-workspace .pricing-package-price {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(40px * var(--app-type-scale));
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pricing-page-workspace .pricing-package-price-alt {
+    font-size: calc(27px * var(--app-type-scale));
+    line-height: 1.2;
+  }
+
+  .pricing-page-workspace .pricing-package-body,
+  .pricing-page-workspace .pricing-package-list {
+    font-size: calc(17px * var(--app-read-type-scale));
+    line-height: 1.55;
+  }
+
+  .pricing-page-workspace .pricing-package-list {
+    line-height: 1.45;
+  }
+
+  .pricing-page-workspace .pricing-popular-badge {
+    font-size: calc(13px * var(--app-type-scale));
+  }
+
+  .pricing-page-workspace .pricing-service-name {
+    font-size: calc(20px * var(--app-type-scale));
+    line-height: 1.25;
+  }
+
+  .pricing-page-workspace .pricing-service-price {
+    font-size: calc(18px * var(--app-read-type-scale));
+  }
+
+  .pricing-page-workspace .pricing-service-desc {
+    font-size: calc(15px * var(--app-read-type-scale));
+    line-height: 1.5;
+  }
+
+  .pricing-page-workspace .pricing-service-status-pill {
+    font-size: calc(13px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .pricing-page-workspace .pricing-service-status-pill {
+      font-size: calc(14px * var(--app-type-scale));
+    }
+  }
+
+  .pricing-page-workspace .pricing-empty-services {
+    font-size: calc(17px * var(--app-read-type-scale));
+    line-height: 1.55;
+  }
+
+  /**
+   * Finans — større typografi (samme mønster som Priser / Kunder).
+   */
+  .finance-page-workspace .app-title {
+    font-size: calc(32px * var(--app-type-scale));
+  }
+
+  .finance-page-workspace .finance-filter-label {
+    font-size: calc(13px * var(--app-type-scale));
+    letter-spacing: 0.06em;
+  }
+
+  .finance-page-workspace .finance-filter-control {
+    font-size: calc(17px * var(--app-read-type-scale));
+  }
+
+  .finance-page-workspace .finance-date-input {
+    font-size: calc(17px * var(--app-read-type-scale));
+  }
+
+  .finance-page-workspace .finance-kpi-label {
+    font-size: calc(14px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .finance-page-workspace .finance-kpi-value {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(40px * var(--app-type-scale));
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .finance-page-workspace .finance-kpi-caption {
+    font-size: calc(15px * var(--app-read-type-scale));
+    line-height: 1.5;
+    font-weight: 500;
+  }
+
+  .finance-table-head {
+    font-size: calc(14px * var(--app-type-scale));
+  }
+
+  .finance-page-workspace .finance-table-head {
+    font-size: calc(15px * var(--app-type-scale));
+    line-height: 1.35;
+  }
+
+  .finance-page-workspace .finance-transactions-title.app-section-title {
+    font-size: calc(26px * var(--app-type-scale));
+  }
+
+  .finance-page-workspace .finance-row-date {
+    font-size: calc(16px * var(--app-read-type-scale));
+  }
+
+  .finance-page-workspace .finance-row-desc {
+    font-size: calc(18px * var(--app-type-scale));
+    line-height: 1.3;
+  }
+
+  .finance-page-workspace .finance-row-meta {
+    font-size: calc(16px * var(--app-read-type-scale));
+  }
+
+  .finance-page-workspace .finance-category-pill {
+    font-size: calc(13px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .finance-page-workspace .finance-category-pill {
+      font-size: calc(14px * var(--app-type-scale));
+    }
+  }
+
+  .finance-page-workspace .finance-row-type {
+    font-size: calc(16px * var(--app-type-scale));
+  }
+
+  .finance-page-workspace .finance-row-amount {
+    font-size: calc(18px * var(--app-read-type-scale));
+  }
+
+  .finance-page-workspace .finance-page-footer {
+    font-size: calc(17px * var(--app-read-type-scale));
+  }
+
+  .finance-page-workspace .finance-empty-hint {
+    font-size: calc(17px * var(--app-read-type-scale));
+    line-height: 1.55;
+  }
+
+  .finance-page-workspace .finance-range-hint {
+    font-size: calc(16px * var(--app-read-type-scale));
+  }
+
+  /**
+   * Fakturaer — større typografi (samme mønster som Finans / Priser).
+   */
+  .invoices-page-workspace .app-title {
+    font-size: calc(32px * var(--app-type-scale));
+  }
+
+  .invoices-page-workspace .invoices-table-head {
+    font-size: calc(15px * var(--app-type-scale));
+    line-height: 1.35;
+  }
+
+  .invoices-page-workspace .invoices-row-title {
+    font-size: calc(21px * var(--app-type-scale));
+    line-height: 1.25;
+  }
+
+  .invoices-page-workspace .invoices-row-meta {
+    font-size: calc(16px * var(--app-read-type-scale));
+    line-height: 1.45;
+  }
+
+  .invoices-page-workspace .invoices-row-caption {
+    font-size: calc(14px * var(--app-read-type-scale));
+    line-height: 1.45;
+  }
+
+  @media (min-width: 768px) {
+    .invoices-page-workspace .invoices-row-caption {
+      font-size: calc(15px * var(--app-read-type-scale));
+    }
+  }
+
+  .invoices-page-workspace .invoices-row-pill {
+    font-size: calc(13px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .invoices-page-workspace .invoices-row-pill {
+      font-size: calc(14px * var(--app-type-scale));
+    }
+  }
+
+  .invoices-page-workspace .invoices-status-pill,
+  .invoices-page-workspace .invoices-alert-pill {
+    font-size: calc(13px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .invoices-page-workspace .invoices-status-pill,
+    .invoices-page-workspace .invoices-alert-pill {
+      font-size: calc(14px * var(--app-type-scale));
+    }
+  }
+
+  .invoices-page-workspace .invoices-due-date {
+    font-size: calc(18px * var(--app-type-scale));
+    line-height: 1.3;
+  }
+
+  .invoices-page-workspace .invoices-rest-amount-mobile {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(20px * var(--app-type-scale));
+    font-weight: 700;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .invoices-page-workspace .invoices-rest-amount {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(28px * var(--app-type-scale));
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (min-width: 768px) {
+    .invoices-page-workspace .invoices-rest-amount {
+      font-size: calc(32px * var(--app-type-scale));
+    }
+  }
+
+  .invoices-page-workspace .invoices-payment-major {
+    font-size: calc(18px * var(--app-type-scale));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .invoices-page-workspace .invoices-payment-slash {
+    font-size: calc(16px * var(--app-read-type-scale));
+  }
+
+  .invoices-page-workspace .invoices-action-btn {
+    font-size: calc(16px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .invoices-page-workspace .invoices-action-btn {
+      font-size: calc(17px * var(--app-type-scale));
+    }
+  }
+
+  .invoices-page-workspace .invoices-empty-hint {
+    font-size: calc(17px * var(--app-read-type-scale));
+    line-height: 1.55;
+  }
+
+  .invoices-page-workspace .invoices-filter-empty-title {
+    font-size: calc(20px * var(--app-type-scale));
+  }
+
+  .invoices-page-workspace .invoices-filter-empty-hint {
+    font-size: calc(16px * var(--app-read-type-scale));
+    line-height: 1.5;
+  }
+
+  .invoices-page-workspace .invoices-load-error {
+    font-size: calc(16px * var(--app-read-type-scale));
+    line-height: 1.5;
+  }
+
+  @media (min-width: 768px) {
+    .invoices-page-workspace .invoices-load-error {
+      font-size: calc(17px * var(--app-read-type-scale));
+    }
+  }
+
+  /**
+   * Aktiva — større typografi (samme mønster som Fakturaer / Finans).
+   */
+  .assets-page-workspace .app-title {
+    font-size: calc(32px * var(--app-type-scale));
+  }
+
+  .assets-page-workspace .assets-table-head {
+    font-size: calc(15px * var(--app-type-scale));
+    line-height: 1.35;
+  }
+
+  .assets-page-workspace .assets-kpi-label {
+    font-size: calc(14px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .assets-page-workspace .assets-kpi-value {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(40px * var(--app-type-scale));
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .assets-page-workspace .assets-kpi-caption {
+    font-size: calc(16px * var(--app-read-type-scale));
+    line-height: 1.5;
+  }
+
+  .assets-page-workspace .assets-stat-label {
+    font-size: calc(16px * var(--app-read-type-scale));
+    font-weight: 500;
+    color: var(--muted-foreground);
+  }
+
+  @media (min-width: 768px) {
+    .assets-page-workspace .assets-stat-label {
+      font-size: calc(17px * var(--app-read-type-scale));
+    }
+  }
+
+  .assets-page-workspace .assets-stat-value {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(28px * var(--app-type-scale));
+    font-weight: 700;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (min-width: 768px) {
+    .assets-page-workspace .assets-stat-value {
+      font-size: calc(32px * var(--app-type-scale));
+    }
+  }
+
+  .assets-page-workspace .assets-filter-hint {
+    font-size: calc(16px * var(--app-read-type-scale));
+    line-height: 1.5;
+  }
+
+  .assets-page-workspace .assets-load-error {
+    font-size: calc(16px * var(--app-read-type-scale));
+    line-height: 1.5;
+  }
+
+  @media (min-width: 768px) {
+    .assets-page-workspace .assets-load-error {
+      font-size: calc(17px * var(--app-read-type-scale));
+    }
+  }
+
+  .assets-page-workspace .assets-setup-hint {
+    font-size: calc(16px * var(--app-read-type-scale));
+    line-height: 1.5;
+  }
+
+  @media (min-width: 768px) {
+    .assets-page-workspace .assets-setup-hint {
+      font-size: calc(17px * var(--app-read-type-scale));
+    }
+  }
+
+  .assets-page-workspace .assets-inventory-title {
+    font-size: calc(22px * var(--app-type-scale));
+    line-height: 1.25;
+  }
+
+  @media (min-width: 768px) {
+    .assets-page-workspace .assets-inventory-title {
+      font-size: calc(26px * var(--app-type-scale));
+    }
+  }
+
+  .assets-page-workspace .assets-toolbar-meta {
+    font-size: calc(16px * var(--app-read-type-scale));
+    line-height: 1.45;
+  }
+
+  .assets-page-workspace .assets-toolbar-btn {
+    font-size: calc(16px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .assets-page-workspace .assets-toolbar-btn {
+      font-size: calc(17px * var(--app-type-scale));
+    }
+  }
+
+  .assets-page-workspace .assets-search-input,
+  .assets-page-workspace .assets-filter-select {
+    font-size: calc(17px * var(--app-read-type-scale));
+  }
+
+  .assets-page-workspace .assets-row-name {
+    font-size: calc(18px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .assets-page-workspace .assets-row-meta {
+    font-size: calc(16px * var(--app-read-type-scale));
+    line-height: 1.45;
+  }
+
+  .assets-page-workspace .assets-row-qty {
+    font-size: calc(16px * var(--app-type-scale));
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (min-width: 768px) {
+    .assets-page-workspace .assets-row-qty {
+      font-size: calc(17px * var(--app-type-scale));
+    }
+  }
+
+  .assets-page-workspace .assets-row-value {
+    font-size: calc(18px * var(--app-type-scale));
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .assets-page-workspace .assets-condition-pill,
+  .assets-page-workspace .assets-insurance-pill {
+    font-size: calc(13px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .assets-page-workspace .assets-condition-pill,
+    .assets-page-workspace .assets-insurance-pill {
+      font-size: calc(14px * var(--app-type-scale));
+    }
+  }
+
+  .assets-page-workspace .assets-empty-hint {
+    font-size: calc(17px * var(--app-read-type-scale));
+    line-height: 1.55;
+  }
+
+  .assets-page-workspace .assets-page-footer {
+    font-size: calc(17px * var(--app-read-type-scale));
+    line-height: 1.45;
+  }
+
+  /**
+   * Rapporter — større typografi (samme mønster som Aktiva / Finans).
+   */
+  .reports-page-workspace .app-title {
+    font-size: calc(32px * var(--app-type-scale));
+  }
+
+  .reports-page-workspace .app-section-title {
+    font-size: calc(28px * var(--app-type-scale));
+    line-height: 1.25;
+  }
+
+  .reports-page-workspace .reports-kpi-label {
+    font-size: calc(14px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .reports-page-workspace .reports-kpi-value {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(40px * var(--app-type-scale));
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .reports-page-workspace .reports-kpi-caption {
+    font-size: calc(15px * var(--app-read-type-scale));
+    line-height: 1.5;
+    font-weight: 500;
+    color: var(--muted-foreground);
+  }
+
+  .reports-page-workspace .reports-kpi-caption-strong {
+    font-size: calc(16px * var(--app-read-type-scale));
+    line-height: 1.45;
+    font-weight: 600;
+  }
+
+  .reports-page-workspace .reports-kpi-trend {
+    font-size: calc(16px * var(--app-read-type-scale));
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .reports-page-workspace .reports-inline-link {
+    font-size: calc(14px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  .reports-page-workspace .reports-load-error {
+    font-size: calc(16px * var(--app-read-type-scale));
+    line-height: 1.5;
+  }
+
+  @media (min-width: 768px) {
+    .reports-page-workspace .reports-load-error {
+      font-size: calc(17px * var(--app-read-type-scale));
+    }
+  }
+
+  .reports-page-workspace .reports-chart-period-badge {
+    font-size: calc(14px * var(--app-type-scale));
+    line-height: 1.35;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .reports-page-workspace .reports-chart-tooltip {
+    font-size: calc(13px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .reports-page-workspace .reports-chart-tooltip {
+      font-size: calc(14px * var(--app-type-scale));
+    }
+  }
+
+  .reports-page-workspace .reports-chart-axis {
+    font-size: calc(13px * var(--app-type-scale));
+    line-height: 1.35;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted-foreground);
+  }
+
+  @media (min-width: 768px) {
+    .reports-page-workspace .reports-chart-axis {
+      font-size: calc(14px * var(--app-type-scale));
+    }
+  }
+
+  .reports-page-workspace .reports-breakdown-pill {
+    font-size: calc(14px * var(--app-type-scale));
+    line-height: 1.3;
+  }
+
+  @media (min-width: 768px) {
+    .reports-page-workspace .reports-breakdown-pill {
+      font-size: calc(15px * var(--app-type-scale));
+    }
+  }
+
+  .reports-page-workspace .reports-breakdown-stats {
+    font-size: calc(18px * var(--app-type-scale));
+    line-height: 1.35;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .reports-page-workspace .reports-breakdown-stats-meta {
+    font-size: calc(16px * var(--app-read-type-scale));
+    font-weight: 600;
+  }
+
+  .reports-page-workspace .reports-empty-hint {
+    font-size: calc(17px * var(--app-read-type-scale));
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+
+  .reports-page-workspace .reports-filter-trigger {
+    font-size: calc(18px * var(--app-type-scale));
+  }
+
+  .reports-page-workspace .reports-filter-item {
+    font-size: calc(17px * var(--app-type-scale));
+  }
+
+  .app-meta {
+    font-size: calc(13px * var(--app-type-scale));
+    line-height: 1.45;
+    color: var(--muted-foreground);
+  }
+
+  /** @deprecated bruk `.app-section-title` */
+  .app-subtitle {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(24px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--rn-text-heading);
+  }
+
+  /** @deprecated bruk `.app-text-muted` */
+  .app-muted {
+    font-size: calc(13px * var(--app-read-type-scale));
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+
+  .app-control {
+    min-height: max(var(--app-control-height), var(--app-tap-target-min));
+    border-radius: var(--app-radius);
+  }
+
+  .app-main {
+    padding-block: calc(0.8rem * var(--app-spacing-scale));
+    padding-inline: var(--app-page-padding-mobile);
+    min-height: 0;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  @media (min-width: 768px) {
+    .app-main {
+      padding-block: calc(1.075rem * var(--app-spacing-scale));
+      padding-inline: var(--app-page-padding-tablet);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .app-main {
+      padding-block: calc(1.075rem * var(--app-spacing-scale));
+      padding-inline: var(--app-page-padding-desktop);
+    }
+  }
+
+  /** Primary column — full width of main; cap only if `--app-content-max-width` is set. */
+  .main-content {
+    width: 100%;
+    max-width: var(--app-content-max-width);
+    min-width: 0;
+    margin-inline: auto;
+  }
+
+  .app-page-inner {
+    width: 100%;
+    max-width: var(--app-content-max-width);
+    min-width: 0;
+    margin-inline: auto;
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  .app-chart {
+    min-height: var(--app-chart-min-height);
+    padding: var(--app-card-padding);
+    border-radius: var(--app-radius);
+  }
+
+  .app-table {
+    font-size: calc(14.5px * var(--app-read-type-scale));
+  }
+
+  .app-table table {
+    font-size: inherit;
   }
 }
 

@@ -188,9 +188,9 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
     "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
 
   return (
-    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 pb-8">
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <div className="px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
+    <div className="mx-auto flex w-full flex-col gap-8 pb-8">
+      <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
+        <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
           <AppPageHeader
             className="mb-0"
             surface="default"
@@ -214,18 +214,16 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
-                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                  Totalt fakturert
-                </span>
+                <span className="dashboard-kpi-label">Totalt fakturert</span>
                 <div className="rounded-md bg-accent p-2">
-                  <LayoutDashboard className="size-5 text-primary" aria-hidden />
+                  <LayoutDashboard className="size-6 text-primary" aria-hidden />
                 </div>
               </div>
               <div>
-                <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
+                <p className="dashboard-kpi-value text-success">
                   {formatNok(kpis.totalInvoicedNok)}
                 </p>
-                <p className="mt-3 text-xs font-medium text-muted-foreground md:text-sm">
+                <p className="dashboard-kpi-caption mt-3 text-muted-foreground">
                   {formatPctDelta(kpis.invoicedMonthDeltaPct)}
                 </p>
               </div>
@@ -233,18 +231,16 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
 
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
-                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                  Betalt
-                </span>
+                <span className="dashboard-kpi-label">Betalt</span>
                 <div className="rounded-md bg-accent p-2">
-                  <CheckCircle2 className="size-5 text-primary" aria-hidden />
+                  <CheckCircle2 className="size-6 text-primary" aria-hidden />
                 </div>
               </div>
               <div>
-                <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
+                <p className="dashboard-kpi-value text-success">
                   {formatNok(kpis.totalPaidNok)}
                 </p>
-                <p className="mt-3 text-xs font-medium text-muted-foreground md:text-sm">
+                <p className="dashboard-kpi-caption mt-3 text-muted-foreground">
                   {paidShareLabel}
                 </p>
               </div>
@@ -252,19 +248,17 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
 
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
-                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                  Ubetalt
-                </span>
+                <span className="dashboard-kpi-label">Ubetalt</span>
                 <div className="rounded-md bg-rn-danger-soft p-2">
-                  <Clock className="size-5 text-rn-danger-ink" aria-hidden />
+                  <Clock className="size-6 text-rn-danger-ink" aria-hidden />
                 </div>
               </div>
               <div>
-                <p className="font-heading text-3xl font-extrabold tracking-tight text-destructive tabular-nums sm:text-4xl">
+                <p className="dashboard-kpi-value text-destructive">
                   {formatNok(kpis.totalUnpaidNok)}
                 </p>
-                <p className="mt-3 flex items-center gap-1 text-xs font-medium text-destructive md:text-sm">
-                  <AlertCircle className="size-3.5 shrink-0" aria-hidden />
+                <p className="dashboard-kpi-caption mt-3 flex items-center gap-1 text-destructive">
+                  <AlertCircle className="size-4 shrink-0" aria-hidden />
                   {overdueLabel}
                 </p>
               </div>
@@ -272,18 +266,16 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
 
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
-                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                  Bookinger
-                </span>
+                <span className="dashboard-kpi-label">Bookinger</span>
                 <div className="rounded-md bg-accent p-2">
-                  <CalendarCheck className="size-5 text-primary" aria-hidden />
+                  <CalendarCheck className="size-6 text-primary" aria-hidden />
                 </div>
               </div>
               <div>
-                <p className="font-heading text-3xl font-extrabold tracking-tight text-success tabular-nums sm:text-4xl">
+                <p className="dashboard-kpi-value text-success">
                   {kpis.activeBookingCount}
                 </p>
-                <p className="mt-3 text-xs font-medium text-muted-foreground md:text-sm">
+                <p className="dashboard-kpi-caption mt-3 text-muted-foreground">
                   {venuesLabel}
                 </p>
               </div>
@@ -296,10 +288,10 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
         <div className={cn("lg:col-span-2 overflow-hidden", RN_CARD_SHELL)}>
           <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:px-8 md:py-6">
             <div>
-              <h2 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
+              <h2 className="app-section-title">
                 Månedlig omsetning
               </h2>
-              <p className="mt-1 text-xs text-muted-foreground md:text-sm">
+              <p className="mt-1 app-text-muted md:text-app-sm">
                 Fakturert beløp per måned etter arrangementsdato (aktive bookinger)
               </p>
             </div>
@@ -416,7 +408,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               className="size-5 shrink-0 text-destructive md:size-6"
               aria-hidden
             />
-            <h2 className="font-heading text-xl font-bold tracking-tight text-rn-danger-ink md:text-2xl">
+            <h2 className="app-section-title text-rn-danger-ink">
               Betalingsvarsler
             </h2>
           </div>

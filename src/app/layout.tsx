@@ -1,3 +1,5 @@
+import { DisplayDensityScript } from "@/components/providers/display-density-script";
+import { DisplayDensitySync } from "@/components/providers/display-density-sync";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_DESCRIPTION, APP_NAME } from "@/config/app";
 import { cn } from "@/lib/utils";
@@ -33,6 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-density="spacious"
       className={cn(
         inter.variable,
         manrope.variable,
@@ -42,11 +45,12 @@ export default function RootLayout({
       <body
         className={cn(
           "flex min-h-full flex-col bg-background font-sans text-foreground",
-          "text-[length:var(--font-size-base)] leading-[var(--line-height-base)]",
         )}
       >
+        <DisplayDensityScript />
         <SupabaseProvider>
           <QueryProvider>
+            <DisplayDensitySync />
             {children}
             <Toaster />
           </QueryProvider>

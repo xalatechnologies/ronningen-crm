@@ -10,10 +10,12 @@ export function SectionCard({
 }) {
   return (
     <Card className="border-border shadow-sm">
-      <CardHeader className="p-4 pb-0">
-        <CardTitle className="text-base font-medium">{title}</CardTitle>
+      <CardHeader className="px-[length:var(--app-card-padding)] pb-0 pt-[length:var(--app-card-padding)]">
+        <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-3">{children}</CardContent>
+      <CardContent className="px-[length:var(--app-card-padding)] pb-[length:var(--app-card-padding)] pt-3">
+        {children}
+      </CardContent>
     </Card>
   );
 }

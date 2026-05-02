@@ -11,7 +11,7 @@ export function MobileNavLinks() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-2 px-2 pb-4 md:gap-2.5 md:px-3" aria-label="Mobil hovedmeny">
+    <nav className="flex flex-col gap-[length:var(--spacing-app-gap)] px-[length:calc(var(--app-card-padding)*0.35)] pb-4 md:gap-[length:var(--spacing-app-gap)] md:px-[length:calc(var(--app-card-padding)*0.45)]" aria-label="Mobil hovedmeny">
       {mainNavigation.map((item) => {
         const active =
           pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -22,7 +22,7 @@ export function MobileNavLinks() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-3.5 rounded-md border-l-[3px] py-3.5 pl-3 pr-3.5 transition-colors outline-none md:gap-4 md:py-4 md:pl-3.5 md:pr-4",
+              "flex min-h-[max(2.75rem,var(--app-tap-target-min))] items-center gap-[length:var(--spacing-app-gap)] rounded-[length:var(--app-radius)] border-l-[3px] py-[length:calc(var(--app-card-padding)*0.55)] pl-3 pr-[length:calc(var(--app-card-padding)*0.55)] transition-colors outline-none md:gap-[length:var(--spacing-app-gap)] md:py-[length:calc(var(--app-card-padding)*0.65)] md:pl-[length:calc(var(--app-card-padding)*0.45)] md:pr-[length:calc(var(--app-card-padding)*0.65)]",
               RN_TEXT_NAV_LINK,
               "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               active

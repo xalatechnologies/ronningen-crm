@@ -57,8 +57,8 @@ export function resolveStandardBookingPaymentFromAmounts(
 } {
   const total = totalNok;
   const inputPaid = Math.min(Math.max(0, paidNok), total);
-  let paid = inputPaid;
-  let remaining = Math.max(0, total - paid);
+  const paid = inputPaid;
+  const remaining = Math.max(0, total - paid);
   if (total <= 0) {
     return { paid: 0, remaining: 0, paymentStatus: "paid" };
   }

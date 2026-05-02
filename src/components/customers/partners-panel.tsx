@@ -19,18 +19,19 @@ import {
   partnerFormSchema,
   type PartnerFormInput,
 } from "@/lib/validations";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronRight, Plus, Search, Trash2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm, type Resolver, type UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 
+const PARTNERS_PAGE_SIZE = 4;
+
 const partnersTableHeadClass =
-  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+  "customers-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 
 const fieldClass =
   "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
@@ -131,6 +132,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
   const supabase = useSupabase();
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [partnersPage, setPartnersPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [deleteBusyId, setDeleteBusyId] = useState<string | null>(null);
@@ -181,6 +183,22 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
       return hay.includes(q);
     });
   }, [partners, query]);
+
+  const pagination = useMemo(() => {
+    const totalPages = Math.max(
+      1,
+      Math.ceil(filtered.length / PARTNERS_PAGE_SIZE),
+    );
+    const currentPage = Math.min(Math.max(1, partnersPage), totalPages);
+    const start = (currentPage - 1) * PARTNERS_PAGE_SIZE;
+    return {
+      totalPages,
+      currentPage,
+      pageRows: filtered.slice(start, start + PARTNERS_PAGE_SIZE),
+    };
+  }, [filtered, partnersPage]);
+
+  const { totalPages, currentPage, pageRows } = pagination;
 
   function openEdit(p: PartnerRow) {
     const cat = p.category as PartnerFormInput["category"];
@@ -275,134 +293,184 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
 
   return (
     <>
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <header className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
-          <div
-            className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-4 xl:gap-5"
-            role="search"
-            aria-label="Partnere — søk og ny partner"
-          >
-            <h2 className="font-heading text-3xl font-bold tracking-tight text-rn-text-heading md:text-4xl">
-              Partnere &amp; leverandører
-            </h2>
-            <div className="flex w-full min-w-0 flex-col gap-3 md:min-w-0 md:flex-1 md:flex-row md:items-stretch md:justify-end md:gap-3 lg:gap-4">
-              <div className="relative min-w-0 w-full md:flex-1 md:max-w-3xl">
-                <Search
-                  className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
-                  aria-hidden
-                />
-                <Input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Søk partner…"
-                  className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-base text-foreground shadow-sm md:h-14 md:pl-14 md:text-[17px] focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-                  aria-label="Søk partnere"
-                />
-              </div>
-              <Button
-                type="button"
-                onClick={() => setAddOpen(true)}
-                className={cn(
-                  buttonVariants({ variant: "success", size: "cta" }),
-                  "lg:w-auto lg:min-w-44",
-                )}
-              >
-                <Plus className="size-5" aria-hidden />
-                Ny partner
-              </Button>
+      <header className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
+        <div
+          className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-4 xl:gap-5"
+          role="search"
+          aria-label="Partnere — søk og ny partner"
+        >
+            <h1 className="customers-partners-hero app-title">
+              Partnere
+            </h1>
+          <div className="flex w-full min-w-0 flex-col gap-3 md:min-w-0 md:flex-1 md:flex-row md:items-stretch md:justify-end md:gap-3 lg:gap-4">
+            <div className="relative min-w-0 w-full md:flex-1 md:max-w-3xl">
+              <Search
+                className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
+                aria-hidden
+              />
+              <Input
+                id="partners-search"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setPartnersPage(1);
+                }}
+                placeholder="Søk partner…"
+                className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                aria-label="Søk partnere"
+              />
             </div>
+            <Button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              className={cn(
+                buttonVariants({ variant: "success", size: "cta" }),
+                "lg:w-auto lg:min-w-44",
+              )}
+            >
+              <Plus className="size-5" aria-hidden />
+              Ny partner
+            </Button>
           </div>
-        </header>
+        </div>
+      </header>
 
-        {partners.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center md:px-8 md:py-16">
-            <p className="text-base text-muted-foreground">
-              Ingen partnere registrert ennå. Legg til catering, dekor, renhold
-              eller andre.
-            </p>
-          </div>
+      {partners.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center md:px-8 md:py-16">
+          <p className="customers-empty-hint text-muted-foreground">
+            Ingen partnere registrert ennå. Legg til catering, dekor, renhold
+            eller andre.
+          </p>
+        </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-base">
-              <thead>
-                <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                  <th className={partnersTableHeadClass}>Kategori</th>
-                  <th className={partnersTableHeadClass}>Navn</th>
-                  <th className={partnersTableHeadClass}>Telefon</th>
-                  <th className={partnersTableHeadClass}>E-post</th>
-                  <th className={cn(partnersTableHeadClass, "w-12 text-right")}>
-                    <span className="sr-only">Handling</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-rn-border-strong/50">
-                {filtered.map((p) => {
-                  const active = selectedId === p.id;
-                  return (
-                    <tr
-                      key={p.id}
-                      className={cn(
-                        "cursor-pointer transition-colors hover:bg-rn-surface-row-hover",
-                        active && "bg-rn-surface-row-hover",
-                      )}
-                      onClick={() => openEdit(p)}
-                    >
-                      <td className="px-6 py-5 md:px-8 md:py-6">
-                        <span
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-left text-app-base">
+                <thead>
+                  <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+                    <th className={partnersTableHeadClass}>Navn</th>
+                    <th className={partnersTableHeadClass}>Kategori</th>
+                    <th className={partnersTableHeadClass}>Telefon</th>
+                    <th className={partnersTableHeadClass}>E-post</th>
+                    <th className={cn(partnersTableHeadClass, "w-12 text-right")}>
+                      <span className="sr-only">Handling</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-rn-border-strong/50">
+                  {pageRows.map((p) => {
+                    const active = selectedId === p.id;
+                    return (
+                      <tr
+                        key={p.id}
+                        className={cn(
+                          "cursor-pointer transition-colors hover:bg-rn-surface-row-hover",
+                          active && "bg-rn-surface-row-hover",
+                        )}
+                        onClick={() => openEdit(p)}
+                      >
+                        <td
                           className={cn(
-                            "inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold md:px-3 md:text-sm",
-                            active
-                              ? "border-success/35 bg-rn-surface-gradient-from text-success"
-                              : "border-rn-border-strong bg-rn-surface-segment text-rn-text-body",
+                            "customers-partners-row-name px-6 py-5 font-heading font-semibold md:px-8 md:py-6",
+                            active ? "text-success" : "text-foreground",
                           )}
                         >
-                          {partnerCategoryLabelNb(p.category)}
-                        </span>
-                      </td>
-                      <td
-                        className={cn(
-                          "px-6 py-5 font-heading text-base font-semibold md:px-8 md:py-6",
-                          active ? "text-success" : "text-foreground",
-                        )}
-                      >
-                        {p.name}
-                      </td>
-                      <td className="px-6 py-5 text-muted-foreground md:px-8 md:py-6 md:text-base">
-                        {p.phone ?? "—"}
-                      </td>
-                      <td className="px-6 py-5 text-muted-foreground md:px-8 md:py-6 md:text-base">
-                        {p.email ?? "—"}
-                      </td>
-                      <td
-                        className="px-6 py-5 text-right md:px-8 md:py-6"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="flex items-center justify-end gap-0.5">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10"
-                            aria-label={`Slett ${p.name}`}
-                            disabled={deleteBusyId != null}
-                            onClick={() => requestDeletePartner(p.id, p.name)}
+                          {p.name}
+                        </td>
+                        <td className="px-6 py-5 md:px-8 md:py-6">
+                          <span
+                            className={cn(
+                              "customers-partners-category-pill inline-flex rounded-full border px-2.5 py-1 font-semibold md:px-3",
+                              active
+                                ? "border-success/35 bg-rn-surface-gradient-from text-success"
+                                : "border-rn-border-strong bg-rn-surface-segment text-rn-text-body",
+                            )}
                           >
-                            <Trash2 className="size-4" aria-hidden />
-                          </Button>
-                          <ChevronRight
-                            className="size-5 shrink-0 text-muted-foreground md:size-6"
-                            aria-hidden
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                            {partnerCategoryLabelNb(p.category)}
+                          </span>
+                        </td>
+                        <td className="customers-partners-row-meta px-6 py-5 text-muted-foreground md:px-8 md:py-6">
+                          {p.phone ?? "—"}
+                        </td>
+                        <td className="customers-partners-row-meta px-6 py-5 text-muted-foreground md:px-8 md:py-6">
+                          {p.email ?? "—"}
+                        </td>
+                        <td
+                          className="px-6 py-5 text-right md:px-8 md:py-6"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-end gap-0.5">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10"
+                              aria-label={`Slett ${p.name}`}
+                              disabled={deleteBusyId != null}
+                              onClick={() => requestDeletePartner(p.id, p.name)}
+                            >
+                              <Trash2 className="size-4" aria-hidden />
+                            </Button>
+                            <ChevronRight
+                              className="size-6 shrink-0 text-muted-foreground md:size-7"
+                              aria-hidden
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {filtered.length > 0 ? (
+              <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
+                <span>
+                  Viser{" "}
+                  {pageRows.length
+                    ? (currentPage - 1) * PARTNERS_PAGE_SIZE + 1
+                    : 0}
+                  –
+                  {Math.min(
+                    currentPage * PARTNERS_PAGE_SIZE,
+                    filtered.length,
+                  )}{" "}
+                  av {filtered.length}
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
+                    disabled={currentPage <= 1}
+                    onClick={() =>
+                      setPartnersPage((p) => Math.max(1, p - 1))
+                    }
+                  >
+                    <ChevronLeft className="size-5" aria-hidden />
+                    Forrige
+                  </Button>
+                  <span className="flex items-center px-2 tabular-nums">
+                    Side {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
+                    disabled={currentPage >= totalPages}
+                    onClick={() =>
+                      setPartnersPage((p) => Math.min(totalPages, p + 1))
+                    }
+                  >
+                    Neste
+                    <ChevronRight className="size-5" aria-hidden />
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </>
         )}
-      </div>
 
       <Sheet
         open={selectedId != null && selected != null}
@@ -421,7 +489,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
           {selected ? (
             <div className="flex h-full flex-col">
               <SheetHeader className="flex flex-row items-center justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head p-6">
-                <SheetTitle className="text-left font-heading text-xl font-bold text-rn-text-heading md:text-2xl">
+                <SheetTitle className="app-card-title text-left">
                   Rediger partner
                 </SheetTitle>
                 <Button
@@ -475,10 +543,10 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
           {partnerDeleteTarget ? (
             <>
               <DialogHeader className="text-left">
-                <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading">
+                <DialogTitle className="app-card-title">
                   Slette partner?
                 </DialogTitle>
-                <DialogDescription className="text-base leading-relaxed text-muted-foreground">
+                <DialogDescription className="text-app-base leading-relaxed text-muted-foreground">
                   Du er i ferd med å slette «{partnerDeleteTarget.name}». Dette kan
                   ikke angres.
                 </DialogDescription>
@@ -512,9 +580,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-w-md rounded-md" showCloseButton>
           <DialogHeader>
-            <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading md:text-2xl">
-              Ny partner
-            </DialogTitle>
+            <DialogTitle className="app-card-title">Ny partner</DialogTitle>
           </DialogHeader>
           <form
             onSubmit={addForm.handleSubmit(onAddPartner)}

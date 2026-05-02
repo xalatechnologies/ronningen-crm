@@ -1,0 +1,106 @@
+/**
+ * Global display density — driven by `html[data-density]`.
+ * Defaults match `spacious`. Sync numeric intent with `src/config/display.ts`.
+ *
+ * - `--app-type-scale`: density + global type tweak — use for UI chrome (labels, nav,
+ *   controls, headings, KPIs).
+ * - `--app-read-type-scale`: extra boost for paragraphs, descriptions, `text-app-base`,
+ *   `.app-text*`, `.app-table` — readable copy only.
+ */
+
+:root {
+  /** Typographic boost on top of `--app-font-scale` (density). `1` = no extra scaling. */
+  --app-readability-scale: 1;
+  --app-font-scale: 1.06;
+  --app-type-scale: calc(var(--app-font-scale) * var(--app-readability-scale));
+  /** Applied only to body copy / semantic text (not buttons, inputs, meta, titles). */
+  --app-read-boost: 1.12;
+  --app-read-type-scale: calc(var(--app-type-scale) * var(--app-read-boost));
+  --app-spacing-scale: 1;
+  /** `none` = use full width of main column (only outer `app-main` gutters apply). */
+  --app-content-max-width: none;
+  --app-card-padding: 18px;
+  --app-page-padding: 8px;
+  --app-page-padding-mobile: 6px;
+  --app-page-padding-tablet: 8px;
+  --app-page-padding-desktop: 8px;
+  --app-control-height: 44px;
+  --app-radius: 8px;
+  --app-sidebar-width: 260px;
+  --app-header-height: 72px;
+  --app-tap-target-min: 44px;
+  --app-chart-min-height: 220px;
+  --app-input-min-height: 44px;
+  --app-button-min-height: 40px;
+
+  --font-size-base: calc(18px * var(--app-type-scale));
+  --line-height-base: 1.55;
+  --line-height-heading: 1.3;
+  --radius: var(--app-radius);
+  --sidebar-width: var(--app-sidebar-width);
+}
+
+html[data-density="compact"] {
+  --app-font-scale: 0.96;
+  --app-spacing-scale: 0.82;
+  --app-card-padding: 14px;
+  --app-page-padding: 8px;
+  --app-page-padding-mobile: 6px;
+  --app-page-padding-tablet: 8px;
+  --app-page-padding-desktop: 8px;
+  --app-control-height: 36px;
+  --app-radius: 4px;
+  --app-sidebar-width: 240px;
+  --app-header-height: 56px;
+  --app-tap-target-min: 40px;
+  --app-chart-min-height: 180px;
+  --app-input-min-height: 44px;
+  --app-button-min-height: 40px;
+}
+
+html[data-density="comfortable"] {
+  --app-font-scale: 1;
+  --app-spacing-scale: 0.94;
+  --app-card-padding: 16px;
+  --app-page-padding: 12px;
+  --app-page-padding-mobile: 10px;
+  --app-page-padding-tablet: 12px;
+  --app-page-padding-desktop: 12px;
+  --app-control-height: 40px;
+  --app-radius: 6px;
+  --app-sidebar-width: 240px;
+  --app-header-height: 64px;
+  --app-tap-target-min: 40px;
+  --app-chart-min-height: 200px;
+  --app-input-min-height: 44px;
+  --app-button-min-height: 40px;
+}
+
+html[data-density="spacious"] {
+  --app-font-scale: 1.06;
+  --app-spacing-scale: 1;
+  --app-card-padding: 18px;
+  --app-page-padding: 8px;
+  --app-page-padding-mobile: 6px;
+  --app-page-padding-tablet: 8px;
+  --app-page-padding-desktop: 8px;
+  --app-control-height: 44px;
+  --app-radius: 8px;
+  --app-sidebar-width: 260px;
+  --app-header-height: 72px;
+  --app-tap-target-min: 44px;
+  --app-chart-min-height: 220px;
+  --app-input-min-height: 44px;
+  --app-button-min-height: 40px;
+}
+
+html[data-density="compact"],
+html[data-density="comfortable"],
+html[data-density="spacious"] {
+  --app-content-max-width: none;
+  --font-size-base: calc(18px * var(--app-type-scale));
+  --line-height-base: 1.55;
+  --line-height-heading: 1.3;
+  --radius: var(--app-radius);
+  --sidebar-width: var(--app-sidebar-width);
+}

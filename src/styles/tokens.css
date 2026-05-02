@@ -11,8 +11,8 @@
   --rn-card: #ffffff;
   --rn-sidebar-bg: #ffffff;
   --rn-text-primary: #1a1c1a;
-  --rn-text-secondary: #414944;
-  --rn-text-muted: #717973;
+  --rn-text-secondary: #343a38;
+  --rn-text-muted: #55605a;
   --rn-border: #f1f5f9;
   --rn-divider: #e2e3df;
   --rn-accent-blue: #58605e;
@@ -24,9 +24,9 @@
   --rn-border-strong: #94a3b8;
   --rn-border-strong-hover: #64748b;
   --rn-text-heading: #0c1f16;
-  --rn-text-body: #475569;
+  --rn-text-body: #334155;
   --rn-text-ink: #0f172a;
-  --rn-text-slate: #64748b;
+  --rn-text-slate: #475569;
   --rn-text-column: #1e293b;
   --rn-surface-segment: #f1f4f3;
   --rn-surface-table-head: #e8edeb;
@@ -38,7 +38,7 @@
   --rn-accent-fill-hover: #143528;
   --rn-badge-border: #cbd5e1;
   --rn-badge-surface: #eef1f0;
-  --rn-footer-text: #334155;
+  --rn-footer-text: #1e293b;
   --rn-danger-soft: #ffdad8;
   --rn-danger-surface: #ffdad6;
   --rn-danger-ink: #401a1a;
@@ -58,7 +58,7 @@
   --secondary: #d9e1de;
   --secondary-foreground: #1a1c1a;
   --muted: #f3f4f0;
-  --muted-foreground: #414944;
+  --muted-foreground: #343a38;
   --accent: #ecfdf5;
   --accent-foreground: #002d1c;
   --destructive: #ba1a1a;
@@ -86,10 +86,6 @@
 
   /* Layout */
   --sidebar-width: 240px;
-
-  /* Typography base */
-  --font-size-base: 14px;
-  --line-height-base: 1.5;
 
   /* Monospace fallback (no Geist dependency in app shell) */
   --font-geist-mono:

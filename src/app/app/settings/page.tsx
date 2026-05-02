@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   return (
-    <div className="mx-auto w-full max-w-[1440px] pb-24 md:pb-8">
+    <div className="mx-auto w-full pb-24 md:pb-8">
       <PageShell title="Innstillinger">
         <div
           className={cn(

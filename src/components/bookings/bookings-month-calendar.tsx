@@ -249,7 +249,7 @@ export function BookingsMonthCalendar({
           className={cn(
             "flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold sm:size-7 sm:text-sm md:size-8 md:text-base",
             isToday
-              ? "bg-success text-white shadow-sm"
+              ? "bg-success !text-white shadow-sm [&_svg]:!text-white"
               : hasBookings
                 ? "bg-white/55 text-rn-text-heading shadow-sm backdrop-blur-[2px]"
                 : "text-rn-text-heading",

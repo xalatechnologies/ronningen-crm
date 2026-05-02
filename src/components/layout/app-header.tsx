@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { MenuIcon, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 function initialsFromUser(email: string | undefined, metaName: unknown): string {
   if (typeof metaName === "string" && metaName.trim()) {
@@ -46,6 +46,38 @@ function avatarUrlFromUser(user: ReturnType<typeof useAuthUser>["user"]) {
   return typeof url === "string" && url.trim() ? url.trim() : null;
 }
 
+function HeaderAvatarOrInitials({
+  avatarUrl,
+  initials,
+  loading,
+}: {
+  avatarUrl: string;
+  initials: string;
+  loading: boolean;
+}) {
+  const [broken, setBroken] = useState(false);
+  const fallback = (
+    <span
+      className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-sm font-bold text-success"
+      aria-hidden
+    >
+      {loading ? "…" : initials}
+    </span>
+  );
+  if (broken) return fallback;
+  return (
+    <img
+      src={avatarUrl}
+      alt=""
+      width={44}
+      height={44}
+      className="size-11 shrink-0 rounded-full border-2 border-rn-border-strong object-cover"
+      referrerPolicy="no-referrer"
+      onError={() => setBroken(true)}
+    />
+  );
+}
+
 export function AppHeader({ children }: { children?: ReactNode }) {
   const { user, loading } = useAuthUser();
   const supabase = useSupabase();
@@ -58,11 +90,6 @@ export function AppHeader({ children }: { children?: ReactNode }) {
   );
 
   const avatarUrl = useMemo(() => avatarUrlFromUser(user), [user]);
-  const [avatarBroken, setAvatarBroken] = useState(false);
-
-  useEffect(() => {
-    setAvatarBroken(false);
-  }, [avatarUrl]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -73,7 +100,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex min-h-16 items-center justify-between gap-4 border-b-2 border-rn-border-strong bg-card px-4 py-4 shadow-rn-card md:min-h-18 md:px-8",
+        "sticky top-0 z-30 flex min-h-[length:var(--app-header-height)] items-center justify-between gap-[length:var(--spacing-app-gap)] border-b-2 border-rn-border-strong bg-card px-[length:var(--app-page-padding-mobile)] py-[length:calc(var(--app-card-padding)*0.65)] shadow-rn-card md:px-[length:var(--app-page-padding-tablet)] md:py-[length:calc(var(--app-card-padding)*0.75)] lg:px-[length:var(--app-page-padding-desktop)]",
       )}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -96,7 +123,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
             className="w-[min(100%,280px)] border-sidebar-border bg-sidebar p-0 text-sidebar-foreground"
           >
             <SheetHeader className="border-b border-sidebar-border px-4 py-3 text-left">
-              <SheetTitle className="font-heading text-sidebar-foreground">
+              <SheetTitle className="font-heading !text-app-md font-bold tracking-tight text-sidebar-foreground">
                 {APP_NAME}
               </SheetTitle>
             </SheetHeader>
@@ -112,26 +139,23 @@ export function AppHeader({ children }: { children?: ReactNode }) {
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              "flex shrink-0 items-center gap-2 rounded-md border-2 border-transparent py-1.5 pr-1 pl-1 outline-none transition-colors",
+              "flex shrink-0 items-center gap-2 rounded-[length:var(--app-radius)] border-2 border-transparent py-1.5 pr-1 pl-1 outline-none transition-colors",
               "hover:bg-muted/45 focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               "disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-muted/30",
             )}
             disabled={loading}
             aria-label="Konto og utlogging"
           >
-            {avatarUrl && !avatarBroken ? (
-              <img
-                src={avatarUrl}
-                alt=""
-                width={44}
-                height={44}
-                className="size-11 shrink-0 rounded-full border-2 border-rn-border-strong object-cover"
-                referrerPolicy="no-referrer"
-                onError={() => setAvatarBroken(true)}
+            {avatarUrl ? (
+              <HeaderAvatarOrInitials
+                key={avatarUrl}
+                avatarUrl={avatarUrl}
+                initials={initials}
+                loading={loading}
               />
             ) : (
               <span
-                className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-sm font-bold text-success"
+                className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-sm font-bold text-success"
                 aria-hidden
               >
                 {loading ? "…" : initials}
@@ -145,15 +169,15 @@ export function AppHeader({ children }: { children?: ReactNode }) {
           <DropdownMenuContent
             align="end"
             sideOffset={8}
-            className="min-w-64 max-w-[min(100vw-1.5rem,20rem)] rounded-md border-2 border-rn-border-strong bg-popover p-2.5 text-base shadow-rn-card"
+            className="min-w-64 max-w-[min(100vw-1.5rem,20rem)] rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-2.5 text-app-base shadow-rn-card"
           >
             <DropdownMenuGroup>
-              <DropdownMenuLabel className="px-3 py-2 font-heading text-sm font-semibold text-foreground truncate md:px-3.5 md:py-2.5 md:text-base">
+              <DropdownMenuLabel className="px-3 py-2 font-heading text-app-sm font-semibold text-foreground truncate md:px-3.5 md:py-2.5 md:text-app-md">
                 {user?.email ?? "Innlogget"}
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-2 bg-border" />
               <DropdownMenuItem
-                className="px-3 py-2.5 font-heading text-base font-bold md:px-3.5 md:py-3"
+                className="px-3 py-2.5 font-heading text-app-md font-bold md:px-3.5 md:py-3"
                 onSelect={() => void signOut()}
               >
                 Logg ut

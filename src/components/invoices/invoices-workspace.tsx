@@ -4,7 +4,6 @@ import type { UnpaidInvoiceRow } from "@/components/invoices/types";
 import { BOOKING_PAYMENT_STATUS_LABELS } from "@/constants/booking-payment-status";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
   type InvoiceRowFilter,
   daysRelativeToDue,
@@ -52,7 +51,7 @@ function formatNoticeDate(iso: string) {
 }
 
 const invoicesTableHeadClass =
-  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+  "invoices-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const invoicesTableCellClass =
   "px-6 py-5 align-top md:px-8 md:py-6";
 
@@ -88,35 +87,39 @@ function DueAndWarnings({
   return (
     <div className="flex min-w-0 max-w-72 flex-col gap-2">
       <div>
-        <div className="font-heading text-base font-semibold tabular-nums text-foreground">
+        <div className="font-heading invoices-due-date font-semibold tabular-nums text-foreground">
           {formatMediumDate(due)}
         </div>
         {customDue ? (
-          <p className="mt-0.5 text-xs text-muted-foreground">Eget forfall</p>
+          <p className="invoices-row-caption mt-0.5 text-muted-foreground">
+            Eget forfall
+          </p>
         ) : null}
       </div>
       <div className="flex flex-col items-start gap-1.5">
         {overdue ? (
           <Badge
             variant="destructive"
-            className="h-auto w-fit rounded-md px-2.5 py-1 text-[11px] font-bold leading-snug"
+            className="invoices-alert-pill h-auto w-fit rounded-md px-2.5 py-1 font-bold leading-snug"
           >
             Forfalt · {relLabel}
           </Badge>
         ) : rel === 0 ? (
           <Badge
             variant="secondary"
-            className="h-auto w-fit rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-900"
+            className="invoices-alert-pill h-auto w-fit rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 font-bold text-amber-900"
           >
             Forfall i dag
           </Badge>
         ) : (
-          <span className="text-sm leading-snug text-muted-foreground">{relLabel}</span>
+          <span className="invoices-row-meta leading-snug text-muted-foreground">
+            {relLabel}
+          </span>
         )}
         {row.collectionNoticeSentAt ? (
           <Badge
             variant="secondary"
-            className="h-auto w-fit max-w-full flex-wrap items-start gap-1 rounded-md border border-violet-200 bg-violet-50 py-1.5 pl-2 pr-2 text-left text-[11px] font-semibold leading-snug text-violet-900"
+            className="invoices-alert-pill h-auto w-fit max-w-full flex-wrap items-start gap-1 rounded-md border border-violet-200 bg-violet-50 py-1.5 pl-2 pr-2 text-left font-semibold leading-snug text-violet-900"
           >
             <Scale className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             Innkassovarsel registrert {formatNoticeDate(row.collectionNoticeSentAt)}
@@ -124,7 +127,7 @@ function DueAndWarnings({
         ) : suggestInkasso ? (
           <Badge
             variant="outline"
-            className="h-auto w-fit max-w-full items-start gap-1 rounded-md border-amber-300 bg-amber-50/80 py-1.5 pl-2 pr-2 text-left text-[11px] font-semibold leading-snug text-amber-950"
+            className="invoices-alert-pill h-auto w-fit max-w-full items-start gap-1 rounded-md border-amber-300 bg-amber-50/80 py-1.5 pl-2 pr-2 text-left font-semibold leading-snug text-amber-950"
           >
             <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-700" aria-hidden />
             Vurder innkassovarsel (14+ dager over forfall)
@@ -142,18 +145,18 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
   const badgeClass = (() => {
     switch (row.paymentStatus) {
       case "paid":
-        return "rounded-md border border-emerald-200 bg-emerald-50 text-[11px] font-bold text-emerald-950";
+        return "rounded-md border border-emerald-200 bg-emerald-50 font-bold text-emerald-950";
       case "unpaid":
-        return "rounded-md border border-border text-[11px] font-bold";
+        return "rounded-md border border-border font-bold";
       case "partial":
-        return "rounded-md border border-amber-200 bg-amber-50 text-[11px] font-bold text-amber-950";
+        return "rounded-md border border-amber-200 bg-amber-50 font-bold text-amber-950";
       case "waived":
-        return "rounded-md border border-slate-300 bg-slate-100 text-[11px] font-bold text-slate-800";
+        return "rounded-md border border-slate-300 bg-slate-100 font-bold text-slate-800";
       case "disputed":
-        return "rounded-md border border-orange-300 bg-orange-50 text-[11px] font-bold text-orange-950";
+        return "rounded-md border border-orange-300 bg-orange-50 font-bold text-orange-950";
       case "other":
       default:
-        return "rounded-md border border-violet-200 bg-violet-50 text-[11px] font-bold text-violet-950";
+        return "rounded-md border border-violet-200 bg-violet-50 font-bold text-violet-950";
     }
   })();
 
@@ -163,17 +166,24 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
     <div className="flex min-w-36 max-w-56 flex-col gap-2">
       <Badge
         variant="outline"
-        className={cn("h-auto w-fit px-2.5 py-1 text-[11px] font-bold", badgeClass)}
+        className={cn(
+          "invoices-status-pill h-auto w-fit px-2.5 py-1 font-bold",
+          badgeClass,
+        )}
       >
         {statusLabel}
       </Badge>
       {row.paymentStatus === "partial" ? (
-        <span className="text-xs font-semibold text-muted-foreground">{pct}% betalt</span>
+        <span className="invoices-row-caption font-semibold text-muted-foreground">
+          {pct}% betalt
+        </span>
       ) : null}
       <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0 tabular-nums">
-        <span className="text-base font-bold text-success">{formatNok(row.paidNok)}</span>
-        <span className="text-sm text-muted-foreground">/</span>
-        <span className="text-base font-semibold text-foreground">
+        <span className="invoices-payment-major font-bold text-success">
+          {formatNok(row.paidNok)}
+        </span>
+        <span className="invoices-payment-slash text-muted-foreground">/</span>
+        <span className="invoices-payment-major font-semibold text-foreground">
           {formatNok(row.totalNok)}
         </span>
       </div>
@@ -254,7 +264,7 @@ function MarkInvoicePaidButton({
       disabled={busy || row.remainingNok <= 0}
       title="Registrer at kunden har betalt hele beløpet"
       className={cn(
-        "h-10 w-full justify-center gap-1.5 rounded-md border-2 border-success/60 bg-success/10 px-3 font-heading text-xs font-bold text-emerald-950 shadow-sm hover:bg-success/20 md:h-11 md:gap-2 md:px-4 md:text-sm dark:text-emerald-100",
+        "invoices-action-btn h-10 w-full justify-center gap-1.5 rounded-md border-2 border-success/60 bg-success/10 px-3 font-heading font-bold text-emerald-950 shadow-sm hover:bg-success/20 md:h-11 md:gap-2 md:px-4 dark:text-emerald-100",
         busy && "opacity-70",
       )}
       onClick={() => void onMarkPaid()}
@@ -287,7 +297,7 @@ export function InvoicesWorkspace({
 
   if (rows.length === 0) {
     return (
-      <section className={cn("overflow-hidden", RN_CARD_SHELL)}>
+      <section className="min-w-0" aria-label="Ingen utestående fakturaer">
         <div className="flex flex-col items-center gap-4 px-6 py-16 text-center md:gap-5 md:px-8 md:py-20">
           <div
             className="flex size-16 items-center justify-center rounded-md border-2 border-rn-border-strong bg-muted/40 md:size-18"
@@ -295,7 +305,7 @@ export function InvoicesWorkspace({
           >
             <FileText className="size-8 text-muted-foreground md:size-9" />
           </div>
-          <p className="max-w-md text-base text-muted-foreground">
+          <p className="invoices-empty-hint max-w-md text-muted-foreground">
             Ingen utestående fakturaer. Når en booking har restbeløp, vises den
             her med betalingsstatus, forfall og verktøy for oppfølging.
           </p>
@@ -303,7 +313,7 @@ export function InvoicesWorkspace({
             href="/app/bookings"
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "h-12 rounded-md border-2 border-rn-border-strong px-6 font-heading text-base font-bold",
+              "invoices-action-btn h-12 rounded-md border-2 border-rn-border-strong px-6 font-heading font-bold",
             )}
           >
             Gå til bookinger
@@ -314,13 +324,13 @@ export function InvoicesWorkspace({
   }
 
   return (
-    <section className={cn("overflow-hidden", RN_CARD_SHELL)}>
+    <section className="min-w-0" aria-label="Fakturaliste">
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-2 px-6 py-14 text-center md:py-16">
-          <p className="font-heading text-base font-semibold text-foreground">
+          <p className="invoices-filter-empty-title font-heading font-semibold text-foreground">
             Ingen treff i filteret
           </p>
-          <p className="max-w-sm text-sm text-muted-foreground">
+          <p className="invoices-filter-empty-hint max-w-sm text-muted-foreground">
             Velg et annet segment over, eller vis alle ubetalte.
           </p>
         </div>
@@ -368,24 +378,24 @@ export function InvoicesWorkspace({
                 >
                   <td className={invoicesTableCellClass}>
                     <div className="min-w-0 max-w-64">
-                      <div className="truncate font-heading text-base font-semibold text-foreground">
+                      <div className="invoices-row-title truncate font-heading font-semibold text-foreground">
                         {r.customerName}
                       </div>
                       {r.customerEmail ? (
-                        <div className="mt-0.5 truncate text-sm text-muted-foreground">
+                        <div className="invoices-row-meta mt-0.5 truncate text-muted-foreground">
                           {r.customerEmail}
                         </div>
                       ) : null}
-                      <div className="mt-2 text-sm text-muted-foreground lg:hidden">
+                      <div className="invoices-row-meta mt-2 text-muted-foreground lg:hidden">
                         <span className="font-medium text-foreground">
                           {r.eventType}
                         </span>
                         <span className="text-muted-foreground"> · </span>
                         <span className="tabular-nums">{r.eventDateLabel}</span>
                       </div>
-                      <div className="mt-2 font-heading text-base font-bold tabular-nums text-destructive md:hidden">
+                      <div className="invoices-rest-amount-mobile mt-2 text-destructive md:hidden">
                         {formatNok(r.remainingNok)}
-                        <div className="mt-0.5 text-xs font-normal text-muted-foreground">
+                        <div className="invoices-row-caption mt-0.5 font-normal text-muted-foreground">
                           å betale
                         </div>
                       </div>
@@ -398,19 +408,19 @@ export function InvoicesWorkspace({
                     )}
                   >
                     <div className="flex min-w-0 max-w-56 flex-col gap-2">
-                      <span className="inline-flex w-fit rounded-md border border-success/30 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-100 md:text-sm">
+                      <span className="invoices-row-pill inline-flex w-fit rounded-md border border-success/30 bg-emerald-50 px-2.5 py-1 font-bold text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-100">
                         {r.eventType}
                       </span>
-                      <div className="tabular-nums text-sm text-muted-foreground md:text-base">
+                      <div className="invoices-row-meta tabular-nums text-muted-foreground">
                         {r.eventDateLabel}
                       </div>
                       {r.propertyName ? (
-                        <div className="text-xs font-medium text-muted-foreground md:text-sm">
+                        <div className="invoices-row-caption font-medium text-muted-foreground">
                           {r.propertyName}
                         </div>
                       ) : null}
                       {r.bookingReference ? (
-                        <div className="text-xs tabular-nums text-muted-foreground">
+                        <div className="invoices-row-caption tabular-nums text-muted-foreground">
                           Ref.&nbsp;{r.bookingReference}
                         </div>
                       ) : null}
@@ -429,10 +439,10 @@ export function InvoicesWorkspace({
                     )}
                   >
                     <div className="inline-block text-right">
-                      <div className="font-heading text-xl font-bold tabular-nums text-destructive md:text-2xl">
+                      <div className="invoices-rest-amount font-heading font-bold text-destructive">
                         {formatNok(r.remainingNok)}
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground">
+                      <p className="invoices-row-caption mt-1 text-muted-foreground">
                         Faktura {formatNok(r.totalNok)}
                       </p>
                     </div>
@@ -451,7 +461,7 @@ export function InvoicesWorkspace({
                         rel="noopener noreferrer"
                         className={cn(
                           buttonVariants({ variant: "outline" }),
-                          "inline-flex h-10 items-center justify-center gap-1.5 rounded-md border-2 border-rn-border-strong px-3 font-heading text-sm font-bold md:h-11 md:gap-2 md:px-4 md:text-base",
+                          "invoices-action-btn inline-flex h-10 items-center justify-center gap-1.5 rounded-md border-2 border-rn-border-strong px-3 font-heading font-bold md:h-11 md:gap-2 md:px-4",
                         )}
                       >
                         Faktura

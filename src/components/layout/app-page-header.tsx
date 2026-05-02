@@ -26,9 +26,7 @@ export function AppPageHeader({
 }) {
   const titleBlock = (
     <div className="min-w-0 shrink-0">
-      <h1 className="font-heading text-3xl font-bold tracking-tight text-rn-text-heading md:text-4xl">
-        {title}
-      </h1>
+      <h1 className="app-title">{title}</h1>
     </div>
   );
 
@@ -48,17 +46,17 @@ export function AppPageHeader({
     return (
       <header
         className={cn(
-          "mb-8 flex flex-col overflow-hidden rounded-md border-2 border-rn-border-strong bg-card shadow-rn-card",
+          "mb-8 flex max-w-full min-w-0 flex-col overflow-x-hidden overflow-y-visible rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card shadow-rn-card",
           className,
         )}
       >
         <div
           className={cn(
-            "flex flex-col justify-between gap-6 md:flex-row md:items-center md:gap-8 xl:gap-8",
-            "px-6 sm:px-8 md:px-10 lg:px-12",
+            "flex min-w-0 max-w-full flex-col justify-between gap-[length:var(--spacing-app-section)] md:flex-row md:items-center md:gap-8 xl:gap-8",
+            "px-[length:var(--app-card-padding)] sm:px-[length:calc(var(--app-card-padding)+0.25rem)] md:px-[length:calc(var(--app-card-padding)+0.5rem)] lg:px-[length:calc(var(--app-card-padding)+0.75rem)]",
             toolbar
-              ? "py-6 sm:py-7 md:py-8 lg:py-9"
-              : "py-8 sm:py-10 md:py-11 lg:py-12",
+              ? "py-[length:calc(var(--app-card-padding)*0.85)] sm:py-[length:calc(var(--app-card-padding)*0.95)] md:py-[length:var(--app-card-padding)] lg:py-[length:calc(var(--app-card-padding)+0.25rem)]"
+              : "py-[length:var(--app-card-padding)] sm:py-[length:calc(var(--app-card-padding)+0.35rem)] md:py-[length:calc(var(--app-card-padding)+0.65rem)] lg:py-[length:calc(var(--app-card-padding)+0.85rem)]",
           )}
         >
           {titleBlock}
@@ -67,7 +65,7 @@ export function AppPageHeader({
         {toolbar ? (
           <div
             className={cn(
-              "border-t border-rn-border-strong/50 px-6 py-5 sm:px-8 sm:py-6 md:px-10 md:py-7 lg:px-12",
+              "min-w-0 max-w-full overflow-x-auto border-t border-rn-border-strong/50 px-[length:var(--app-card-padding)] py-[length:calc(var(--app-card-padding)*0.75)] sm:px-[length:calc(var(--app-card-padding)+0.25rem)] sm:py-[length:calc(var(--app-card-padding)*0.85)] md:px-[length:calc(var(--app-card-padding)+0.5rem)] md:py-[length:calc(var(--app-card-padding)*0.9)] lg:px-[length:calc(var(--app-card-padding)+0.75rem)]",
               toolbarClassName,
             )}
           >
@@ -79,13 +77,18 @@ export function AppPageHeader({
   }
 
   return (
-    <header className={cn("mb-8 flex flex-col gap-4 md:gap-6", className)}>
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center md:gap-4 xl:gap-5">
+    <header
+      className={cn(
+        "mb-8 flex max-w-full min-w-0 flex-col gap-[length:var(--spacing-app-gap)] md:gap-[length:var(--spacing-app-section)]",
+        className,
+      )}
+    >
+      <div className="flex min-w-0 max-w-full flex-col justify-between gap-4 md:flex-row md:items-center md:gap-4 xl:gap-5">
         {titleBlock}
         {actionsBlock}
       </div>
       {toolbar ? (
-        <div className="border-t border-rn-border-strong/50 pt-4 md:pt-5">
+        <div className="min-w-0 max-w-full overflow-x-auto border-t border-rn-border-strong/50 pt-4 md:pt-5">
           {toolbar}
         </div>
       ) : null}

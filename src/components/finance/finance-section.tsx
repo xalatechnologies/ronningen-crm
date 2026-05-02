@@ -57,10 +57,10 @@ import { toast } from "sonner";
 import type { TransactionListItem } from "./types";
 
 const financeTableHeadClass =
-  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+  "finance-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const financeTableCellClass = "px-6 py-5 md:px-8 md:py-6";
 const filterControlClass =
-  "flex h-12 w-full rounded-md border-2 border-rn-border-strong bg-card px-4 text-base font-medium focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25";
+  "finance-filter-control flex h-12 w-full rounded-md border-2 border-rn-border-strong bg-card px-4 font-medium focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25";
 
 const txDialogFieldLabel =
   "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs";
@@ -398,7 +398,7 @@ function TransactionFormInner({
                 className={cn(
                   "flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border-2 px-4 py-3 font-heading text-base font-semibold transition-all outline-none sm:min-h-11",
                   txType === "income"
-                    ? "border-rn-accent-border bg-success text-white shadow-md"
+                    ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
                     : "border-transparent bg-transparent text-foreground hover:bg-muted/60",
                 )}
               >
@@ -417,7 +417,7 @@ function TransactionFormInner({
                 className={cn(
                   "flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border-2 px-4 py-3 font-heading text-base font-semibold transition-all outline-none sm:min-h-11",
                   txType === "expense"
-                    ? "border-destructive/60 bg-destructive text-white shadow-md"
+                    ? "border-destructive/60 bg-destructive !text-white shadow-md [&_svg]:!text-white"
                     : "border-transparent bg-transparent text-foreground hover:bg-muted/60",
                 )}
               >
@@ -652,7 +652,8 @@ export function FinanceSection({
     "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
 
   return (
-    <div className="mx-auto flex w-full max-w-[1440px] flex-col pb-24 md:pb-8">
+    <div className="mx-auto flex w-full flex-col pb-24 md:pb-8">
+      <div className="finance-page-workspace flex w-full flex-col">
       {loadError ? (
         <div
           className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
@@ -686,7 +687,7 @@ export function FinanceSection({
           <>
             <section className="flex flex-wrap items-end gap-4 md:gap-5">
                 <div className="min-w-[200px] flex-1 space-y-2">
-                  <Label className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs">
+                  <Label className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase">
                     Lokale
                   </Label>
                   <select
@@ -709,7 +710,7 @@ export function FinanceSection({
                 <div className="min-w-[160px] flex-1 space-y-2">
                   <Label
                     htmlFor="finance-filter-from"
-                    className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs"
+                    className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase"
                   >
                     Fra dato
                   </Label>
@@ -718,13 +719,13 @@ export function FinanceSection({
                     value={range.from}
                     onChange={setDateFrom}
                     variant="toolbar"
-                    className="h-12 text-base"
+                    className="finance-date-input h-12"
                   />
                 </div>
                 <div className="min-w-[160px] flex-1 space-y-2">
                   <Label
                     htmlFor="finance-filter-to"
-                    className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs"
+                    className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase"
                   >
                     Til dato
                   </Label>
@@ -733,7 +734,7 @@ export function FinanceSection({
                     value={range.to}
                     onChange={setDateTo}
                     variant="toolbar"
-                    className="h-12 text-base"
+                    className="finance-date-input h-12"
                   />
                 </div>
                 <Button
@@ -772,7 +773,7 @@ export function FinanceSection({
 
             {range.from > range.to ? (
               <div className="mt-6 border-t border-rn-border-strong/50 pt-4">
-                <p className="text-sm text-muted-foreground md:text-base">
+                <p className="finance-range-hint text-muted-foreground">
                   «Til dato» er før «fra dato» — vi viser likevel alle transaksjoner mellom
                   disse datoene.
                 </p>
@@ -786,7 +787,7 @@ export function FinanceSection({
               <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3">
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
-                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                <span className="finance-kpi-label text-muted-foreground">
                   Inntekter
                 </span>
                 <TrendingUp
@@ -794,13 +795,13 @@ export function FinanceSection({
                   aria-hidden
                 />
               </div>
-              <p className="font-heading text-3xl font-extrabold text-success tabular-nums sm:text-4xl">
+              <p className="finance-kpi-value text-success">
                 {formatNok(income)}
               </p>
               {comparison.dIncome != null ? (
                 <p
                   className={cn(
-                    "mt-3 flex items-center gap-1 text-sm font-semibold md:text-base",
+                    "finance-kpi-caption mt-3 flex items-center gap-1 font-semibold",
                     comparison.dIncome >= 0 ? "text-success" : "text-destructive",
                   )}
                 >
@@ -812,13 +813,15 @@ export function FinanceSection({
                   {Math.abs(comparison.dIncome).toFixed(1)}% vs. forrige periode
                 </p>
               ) : (
-                <p className="mt-3 text-sm text-muted-foreground md:text-base">—</p>
+                <p className="finance-kpi-caption mt-3 text-muted-foreground">
+                  —
+                </p>
               )}
             </div>
 
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
-                <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                <span className="finance-kpi-label text-muted-foreground">
                   Utgifter
                 </span>
                 <TrendingDown
@@ -826,13 +829,13 @@ export function FinanceSection({
                   aria-hidden
                 />
               </div>
-              <p className="font-heading text-3xl font-extrabold text-rn-text-heading tabular-nums sm:text-4xl">
+              <p className="finance-kpi-value text-rn-text-heading">
                 {formatNok(expense)}
               </p>
               {comparison.dExpense != null ? (
                 <p
                   className={cn(
-                    "mt-3 flex items-center gap-1 text-sm font-semibold md:text-base",
+                    "finance-kpi-caption mt-3 flex items-center gap-1 font-semibold",
                     comparison.dExpense <= 0 ? "text-success" : "text-destructive",
                   )}
                 >
@@ -844,13 +847,15 @@ export function FinanceSection({
                   {Math.abs(comparison.dExpense).toFixed(1)}% vs. forrige periode
                 </p>
               ) : (
-                <p className="mt-3 text-sm text-muted-foreground md:text-base">—</p>
+                <p className="finance-kpi-caption mt-3 text-muted-foreground">
+                  —
+                </p>
               )}
             </div>
 
             <div className="flex flex-col justify-between rounded-md border-2 border-rn-accent-border bg-success p-6 text-white shadow-rn-hero-success">
               <div className="mb-3 flex items-start justify-between">
-                <span className="text-[11px] font-semibold tracking-wider text-white/80 uppercase">
+                <span className="finance-kpi-label text-white/80">
                   Resultat
                 </span>
                 <Wallet
@@ -860,7 +865,7 @@ export function FinanceSection({
               </div>
               <p
                 className={cn(
-                  "font-heading text-3xl font-extrabold tabular-nums sm:text-4xl",
+                  "finance-kpi-value",
                   net >= 0 ? "text-white" : "text-red-200",
                 )}
               >
@@ -868,11 +873,13 @@ export function FinanceSection({
                 {formatNok(net)}
               </p>
               {margin != null ? (
-                <p className="mt-3 text-sm font-semibold text-primary-light md:text-base">
+                <p className="finance-kpi-caption mt-3 font-semibold text-primary-light">
                   Netto margin: {margin.toFixed(1)} %
                 </p>
               ) : (
-                <p className="mt-3 text-sm text-white/80 md:text-base">Ingen inntekt i perioden</p>
+                <p className="finance-kpi-caption mt-3 font-semibold text-white/80">
+                  Ingen inntekt i perioden
+                </p>
               )}
             </div>
           </div>
@@ -880,7 +887,7 @@ export function FinanceSection({
 
             <div className="mt-6 border-t border-rn-border-strong/50 pt-6 sm:pt-8">
               <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong pb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:pb-6">
-                <h2 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
+                <h2 className="finance-transactions-title app-section-title">
                   Transaksjoner
                 </h2>
                 <div className="flex gap-2">
@@ -898,7 +905,7 @@ export function FinanceSection({
         </div>
 
         {filtered.length === 0 ? (
-          <div className="space-y-3 p-8 text-center text-base text-muted-foreground md:p-10">
+          <div className="finance-empty-hint space-y-3 p-8 text-center text-muted-foreground md:p-10">
             <p>Ingen transaksjoner i valgt periode.</p>
             {properties.length === 0 ? (
               <p>
@@ -952,7 +959,7 @@ export function FinanceSection({
                     <TableCell
                       className={cn(
                         financeTableCellClass,
-                        "text-sm tabular-nums text-foreground md:text-base",
+                        "finance-row-date tabular-nums text-foreground",
                       )}
                     >
                       {formatDisplayDate(r.transaction_date)}
@@ -960,7 +967,7 @@ export function FinanceSection({
                     <TableCell
                       className={cn(
                         financeTableCellClass,
-                        "max-w-[220px] text-base font-semibold text-rn-text-heading",
+                        "finance-row-desc max-w-[220px] font-semibold text-rn-text-heading",
                       )}
                     >
                       <span className="line-clamp-2">
@@ -970,7 +977,7 @@ export function FinanceSection({
                     <TableCell
                       className={cn(
                         financeTableCellClass,
-                        "text-sm text-muted-foreground md:text-base",
+                        "finance-row-meta text-muted-foreground",
                       )}
                     >
                       {r.propertyName ?? "—"}
@@ -978,7 +985,7 @@ export function FinanceSection({
                     <TableCell className={financeTableCellClass}>
                       <span
                         className={cn(
-                          "inline-flex rounded-full px-3 py-1 text-[11px] font-bold md:text-xs",
+                          "finance-category-pill inline-flex rounded-full px-3 py-1 font-bold",
                           categoryPillClass(r.category),
                         )}
                       >
@@ -988,7 +995,7 @@ export function FinanceSection({
                     <TableCell className={financeTableCellClass}>
                       <div
                         className={cn(
-                          "flex items-center gap-2 text-sm font-semibold md:text-base",
+                          "finance-row-type flex items-center gap-2 font-semibold",
                           inc ? "text-success" : "text-destructive",
                         )}
                       >
@@ -1003,7 +1010,7 @@ export function FinanceSection({
                     <TableCell
                       className={cn(
                         financeTableCellClass,
-                        "text-right text-base font-bold tabular-nums",
+                        "finance-row-amount text-right font-bold tabular-nums",
                         inc ? "text-success" : "text-destructive",
                       )}
                     >
@@ -1034,7 +1041,7 @@ export function FinanceSection({
         )}
 
         {filtered.length > 0 ? (
-          <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 text-base font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
+          <div className="finance-page-footer flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
             <span>
               Viser {pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0}–
               {Math.min(currentPage * PAGE_SIZE, filtered.length)} av{" "}
@@ -1071,6 +1078,7 @@ export function FinanceSection({
             </>
           }
         />
+      </div>
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent
