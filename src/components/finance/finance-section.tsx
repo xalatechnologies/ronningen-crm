@@ -13,6 +13,7 @@ import {
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Table,
   TableBody,
@@ -34,7 +35,6 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   Building2,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -60,8 +60,6 @@ import type { TransactionListItem } from "./types";
 const financeTableHeadClass =
   "finance-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const financeTableCellClass = "px-6 py-5 md:px-8 md:py-6";
-const filterControlClass =
-  "finance-filter-control flex h-12 w-full rounded-md border-2 border-rn-border-strong bg-card px-4 font-medium focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25";
 
 const txDialogFieldLabel =
   "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs";
@@ -353,11 +351,8 @@ function TransactionFormInner({
                 className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground"
                 aria-hidden
               />
-              <select
-                className={cn(
-                  filterControlClass,
-                  "appearance-none bg-background py-0 pr-11 pl-12",
-                )}
+              <NativeSelect
+                className="bg-background py-0 pl-12"
                 aria-label="Lokale for transaksjonen"
                 {...register("propertyId")}
                 id={`tx-property-${categoryListId}`}
@@ -367,11 +362,7 @@ function TransactionFormInner({
                     {p.name}
                   </option>
                 ))}
-              </select>
-              <ChevronDown
-                className="pointer-events-none absolute top-1/2 right-3.5 size-5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
+              </NativeSelect>
             </div>
             {formState.errors.propertyId ? (
               <p className="text-sm text-destructive">
@@ -723,14 +714,14 @@ export function FinanceSection({
                   <Label className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase">
                     Lokale
                   </Label>
-                  <select
+                  <NativeSelect
                     value={propertyId}
                     onChange={(e) => {
                       setPropertyId(e.target.value);
                       setPage(1);
                     }}
                     aria-label="Filtrer transaksjoner etter lokale"
-                    className={filterControlClass}
+                    className="bg-card"
                   >
                     <option value="">Alle lokaler</option>
                     {properties.map((p) => (
@@ -738,7 +729,7 @@ export function FinanceSection({
                         {p.name}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </div>
                 <div className="min-w-[160px] flex-1 space-y-2">
                   <Label
@@ -797,7 +788,7 @@ export function FinanceSection({
                     href="/app/assets"
                     className="font-semibold text-success underline underline-offset-2"
                   >
-                    Åpne Aktiva
+                    Åpne Inventar
                   </Link>
                   {" "}for å legge til lokaler.
                 </div>
@@ -946,7 +937,7 @@ export function FinanceSection({
                   href="/app/assets"
                   className="font-semibold text-success underline underline-offset-2"
                 >
-                  Registrer lokaler under Aktiva
+                  Registrer lokaler under Inventar
                 </Link>
                 {" "}før du kan legge inn transaksjoner.
               </p>

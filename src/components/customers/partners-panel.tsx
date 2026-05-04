@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,7 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, ChevronRight, Plus, Search, Trash2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm, type Resolver, type UseFormReturn } from "react-hook-form";
@@ -35,8 +36,6 @@ const partnersTableHeadClass =
 
 const fieldClass =
   "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
-
-const selectPad = "pr-10 appearance-none bg-transparent";
 
 function partnerCategoryLabelNb(category: string): string {
   switch (category) {
@@ -66,16 +65,12 @@ function PartnerFields({
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor={`${idPrefix}-cat`}>Kategori</Label>
-        <select
-          id={`${idPrefix}-cat`}
-          {...register("category")}
-          className={cn(fieldClass, selectPad)}
-        >
+        <NativeSelect id={`${idPrefix}-cat`} {...register("category")}>
           <option value="catering">Catering</option>
           <option value="decoration">Dekorasjon</option>
           <option value="cleaning">Renhold</option>
           <option value="other">Annet</option>
-        </select>
+        </NativeSelect>
         {err.category ? (
           <p className="text-xs text-destructive">{err.category.message}</p>
         ) : null}
@@ -353,7 +348,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
                     <th className={partnersTableHeadClass}>Telefon</th>
                     <th className={partnersTableHeadClass}>E-post</th>
                     <th className={cn(partnersTableHeadClass, "w-12 text-right")}>
-                      <span className="sr-only">Handling</span>
+                      <span className="sr-only">Åpne</span>
                     </th>
                   </tr>
                 </thead>
@@ -396,21 +391,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
                           {p.email ?? "—"}
                         </td>
                         <td className="px-6 py-5 text-right md:px-8 md:py-6">
-                          <div className="flex items-center justify-end gap-0.5">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10"
-                              aria-label={`Slett ${p.name}`}
-                              disabled={deleteBusyId != null}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                requestDeletePartner(p.id, p.name);
-                              }}
-                            >
-                              <Trash2 className="size-4" aria-hidden />
-                            </Button>
+                          <div className="flex items-center justify-end">
                             <ChevronRight
                               className="size-6 shrink-0 text-muted-foreground md:size-7"
                               aria-hidden

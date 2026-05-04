@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Table,
   TableBody,
@@ -35,7 +36,6 @@ import {
   Armchair,
   Box,
   Building2,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Coffee,
@@ -51,12 +51,10 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
-  forwardRef,
   useCallback,
   useId,
   useMemo,
   useState,
-  type ComponentPropsWithoutRef,
 } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
@@ -68,33 +66,6 @@ const assetsTableHeadClass =
 const assetsTableCellClass = "px-6 py-5 md:px-8 md:py-6";
 const assetsKpiStatTileClass =
   "flex flex-col gap-2 rounded-lg border border-rn-border-strong/50 bg-muted/25 px-4 py-3.5 sm:gap-2.5 sm:px-4 sm:py-4 md:px-5 md:py-5";
-const assetFormControlClass =
-  "flex h-12 w-full rounded-md border-2 border-rn-border-strong bg-background px-4 text-base font-medium focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25";
-
-const AssetFormSelect = forwardRef<
-  HTMLSelectElement,
-  ComponentPropsWithoutRef<"select">
->(function AssetFormSelect({ className, children, ...props }, ref) {
-  return (
-    <div className="relative">
-      <select
-        ref={ref}
-        className={cn(
-          assetFormControlClass,
-          "cursor-pointer appearance-none bg-background pr-11",
-          className,
-        )}
-        {...props}
-      >
-        {children}
-      </select>
-      <ChevronDown
-        className="pointer-events-none absolute top-1/2 right-3.5 size-5 -translate-y-1/2 text-muted-foreground"
-        aria-hidden
-      />
-    </div>
-  );
-});
 
 export type AssetsSectionProps = {
   assets: AssetListItem[];
@@ -187,7 +158,7 @@ function downloadAssetsCsv(rows: AssetListItem[]) {
   const url = URL.createObjectURL(blob);
   const el = document.createElement("a");
   el.href = url;
-  el.download = `aktiva-${new Date().toISOString().slice(0, 10)}.csv`;
+  el.download = `inventar-${new Date().toISOString().slice(0, 10)}.csv`;
   el.click();
   URL.revokeObjectURL(url);
 }
@@ -285,27 +256,27 @@ function AssetFormFields({
         .update(payload)
         .eq("id", row.id);
       if (error) {
-        toast.error("Kunne ikke oppdatere aktivum", {
+        toast.error("Kunne ikke oppdatere inventarpost", {
           description: error.message,
         });
         return;
       }
-      toast.success("Aktivum oppdatert");
+      toast.success("Inventarpost oppdatert");
     } else {
       const { error } = await supabase.from("assets").insert(payload);
       if (error) {
-        toast.error("Kunne ikke opprette aktivum", {
+        toast.error("Kunne ikke opprette inventarpost", {
           description: error.message,
         });
         return;
       }
-      toast.success("Aktivum opprettet");
+      toast.success("Inventarpost opprettet");
     }
     onClose();
     router.refresh();
   }
 
-  const title = isEdit ? "Rediger aktivum" : "Nytt aktivum";
+  const title = isEdit ? "Rediger inventarpost" : "Ny inventarpost";
 
   return (
     <>
@@ -314,7 +285,9 @@ function AssetFormFields({
           {title}
         </DialogTitle>
         <DialogDescription className="sr-only">
-          {isEdit ? "Skjema for å oppdatere aktivum." : "Skjema for å registrere nytt aktivum."}
+          {isEdit
+            ? "Skjema for å oppdatere inventarpost."
+            : "Skjema for å registrere ny inventarpost."}
         </DialogDescription>
       </DialogHeader>
       <form
@@ -329,7 +302,7 @@ function AssetFormFields({
             >
               Lokale
             </Label>
-            <AssetFormSelect
+            <NativeSelect
               id={idProperty}
               aria-invalid={!!formState.errors.propertyId}
               aria-label="Lokale"
@@ -340,7 +313,7 @@ function AssetFormFields({
                   {p.name}
                 </option>
               ))}
-            </AssetFormSelect>
+            </NativeSelect>
             {formState.errors.propertyId ? (
               <p className="text-sm text-destructive" role="alert">
                 {formState.errors.propertyId.message}
@@ -432,7 +405,7 @@ function AssetFormFields({
               >
                 Tilstand
               </Label>
-              <AssetFormSelect
+              <NativeSelect
                 id={idCondition}
                 aria-label="Tilstand"
                 value={conditionVal ?? ""}
@@ -443,7 +416,7 @@ function AssetFormFields({
                     {o.label}
                   </option>
                 ))}
-              </AssetFormSelect>
+              </NativeSelect>
             </div>
             <div className="space-y-2">
               <Label
@@ -452,7 +425,7 @@ function AssetFormFields({
               >
                 Forsikring
               </Label>
-              <AssetFormSelect
+              <NativeSelect
                 id={idInsurance}
                 aria-label="Forsikringsstatus"
                 value={insuranceVal ?? ""}
@@ -463,7 +436,7 @@ function AssetFormFields({
                     {o.label}
                   </option>
                 ))}
-              </AssetFormSelect>
+              </NativeSelect>
             </div>
           </div>
         </div>
@@ -472,7 +445,8 @@ function AssetFormFields({
           <Button
             type="button"
             variant="outline"
-            className="h-12 rounded-md border-2 border-rn-border-strong px-6 text-base font-semibold"
+            size="cta"
+            className="border-2 border-rn-border-strong"
             onClick={onClose}
             disabled={isSubmitting}
           >
@@ -489,7 +463,7 @@ function AssetFormFields({
               ? "Lagrer …"
               : isEdit
                 ? "Lagre"
-                : "Opprett aktivum"}
+                : "Opprett inventarpost"}
           </Button>
         </DialogFooter>
       </form>
@@ -609,7 +583,7 @@ export function AssetsSection({
       toast.error("Kunne ikke slette", { description: error.message });
       return;
     }
-    toast.success("Aktivum slettet");
+    toast.success("Inventarpost slettet");
     router.refresh();
   }
 
@@ -626,7 +600,7 @@ export function AssetsSection({
           <AppPageHeader
             className="mb-0 gap-3 md:gap-4"
             surface="default"
-            title="Aktiva"
+            title="Inventar"
             actions={
               <Button
                 type="button"
@@ -642,7 +616,7 @@ export function AssetsSection({
                 className={cn(buttonVariants({ variant: "success", size: "cta" }))}
               >
                 <Plus className="size-5" aria-hidden />
-                Nytt aktivum
+                Ny inventarpost
               </Button>
             }
           />
@@ -665,7 +639,7 @@ export function AssetsSection({
             role="status"
           >
             <div className="assets-setup-hint rounded-md border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-amber-950 dark:text-amber-50">
-              Det finnes ingen lokaler ennå. Aktiva må knyttes til et lokale — legg inn
+              Det finnes ingen lokaler ennå. Inventar må knyttes til et lokale — legg inn
               eiendommer i databasen (eller kontakt administrator) før du registrerer
               inventar.
             </div>
@@ -675,7 +649,7 @@ export function AssetsSection({
         {!loadError && properties.length > 0 && assets.length > 0 ? (
           <section
             className="assets-kpi-summary border-t border-rn-border-strong/50 px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 lg:px-8"
-            aria-label="Sammendrag aktiva"
+            aria-label="Sammendrag inventar"
           >
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12 xl:gap-16">
               <div className="min-w-0 shrink-0 lg:max-w-md">
@@ -804,17 +778,17 @@ export function AssetsSection({
 
             <div className="relative w-40 shrink-0 sm:w-48">
               <Building2
-                className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground sm:left-4"
+                className="pointer-events-none absolute top-1/2 left-3.5 z-10 size-5 -translate-y-1/2 text-muted-foreground sm:left-4"
                 aria-hidden
               />
-              <select
+              <NativeSelect
                 value={propertyId}
                 onChange={(e) => {
                   setPropertyId(e.target.value);
                   setPage(1);
                 }}
                 aria-label="Filtrer etter lokale"
-                className="assets-filter-select h-11 w-full cursor-pointer appearance-none rounded-md border-2 border-rn-border-strong bg-background py-0 pr-10 pl-11 font-medium sm:h-12 sm:pl-12 focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25"
+                className="rounded-md py-0 pl-11 sm:pl-12"
               >
                 <option value="">Alle lokaler</option>
                 {properties.map((p) => (
@@ -822,37 +796,29 @@ export function AssetsSection({
                     {p.name}
                   </option>
                 ))}
-              </select>
-              <ChevronDown
-                className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
+              </NativeSelect>
             </div>
 
             <div className="relative w-36 shrink-0 sm:w-44">
               <Wrench
-                className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground sm:left-4"
+                className="pointer-events-none absolute top-1/2 left-3.5 z-10 size-5 -translate-y-1/2 text-muted-foreground sm:left-4"
                 aria-hidden
               />
-              <select
+              <NativeSelect
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value as "all" | AssetStatusBucket);
                   setPage(1);
                 }}
                 aria-label="Filtrer etter tilstand"
-                className="assets-filter-select h-11 w-full cursor-pointer appearance-none rounded-md border-2 border-rn-border-strong bg-background py-0 pr-10 pl-11 font-medium sm:h-12 sm:pl-12 focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25"
+                className="rounded-md py-0 pl-11 sm:pl-12"
               >
                 {STATUS_QUICK_FILTERS.map((opt) => (
                   <option key={opt.id} value={opt.id}>
                     {opt.label}
                   </option>
                 ))}
-              </select>
-              <ChevronDown
-                className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
+              </NativeSelect>
             </div>
           </div>
         </div>
@@ -868,11 +834,11 @@ export function AssetsSection({
             <p className="assets-empty-hint max-w-sm text-muted-foreground">
               {assets.length === 0 ? (
                 <>
-                  Ingen aktiva i registeret ennå.
+                  Ingen inventar i registeret ennå.
                   {canEdit && properties.length > 0 ? (
                     <>
                       {" "}
-                      Bruk <span className="font-medium text-foreground">Nytt aktivum</span>{" "}
+                      Bruk <span className="font-medium text-foreground">Ny inventarpost</span>{" "}
                       over for å legge til inventar.
                     </>
                   ) : null}
@@ -1104,7 +1070,7 @@ export function AssetsSection({
               <>
                 <DialogHeader>
                   <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading md:text-2xl">
-                    Kan ikke legge til aktivum
+                    Kan ikke legge til inventarpost
                   </DialogTitle>
                 </DialogHeader>
                 <p className="text-sm text-muted-foreground md:text-base">

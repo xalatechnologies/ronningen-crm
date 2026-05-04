@@ -1,6 +1,6 @@
 export type AssetStatusBucket = "operational" | "maintenance" | "replace";
 
-/** Same buckets as Aktiva — brukes i rapporter og liste. */
+/** Same buckets as Inventar — brukes i rapporter og liste. */
 export function assetStatusBucket(condition: string | null): AssetStatusBucket {
   const c = (condition ?? "").toLowerCase();
   if (
@@ -83,7 +83,7 @@ export function assetInsuranceBucket(
   return "other";
 }
 
-/** Forsikret verdi / linjer — samme kriterium som «Forsikret»-kolonnen i Aktiva. */
+/** Forsikret verdi / linjer — samme kriterium som «Forsikret»-kolonnen i Inventar. */
 export function assetRowInsuranceIsCovered(status: string | null): boolean {
   return assetInsuranceBucket(status) === "covered";
 }

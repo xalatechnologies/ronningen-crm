@@ -1,9 +1,11 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  BedDouble,
   CalendarDays,
   Coins,
   FileText,
+  Inbox,
   LayoutDashboard,
   Package,
   Users,
@@ -14,6 +16,8 @@ import {
 export const SIDEBAR_SEGMENT_ICONS: Record<string, LucideIcon> = {
   dashboard: LayoutDashboard,
   bookings: CalendarDays,
+  overnatting: BedDouble,
+  inquiries: Inbox,
   customers: Users,
   pricing: Coins,
   finance: WalletCards,

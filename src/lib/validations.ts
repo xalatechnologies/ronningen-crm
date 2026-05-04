@@ -148,10 +148,28 @@ export type BookingPackageCatalogEntry = { id: string; price: number };
 export type BookingAddonCatalogEntry = { id: string; price: number };
 
 export function estimateNewBookingTotalNok(
-  data: { selectedPackageId: string; selectedAddonIds: string[] },
+  data: {
+    packageSource: "catalog" | "custom";
+    selectedPackageId: string;
+    selectedAddonIds: string[];
+    customPackagePrice: number;
+    customAddonLines: { name: string; priceNok: number }[];
+  },
   packageCatalog: BookingPackageCatalogEntry[],
   addonCatalog: BookingAddonCatalogEntry[],
 ): number {
+  if (data.packageSource === "custom") {
+    let total = Number.isFinite(data.customPackagePrice)
+      ? Number(data.customPackagePrice)
+      : 0;
+    for (const line of data.customAddonLines ?? []) {
+      if (line.name?.trim()) {
+        const p = Number(line.priceNok);
+        total += Number.isFinite(p) ? p : 0;
+      }
+    }
+    return total;
+  }
   const pkgById = new Map(
     packageCatalog.map((p) => [p.id, Number(p.price)]),
   );
@@ -342,7 +360,24 @@ export const newBookingFormFieldsSchema = z.object({
     .int("Antall gjester må være et heltall")
     .min(1, "Oppgi minst én gjest")
     .max(50_000, "Antall gjester virker urealistisk høyt"),
-  selectedPackageId: z.string().uuid("Velg en pakke"),
+  packageSource: z.enum(["catalog", "custom"]),
+  selectedPackageId: z.union([
+    z.literal(""),
+    z.string().uuid("Velg en pakke"),
+  ]),
+  customPackageName: z
+    .string()
+    .transform((s) => s.trim())
+    .pipe(z.string().max(200, "Maks 200 tegn")),
+  customPackagePrice: z.coerce
+    .number({ error: "Ugyldig pris" })
+    .min(0, "Pris kan ikke være negativ"),
+  customAddonLines: z.array(
+    z.object({
+      name: z.string(),
+      priceNok: z.coerce.number().min(0, "Pris kan ikke være negativ"),
+    }),
+  ),
   selectedAddonIds: z.array(z.string().uuid()),
   depositPaid: z.coerce
     .number({ error: "Ugyldig depositum" })
@@ -457,22 +492,36 @@ export function createNewBookingFormSchema(
   const allowedAddons = new Set(addonCatalog.map((a) => a.id));
   const allowedPackages = new Set(packageCatalog.map((p) => p.id));
   return newBookingFormFieldsSchema.superRefine((data, ctx) => {
-    if (packageCatalog.length === 0) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Ingen aktive pakker. Opprett pakker under Priser først.",
-        path: ["selectedPackageId"],
-      });
-      return;
+    if (data.packageSource === "catalog") {
+      if (packageCatalog.length === 0) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Ingen aktive pakker. Velg egen pakkepris eller opprett pakker under Priser.",
+          path: ["packageSource"],
+        });
+        return;
+      }
+      if (
+        !data.selectedPackageId ||
+        !allowedPackages.has(data.selectedPackageId)
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Velg en pakke",
+          path: ["selectedPackageId"],
+        });
+        return;
+      }
+    } else if (data.packageSource === "custom") {
+      if (data.customPackageName.trim().length < 1) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Oppgi navn på pakke / prisgrunnlag",
+          path: ["customPackageName"],
+        });
+      }
     }
-    if (!allowedPackages.has(data.selectedPackageId)) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Ugyldig pakke valgt",
-        path: ["selectedPackageId"],
-      });
-      return;
-    }
+
     if (data.festType === NEW_BOOKING_FEST_TYPE_ANNET) {
       const t = data.festTypeCustom?.trim() ?? "";
       if (!t) {
@@ -526,3 +575,277 @@ export const transactionFormSchema = z.object({
 });
 
 export type TransactionFormInput = z.infer<typeof transactionFormSchema>;
+
+// --- Forespørsler (booking_inquiries) — brukes av inquiries-modulen
+export const BOOKING_INQUIRY_STATUSES = [
+  "new",
+  "contacted",
+  "quote_sent",
+  "awaiting_customer",
+  "converted",
+  "lost",
+] as const;
+
+export type BookingInquiryStatus = (typeof BOOKING_INQUIRY_STATUSES)[number];
+
+export const BOOKING_INQUIRY_FORM_STATUSES = [
+  "new",
+  "contacted",
+  "quote_sent",
+  "awaiting_customer",
+  "lost",
+] as const;
+
+export type BookingInquiryFormStatus =
+  (typeof BOOKING_INQUIRY_FORM_STATUSES)[number];
+
+export const bookingInquiryFormSchema = z
+  .object({
+    customerId: z.union([z.literal(""), z.string().uuid("Ugyldig kunde")]),
+    newCustomerName: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().max(200)),
+    newCustomerPhone: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().max(40)),
+    newCustomerEmail: z.union([
+      z.literal(""),
+      z.string().email("Ugyldig e-post"),
+    ]),
+    newCustomerAddress: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().max(300)),
+    propertyId: z.union([z.literal(""), z.string().uuid("Ugyldig lokale")]),
+    eventType: z.enum(NEW_BOOKING_EVENT_TYPES, {
+      message: "Velg bedrift eller privat",
+    }),
+    festType: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().max(120)),
+    preferredEventDate: z
+      .string()
+      .transform((s) => s.trim())
+      .refine((s) => s === "" || parseBookingDateLocal(s), {
+        message: "Ugyldig ønsket dato",
+      }),
+    preferredEventEndDate: z
+      .string()
+      .transform((s) => s.trim())
+      .refine((s) => s === "" || parseBookingDateLocal(s), {
+        message: "Ugyldig sluttdato",
+      }),
+    guestCount: z.coerce
+      .number({ error: "Oppgi antall gjester" })
+      .int("Antall gjester må være et heltall")
+      .min(0, "Antall gjester kan ikke være negativt")
+      .max(50_000, "Antall gjester virker urealistisk høyt"),
+    estimatedTotal: z.preprocess((v) => {
+      if (v === "" || v === undefined || v === null) return undefined;
+      const n = typeof v === "number" ? v : Number(v);
+      return Number.isFinite(n) ? n : undefined;
+    }, z.number().min(0, "Beløp kan ikke være negativt").optional()),
+    status: z.enum(BOOKING_INQUIRY_FORM_STATUSES, {
+      message: "Velg status",
+    }),
+    nextFollowUpAt: z
+      .string()
+      .transform((s) => s.trim())
+      .refine((s) => s === "" || !Number.isNaN(Date.parse(s)), {
+        message: "Ugyldig tidspunkt for oppfølging",
+      }),
+    internalNotes: z.string().max(8000, "Maks 8000 tegn").optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.customerId) {
+      if (data.newCustomerName.length < 2) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Navn er påkrevd (minst 2 tegn)",
+          path: ["newCustomerName"],
+        });
+      }
+      if (data.newCustomerPhone.length < 3) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Telefon er påkrevd (minst 3 tegn)",
+          path: ["newCustomerPhone"],
+        });
+      }
+    }
+    const start = data.preferredEventDate;
+    const end = data.preferredEventEndDate;
+    if (start && end && end < start) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Sluttdato kan ikke være før startdato",
+        path: ["preferredEventEndDate"],
+      });
+    }
+  });
+
+export type BookingInquiryFormInput = z.infer<typeof bookingInquiryFormSchema>;
+
+export const inquiryActivityNoteSchema = z.object({
+  body: z
+    .string()
+    .transform((s) => s.trim())
+    .pipe(z.string().min(1, "Skriv en melding").max(8000, "Maks 8000 tegn")),
+});
+
+export type InquiryActivityNoteInput = z.infer<typeof inquiryActivityNoteSchema>;
+
+// --- Overnatting
+export const ACCOMMODATION_RESERVATION_STATUSES = [
+  "tentative",
+  "confirmed",
+  "cancelled",
+] as const;
+
+export type AccommodationReservationStatus =
+  (typeof ACCOMMODATION_RESERVATION_STATUSES)[number];
+
+const accommodationHhMmOptional = z
+  .string()
+  .transform((s) => s.trim())
+  .refine((s) => s === "" || /^(\d|[01]\d|2[0-3]):[0-5]\d$/.test(s), {
+    message: "Ugyldig klokkeslett (HH:MM)",
+  });
+
+export const accommodationReservationFormSchema = z
+  .object({
+    customerId: z.union([z.literal(""), z.string().uuid("Ugyldig kunde")]),
+    newCustomerName: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().max(200)),
+    newCustomerPhone: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().max(40)),
+    newCustomerEmail: z.union([
+      z.literal(""),
+      z.string().email("Ugyldig e-post"),
+    ]),
+    newCustomerAddress: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().max(300)),
+    unitId: z.string().uuid("Velg enhet"),
+    checkInDate: z
+      .string()
+      .transform((s) => s.trim())
+      .refine((s) => parseBookingDateLocal(s), { message: "Ugyldig ankomstdato" }),
+    checkOutDate: z
+      .string()
+      .transform((s) => s.trim())
+      .refine((s) => parseBookingDateLocal(s), { message: "Ugyldig avreisedato" }),
+    checkInTime: accommodationHhMmOptional,
+    checkOutTime: accommodationHhMmOptional,
+    guestCount: z.coerce
+      .number({ error: "Oppgi antall gjester" })
+      .int("Antall gjester må være et heltall")
+      .min(1, "Minst én gjest")
+      .max(100, "Antall gjester virker urealistisk høyt"),
+    status: z.enum(ACCOMMODATION_RESERVATION_STATUSES, {
+      message: "Velg status",
+    }),
+    notes: z.string().max(8000, "Maks 8000 tegn").optional(),
+    totalPrice: z.preprocess((v) => {
+      if (v === "" || v === undefined || v === null) return undefined;
+      const n = typeof v === "number" ? v : Number(v);
+      return Number.isFinite(n) ? n : undefined;
+    }, z.number().min(0, "Beløp kan ikke være negativt").optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.customerId) {
+      if (data.newCustomerName.length < 2) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Navn er påkrevd (minst 2 tegn)",
+          path: ["newCustomerName"],
+        });
+      }
+      if (data.newCustomerPhone.length < 3) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Telefon er påkrevd (minst 3 tegn)",
+          path: ["newCustomerPhone"],
+        });
+      }
+    }
+    if (data.checkInDate >= data.checkOutDate) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Avreisedato må være etter ankomst",
+        path: ["checkOutDate"],
+      });
+    }
+  });
+
+export type AccommodationReservationFormInput = z.infer<
+  typeof accommodationReservationFormSchema
+>;
+
+export const accommodationReservationEditSchema = z
+  .object({
+    unitId: z.string().uuid("Velg enhet"),
+    checkInDate: z
+      .string()
+      .transform((s) => s.trim())
+      .refine((s) => parseBookingDateLocal(s), { message: "Ugyldig ankomstdato" }),
+    checkOutDate: z
+      .string()
+      .transform((s) => s.trim())
+      .refine((s) => parseBookingDateLocal(s), { message: "Ugyldig avreisedato" }),
+    checkInTime: accommodationHhMmOptional,
+    checkOutTime: accommodationHhMmOptional,
+    guestCount: z.coerce
+      .number({ error: "Oppgi antall gjester" })
+      .int()
+      .min(1)
+      .max(100),
+    status: z.enum(ACCOMMODATION_RESERVATION_STATUSES, {
+      message: "Velg status",
+    }),
+    notes: z.string().max(8000).optional(),
+    totalPrice: z.preprocess((v) => {
+      if (v === "" || v === undefined || v === null) return undefined;
+      const n = typeof v === "number" ? v : Number(v);
+      return Number.isFinite(n) ? n : undefined;
+    }, z.number().min(0).optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (data.checkInDate >= data.checkOutDate) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Avreisedato må være etter ankomst",
+        path: ["checkOutDate"],
+      });
+    }
+  });
+
+export type AccommodationReservationEditInput = z.infer<
+  typeof accommodationReservationEditSchema
+>;
+
+export const accommodationUnitFormSchema = z.object({
+  name: z
+    .string()
+    .transform((s) => s.trim())
+    .pipe(z.string().min(1, "Navn er påkrevd").max(200)),
+  propertyId: z.union([z.literal(""), z.string().uuid("Ugyldig lokale")]),
+  maxGuests: z.coerce
+    .number({ error: "Oppgi kapasitet" })
+    .int()
+    .min(1, "Minst 1 gjest")
+    .max(100, "Maks 100"),
+  notes: z.string().max(2000, "Maks 2000 tegn").optional(),
+  active: z.boolean(),
+  sortOrder: z.coerce.number().int().min(0).max(9999).optional(),
+});
+
+export type AccommodationUnitFormInput = z.infer<typeof accommodationUnitFormSchema>;

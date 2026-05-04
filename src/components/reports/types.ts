@@ -23,7 +23,7 @@ export type ReportsKpis = {
   unpaidShareOfBooked: number;
 };
 
-/** Aktiva: tilstand og forsikring — samme logikk som Aktiva-siden. */
+/** Inventar: tilstand og forsikring — samme logikk som Inventar-siden. */
 export type ReportsFacilityStats = {
   assetOperationalCount: number;
   assetMaintenanceCount: number;
@@ -38,7 +38,7 @@ export type ReportsSectionProps = {
   kpis: ReportsKpis;
   monthlyRevenue: MonthlyRevenuePoint[];
   eventBreakdown: EventTypeBreakdown[];
-  /** Aktiva (tilstand / forsikring) — samme logikk som Aktiva-siden. */
+  /** Inventar (tilstand / forsikring) — samme logikk som Inventar-siden. */
   facility: ReportsFacilityStats;
   reportYear: number;
   /** Gjeldende kalenderår (øvre grense for årvelger). */

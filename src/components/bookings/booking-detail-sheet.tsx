@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Sheet,
   SheetContent,
@@ -48,8 +49,6 @@ import { toast } from "sonner";
 
 const fieldClass =
   "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
-
-const selectChevronPad = "pr-10 md:pr-11 appearance-none bg-transparent";
 
 const labelClass =
   "text-[12px] font-semibold uppercase tracking-wider text-rn-text-slate";
@@ -476,17 +475,18 @@ export function BookingDetailSheet({
                   <Label htmlFor="bde-event-type" className={labelClass}>
                     Kategori
                   </Label>
-                  <select
+                  <NativeSelect
                     id="bde-event-type"
                     {...register("eventType")}
-                    className={cn(fieldClass, selectChevronPad, "mt-1.5")}
+                    wrapperClassName="mt-1.5"
+                    aria-invalid={!!errors.eventType}
                   >
                     {NEW_BOOKING_EVENT_TYPES.map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                   {errors.eventType ? (
                     <p className="mt-1 text-xs text-destructive">
                       {errors.eventType.message}
@@ -643,17 +643,18 @@ export function BookingDetailSheet({
                 <Label htmlFor="bde-pay-status" className={labelClass}>
                   Betalingsstatus
                 </Label>
-                <select
+                <NativeSelect
                   id="bde-pay-status"
                   {...register("paymentStatus")}
-                  className={cn(fieldClass, selectChevronPad, "mt-1.5")}
+                  wrapperClassName="mt-1.5"
+                  aria-invalid={!!errors.paymentStatus}
                 >
                   {BOOKING_PAYMENT_STATUS_VALUES.map((v) => (
                     <option key={v} value={v}>
                       {BOOKING_PAYMENT_STATUS_LABELS[v]}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
                 {errors.paymentStatus ? (
                   <p className="mt-1 text-xs text-destructive">
                     {errors.paymentStatus.message}

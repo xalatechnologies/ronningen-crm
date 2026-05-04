@@ -18,6 +18,113 @@ export type Database = {
   };
   public: {
     Tables: {
+      accommodation_reservations: {
+        Row: {
+          id: string;
+          unit_id: string;
+          customer_id: string;
+          check_in_date: string;
+          check_out_date: string;
+          check_in_time: string | null;
+          check_out_time: string | null;
+          status: string;
+          guest_count: number;
+          notes: string | null;
+          total_price: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          unit_id: string;
+          customer_id: string;
+          check_in_date: string;
+          check_out_date: string;
+          check_in_time?: string | null;
+          check_out_time?: string | null;
+          status?: string;
+          guest_count?: number;
+          notes?: string | null;
+          total_price?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          unit_id?: string;
+          customer_id?: string;
+          check_in_date?: string;
+          check_out_date?: string;
+          check_in_time?: string | null;
+          check_out_time?: string | null;
+          status?: string;
+          guest_count?: number;
+          notes?: string | null;
+          total_price?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "accommodation_reservations_unit_id_fkey";
+            columns: ["unit_id"];
+            isOneToOne: false;
+            referencedRelation: "accommodation_units";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "accommodation_reservations_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      accommodation_units: {
+        Row: {
+          id: string;
+          name: string;
+          property_id: string | null;
+          max_guests: number;
+          notes: string | null;
+          active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          property_id?: string | null;
+          max_guests?: number;
+          notes?: string | null;
+          active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          property_id?: string | null;
+          max_guests?: number;
+          notes?: string | null;
+          active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "accommodation_units_property_id_fkey";
+            columns: ["property_id"];
+            isOneToOne: false;
+            referencedRelation: "properties";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       assets: {
         Row: {
           condition: string | null;
@@ -145,6 +252,117 @@ export type Database = {
             columns: ["property_id"];
             isOneToOne: false;
             referencedRelation: "properties";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      booking_inquiries: {
+        Row: {
+          id: string;
+          customer_id: string;
+          property_id: string | null;
+          event_type: string;
+          fest_type: string | null;
+          preferred_event_date: string | null;
+          preferred_event_end_date: string | null;
+          guest_count: number;
+          estimated_total: number | null;
+          status: string;
+          next_follow_up_at: string | null;
+          internal_notes: string | null;
+          converted_booking_id: string | null;
+          converted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          customer_id: string;
+          property_id?: string | null;
+          event_type?: string;
+          fest_type?: string | null;
+          preferred_event_date?: string | null;
+          preferred_event_end_date?: string | null;
+          guest_count?: number;
+          estimated_total?: number | null;
+          status?: string;
+          next_follow_up_at?: string | null;
+          internal_notes?: string | null;
+          converted_booking_id?: string | null;
+          converted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          customer_id?: string;
+          property_id?: string | null;
+          event_type?: string;
+          fest_type?: string | null;
+          preferred_event_date?: string | null;
+          preferred_event_end_date?: string | null;
+          guest_count?: number;
+          estimated_total?: number | null;
+          status?: string;
+          next_follow_up_at?: string | null;
+          internal_notes?: string | null;
+          converted_booking_id?: string | null;
+          converted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "booking_inquiries_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "booking_inquiries_property_id_fkey";
+            columns: ["property_id"];
+            isOneToOne: false;
+            referencedRelation: "properties";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "booking_inquiries_converted_booking_id_fkey";
+            columns: ["converted_booking_id"];
+            isOneToOne: false;
+            referencedRelation: "bookings";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      booking_inquiry_activities: {
+        Row: {
+          id: string;
+          inquiry_id: string;
+          body: string;
+          kind: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          inquiry_id: string;
+          body: string;
+          kind?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          inquiry_id?: string;
+          body?: string;
+          kind?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "booking_inquiry_activities_inquiry_id_fkey";
+            columns: ["inquiry_id"];
+            isOneToOne: false;
+            referencedRelation: "booking_inquiries";
             referencedColumns: ["id"];
           },
         ];

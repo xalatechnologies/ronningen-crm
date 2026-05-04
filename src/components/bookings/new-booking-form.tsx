@@ -4,6 +4,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   bookingPackageListBlurb,
@@ -16,19 +17,21 @@ import {
   todayLocalYmd,
   type BookingAddonCatalogEntry,
   type BookingPackageCatalogEntry,
+  type NewBookingFestTypeField,
   type NewBookingFormInput,
 } from "@/lib/validations";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Calendar, ChevronDown, Copy, Package, User } from "lucide-react";
+import { ArrowLeft, Calendar, Copy, Package, Plus, Trash2, User, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   type Resolver,
   Controller,
+  useFieldArray,
   useForm,
   useWatch,
 } from "react-hook-form";
@@ -38,8 +41,6 @@ const fieldClass =
   "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
 const sectionIconWrap = "text-rn-text-slate";
-
-const selectChevronPad = "pr-10 md:pr-11";
 
 const labelClass =
   "text-[12px] font-semibold uppercase tracking-wider text-rn-text-slate";
@@ -60,12 +61,45 @@ function formatNok(n: number) {
   }).format(n);
 }
 
+function mapInquiryFestToForm(stored: string | null): {
+  festType: NewBookingFestTypeField;
+  festTypeCustom: string;
+} {
+  const t = stored?.trim() ?? "";
+  if (!t) {
+    return {
+      festType: NEW_BOOKING_FEST_TYPE_PRESETS[0] ?? NEW_BOOKING_FEST_TYPE_ANNET,
+      festTypeCustom: "",
+    };
+  }
+  if ((NEW_BOOKING_FEST_TYPE_PRESETS as readonly string[]).includes(t)) {
+    return { festType: t as NewBookingFestTypeField, festTypeCustom: "" };
+  }
+  return {
+    festType: NEW_BOOKING_FEST_TYPE_ANNET,
+    festTypeCustom: t,
+  };
+}
+
 export type ExistingCustomer = {
   id: string;
   name: string;
   phone: string | null;
   email: string | null;
   address: string | null;
+};
+
+/** Forhåndsutfylling fra forespørsel ved /bookings/new?inquiryId= */
+export type InquiryPrefill = {
+  inquiryId: string;
+  propertyId: string | null;
+  eventType: "Bedrift" | "Privat";
+  festType: string | null;
+  preferredEventDate: string | null;
+  preferredEventEndDate: string | null;
+  guestCount: number;
+  estimatedTotal: number | null;
+  internalNotes: string | null;
 };
 
 type NewBookingFormFieldValues = Omit<
@@ -93,12 +127,15 @@ export type NewBookingFormProps = {
   existingCustomer?: ExistingCustomer | null;
   bookingAddons: BookingAddonOption[];
   bookingPackages: BookingPackageOption[];
+  /** Når satt: fyller skjema fra forespørsel og kobler konvertering etter lagring. */
+  inquiryPrefill?: InquiryPrefill | null;
 };
 
 export function NewBookingForm({
   existingCustomer = null,
   bookingAddons,
   bookingPackages,
+  inquiryPrefill = null,
 }: NewBookingFormProps) {
   const supabase = useSupabase();
   const router = useRouter();
@@ -127,6 +164,10 @@ export function NewBookingForm({
 
   const defaultPackageId = sortedPackages[0]?.id ?? "";
   const defaultPackagePrice = Number(sortedPackages[0]?.price ?? 0);
+  const defaultPackageSource =
+    sortedPackages.length > 0 ? ("catalog" as const) : ("custom" as const);
+  const defaultAgreedTotal =
+    sortedPackages.length > 0 ? defaultPackagePrice : 0;
 
   const addonCatalog: BookingAddonCatalogEntry[] = useMemo(
     () => bookingAddons.map(({ id, price }) => ({ id, price: Number(price) })),
@@ -155,10 +196,14 @@ export function NewBookingForm({
       eventStartTime: "",
       eventEndTime: "",
       guestCount: 1,
+      packageSource: defaultPackageSource,
       selectedPackageId: defaultPackageId,
+      customPackageName: "",
+      customPackagePrice: 0,
+      customAddonLines: [],
       selectedAddonIds: [],
       depositPaid: 0,
-      agreedTotal: defaultPackagePrice,
+      agreedTotal: defaultAgreedTotal,
       notes: "",
       bookingReference: "",
     },
@@ -173,23 +218,103 @@ export function NewBookingForm({
     formState: { errors, isSubmitting },
   } = form;
 
+  const { fields: customAddonFields, append: appendCustomAddon, remove: removeCustomAddon } =
+    useFieldArray({
+      control,
+      name: "customAddonLines",
+    });
+
   const selectedPackageId = useWatch({ control, name: "selectedPackageId" });
+  const packageSource = useWatch({ control, name: "packageSource" });
   const festType = useWatch({ control, name: "festType" });
   const watched = useWatch({ control });
   const selectedAddonIds = watched?.selectedAddonIds ?? [];
 
+  useEffect(() => {
+    if (sortedPackages.length === 0) {
+      setValue("packageSource", "custom", { shouldValidate: true });
+      setValue("selectedPackageId", "", { shouldValidate: true });
+    }
+  }, [sortedPackages.length, setValue]);
+
+  const inquiryApplyRef = useRef(false);
+  useEffect(() => {
+    if (!inquiryPrefill || inquiryApplyRef.current) return;
+    inquiryApplyRef.current = true;
+    const { festType: ft, festTypeCustom: ftc } = mapInquiryFestToForm(
+      inquiryPrefill.festType,
+    );
+    setValue("eventType", inquiryPrefill.eventType, { shouldValidate: true });
+    setValue("festType", ft, { shouldValidate: true });
+    setValue("festTypeCustom", ftc, { shouldValidate: true });
+    setValue("guestCount", Math.max(1, inquiryPrefill.guestCount), {
+      shouldValidate: true,
+    });
+    const today = todayLocalYmd();
+    let start = inquiryPrefill.preferredEventDate?.trim() ?? "";
+    if (!start || start < today) start = today;
+    setValue("eventDate", start, { shouldValidate: true });
+    const end = inquiryPrefill.preferredEventEndDate?.trim() ?? "";
+    if (end && end >= start) {
+      setValue("eventEndDate", end, { shouldValidate: true });
+    } else {
+      setValue("eventEndDate", "", { shouldValidate: true });
+    }
+    const est = inquiryPrefill.estimatedTotal;
+    if (est != null && est > 0) {
+      setValue("packageSource", "custom", { shouldValidate: true });
+      setValue("selectedPackageId", "", { shouldValidate: true });
+      setValue("customPackageName", "Avtalt pris (forespørsel)", {
+        shouldValidate: true,
+      });
+      setValue("customPackagePrice", est, { shouldValidate: true });
+      setValue("agreedTotal", est, { shouldValidate: true });
+    }
+    const note = inquiryPrefill.internalNotes?.trim();
+    if (note) {
+      setValue("notes", note, { shouldValidate: true });
+    }
+  }, [inquiryPrefill, setValue]);
+
   const estimatedTotal = useMemo(() => {
-    const pkgId =
-      (watched?.selectedPackageId as string | undefined) || defaultPackageId;
-    const ids = Array.isArray(watched?.selectedAddonIds)
+    if (!watched) return 0;
+    const src =
+      (watched.packageSource as "catalog" | "custom") ?? defaultPackageSource;
+    const pkgId = String(watched.selectedPackageId ?? "");
+    const ids = Array.isArray(watched.selectedAddonIds)
       ? watched.selectedAddonIds
       : [];
+    const customPriceRaw = watched.customPackagePrice;
+    const customPrice =
+      typeof customPriceRaw === "number"
+        ? customPriceRaw
+        : Number.parseFloat(String(customPriceRaw ?? 0));
+    const linesRaw = watched.customAddonLines;
+    const lines = Array.isArray(linesRaw)
+      ? linesRaw.map((row) => {
+          const r = row as { name?: string; priceNok?: unknown };
+          const p =
+            typeof r?.priceNok === "number"
+              ? r.priceNok
+              : Number.parseFloat(String(r?.priceNok ?? 0));
+          return {
+            name: String(r?.name ?? ""),
+            priceNok: Number.isFinite(p) ? p : 0,
+          };
+        })
+      : [];
     return estimateNewBookingTotalNok(
-      { selectedPackageId: pkgId, selectedAddonIds: ids },
+      {
+        packageSource: src,
+        selectedPackageId: pkgId,
+        selectedAddonIds: ids,
+        customPackagePrice: Number.isFinite(customPrice) ? customPrice : 0,
+        customAddonLines: lines,
+      },
       packageCatalog,
       addonCatalog,
     );
-  }, [watched, packageCatalog, addonCatalog, defaultPackageId]);
+  }, [watched, packageCatalog, addonCatalog, defaultPackageSource]);
 
   const agreedTotalWatchedRaw = Number(watched?.agreedTotal);
   const agreedTotalWatched = Number.isFinite(agreedTotalWatchedRaw)
@@ -222,8 +347,11 @@ export function NewBookingForm({
 
     const estimated = estimateNewBookingTotalNok(
       {
+        packageSource: data.packageSource,
         selectedPackageId: data.selectedPackageId,
         selectedAddonIds: data.selectedAddonIds,
+        customPackagePrice: data.customPackagePrice,
+        customAddonLines: data.customAddonLines,
       },
       packageCatalog,
       addonCatalog,
@@ -231,12 +359,18 @@ export function NewBookingForm({
     const total = data.agreedTotal;
     const discountNok = Math.max(0, estimated - total);
     const nameById = new Map(bookingAddons.map((a) => [a.id, a.name]));
-    const addOnLabels = data.selectedAddonIds
+    const catalogAddOnLabels = data.selectedAddonIds
       .map((id) => nameById.get(id))
       .filter(Boolean) as string[];
+    const customAddOnLabels = data.customAddonLines
+      .filter((l) => l.name.trim())
+      .map((l) => `${l.name.trim()} (${formatNok(l.priceNok)})`);
+    const addOnLabels = [...catalogAddOnLabels, ...customAddOnLabels];
     const packageName =
-      sortedPackages.find((p) => p.id === data.selectedPackageId)?.name ??
-      "Pakke";
+      data.packageSource === "custom"
+        ? data.customPackageName.trim()
+        : sortedPackages.find((p) => p.id === data.selectedPackageId)?.name ??
+          "Pakke";
     const pricingSummary = [
       `Estimert total: ${formatNok(estimated)}`,
       `Avtalt total: ${formatNok(total)}`,
@@ -254,7 +388,9 @@ export function NewBookingForm({
         : null,
       data.notes?.trim(),
       addOnLabels.length ? `Tillegg: ${addOnLabels.join(", ")}` : null,
-      `Pakke: ${packageName}`,
+      data.packageSource === "custom"
+        ? `Pakke (egen): ${packageName} · ${formatNok(data.customPackagePrice)}`
+        : `Pakke: ${packageName}`,
     ].filter(Boolean);
     const notesCombined = parts.join("\n");
 
@@ -315,7 +451,7 @@ export function NewBookingForm({
       .from("bookings")
       .insert({
         customer_id: customerId,
-        property_id: null,
+        property_id: inquiryPrefill?.propertyId ?? null,
         fest_type: festTypeStored,
         event_type: data.eventType,
         event_date: data.eventDate,
@@ -344,6 +480,25 @@ export function NewBookingForm({
     setSavedBookingId(bookingRow.id);
     toast.success("Booking opprettet", { description: bookingRow.id });
 
+    if (inquiryPrefill?.inquiryId) {
+      const { error: convErr } = await supabase
+        .from("booking_inquiries")
+        .update({
+          converted_booking_id: bookingRow.id,
+          converted_at: new Date().toISOString(),
+          status: "converted",
+        })
+        .eq("id", inquiryPrefill.inquiryId)
+        .is("converted_booking_id", null);
+
+      if (convErr) {
+        toast.message(
+          "Booking opprettet, men forespørsel ble ikke koblet automatisk",
+          { description: convErr.message },
+        );
+      }
+    }
+
     if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
     redirectTimerRef.current = setTimeout(() => {
       router.push("/app/bookings");
@@ -370,39 +525,42 @@ export function NewBookingForm({
     router.refresh();
   }
 
-  const noActivePackages = sortedPackages.length === 0;
+  const catalogPackageBlocked =
+    packageSource === "catalog" && sortedPackages.length === 0;
 
   return (
     <div className="mx-auto w-full space-y-5 pb-12 md:space-y-6 md:pb-8">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
+      <header className="flex items-center gap-3 rounded-lg border-2 border-rn-border-strong bg-card px-3 py-3 shadow-rn-card sm:gap-4 sm:px-4 md:px-5">
         <Link
           href="/app/bookings"
           aria-label="Tilbake til bookinger"
           className={cn(
             buttonVariants({ variant: "ghost", size: "icon-sm" }),
-            "mt-1 shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
+            "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
           )}
         >
           <ArrowLeft className="size-5 text-success" aria-hidden />
         </Link>
-        <div className="min-w-0">
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-rn-text-heading md:text-4xl">
+        <div className="min-w-0 flex-1">
+          <h1 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading sm:text-2xl md:text-3xl">
             Ny booking
           </h1>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
-            Registrer arrangement, kunde og økonomi — felles mønster som øvrige sider.
+          <p className="mt-0.5 text-xs leading-snug text-muted-foreground sm:text-sm md:text-base md:leading-relaxed">
+            Registrer arrangement, kunde og økonomi — felles mønster som øvrige
+            sider.
           </p>
         </div>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <h2 className="font-heading text-2xl font-bold tracking-tight text-rn-text-heading md:text-3xl">
-          Bookingdetaljer
-        </h2>
-        <p className="text-sm leading-relaxed text-rn-text-body md:text-base">
-          Opprett et profesjonelt arrangement for kunden i Rønningen Manager.
-        </p>
-      </div>
+        <Link
+          href="/app/bookings"
+          aria-label="Lukk og gå til bookinger"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "icon-sm" }),
+            "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
+          )}
+        >
+          <X className="size-5 text-rn-text-slate" aria-hidden />
+        </Link>
+      </header>
 
       {existingCustomer ? (
         <div
@@ -604,31 +762,20 @@ export function NewBookingForm({
                   Festtype
                   <RequiredMark />
                 </Label>
-                <div className="relative">
-                  <select
-                    className={cn(
-                      fieldClass,
-                      selectChevronPad,
-                      "w-full appearance-none bg-background",
-                      errors.festType && "border-destructive",
-                    )}
-                    {...register("festType")}
-                  >
-                    <option value="">Velg…</option>
-                    {NEW_BOOKING_FEST_TYPE_PRESETS.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                    <option value={NEW_BOOKING_FEST_TYPE_ANNET}>
-                      Annet (eget)
+                <NativeSelect
+                  className={cn(errors.festType && "border-destructive")}
+                  {...register("festType")}
+                >
+                  <option value="">Velg…</option>
+                  {NEW_BOOKING_FEST_TYPE_PRESETS.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
                     </option>
-                  </select>
-                  <ChevronDown
-                    className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-rn-text-slate md:right-4"
-                    aria-hidden
-                  />
-                </div>
+                  ))}
+                  <option value={NEW_BOOKING_FEST_TYPE_ANNET}>
+                    Annet (eget)
+                  </option>
+                </NativeSelect>
                 {festType === NEW_BOOKING_FEST_TYPE_ANNET ? (
                   <div className="space-y-2 pt-1">
                     <Label className={labelClass}>
@@ -661,25 +808,14 @@ export function NewBookingForm({
                   Bedrift eller privat
                   <RequiredMark />
                 </Label>
-                <div className="relative">
-                  <select
-                    className={cn(
-                      fieldClass,
-                      selectChevronPad,
-                      "w-full appearance-none bg-background",
-                      errors.eventType && "border-destructive",
-                    )}
-                    {...register("eventType")}
-                  >
-                    <option value="">Velg…</option>
-                    <option value="Bedrift">Bedrift</option>
-                    <option value="Privat">Privat</option>
-                  </select>
-                  <ChevronDown
-                    className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-rn-text-slate md:right-4"
-                    aria-hidden
-                  />
-                </div>
+                <NativeSelect
+                  className={cn(errors.eventType && "border-destructive")}
+                  {...register("eventType")}
+                >
+                  <option value="">Velg…</option>
+                  <option value="Bedrift">Bedrift</option>
+                  <option value="Privat">Privat</option>
+                </NativeSelect>
                 {errors.eventType ? (
                   <p className="text-xs text-destructive">
                     {errors.eventType.message}
@@ -848,20 +984,93 @@ export function NewBookingForm({
                 Tjenestepakke
                 <RequiredMark />
               </Label>
-              <div className="flex flex-col gap-3">
-                {noActivePackages ? (
-                  <p className="rounded-md border-2 border-dashed border-rn-border-strong bg-rn-surface-wash px-4 py-3 text-sm text-rn-text-body">
-                    Ingen aktive pakker. Gå til{" "}
-                    <Link
-                      href="/app/pricing"
-                      className="font-semibold text-success underline-offset-2 hover:underline"
+              {sortedPackages.length > 0 ? (
+                <Controller
+                  name="packageSource"
+                  control={control}
+                  render={({ field }) => (
+                    <div
+                      className="flex flex-wrap gap-3"
+                      role="group"
+                      aria-label="Pakkekilde"
                     >
-                      Priser
-                    </Link>{" "}
-                    og opprett pakkenivåer (de vises her automatisk).
-                  </p>
-                ) : (
-                  sortedPackages.map((pkg) => {
+                      <label
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-md border-2 px-3 py-2 text-sm font-medium transition-colors",
+                          field.value === "catalog"
+                            ? "border-success bg-success/5 text-rn-text-heading"
+                            : "border-rn-border-strong hover:bg-rn-surface-row-hover",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          className="size-4 accent-success"
+                          name={field.name}
+                          value="catalog"
+                          checked={field.value === "catalog"}
+                          onChange={() => {
+                            field.onChange("catalog");
+                            if (defaultPackageId) {
+                              setValue("selectedPackageId", defaultPackageId, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
+                            }
+                          }}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                        />
+                        Fra priskatalog
+                      </label>
+                      <label
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-md border-2 px-3 py-2 text-sm font-medium transition-colors",
+                          field.value === "custom"
+                            ? "border-success bg-success/5 text-rn-text-heading"
+                            : "border-rn-border-strong hover:bg-rn-surface-row-hover",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          className="size-4 accent-success"
+                          name={field.name}
+                          value="custom"
+                          checked={field.value === "custom"}
+                          onChange={() => {
+                            field.onChange("custom");
+                            setValue("selectedPackageId", "", {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                          }}
+                          onBlur={field.onBlur}
+                        />
+                        Egen pakke
+                      </label>
+                    </div>
+                  )}
+                />
+              ) : (
+                <p className="text-xs text-rn-text-body">
+                  Ingen aktive pakker i{" "}
+                  <Link
+                    href="/app/pricing"
+                    className="font-semibold text-success underline-offset-2 hover:underline"
+                  >
+                    Priser
+                  </Link>
+                  . Legg inn <span className="font-medium">egen pakke</span>{" "}
+                  under (navn og pris).
+                </p>
+              )}
+              {errors.packageSource ? (
+                <p className="text-xs text-destructive">
+                  {errors.packageSource.message}
+                </p>
+              ) : null}
+              {packageSource === "catalog" && sortedPackages.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  {sortedPackages.map((pkg) => {
                     const blurb = bookingPackageListBlurb(pkg.description);
                     return (
                       <label
@@ -896,9 +1105,65 @@ export function NewBookingForm({
                         </div>
                       </label>
                     );
-                  })
-                )}
-              </div>
+                  })}
+                </div>
+              ) : null}
+              {packageSource === "custom" || sortedPackages.length === 0 ? (
+                <div className="space-y-3 rounded-md border-2 border-rn-border-strong bg-rn-surface-wash/40 p-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-booking-custom-pkg-name" className={labelClass}>
+                      Pakkenavn (egen)
+                      <RequiredMark />
+                    </Label>
+                    <Input
+                      id="new-booking-custom-pkg-name"
+                      className={cn(
+                        fieldClass,
+                        errors.customPackageName && "border-destructive",
+                      )}
+                      placeholder="F.eks. Helgepakke firma"
+                      {...register("customPackageName")}
+                      aria-invalid={!!errors.customPackageName}
+                    />
+                    {errors.customPackageName ? (
+                      <p className="text-xs text-destructive">
+                        {errors.customPackageName.message}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-booking-custom-pkg-price" className={labelClass}>
+                      Pakkepris (NOK)
+                    </Label>
+                    <div className="relative">
+                      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-rn-text-slate md:left-4">
+                        kr
+                      </span>
+                      <Input
+                        id="new-booking-custom-pkg-price"
+                        className={cn(
+                          fieldClass,
+                          "pl-10 md:pl-11",
+                          errors.customPackagePrice && "border-destructive",
+                        )}
+                        type="number"
+                        min={0}
+                        step={100}
+                        {...register("customPackagePrice")}
+                        aria-invalid={!!errors.customPackagePrice}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Bruk 0 om pris avtales separat — juster «Avtalt total» under.
+                    </p>
+                    {errors.customPackagePrice ? (
+                      <p className="text-xs text-destructive">
+                        {errors.customPackagePrice.message}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
               {errors.selectedPackageId ? (
                 <p className="text-xs text-destructive">
                   {errors.selectedPackageId.message}
@@ -906,23 +1171,22 @@ export function NewBookingForm({
               ) : null}
             </div>
             <div className="space-y-4">
-              <Label className={labelClass}>
-                Tillegg
-              </Label>
+              <Label className={labelClass}>Tillegg</Label>
               <p className="text-xs text-rn-text-body">
-                Hentes fra Priser → tilleggstjenester (aktive rader). Endre
-                navn og pris der.
+                Velg fra katalog (synkronisert med Priser) og/eller legg inn egne
+                tillegg med navn og pris — uten å opprette dem i Priser først.
               </p>
               {bookingAddons.length === 0 ? (
-                <p className="rounded-md border-2 border-dashed border-rn-border-strong bg-rn-surface-wash px-4 py-3 text-sm text-rn-text-body">
-                  Ingen aktive tillegg. Gå til{" "}
+                <p className="rounded-md border border-dashed border-rn-border-strong bg-rn-surface-wash/30 px-3 py-2 text-xs text-rn-text-body">
+                  Ingen aktive katalog-tillegg. Bruk seksjonen «Egne tillegg»
+                  under, eller opprett tjenester under{" "}
                   <Link
                     href="/app/pricing"
                     className="font-semibold text-success underline-offset-2 hover:underline"
                   >
                     Priser
-                  </Link>{" "}
-                  og opprett tilleggstjenester.
+                  </Link>
+                  .
                 </p>
               ) : (
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 lg:gap-3">
@@ -965,6 +1229,101 @@ export function NewBookingForm({
                   {errors.selectedAddonIds.message}
                 </p>
               ) : null}
+              <div className="space-y-3 border-t border-rn-border-strong pt-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className={labelClass}>Egne tillegg</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-1.5 rounded-md font-semibold"
+                    onClick={() => appendCustomAddon({ name: "", priceNok: 0 })}
+                    disabled={customAddonFields.length >= 24}
+                  >
+                    <Plus className="size-4" aria-hidden />
+                    Legg til linje
+                  </Button>
+                </div>
+                {customAddonFields.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Ingen egne tillegg — valgfritt.
+                  </p>
+                ) : (
+                  <ul className="space-y-3">
+                    {customAddonFields.map((field, index) => (
+                      <li
+                        key={field.id}
+                        className="flex flex-col gap-2 rounded-md border-2 border-rn-border-strong bg-background p-3 sm:flex-row sm:items-end"
+                      >
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <Label
+                            className="text-[11px] font-semibold uppercase tracking-wider text-rn-text-slate"
+                            htmlFor={`custom-addon-name-${field.id}`}
+                          >
+                            Navn
+                          </Label>
+                          <Input
+                            id={`custom-addon-name-${field.id}`}
+                            className={cn(
+                              fieldClass,
+                              errors.customAddonLines?.[index]?.name &&
+                                "border-destructive",
+                            )}
+                            placeholder="F.eks. Ekstra servering søndag"
+                            {...register(`customAddonLines.${index}.name`)}
+                            aria-invalid={!!errors.customAddonLines?.[index]?.name}
+                          />
+                          {errors.customAddonLines?.[index]?.name ? (
+                            <p className="text-xs text-destructive">
+                              {errors.customAddonLines[index]?.name?.message}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="w-full space-y-2 sm:w-40">
+                          <Label
+                            className="text-[11px] font-semibold uppercase tracking-wider text-rn-text-slate"
+                            htmlFor={`custom-addon-price-${field.id}`}
+                          >
+                            Pris (NOK)
+                          </Label>
+                          <Input
+                            id={`custom-addon-price-${field.id}`}
+                            type="number"
+                            min={0}
+                            step={50}
+                            className={cn(
+                              fieldClass,
+                              errors.customAddonLines?.[index]?.priceNok &&
+                                "border-destructive",
+                            )}
+                            {...register(`customAddonLines.${index}.priceNok`, {
+                              valueAsNumber: true,
+                            })}
+                            aria-invalid={
+                              !!errors.customAddonLines?.[index]?.priceNok
+                            }
+                          />
+                          {errors.customAddonLines?.[index]?.priceNok ? (
+                            <p className="text-xs text-destructive">
+                              {errors.customAddonLines[index]?.priceNok?.message}
+                            </p>
+                          ) : null}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => removeCustomAddon(index)}
+                          aria-label="Fjern tilleggslinje"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1001,7 +1360,8 @@ export function NewBookingForm({
                   Estimert totalpris
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Beregnet fra pakke og valgte tillegg (referanse).
+                  Beregnet fra pakke (katalog eller egen), valgte katalogtillegg og
+                  egne tilleggslinjer (referanse).
                 </p>
                 <div
                   className={cn(
@@ -1094,7 +1454,9 @@ export function NewBookingForm({
             type="submit"
             variant="success"
             size="cta"
-            disabled={isSubmitting || noActivePackages || !!savedBookingId}
+            disabled={
+              isSubmitting || catalogPackageBlocked || !!savedBookingId
+            }
           >
             {isSubmitting ? "Lagrer…" : "Lagre booking"}
           </Button>

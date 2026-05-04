@@ -6,7 +6,7 @@ export type DisplayDensity = "compact" | "comfortable" | "spacious";
 
 /**
  * Global type: `--app-readability-scale`, `--app-read-boost` in display-density.css.
- * Body copy uses the read scale; keep presets in sync with `--app-font-scale` / spacing only.
+ * Body uses `1rem` (= `--font-size-base`); keep presets in sync with spacing / padding / heights.
  */
 export const compact = {
   fontScale: 0.96,
@@ -19,17 +19,17 @@ export const compact = {
 
 export const comfortable = {
   fontScale: 1,
-  spacingScale: 0.94,
-  cardPaddingPx: 16,
+  spacingScale: 0.9,
+  cardPaddingPx: 15,
   pagePaddingPx: 12,
   controlHeightPx: 40,
   sidebarWidthPx: 240,
 } as const;
 
 export const spacious = {
-  fontScale: 1.06,
-  spacingScale: 1,
-  cardPaddingPx: 18,
+  fontScale: 1.02,
+  spacingScale: 0.95,
+  cardPaddingPx: 16,
   pagePaddingPx: 8,
   controlHeightPx: 44,
   sidebarWidthPx: 260,

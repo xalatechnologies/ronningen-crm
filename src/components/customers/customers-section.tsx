@@ -21,7 +21,7 @@ import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, ChevronRight, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
@@ -305,7 +305,7 @@ export function CustomersSection({
                             "w-12 text-right",
                           )}
                         >
-                          <span className="sr-only">Handling</span>
+                          <span className="sr-only">Åpne</span>
                         </th>
                       </tr>
                     </thead>
@@ -358,26 +358,7 @@ export function CustomersSection({
                             {formatNok(st.spent)}
                           </td>
                           <td className="px-6 py-5 text-right md:px-8 md:py-6">
-                            <div className="flex items-center justify-end gap-0.5">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-sm"
-                                className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10 disabled:opacity-40"
-                                aria-label={`Slett ${c.name}`}
-                                title={
-                                  st.count > 0
-                                    ? "Kan ikke slette: kunden har bookinger"
-                                    : `Slett ${c.name}`
-                                }
-                                disabled={deleteBusyId != null || st.count > 0}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  requestDeleteCustomer(c, st.count);
-                                }}
-                              >
-                                <Trash2 className="size-4" aria-hidden />
-                              </Button>
+                            <div className="flex items-center justify-end">
                               <ChevronRight
                                 className="size-6 shrink-0 text-muted-foreground md:size-7"
                                 aria-hidden

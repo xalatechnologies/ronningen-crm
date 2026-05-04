@@ -181,7 +181,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
 
   const venuesLabel =
     kpis.propertyCount === 0
-      ? "Registrer lokaler under Aktiva"
+      ? "Registrer lokaler under Inventar"
       : `${kpis.propertyCount} lokal${kpis.propertyCount !== 1 ? "er" : ""} i systemet`;
 
   const kpiTileClass =
