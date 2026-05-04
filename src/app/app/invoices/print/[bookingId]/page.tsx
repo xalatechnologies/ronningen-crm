@@ -1,4 +1,5 @@
 import { InvoicePrintToolbar } from "@/components/invoices/print-toolbar";
+import { formatBookingListDateLabel } from "@/lib/booking-period";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -77,7 +78,7 @@ export default async function InvoicePrintPage({ params }: PageProps) {
   const { data: row, error } = await supabase
     .from("bookings")
     .select(
-      "id, event_type, event_date, guest_count, total_price, paid_amount, remaining_amount, status, booking_reference, payment_due_date, notes, customers(name, phone, email, address), properties(name)",
+      "id, event_type, event_date, event_end_date, event_start_time, event_end_time, guest_count, total_price, paid_amount, remaining_amount, status, booking_reference, payment_due_date, notes, customers(name, phone, email, address), properties(name)",
     )
     .eq("id", bookingId)
     .maybeSingle();
@@ -88,6 +89,9 @@ export default async function InvoicePrintPage({ params }: PageProps) {
     id: string;
     event_type: string;
     event_date: string;
+    event_end_date: string | null;
+    event_start_time: string | null;
+    event_end_time: string | null;
     guest_count: number;
     total_price: number;
     paid_amount: number;
@@ -128,7 +132,12 @@ export default async function InvoicePrintPage({ params }: PageProps) {
 
   const lineTitle = "Restbeløp på booking";
   const lineDetailParts = [
-    `${eventType} · ${formatLongDate(r.event_date)}`,
+    `${eventType} · ${formatBookingListDateLabel({
+      eventDateIso: r.event_date,
+      eventEndDateIso: r.event_end_date,
+      eventStartTime: r.event_start_time,
+      eventEndTime: r.event_end_time,
+    })}`,
     r.guest_count ? `${r.guest_count} gjester` : null,
     r.properties?.name ? `Lokale: ${r.properties.name}` : null,
   ].filter(Boolean);

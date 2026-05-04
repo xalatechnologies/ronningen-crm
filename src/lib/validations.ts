@@ -264,6 +264,21 @@ const phoneWhenPresentSchema = z
     "Ugyldig telefonnummer (bruk siffer, +47, mellomrom eller bindestrek)",
   );
 
+const optionalBookingTimeSchema = z
+  .string()
+  .transform((s) => s.trim())
+  .pipe(
+    z.union([
+      z.literal(""),
+      z
+        .string()
+        .regex(
+          /^([01]?\d|2[0-3]):[0-5]\d$/,
+          "Ugyldig klokkeslett (bruk HH:MM)",
+        ),
+    ]),
+  );
+
 export const newBookingFormFieldsSchema = z.object({
   customerName: z
     .string()
@@ -311,6 +326,17 @@ export const newBookingFormFieldsSchema = z.object({
     .refine((s) => s >= todayLocalYmd(), {
       message: "Dato kan ikke ligge i fortiden",
     }),
+  eventEndDate: z
+    .string()
+    .transform((s) => s.trim())
+    .refine((s) => s === "" || parseBookingDateLocal(s), {
+      message: "Ugyldig sluttdato",
+    })
+    .refine((s) => s === "" || s >= todayLocalYmd(), {
+      message: "Sluttdato kan ikke ligge i fortiden",
+    }),
+  eventStartTime: optionalBookingTimeSchema,
+  eventEndTime: optionalBookingTimeSchema,
   guestCount: z.coerce
     .number({ error: "Oppgi antall gjester" })
     .int("Antall gjester må være et heltall")
@@ -332,6 +358,15 @@ export const newBookingFormFieldsSchema = z.object({
     .string()
     .transform((s) => s.trim())
     .pipe(z.string().max(120, "Referanse kan ikke overstige 120 tegn")),
+}).superRefine((data, ctx) => {
+  const end = data.eventEndDate.trim();
+  if (end && end < data.eventDate) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Sluttdato kan ikke være før startdato",
+      path: ["eventEndDate"],
+    });
+  }
 });
 
 export type NewBookingFormInput = z.infer<typeof newBookingFormFieldsSchema>;
@@ -367,6 +402,14 @@ export const bookingDetailEditSchema = z
       .string()
       .min(1, "Velg dato")
       .refine((s) => parseBookingDateLocal(s), { message: "Ugyldig dato" }),
+    eventEndDate: z
+      .string()
+      .transform((s) => s.trim())
+      .refine((s) => s === "" || parseBookingDateLocal(s), {
+        message: "Ugyldig sluttdato",
+      }),
+    eventStartTime: optionalBookingTimeSchema,
+    eventEndTime: optionalBookingTimeSchema,
     guestCount: z.coerce
       .number({ error: "Oppgi antall gjester" })
       .int("Antall gjester må være et heltall")
@@ -388,6 +431,14 @@ export const bookingDetailEditSchema = z
     notes: z.string().max(8000, "Notatet er for langt (maks 8000 tegn)").optional(),
   })
   .superRefine((data, ctx) => {
+    const end = data.eventEndDate.trim();
+    if (end && end < data.eventDate) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Sluttdato kan ikke være før startdato",
+        path: ["eventEndDate"],
+      });
+    }
     if (data.paidNok > data.totalNok) {
       ctx.addIssue({
         code: "custom",

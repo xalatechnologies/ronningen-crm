@@ -23,6 +23,10 @@ export type BookingListRow = {
   dimmed?: boolean;
   /** ISO date yyyy-mm-dd for filters / stats */
   eventDateIso: string;
+  /** Siste dag i perioden (yyyy-mm-dd), null = samme som start. */
+  eventEndDateIso: string | null;
+  eventStartTime: string | null;
+  eventEndTime: string | null;
   festType: string | null;
   bookingReference: string | null;
   notes: string | null;

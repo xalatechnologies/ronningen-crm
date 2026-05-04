@@ -69,6 +69,9 @@ export type Database = {
           created_at: string;
           customer_id: string;
           event_date: string;
+          event_end_date: string | null;
+          event_start_time: string | null;
+          event_end_time: string | null;
           event_type: string;
           fest_type: string | null;
           guest_count: number;
@@ -89,6 +92,9 @@ export type Database = {
           created_at?: string;
           customer_id: string;
           event_date: string;
+          event_end_date?: string | null;
+          event_start_time?: string | null;
+          event_end_time?: string | null;
           event_type: string;
           fest_type?: string | null;
           guest_count?: number;
@@ -109,6 +115,9 @@ export type Database = {
           created_at?: string;
           customer_id?: string;
           event_date?: string;
+          event_end_date?: string | null;
+          event_start_time?: string | null;
+          event_end_time?: string | null;
           event_type?: string;
           fest_type?: string | null;
           guest_count?: number;

@@ -40,6 +40,7 @@ import { toast } from "sonner";
 import { useSupabase } from "@/providers/supabase-provider";
 
 import { RN_CARD_SHELL, RN_SEGMENT_CONTROL } from "@/lib/rn-ui";
+import { eachBookingYmdInRange } from "@/lib/booking-period";
 
 const bookingsTableHeadClass =
   "bookings-list-table-head font-semibold tracking-wider text-rn-text-column uppercase";
@@ -107,10 +108,17 @@ function computeQuickStats(rows: BookingListRow[]): BookingsQuickStats {
     const ym = r.eventDateIso.slice(0, 7);
     if (ym === thisYm) {
       currentMonthRevenue += r.totalNok;
-      daysWithEvents.add(r.eventDateIso);
     }
     if (ym === prevYm) {
       prevMonthRevenue += r.totalNok;
+    }
+    for (const ymd of eachBookingYmdInRange(
+      r.eventDateIso,
+      r.eventEndDateIso,
+    )) {
+      if (ymd.slice(0, 7) === thisYm) {
+        daysWithEvents.add(ymd);
+      }
     }
   }
 

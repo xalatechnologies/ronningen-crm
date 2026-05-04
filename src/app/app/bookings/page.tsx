@@ -7,6 +7,7 @@ import { effectiveBookingPaymentStatus } from "@/constants/booking-payment-statu
 import { normalizeBookingAudience } from "@/lib/booking-audience";
 import { canManageBookings } from "@/lib/role-access";
 import { fetchProfileRole } from "@/lib/supabase/auth";
+import { formatBookingListDateLabel } from "@/lib/booking-period";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type RawBooking = {
@@ -14,6 +15,9 @@ type RawBooking = {
   customer_id: string;
   event_type: string;
   event_date: string;
+  event_end_date: string | null;
+  event_start_time: string | null;
+  event_end_time: string | null;
   guest_count: number;
   total_price: number;
   paid_amount: number;
@@ -65,14 +69,6 @@ function avatarClassForId(id: string) {
   return classes[h % classes.length]!;
 }
 
-function formatRowDate(iso: string) {
-  return new Intl.DateTimeFormat("nb-NO", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(`${iso}T12:00:00`));
-}
-
 function paidLabelAndFraction(
   total: number,
   paid: number,
@@ -104,7 +100,7 @@ export default async function BookingsPage() {
   const { data: rawList, error } = await supabase
     .from("bookings")
     .select(
-      "id, customer_id, event_type, event_date, guest_count, total_price, paid_amount, remaining_amount, status, fest_type, notes, booking_reference, payment_due_date, collection_notice_sent_at, payment_status, customers(name, phone, email, address)",
+      "id, customer_id, event_type, event_date, event_end_date, event_start_time, event_end_time, guest_count, total_price, paid_amount, remaining_amount, status, fest_type, notes, booking_reference, payment_due_date, collection_notice_sent_at, payment_status, customers(name, phone, email, address)",
     )
     .order("event_date", { ascending: false });
 
@@ -134,7 +130,12 @@ export default async function BookingsPage() {
       customerAddress: r.customers?.address ?? null,
       initials: initialsFromName(name),
       avatarClass: avatarClassForId(r.id),
-      date: formatRowDate(r.event_date),
+      date: formatBookingListDateLabel({
+        eventDateIso: r.event_date,
+        eventEndDateIso: r.event_end_date,
+        eventStartTime: r.event_start_time,
+        eventEndTime: r.event_end_time,
+      }),
       eventType: eventTypeLabel,
       guests: Number(r.guest_count),
       totalNok: total,
@@ -145,6 +146,9 @@ export default async function BookingsPage() {
       status,
       dimmed: cancelled,
       eventDateIso: r.event_date,
+      eventEndDateIso: r.event_end_date,
+      eventStartTime: r.event_start_time,
+      eventEndTime: r.event_end_time,
       festType: r.fest_type,
       bookingReference: r.booking_reference,
       notes: r.notes,

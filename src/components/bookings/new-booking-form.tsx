@@ -151,6 +151,9 @@ export function NewBookingForm({
       festTypeCustom: "",
       eventType: "",
       eventDate: "",
+      eventEndDate: "",
+      eventStartTime: "",
+      eventEndTime: "",
       guestCount: 1,
       selectedPackageId: defaultPackageId,
       selectedAddonIds: [],
@@ -316,6 +319,9 @@ export function NewBookingForm({
         fest_type: festTypeStored,
         event_type: data.eventType,
         event_date: data.eventDate,
+        event_end_date: data.eventEndDate.trim() || null,
+        event_start_time: data.eventStartTime.trim() || null,
+        event_end_time: data.eventEndTime.trim() || null,
         guest_count: data.guestCount,
         status: "pending",
         total_price: total,
@@ -682,9 +688,20 @@ export function NewBookingForm({
               </div>
             </div>
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
+              <div className="space-y-2 md:col-span-2">
+                <p className="text-xs leading-relaxed text-muted-foreground md:text-sm">
+                  <span className="font-medium text-foreground">Periode:</span>{" "}
+                  du kan legge inn siste arrangementsdag og valgfri start-/slutttid
+                  (f.eks.{" "}
+                  <span className="whitespace-nowrap tabular-nums">
+                    01.07.2027 17:00 – 04.07.2027 17:00
+                  </span>
+                  ).
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="new-booking-event-date" className={labelClass}>
-                  Dato
+                  Fra dato
                   <RequiredMark />
                 </Label>
                 <Controller
@@ -715,6 +732,88 @@ export function NewBookingForm({
                 ) : null}
               </div>
               <div className="space-y-2">
+                <Label htmlFor="new-booking-event-end-date" className={labelClass}>
+                  Til dato{" "}
+                  <span className="font-normal normal-case text-muted-foreground">
+                    (valgfri)
+                  </span>
+                </Label>
+                <Controller
+                  name="eventEndDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePickerField
+                      id="new-booking-event-end-date"
+                      value={field.value}
+                      onChange={(v) => {
+                        field.onChange(v);
+                        void field.onBlur();
+                      }}
+                      minYmd={todayLocalYmd()}
+                      variant="toolbar"
+                      className={cn(
+                        "bg-background px-3.5 shadow-sm md:h-12 md:px-4 md:text-base",
+                        errors.eventEndDate && "border-destructive",
+                      )}
+                      aria-invalid={!!errors.eventEndDate}
+                    />
+                  )}
+                />
+                {errors.eventEndDate ? (
+                  <p className="text-xs text-destructive">
+                    {errors.eventEndDate.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-booking-start-time" className={labelClass}>
+                  Fra kl.{" "}
+                  <span className="font-normal normal-case text-muted-foreground">
+                    (valgfri)
+                  </span>
+                </Label>
+                <Input
+                  id="new-booking-start-time"
+                  type="time"
+                  step={60}
+                  className={cn(
+                    fieldClass,
+                    errors.eventStartTime && "border-destructive",
+                  )}
+                  {...register("eventStartTime")}
+                  aria-invalid={!!errors.eventStartTime}
+                />
+                {errors.eventStartTime ? (
+                  <p className="text-xs text-destructive">
+                    {errors.eventStartTime.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-booking-end-time" className={labelClass}>
+                  Til kl.{" "}
+                  <span className="font-normal normal-case text-muted-foreground">
+                    (valgfri)
+                  </span>
+                </Label>
+                <Input
+                  id="new-booking-end-time"
+                  type="time"
+                  step={60}
+                  className={cn(
+                    fieldClass,
+                    errors.eventEndTime && "border-destructive",
+                  )}
+                  {...register("eventEndTime")}
+                  aria-invalid={!!errors.eventEndTime}
+                />
+                {errors.eventEndTime ? (
+                  <p className="text-xs text-destructive">
+                    {errors.eventEndTime.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="space-y-2 md:col-span-2">
                 <Label className={labelClass}>
                   Antall gjester
                   <RequiredMark />

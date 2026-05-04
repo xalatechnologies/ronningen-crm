@@ -6,6 +6,7 @@ import {
   hideFromOutstandingInvoices,
 } from "@/constants/booking-payment-status";
 import { sortInvoicesByUrgency } from "@/lib/invoice-row-utils";
+import { formatBookingListDateLabel } from "@/lib/booking-period";
 import { canManageFinance } from "@/lib/role-access";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -13,6 +14,9 @@ type RawBooking = {
   id: string;
   event_type: string;
   event_date: string;
+  event_end_date: string | null;
+  event_start_time: string | null;
+  event_end_time: string | null;
   total_price: number;
   paid_amount: number;
   remaining_amount: number;
@@ -33,14 +37,6 @@ type RawBooking = {
 function isCancelledStatus(status: string) {
   const x = status.toLowerCase();
   return x === "cancelled" || x === "avbestilt";
-}
-
-function formatRowDate(iso: string) {
-  return new Intl.DateTimeFormat("nb-NO", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(`${iso}T12:00:00`));
 }
 
 function toLocalYmd(d: Date) {
@@ -71,7 +67,7 @@ export default async function InvoicesPage() {
   const { data: rawList, error } = await supabase
     .from("bookings")
     .select(
-      "id, event_type, event_date, total_price, paid_amount, remaining_amount, status, booking_reference, payment_due_date, collection_notice_sent_at, payment_status, customers(name, phone, email, address), properties(name)",
+      "id, event_type, event_date, event_end_date, event_start_time, event_end_time, total_price, paid_amount, remaining_amount, status, booking_reference, payment_due_date, collection_notice_sent_at, payment_status, customers(name, phone, email, address), properties(name)",
     )
     .order("event_date", { ascending: true });
 
@@ -94,7 +90,12 @@ export default async function InvoicesPage() {
         customerPhone: r.customers?.phone ?? null,
         customerAddress: r.customers?.address ?? null,
         eventDateIso: r.event_date,
-        eventDateLabel: formatRowDate(r.event_date),
+        eventDateLabel: formatBookingListDateLabel({
+          eventDateIso: r.event_date,
+          eventEndDateIso: r.event_end_date,
+          eventStartTime: r.event_start_time,
+          eventEndTime: r.event_end_time,
+        }),
         eventType: r.event_type?.trim() || "Arrangement",
         paymentDueDateIso: r.payment_due_date ?? null,
         collectionNoticeSentAt: r.collection_notice_sent_at ?? null,

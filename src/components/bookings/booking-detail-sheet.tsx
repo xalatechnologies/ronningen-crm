@@ -66,6 +66,9 @@ function bookingDetailDefaultsFromRow(
     festType: row.festType?.trim() || "Annet",
     eventType: row.eventTypeForm,
     eventDate: row.eventDateIso,
+    eventEndDate: row.eventEndDateIso ?? "",
+    eventStartTime: row.eventStartTime ?? "",
+    eventEndTime: row.eventEndTime ?? "",
     guestCount: row.guests,
     totalNok: row.totalNok,
     paidNok: row.paidNok,
@@ -121,6 +124,9 @@ export function BookingDetailSheet({
       festType: "",
       eventType: "Privat",
       eventDate: "",
+      eventEndDate: "",
+      eventStartTime: "",
+      eventEndTime: "",
       guestCount: 1,
       totalNok: 0,
       paidNok: 0,
@@ -215,6 +221,9 @@ export function BookingDetailSheet({
           fest_type: data.festType,
           event_type: data.eventType,
           event_date: data.eventDate,
+          event_end_date: data.eventEndDate.trim() || null,
+          event_start_time: data.eventStartTime.trim() || null,
+          event_end_time: data.eventEndTime.trim() || null,
           guest_count: data.guestCount,
           total_price: data.totalNok,
           paid_amount: paid,
@@ -484,9 +493,15 @@ export function BookingDetailSheet({
                     </p>
                   ) : null}
                 </div>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    La «Til dato» stå tom for ett døgn. Tid er valgfritt (24t).
+                  </p>
+                </div>
                 <div>
                   <Label htmlFor="bde-date" className={labelClass}>
-                    Dato
+                    Fra dato
                   </Label>
                   <Controller
                     name="eventDate"
@@ -515,6 +530,90 @@ export function BookingDetailSheet({
                   ) : null}
                 </div>
                 <div>
+                  <Label htmlFor="bde-end-date" className={labelClass}>
+                    Til dato{" "}
+                    <span className="font-normal normal-case text-muted-foreground">
+                      (valgfri)
+                    </span>
+                  </Label>
+                  <Controller
+                    name="eventEndDate"
+                    control={control}
+                    render={({ field }) => (
+                      <DatePickerField
+                        id="bde-end-date"
+                        value={field.value}
+                        onChange={(v) => {
+                          field.onChange(v);
+                          void field.onBlur();
+                        }}
+                        variant="toolbar"
+                        className={cn(
+                          fieldClass,
+                          "mt-1.5 bg-background shadow-sm",
+                          errors.eventEndDate && "border-destructive",
+                        )}
+                        aria-invalid={!!errors.eventEndDate}
+                      />
+                    )}
+                  />
+                  {errors.eventEndDate ? (
+                    <p className="mt-1 text-xs text-destructive">
+                      {errors.eventEndDate.message}
+                    </p>
+                  ) : null}
+                </div>
+                <div>
+                  <Label htmlFor="bde-start-time" className={labelClass}>
+                    Fra kl.{" "}
+                    <span className="font-normal normal-case text-muted-foreground">
+                      (valgfri)
+                    </span>
+                  </Label>
+                  <Input
+                    id="bde-start-time"
+                    type="time"
+                    step={60}
+                    {...register("eventStartTime")}
+                    className={cn(
+                      fieldClass,
+                      "mt-1.5",
+                      errors.eventStartTime && "border-destructive",
+                    )}
+                    aria-invalid={!!errors.eventStartTime}
+                  />
+                  {errors.eventStartTime ? (
+                    <p className="mt-1 text-xs text-destructive">
+                      {errors.eventStartTime.message}
+                    </p>
+                  ) : null}
+                </div>
+                <div>
+                  <Label htmlFor="bde-end-time" className={labelClass}>
+                    Til kl.{" "}
+                    <span className="font-normal normal-case text-muted-foreground">
+                      (valgfri)
+                    </span>
+                  </Label>
+                  <Input
+                    id="bde-end-time"
+                    type="time"
+                    step={60}
+                    {...register("eventEndTime")}
+                    className={cn(
+                      fieldClass,
+                      "mt-1.5",
+                      errors.eventEndTime && "border-destructive",
+                    )}
+                    aria-invalid={!!errors.eventEndTime}
+                  />
+                  {errors.eventEndTime ? (
+                    <p className="mt-1 text-xs text-destructive">
+                      {errors.eventEndTime.message}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="md:col-span-2">
                   <Label htmlFor="bde-guests" className={labelClass}>
                     Antall gjester
                   </Label>
@@ -531,6 +630,7 @@ export function BookingDetailSheet({
                       {errors.guestCount.message}
                     </p>
                   ) : null}
+                </div>
                 </div>
               </div>
             </section>

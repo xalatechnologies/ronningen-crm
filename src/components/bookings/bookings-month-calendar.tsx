@@ -2,6 +2,7 @@
 
 import type { BookingListRow, BookingStatus } from "@/components/bookings/types";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
+import { eachBookingYmdInRange } from "@/lib/booking-period";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
@@ -159,22 +160,36 @@ export function BookingsMonthCalendar({
 
   const rowsInMonth = useMemo(() => {
     const prefix = `${year}-${pad2(monthIndex + 1)}`;
-    return rows.filter((r) => r.eventDateIso.startsWith(prefix));
+    return rows.filter((r) => {
+      for (const ymd of eachBookingYmdInRange(
+        r.eventDateIso,
+        r.eventEndDateIso,
+      )) {
+        if (ymd.startsWith(prefix)) return true;
+      }
+      return false;
+    });
   }, [rows, year, monthIndex]);
 
   const byDay = useMemo(() => {
     const m = new Map<string, BookingListRow[]>();
+    const prefix = `${year}-${pad2(monthIndex + 1)}`;
     for (const r of rowsInMonth) {
-      const d = r.eventDateIso;
-      const list = m.get(d) ?? [];
-      list.push(r);
-      m.set(d, list);
+      for (const d of eachBookingYmdInRange(
+        r.eventDateIso,
+        r.eventEndDateIso,
+      )) {
+        if (!d.startsWith(prefix)) continue;
+        const list = m.get(d) ?? [];
+        list.push(r);
+        m.set(d, list);
+      }
     }
     for (const list of m.values()) {
       list.sort((a, b) => a.customer.localeCompare(b.customer, "nb"));
     }
     return m;
-  }, [rowsInMonth]);
+  }, [rowsInMonth, year, monthIndex]);
 
   const { daysInMonth, startPad, todayYmd } = useMemo(() => {
     const first = new Date(year, monthIndex, 1);
