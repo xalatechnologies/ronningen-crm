@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { loginSchema, type LoginInput } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -60,6 +61,14 @@ export function LoginForm() {
   return (
     <main className="flex min-h-[min(100dvh,100svh)] flex-1 flex-col items-center justify-center px-4 py-16 md:px-8 md:py-24">
       <div className="flex w-full max-w-xl flex-col items-stretch gap-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 self-start font-heading text-sm font-semibold text-rn-text-slate transition-colors hover:text-success md:text-base"
+        >
+          <ArrowLeft className="size-4 shrink-0" aria-hidden />
+          Tilbake til forsiden
+        </Link>
+
         <Card
           className={cn(
             "w-full gap-0 py-0 text-base ring-0",
