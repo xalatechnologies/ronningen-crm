@@ -29,6 +29,8 @@ import {
 } from "@/lib/validations";
 import { isIncomeTransactionType as rowIsIncome } from "@/lib/transaction-income";
 import { cn } from "@/lib/utils";
+import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -263,6 +265,7 @@ function TransactionFormInner({
   }) => void;
 }) {
   const supabase = useSupabase();
+  const { currentOrganizationId } = useCurrentOrganization();
   const router = useRouter();
   const isEdit = existing != null;
   const categoryListId = isEdit
@@ -304,7 +307,20 @@ function TransactionFormInner({
       }
       toast.success("Transaksjon oppdatert");
     } else {
-      const { error } = await supabase.from("transactions").insert(payload);
+      let orgId: string;
+      try {
+        orgId = requireOrganizationId(currentOrganizationId);
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+        );
+        return;
+      }
+
+      const { error } = await supabase.from("transactions").insert({
+        ...payload,
+        organization_id: orgId,
+      });
       if (error) {
         toast.error("Kunne ikke registrere transaksjon", {
           description: error.message,

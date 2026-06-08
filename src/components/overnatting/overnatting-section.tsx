@@ -45,6 +45,8 @@ import {
   monthFirstDayYm,
 } from "@/lib/overnatting-month";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";import { cn } from "@/lib/utils";
+import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -140,6 +142,7 @@ export function OvernattingSection({
   loadError,
 }: OvernattingSectionProps) {
   const supabase = useSupabase();
+  const { currentOrganizationId } = useCurrentOrganization();
   const router = useRouter();
   const rid = useId().replace(/:/g, "");
   const [units, setUnits] = useState(initialUnits);
@@ -190,6 +193,12 @@ export function OvernattingSection({
 
   const fetchReservations = useCallback(async () => {
     if (!supabase) return;
+    let orgId: string;
+    try {
+      orgId = requireOrganizationId(currentOrganizationId);
+    } catch {
+      return;
+    }
     const monthStart = monthFirstDayYm(monthYm);
     const endEx = monthEndExclusiveYm(monthYm);
     if (!monthStart || !endEx) return;
@@ -201,6 +210,7 @@ export function OvernattingSection({
       .select(
         "id, unit_id, customer_id, check_in_date, check_out_date, check_in_time, check_out_time, status, guest_count, notes, total_price, customers(name), accommodation_units(name)",
       )
+      .eq("organization_id", orgId)
       .lt("check_in_date", endEx)
       .gt("check_out_date", beforeMonth);
     setLoadingRes(false);
@@ -211,13 +221,15 @@ export function OvernattingSection({
       return;
     }
     setReservations(mapReservations(data));
-  }, [supabase, monthYm]);
+  }, [supabase, monthYm, currentOrganizationId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch reservations when month/org changes
     void fetchReservations();
   }, [fetchReservations]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync server-provided units into editable local state
     setUnits(initialUnits);
   }, [initialUnits]);
 
@@ -284,7 +296,20 @@ export function OvernattingSection({
       }
       toast.success("Enhet oppdatert");
     } else {
-      const { error } = await supabase.from("accommodation_units").insert(payload);
+      let orgId: string;
+      try {
+        orgId = requireOrganizationId(currentOrganizationId);
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+        );
+        return;
+      }
+
+      const { error } = await supabase.from("accommodation_units").insert({
+        ...payload,
+        organization_id: orgId,
+      });
       if (error) {
         toast.error("Kunne ikke opprette enhet", {
           description: error.message,

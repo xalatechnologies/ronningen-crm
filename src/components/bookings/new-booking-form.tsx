@@ -22,6 +22,8 @@ import {
 } from "@/lib/validations";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
+import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Calendar, Copy, Package, Plus, Trash2, User, X } from "lucide-react";
@@ -138,6 +140,7 @@ export function NewBookingForm({
   inquiryPrefill = null,
 }: NewBookingFormProps) {
   const supabase = useSupabase();
+  const { currentOrganizationId } = useCurrentOrganization();
   const router = useRouter();
   const [savedBookingId, setSavedBookingId] = useState<string | null>(null);
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -345,6 +348,16 @@ export function NewBookingForm({
   async function submitBooking(data: NewBookingFormInput) {
     if (savedBookingId) return;
 
+    let orgId: string;
+    try {
+      orgId = requireOrganizationId(currentOrganizationId);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+      );
+      return;
+    }
+
     const estimated = estimateNewBookingTotalNok(
       {
         packageSource: data.packageSource,
@@ -428,6 +441,7 @@ export function NewBookingForm({
           phone: data.phone.trim(),
           email: data.email || null,
           address: data.address.trim() || null,
+          organization_id: orgId,
         })
         .select("id")
         .single();
@@ -466,6 +480,7 @@ export function NewBookingForm({
         notes: notesCombined || null,
         booking_reference: data.bookingReference.trim() || null,
         payment_status,
+        organization_id: orgId,
       })
       .select("id")
       .single();

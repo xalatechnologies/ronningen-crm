@@ -6,6 +6,7 @@ import {
   type InquiryPrefill,
 } from "@/components/bookings/new-booking-form";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { sortBookingPackagesByCatalogOrder } from "@/lib/validations";
 import { z } from "zod";
 
@@ -15,6 +16,7 @@ export default async function NewBookingPage({
   searchParams: Promise<{ customerId?: string; inquiryId?: string }>;
 }) {
   const supabase = await createServerSupabaseClient();
+  const orgId = await requireServerOrganizationId();
   const sp = await searchParams;
 
   let inquiryPrefill: InquiryPrefill | null = null;
@@ -27,6 +29,7 @@ export default async function NewBookingPage({
       .select(
         "id, property_id, event_type, fest_type, preferred_event_date, preferred_event_end_date, guest_count, estimated_total, internal_notes, converted_booking_id, customers(id, name, phone, email, address)",
       )
+      .eq("organization_id", orgId)
       .eq("id", rawInq)
       .maybeSingle();
 
@@ -71,6 +74,7 @@ export default async function NewBookingPage({
     const { data } = await supabase
       .from("customers")
       .select("id, name, phone, email, address")
+      .eq("organization_id", orgId)
       .eq("id", rawId)
       .maybeSingle();
     if (data) existingCustomer = data;
@@ -79,6 +83,7 @@ export default async function NewBookingPage({
   const { data: packages } = await supabase
     .from("packages")
     .select("id, name, description, price")
+    .eq("organization_id", orgId)
     .eq("active", true);
 
   const bookingPackages: BookingPackageOption[] = sortBookingPackagesByCatalogOrder(
@@ -93,6 +98,7 @@ export default async function NewBookingPage({
   const { data: services } = await supabase
     .from("services")
     .select("id, name, price")
+    .eq("organization_id", orgId)
     .eq("active", true)
     .order("name", { ascending: true });
 

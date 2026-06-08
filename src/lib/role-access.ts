@@ -1,37 +1,36 @@
 import type { UserRole } from "@/constants/roles";
+import {
+  canAccessRoute as orgCanAccessRoute,
+  canManageAssets as orgCanManageAssets,
+  canManageBookings as orgCanManageBookings,
+  canManageFinance as orgCanManageFinance,
+  isAdmin as orgIsAdmin,
+  isOwner as orgIsOwner,
+} from "@/lib/organizations/organization-permissions";
 
 export function isOwner(role: UserRole | undefined | null): boolean {
-  return role === "owner";
+  return orgIsOwner(role ?? null);
 }
 
 export function isAdmin(role: UserRole | undefined | null): boolean {
-  return role === "admin";
+  return orgIsAdmin(role ?? null);
 }
 
 export function canManageFinance(role: UserRole | undefined | null): boolean {
-  if (!role) return false;
-  return role === "owner" || role === "admin" || role === "accountant";
+  return orgCanManageFinance(role ?? null);
 }
 
 export function canManageBookings(role: UserRole | undefined | null): boolean {
-  if (!role) return false;
-  return role === "owner" || role === "admin";
+  return orgCanManageBookings(role ?? null);
 }
 
-/** Same RLS as `owner_admin_modify_assets`. */
 export function canManageAssets(role: UserRole | undefined | null): boolean {
-  return canManageBookings(role);
+  return orgCanManageAssets(role ?? null);
 }
 
-/**
- * Central hook for route-level authorization. All roles currently pass;
- * refine per pathname as the product matures.
- */
 export function canAccessRoute(
   role: UserRole | undefined | null,
   pathname: string,
 ): boolean {
-  if (!role) return false;
-  void pathname;
-  return true;
+  return orgCanAccessRoute(role ?? null, pathname);
 }

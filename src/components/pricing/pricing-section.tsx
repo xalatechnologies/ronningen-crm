@@ -21,13 +21,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuthUser } from "@/hooks/use-auth-user";
-import { canManageFinance } from "@/lib/role-access";
+import { useOrganizationPermissions } from "@/hooks/use-organization-permissions";
 import {
   pricingPackageFormSchema,
   type PricingPackageFormInput,
 } from "@/lib/validations";
 import { cn } from "@/lib/utils";
+import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import type { Database } from "@/types/database.types";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -130,6 +131,7 @@ function PricingCatalogFields({
   onClose: () => void;
 }) {
   const supabase = useSupabase();
+  const { currentOrganizationId } = useCurrentOrganization();
   const router = useRouter();
   const isEdit = row != null;
 
@@ -168,7 +170,20 @@ function PricingCatalogFields({
         kind === "packages" ? "Pakke oppdatert" : "Tjeneste oppdatert",
       );
     } else {
-      const { error } = await supabase.from(kind).insert(payload);
+      let orgId: string;
+      try {
+        orgId = requireOrganizationId(currentOrganizationId);
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+        );
+        return;
+      }
+
+      const { error } = await supabase.from(kind).insert({
+        ...payload,
+        organization_id: orgId,
+      });
       if (error) {
         toast.error("Kunne ikke opprette", { description: error.message });
         return;
@@ -287,8 +302,8 @@ export function PricingSection({
   services,
   loadError,
 }: PricingSectionProps) {
-  const { role } = useAuthUser();
-  const canEdit = canManageFinance(role);
+  const { canManageFinance } = useOrganizationPermissions();
+  const canEdit = canManageFinance;
 
   const [packageDialog, setPackageDialog] = useState<{
     open: boolean;

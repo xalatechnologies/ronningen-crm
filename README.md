@@ -161,12 +161,32 @@ A UI-export zip was unpacked under **`stitch-reference/r-nningen-manager-dashboa
 - File names: **kebab-case**; React components: **PascalCase** exports.
 - Imports: alias `@/*` → `src/*`.
 
+## SaaS local development
+
+Multi-tenant SaaS work uses a **separate** Supabase project from live Rønningen production.
+
+| | Live (production) | SaaS (dev) |
+| --- | --- | --- |
+| Env file | `.env.local.main` (gitignored) | `.env.local.saas` (gitignored) |
+| Active dev | `cp .env.local.main .env.local` | `cp .env.local.saas .env.local` |
+| MCP / migrations | **Do not use** for SaaS work | Project ref `ombyblsawalsrktvldqp` |
+
+**Setup**
+
+1. Copy `.env.local.saas` to `.env.local` (or keep them in sync).
+2. Apply migrations from `supabase/migrations/` to the SaaS project only. Skip Ronningen-specific seed migrations on a fresh SaaS DB: `20260430192100`, `20260430191330`, `20260430203000`, `20260430220000`, `20260430231000`, `20260503120000`.
+3. In Supabase Auth → URL configuration: **Site URL** `http://localhost:3000`, **Redirect URLs** `http://localhost:3000/**`.
+4. Register a test user in the SaaS project (or create one in the dashboard).
+5. Sign in → onboarding at `/app/onboarding` → create an organization → dashboard loads with org-scoped data.
+
+Never apply SaaS migrations to the live production project. Never modify `.env.local.main` or production hosting env vars.
+
 ## Manual Supabase checklist
 
 1. Create project; copy URL + anon key into `.env.local`.
-2. Run `supabase/schema.sql` in the SQL editor (or migrate via CLI).
+2. Run migrations from `supabase/migrations/` in order (preferred), or `supabase/schema.sql` for legacy single-tenant DDL only.
 3. Configure Auth URLs and email templates if using magic links / reset emails.
-4. Create at least one **owner** or **admin** profile row (or update `role` via SQL after first signup) so RLS write policies can be exercised.
+4. For **SaaS**: create an organization via onboarding (owner role is assigned automatically). For **single-tenant legacy**: create at least one **owner** or **admin** profile row so RLS write policies can be exercised.
 5. (Optional) Enable Storage buckets when you add file features; keys in env are already named for future service-role scripts.
 
 ## License

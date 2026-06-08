@@ -1,5 +1,6 @@
 import { InvoicePrintToolbar } from "@/components/invoices/print-toolbar";
 import { formatBookingListDateLabel } from "@/lib/booking-period";
+import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -52,9 +53,11 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { bookingId } = await params;
   const supabase = await createServerSupabaseClient();
+  const orgId = await requireServerOrganizationId();
   const { data } = await supabase
     .from("bookings")
     .select("booking_reference, status, remaining_amount")
+    .eq("organization_id", orgId)
     .eq("id", bookingId)
     .maybeSingle();
 
@@ -75,11 +78,13 @@ export default async function InvoicePrintPage({ params }: PageProps) {
   const { bookingId } = await params;
 
   const supabase = await createServerSupabaseClient();
+  const orgId = await requireServerOrganizationId();
   const { data: row, error } = await supabase
     .from("bookings")
     .select(
       "id, event_type, event_date, event_end_date, event_start_time, event_end_time, guest_count, total_price, paid_amount, remaining_amount, status, booking_reference, payment_due_date, notes, customers(name, phone, email, address), properties(name)",
     )
+    .eq("organization_id", orgId)
     .eq("id", bookingId)
     .maybeSingle();
 

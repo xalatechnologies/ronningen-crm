@@ -1,7 +1,8 @@
 import { AssetsSection } from "@/components/assets/assets-section";
 import type { AssetListItem } from "@/components/assets/types";
-import type { UserRole } from "@/constants/roles";
 import { canManageAssets } from "@/lib/role-access";
+import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
+import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type RawAsset = {
@@ -17,24 +18,14 @@ type RawAsset = {
 
 export default async function AssetsPage() {
   const supabase = await createServerSupabaseClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let canManageFromServer = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    canManageFromServer = canManageAssets(profile?.role as UserRole | undefined);
-  }
+  const orgId = await requireServerOrganizationId();
+  const { role } = await resolveServerOrganizationContext(supabase);
+  const canManageFromServer = canManageAssets(role);
 
   const { data: properties, error: pErr } = await supabase
     .from("properties")
     .select("id, name")
+    .eq("organization_id", orgId)
     .order("name");
 
   const { data: rawList, error: aErr } = await supabase
@@ -42,6 +33,7 @@ export default async function AssetsPage() {
     .select(
       "id, property_id, name, quantity, value, condition, insurance_status, properties(name)",
     )
+    .eq("organization_id", orgId)
     .order("name", { ascending: true })
     .limit(10000);
 

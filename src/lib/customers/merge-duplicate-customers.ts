@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import type { UserRole } from "@/constants/roles";
 import type { Database } from "@/types/database.types";
 
 type CustomerRow = {
@@ -34,32 +35,22 @@ export type MergeDuplicateCustomersResult =
 /**
  * Merges duplicate customer rows (same normalized email, or same phone if no email).
  * Keeps the newest row by created_at. Reassigns bookings, deletes duplicate customers.
- * Requires an authenticated owner or admin session on the given client.
+ * Requires an authenticated owner or admin org member on the given client.
  * Does not call revalidatePath (safe during RSC render).
  */
 export async function mergeDuplicateCustomersWithClient(
   supabase: SupabaseClient<Database>,
+  organizationId: string,
+  memberRole: UserRole | null,
 ): Promise<MergeDuplicateCustomersResult> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return { ok: false, error: "Ikke innlogget" };
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || (profile.role !== "owner" && profile.role !== "admin")) {
+  if (!memberRole || (memberRole !== "owner" && memberRole !== "admin")) {
     return { ok: false, error: "Kun administrator kan slå sammen duplikater." };
   }
 
   const { data: rows, error: fetchErr } = await supabase
     .from("customers")
-    .select("id, email, phone, created_at");
+    .select("id, email, phone, created_at")
+    .eq("organization_id", organizationId);
 
   if (fetchErr) {
     return { ok: false, error: fetchErr.message };
@@ -95,11 +86,16 @@ export async function mergeDuplicateCustomersWithClient(
       const { error: bookingErr } = await supabase
         .from("bookings")
         .update({ customer_id: keeper.id })
-        .eq("customer_id", v.id);
+        .eq("customer_id", v.id)
+        .eq("organization_id", organizationId);
       if (bookingErr) {
         return { ok: false, error: bookingErr.message };
       }
-      const { error: delErr } = await supabase.from("customers").delete().eq("id", v.id);
+      const { error: delErr } = await supabase
+        .from("customers")
+        .delete()
+        .eq("id", v.id)
+        .eq("organization_id", organizationId);
       if (delErr) {
         return { ok: false, error: delErr.message };
       }

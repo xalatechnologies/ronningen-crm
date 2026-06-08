@@ -173,6 +173,7 @@ export function BookingDetailSheet({
   }, [row, open, totalW, paidW, paymentStatusW, setValue]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset dialog when sheet closes
     if (!open) setDeleteDialogOpen(false);
   }, [open]);
 

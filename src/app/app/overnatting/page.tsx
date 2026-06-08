@@ -9,8 +9,9 @@ import {
   monthEndExclusiveYm,
   monthFirstDayYm,
 } from "@/lib/overnatting-month";
+import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
+import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { UserRole } from "@/constants/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -54,31 +55,22 @@ export default async function OvernattingPage({
   searchParams: Promise<{ ym?: string }>;
 }) {
   const supabase = await createServerSupabaseClient();
+  const orgId = await requireServerOrganizationId();
+  const { role } = await resolveServerOrganizationContext(supabase);
+  const canEdit = canManageBookings(role);
   const sp = await searchParams;
   const initialYm = ymFromParams(sp.ym);
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let canEdit = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    canEdit = canManageBookings(profile?.role as UserRole | undefined);
-  }
 
   const { data: properties } = await supabase
     .from("properties")
     .select("id, name")
+    .eq("organization_id", orgId)
     .order("name");
 
   const { data: rawUnits, error: uErr } = await supabase
     .from("accommodation_units")
     .select("id, name, property_id, max_guests, notes, active, sort_order, properties(name)")
+    .eq("organization_id", orgId)
     .order("sort_order", { ascending: true })
     .order("name", { ascending: true });
 
@@ -94,6 +86,7 @@ export default async function OvernattingPage({
       .select(
         "id, unit_id, customer_id, check_in_date, check_out_date, check_in_time, check_out_time, status, guest_count, notes, total_price, customers(name), accommodation_units(name)",
       )
+      .eq("organization_id", orgId)
       .lt("check_in_date", endEx)
       .gt("check_out_date", beforeMonth);
     rawRes = q.data as RawRes[] | null;

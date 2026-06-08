@@ -19,6 +19,8 @@ import {
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
+import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
@@ -135,6 +137,7 @@ export function CustomersSection({
   loadError,
 }: CustomersSectionProps) {
   const supabase = useSupabase();
+  const { currentOrganizationId } = useCurrentOrganization();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [customersPage, setCustomersPage] = useState(1);
@@ -194,12 +197,23 @@ export function CustomersSection({
   });
 
   async function onAddCustomer(data: CustomerUpsertFormInput) {
+    let orgId: string;
+    try {
+      orgId = requireOrganizationId(currentOrganizationId);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+      );
+      return;
+    }
+
     const { data: row, error } = await supabase
       .from("customers")
       .insert({
         name: data.name.trim(),
         phone: data.phone.trim() || null,
         email: data.email.trim() || null,
+        organization_id: orgId,
       })
       .select("id")
       .single();

@@ -13,6 +13,7 @@ import {
 } from "@/lib/asset-status-bucket";
 import { isIncomeTransactionType } from "@/lib/transaction-income";
 import { fetchAllTransactionsInDateRange } from "@/lib/supabase/fetch-transactions-in-range";
+import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type RawBooking = {
@@ -100,6 +101,7 @@ export default async function ReportsPage({
   searchParams: Promise<{ year?: string; month?: string }>;
 }) {
   const supabase = await createServerSupabaseClient();
+  const orgId = await requireServerOrganizationId();
 
   const sp = await searchParams;
   const calendarYearMax = new Date().getFullYear();
@@ -154,11 +156,18 @@ export default async function ReportsPage({
       .select(
         "id, event_type, event_date, total_price, paid_amount, remaining_amount, status, customers(name)",
       )
+      .eq("organization_id", orgId)
       .order("event_date", { ascending: false }),
-    fetchAllTransactionsInDateRange(supabase, prevYearStart, reportYearEndYmd),
+    fetchAllTransactionsInDateRange(
+      supabase,
+      orgId,
+      prevYearStart,
+      reportYearEndYmd,
+    ),
     supabase
       .from("assets")
       .select("value, condition, insurance_status")
+      .eq("organization_id", orgId)
       .limit(10_000),
   ]);
 

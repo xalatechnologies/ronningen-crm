@@ -23,6 +23,7 @@ export type Database = {
           id: string;
           unit_id: string;
           customer_id: string;
+          organization_id: string;
           check_in_date: string;
           check_out_date: string;
           check_in_time: string | null;
@@ -38,6 +39,7 @@ export type Database = {
           id?: string;
           unit_id: string;
           customer_id: string;
+          organization_id: string;
           check_in_date: string;
           check_out_date: string;
           check_in_time?: string | null;
@@ -53,6 +55,7 @@ export type Database = {
           id?: string;
           unit_id?: string;
           customer_id?: string;
+          organization_id?: string;
           check_in_date?: string;
           check_out_date?: string;
           check_in_time?: string | null;
@@ -86,6 +89,7 @@ export type Database = {
           id: string;
           name: string;
           property_id: string | null;
+          organization_id: string;
           max_guests: number;
           notes: string | null;
           active: boolean;
@@ -97,6 +101,7 @@ export type Database = {
           id?: string;
           name: string;
           property_id?: string | null;
+          organization_id: string;
           max_guests?: number;
           notes?: string | null;
           active?: boolean;
@@ -108,6 +113,7 @@ export type Database = {
           id?: string;
           name?: string;
           property_id?: string | null;
+          organization_id?: string;
           max_guests?: number;
           notes?: string | null;
           active?: boolean;
@@ -132,6 +138,7 @@ export type Database = {
           id: string;
           insurance_status: string | null;
           name: string;
+          organization_id: string;
           property_id: string;
           quantity: number;
           updated_at: string;
@@ -143,6 +150,7 @@ export type Database = {
           id?: string;
           insurance_status?: string | null;
           name: string;
+          organization_id: string;
           property_id: string;
           quantity?: number;
           updated_at?: string;
@@ -154,6 +162,7 @@ export type Database = {
           id?: string;
           insurance_status?: string | null;
           name?: string;
+          organization_id?: string;
           property_id?: string;
           quantity?: number;
           updated_at?: string;
@@ -184,6 +193,7 @@ export type Database = {
           guest_count: number;
           id: string;
           notes: string | null;
+          organization_id: string;
           paid_amount: number;
           payment_due_date: string | null;
           payment_status: string | null;
@@ -207,6 +217,7 @@ export type Database = {
           guest_count?: number;
           id?: string;
           notes?: string | null;
+          organization_id: string;
           paid_amount?: number;
           payment_due_date?: string | null;
           payment_status?: string | null;
@@ -230,6 +241,7 @@ export type Database = {
           guest_count?: number;
           id?: string;
           notes?: string | null;
+          organization_id?: string;
           paid_amount?: number;
           payment_due_date?: string | null;
           payment_status?: string | null;
@@ -261,6 +273,7 @@ export type Database = {
           id: string;
           customer_id: string;
           property_id: string | null;
+          organization_id: string;
           event_type: string;
           fest_type: string | null;
           preferred_event_date: string | null;
@@ -279,6 +292,7 @@ export type Database = {
           id?: string;
           customer_id: string;
           property_id?: string | null;
+          organization_id: string;
           event_type?: string;
           fest_type?: string | null;
           preferred_event_date?: string | null;
@@ -297,6 +311,7 @@ export type Database = {
           id?: string;
           customer_id?: string;
           property_id?: string | null;
+          organization_id?: string;
           event_type?: string;
           fest_type?: string | null;
           preferred_event_date?: string | null;
@@ -334,6 +349,71 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      organization_members: {
+        Row: {
+          id: string;
+          organization_id: string;
+          user_id: string;
+          role: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          user_id: string;
+          role?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          user_id?: string;
+          role?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organizations: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          logo_url: string | null;
+          subscription_status: string;
+          subscription_plan: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          logo_url?: string | null;
+          subscription_status?: string;
+          subscription_plan?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          logo_url?: string | null;
+          subscription_status?: string;
+          subscription_plan?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       booking_inquiry_activities: {
         Row: {
@@ -375,6 +455,7 @@ export type Database = {
           id: string;
           name: string;
           notes: string | null;
+          organization_id: string;
           phone: string | null;
           updated_at: string;
         };
@@ -385,6 +466,7 @@ export type Database = {
           id?: string;
           name: string;
           notes?: string | null;
+          organization_id: string;
           phone?: string | null;
           updated_at?: string;
         };
@@ -395,6 +477,7 @@ export type Database = {
           id?: string;
           name?: string;
           notes?: string | null;
+          organization_id?: string;
           phone?: string | null;
           updated_at?: string;
         };
@@ -405,6 +488,7 @@ export type Database = {
           id: string;
           category: string;
           name: string;
+          organization_id: string;
           phone: string | null;
           email: string | null;
           notes: string | null;
@@ -415,6 +499,7 @@ export type Database = {
           id?: string;
           category: string;
           name: string;
+          organization_id: string;
           phone?: string | null;
           email?: string | null;
           notes?: string | null;
@@ -425,6 +510,7 @@ export type Database = {
           id?: string;
           category?: string;
           name?: string;
+          organization_id?: string;
           phone?: string | null;
           email?: string | null;
           notes?: string | null;
@@ -440,6 +526,7 @@ export type Database = {
           description: string | null;
           id: string;
           name: string;
+          organization_id: string;
           price: number;
           updated_at: string;
         };
@@ -449,6 +536,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           name: string;
+          organization_id: string;
           price?: number;
           updated_at?: string;
         };
@@ -458,6 +546,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           name?: string;
+          organization_id?: string;
           price?: number;
           updated_at?: string;
         };
@@ -465,6 +554,7 @@ export type Database = {
       };
       profiles: {
         Row: {
+          active_organization_id: string | null;
           avatar_url: string | null;
           created_at: string;
           email: string | null;
@@ -474,6 +564,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          active_organization_id?: string | null;
           avatar_url?: string | null;
           created_at?: string;
           email?: string | null;
@@ -483,6 +574,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          active_organization_id?: string | null;
           avatar_url?: string | null;
           created_at?: string;
           email?: string | null;
@@ -500,6 +592,7 @@ export type Database = {
           id: string;
           name: string;
           notes: string | null;
+          organization_id: string;
           type: string | null;
           updated_at: string;
         };
@@ -509,6 +602,7 @@ export type Database = {
           id?: string;
           name: string;
           notes?: string | null;
+          organization_id: string;
           type?: string | null;
           updated_at?: string;
         };
@@ -518,6 +612,7 @@ export type Database = {
           id?: string;
           name?: string;
           notes?: string | null;
+          organization_id?: string;
           type?: string | null;
           updated_at?: string;
         };
@@ -530,6 +625,7 @@ export type Database = {
           description: string | null;
           id: string;
           name: string;
+          organization_id: string;
           price: number;
           updated_at: string;
         };
@@ -539,6 +635,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           name: string;
+          organization_id: string;
           price?: number;
           updated_at?: string;
         };
@@ -548,10 +645,61 @@ export type Database = {
           description?: string | null;
           id?: string;
           name?: string;
+          organization_id?: string;
           price?: number;
           updated_at?: string;
         };
         Relationships: [];
+      };
+      subscriptions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          provider: string | null;
+          provider_customer_id: string | null;
+          provider_subscription_id: string | null;
+          plan: string;
+          status: string;
+          current_period_start: string | null;
+          current_period_end: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          provider?: string | null;
+          provider_customer_id?: string | null;
+          provider_subscription_id?: string | null;
+          plan?: string;
+          status?: string;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          provider?: string | null;
+          provider_customer_id?: string | null;
+          provider_subscription_id?: string | null;
+          plan?: string;
+          status?: string;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       transactions: {
         Row: {
@@ -560,6 +708,7 @@ export type Database = {
           created_at: string;
           description: string | null;
           id: string;
+          organization_id: string;
           property_id: string;
           transaction_date: string;
           type: string;
@@ -571,6 +720,7 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           id?: string;
+          organization_id: string;
           property_id: string;
           transaction_date: string;
           type: string;
@@ -582,6 +732,7 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           id?: string;
+          organization_id?: string;
           property_id?: string;
           transaction_date?: string;
           type?: string;

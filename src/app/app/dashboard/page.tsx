@@ -17,6 +17,7 @@ import {
   ymd,
 } from "@/lib/dashboard-metrics";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 
 type RawBooking = {
   id: string;
@@ -49,6 +50,7 @@ function formatNbShortDate(iso: string) {
 
 async function loadDashboardData(): Promise<DashboardHomeData> {
   const supabase = await createServerSupabaseClient();
+  const orgId = await requireServerOrganizationId();
   const now = new Date();
   const chartYears = [now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear()] as const;
 
@@ -57,8 +59,9 @@ async function loadDashboardData(): Promise<DashboardHomeData> {
       .from("bookings")
       .select(
         "id, event_type, event_date, total_price, paid_amount, remaining_amount, status, customers(name), properties(name)",
-      ),
-    supabase.from("properties").select("id"),
+      )
+      .eq("organization_id", orgId),
+    supabase.from("properties").select("id").eq("organization_id", orgId),
   ]);
 
   const loadError =

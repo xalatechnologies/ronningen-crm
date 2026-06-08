@@ -3,14 +3,39 @@
 import type { User } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 
-import type { UserRole } from "@/constants/roles";
-import { fetchProfileRole, getRoleFromUser } from "@/lib/supabase/auth";
 import { useSupabase } from "@/providers/supabase-provider";
+
+export type AuthProfile = {
+  fullName: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+};
+
+async function fetchProfileForDisplay(
+  supabase: ReturnType<typeof useSupabase>,
+  userId: string,
+): Promise<AuthProfile | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("full_name, email, avatar_url")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return {
+    fullName: data.full_name,
+    email: data.email,
+    avatarUrl: data.avatar_url,
+  };
+}
 
 export function useAuthUser() {
   const supabase = useSupabase();
   const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<UserRole | null>(null);
+  const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,12 +45,12 @@ export function useAuthUser() {
       if (cancelled) return;
       setUser(nextUser);
       if (!nextUser) {
-        setRole(null);
+        setProfile(null);
         return;
       }
-      const profileRole = await fetchProfileRole(supabase, nextUser.id);
+      const nextProfile = await fetchProfileForDisplay(supabase, nextUser.id);
       if (cancelled) return;
-      setRole(profileRole ?? getRoleFromUser(nextUser));
+      setProfile(nextProfile);
     }
 
     async function init() {
@@ -54,5 +79,5 @@ export function useAuthUser() {
     };
   }, [supabase]);
 
-  return { user, role, loading, isAuthenticated: !!user };
+  return { user, profile, loading, isAuthenticated: !!user };
 }

@@ -13,6 +13,8 @@ import {
 } from "@/lib/validations";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
+import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ACCOMMODATION_RESERVATION_LABELS } from "@/components/overnatting/types";
@@ -47,6 +49,7 @@ export function NewAccommodationReservationForm({
   initialCustomerId,
 }: NewAccommodationReservationFormProps) {
   const supabase = useSupabase();
+  const { currentOrganizationId } = useCurrentOrganization();
   const router = useRouter();
   const rid = useId().replace(/:/g, "");
 
@@ -83,6 +86,17 @@ export function NewAccommodationReservationForm({
 
   async function onSubmit(data: AccommodationReservationFormInput) {
     if (!supabase || !canManage) return;
+
+    let orgId: string;
+    try {
+      orgId = requireOrganizationId(currentOrganizationId);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+      );
+      return;
+    }
+
     let custId = data.customerId || "";
     if (!custId) {
       const { data: row, error: ce } = await supabase
@@ -92,6 +106,7 @@ export function NewAccommodationReservationForm({
           phone: data.newCustomerPhone.trim(),
           email: data.newCustomerEmail.trim() || null,
           address: data.newCustomerAddress.trim() || null,
+          organization_id: orgId,
         })
         .select("id")
         .single();
@@ -118,6 +133,7 @@ export function NewAccommodationReservationForm({
         data.totalPrice === undefined || Number.isNaN(data.totalPrice)
           ? null
           : data.totalPrice,
+      organization_id: orgId,
     });
 
     if (error) {

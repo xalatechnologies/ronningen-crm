@@ -1,7 +1,8 @@
 import { NewAccommodationReservationForm } from "@/components/overnatting/new-accommodation-reservation-form";
 import { canManageBookings } from "@/lib/role-access";
+import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
+import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { UserRole } from "@/constants/roles";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -12,25 +13,15 @@ export default async function NewAccommodationReservationPage({
   searchParams: Promise<{ customerId?: string }>;
 }) {
   const supabase = await createServerSupabaseClient();
+  const orgId = await requireServerOrganizationId();
+  const { role } = await resolveServerOrganizationContext(supabase);
+  const canEdit = canManageBookings(role);
   const sp = await searchParams;
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let canEdit = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    canEdit = canManageBookings(profile?.role as UserRole | undefined);
-  }
 
   const { data: rawUnits } = await supabase
     .from("accommodation_units")
     .select("id, name, max_guests, active")
+    .eq("organization_id", orgId)
     .order("sort_order", { ascending: true })
     .order("name", { ascending: true });
 
@@ -45,6 +36,7 @@ export default async function NewAccommodationReservationPage({
   const { data: customers } = await supabase
     .from("customers")
     .select("id, name")
+    .eq("organization_id", orgId)
     .order("name");
 
   let initialCustomerId: string | undefined;

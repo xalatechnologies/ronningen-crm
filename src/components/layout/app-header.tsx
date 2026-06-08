@@ -18,11 +18,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { OrganizationSwitcher } from "@/components/organizations/organization-switcher";
 import { APP_NAME } from "@/config/app";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { MenuIcon, ChevronDown } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 
@@ -136,6 +138,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
 
       <div className="flex min-w-0 items-center gap-3 md:gap-4">
         {children}
+        <OrganizationSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
@@ -176,6 +179,12 @@ export function AppHeader({ children }: { children?: ReactNode }) {
                 {user?.email ?? "Innlogget"}
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-2 bg-border" />
+              <DropdownMenuItem
+                className="px-3 py-2.5 font-heading text-app-md md:px-3.5 md:py-3"
+                render={<Link href="/app/settings/billing" />}
+              >
+                Fakturering
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="px-3 py-2.5 font-heading text-app-md font-bold md:px-3.5 md:py-3"
                 onSelect={() => void signOut()}

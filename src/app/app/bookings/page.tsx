@@ -6,9 +6,10 @@ import type {
 import { effectiveBookingPaymentStatus } from "@/constants/booking-payment-status";
 import { normalizeBookingAudience } from "@/lib/booking-audience";
 import { canManageBookings } from "@/lib/role-access";
-import { fetchProfileRole } from "@/lib/supabase/auth";
 import { formatBookingListDateLabel } from "@/lib/booking-period";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
+import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 
 type RawBooking = {
   id: string;
@@ -90,18 +91,16 @@ function paidLabelAndFraction(
 
 export default async function BookingsPage() {
   const supabase = await createServerSupabaseClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const profileRole = user ? await fetchProfileRole(supabase, user.id) : null;
-  const canDeleteBookings = canManageBookings(profileRole);
+  const orgId = await requireServerOrganizationId();
+  const { role } = await resolveServerOrganizationContext(supabase);
+  const canDeleteBookings = canManageBookings(role);
 
   const { data: rawList, error } = await supabase
     .from("bookings")
     .select(
       "id, customer_id, event_type, event_date, event_end_date, event_start_time, event_end_time, guest_count, total_price, paid_amount, remaining_amount, status, fest_type, notes, booking_reference, payment_due_date, collection_notice_sent_at, payment_status, customers(name, phone, email, address)",
     )
+    .eq("organization_id", orgId)
     .order("event_date", { ascending: false });
 
   const loadError = error?.message ?? null;

@@ -21,6 +21,8 @@ import {
   type PartnerFormInput,
 } from "@/lib/validations";
 import { cn } from "@/lib/utils";
+import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight, Plus, Search, X } from "lucide-react";
@@ -125,6 +127,7 @@ function PartnerFields({
 
 export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
   const supabase = useSupabase();
+  const { currentOrganizationId } = useCurrentOrganization();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [partnersPage, setPartnersPage] = useState(1);
@@ -211,12 +214,23 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
   }
 
   async function onAddPartner(data: PartnerFormInput) {
+    let orgId: string;
+    try {
+      orgId = requireOrganizationId(currentOrganizationId);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+      );
+      return;
+    }
+
     const { error } = await supabase.from("partners").insert({
       category: data.category,
       name: data.name,
       phone: data.phone.trim() || null,
       email: data.email.trim() || null,
       notes: data.notes?.trim() || null,
+      organization_id: orgId,
     });
 
     if (error) {

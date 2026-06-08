@@ -8,6 +8,8 @@ import {
 } from "@/lib/validations";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
+import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, X } from "lucide-react";
@@ -57,6 +59,7 @@ export function NewInquiryForm({
   initialCustomerId,
 }: NewInquiryFormProps) {
   const supabase = useSupabase();
+  const { currentOrganizationId } = useCurrentOrganization();
   const router = useRouter();
 
   const form = useForm<BookingInquiryFormInput>({
@@ -77,6 +80,17 @@ export function NewInquiryForm({
 
   async function onSubmit(data: BookingInquiryFormInput) {
     if (!supabase || !canManageInquiries) return;
+
+    let orgId: string;
+    try {
+      orgId = requireOrganizationId(currentOrganizationId);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+      );
+      return;
+    }
+
     let customerId = data.customerId || "";
     if (!customerId) {
       const { data: custRow, error: custErr } = await supabase
@@ -86,6 +100,7 @@ export function NewInquiryForm({
           phone: data.newCustomerPhone.trim(),
           email: data.newCustomerEmail.trim() || null,
           address: data.newCustomerAddress.trim() || null,
+          organization_id: orgId,
         })
         .select("id")
         .single();
@@ -113,6 +128,7 @@ export function NewInquiryForm({
       status: data.status,
       next_follow_up_at: fromDatetimeLocalValue(data.nextFollowUpAt),
       internal_notes: data.internalNotes?.trim() || null,
+      organization_id: orgId,
     });
 
     if (error) {

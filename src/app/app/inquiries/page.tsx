@@ -2,7 +2,8 @@ import { InquiriesSection } from "@/components/inquiries/inquiries-section";
 import type { InquiryListRow } from "@/components/inquiries/types";
 import type { BookingInquiryStatus } from "@/lib/validations";
 import { canManageBookings } from "@/lib/role-access";
-import type { UserRole } from "@/constants/roles";
+import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
+import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -44,29 +45,20 @@ function normalizeInquiryStatus(raw: string): BookingInquiryStatus {
 
 export default async function InquiriesPage() {
   const supabase = await createServerSupabaseClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let canEdit = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    canEdit = canManageBookings(profile?.role as UserRole | undefined);
-  }
+  const orgId = await requireServerOrganizationId();
+  const { role } = await resolveServerOrganizationContext(supabase);
+  const canEdit = canManageBookings(role);
 
   const { data: properties, error: pErr } = await supabase
     .from("properties")
     .select("id, name")
+    .eq("organization_id", orgId)
     .order("name");
 
   const { data: customers, error: cErr } = await supabase
     .from("customers")
     .select("id, name")
+    .eq("organization_id", orgId)
     .order("name");
 
   const { data: rawList, error: iErr } = await supabase
@@ -74,6 +66,7 @@ export default async function InquiriesPage() {
     .select(
       "id, customer_id, property_id, event_type, fest_type, preferred_event_date, preferred_event_end_date, guest_count, estimated_total, status, next_follow_up_at, internal_notes, converted_booking_id, converted_at, updated_at, customers(name, phone, email), properties(name)",
     )
+    .eq("organization_id", orgId)
     .order("updated_at", { ascending: false });
 
   const loadError = pErr?.message ?? cErr?.message ?? iErr?.message ?? null;

@@ -4,7 +4,6 @@ import { InquiryFormBody } from "@/components/inquiries/inquiry-form-body";
 import type { InquiryActivityRow, InquiryListRow } from "@/components/inquiries/types";
 import { INQUIRY_STATUS_LABELS } from "@/components/inquiries/types";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -168,10 +167,10 @@ export function InquiryDetailSheet({
 
   useEffect(() => {
     if (!inquiry || !open || !supabase) {
-      setActivities([]);
       return;
     }
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load activities when inquiry sheet opens
     setLoadingActivities(true);
     void (async () => {
       const { data, error } = await supabase

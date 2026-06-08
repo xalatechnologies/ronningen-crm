@@ -1,6 +1,5 @@
 import { UnpaidInvoicesSection } from "@/components/invoices/unpaid-invoices-section";
 import type { UnpaidInvoiceRow } from "@/components/invoices/types";
-import type { UserRole } from "@/constants/roles";
 import {
   effectiveBookingPaymentStatus,
   hideFromOutstandingInvoices,
@@ -8,6 +7,8 @@ import {
 import { sortInvoicesByUrgency } from "@/lib/invoice-row-utils";
 import { formatBookingListDateLabel } from "@/lib/booking-period";
 import { canManageFinance } from "@/lib/role-access";
+import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
+import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type RawBooking = {
@@ -48,27 +49,17 @@ function toLocalYmd(d: Date) {
 
 export default async function InvoicesPage() {
   const supabase = await createServerSupabaseClient();
+  const orgId = await requireServerOrganizationId();
+  const { role } = await resolveServerOrganizationContext(supabase);
+  const canMarkInvoicesPaid = canManageFinance(role);
   const todayYmd = toLocalYmd(new Date());
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let canMarkInvoicesPaid = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    canMarkInvoicesPaid = canManageFinance(profile?.role as UserRole | undefined);
-  }
 
   const { data: rawList, error } = await supabase
     .from("bookings")
     .select(
       "id, event_type, event_date, event_end_date, event_start_time, event_end_time, total_price, paid_amount, remaining_amount, status, booking_reference, payment_due_date, collection_notice_sent_at, payment_status, customers(name, phone, email, address), properties(name)",
     )
+    .eq("organization_id", orgId)
     .order("event_date", { ascending: true });
 
   const loadError = error?.message ?? null;

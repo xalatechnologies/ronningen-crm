@@ -15,6 +15,7 @@ export type TransactionMetricRow = Pick<
  */
 export async function fetchAllTransactionsInDateRange(
   supabase: SupabaseClient<Database>,
+  organizationId: string,
   fromYmd: string,
   toYmd: string,
 ): Promise<{ data: TransactionMetricRow[]; error: string | null }> {
@@ -25,6 +26,7 @@ export async function fetchAllTransactionsInDateRange(
     const { data, error } = await supabase
       .from("transactions")
       .select("amount, type, transaction_date")
+      .eq("organization_id", organizationId)
       .gte("transaction_date", fromYmd)
       .lte("transaction_date", toYmd)
       .order("transaction_date", { ascending: true })

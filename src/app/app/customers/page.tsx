@@ -3,6 +3,8 @@ import {
 } from "@/components/customers/customers-section";
 import type { CustomerBookingListItem } from "@/components/customers/types";
 import { mergeDuplicateCustomersWithClient } from "@/lib/customers/merge-duplicate-customers";
+import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
+import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type RawBooking = {
@@ -19,28 +21,18 @@ type RawBooking = {
 
 export default async function CustomersPage() {
   const supabase = await createServerSupabaseClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  let canMergeDuplicates = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    canMergeDuplicates =
-      profile?.role === "owner" || profile?.role === "admin";
-  }
+  const orgId = await requireServerOrganizationId();
+  const { role } = await resolveServerOrganizationContext(supabase);
+  const canMergeDuplicates = role === "owner" || role === "admin";
 
   if (canMergeDuplicates) {
-    await mergeDuplicateCustomersWithClient(supabase);
+    await mergeDuplicateCustomersWithClient(supabase, orgId, role);
   }
 
   const { data: customers, error: cErr } = await supabase
     .from("customers")
     .select("*")
+    .eq("organization_id", orgId)
     .order("created_at", { ascending: false });
 
   const { data: bookingsRaw, error: bErr } = await supabase
@@ -48,11 +40,13 @@ export default async function CustomersPage() {
     .select(
       "id, customer_id, event_type, event_date, guest_count, total_price, remaining_amount, status, properties(name)",
     )
+    .eq("organization_id", orgId)
     .order("event_date", { ascending: false });
 
   const { data: partners, error: pErr } = await supabase
     .from("partners")
     .select("*")
+    .eq("organization_id", orgId)
     .order("name", { ascending: true });
 
   const loadError = cErr?.message ?? bErr?.message ?? pErr?.message ?? null;

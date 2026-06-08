@@ -1,7 +1,8 @@
 import { FinanceSection } from "@/components/finance/finance-section";
 import type { TransactionListItem } from "@/components/finance/types";
-import type { UserRole } from "@/constants/roles";
 import { canManageFinance } from "@/lib/role-access";
+import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
+import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -25,25 +26,14 @@ type RawTx = {
 
 export default async function FinancePage() {
   const supabase = await createServerSupabaseClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let canManageTransactions = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    const role = profile?.role as UserRole | undefined;
-    canManageTransactions = canManageFinance(role ?? null);
-  }
+  const orgId = await requireServerOrganizationId();
+  const { role } = await resolveServerOrganizationContext(supabase);
+  const canManageTransactions = canManageFinance(role);
 
   const { data: properties, error: pErr } = await supabase
     .from("properties")
     .select("id, name")
+    .eq("organization_id", orgId)
     .order("name");
 
   const { data: rawList, error: tErr } = await supabase
@@ -51,6 +41,7 @@ export default async function FinancePage() {
     .select(
       "id, property_id, type, category, description, amount, transaction_date, properties(name)",
     )
+    .eq("organization_id", orgId)
     .order("transaction_date", { ascending: false })
     .limit(10000);
 

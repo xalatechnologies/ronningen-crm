@@ -3,6 +3,7 @@
 import { APP_NAME } from "@/config/app";
 import { mainNavigation } from "@/config/navigation";
 import { SIDEBAR_SEGMENT_ICONS } from "@/config/nav-icons";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -11,6 +12,9 @@ import { usePathname } from "next/navigation";
 
 export function AppSidebar({ className }: { className?: string }) {
   const pathname = usePathname();
+  const { currentOrganization } = useCurrentOrganization();
+  const displayName = currentOrganization?.name ?? APP_NAME;
+  const logoUrl = currentOrganization?.logoUrl;
 
   return (
     <aside
@@ -28,18 +32,29 @@ export function AppSidebar({ className }: { className?: string }) {
             )}
             aria-label={`${APP_NAME} — gå til oversikt`}
           >
-            <Image
-              src="/ronningen-selskapslokale-logo.png"
-              alt=""
-              fill
-              sizes="(min-width: 768px) 64px, 56px"
-              className="object-contain p-1.5"
-              priority
-            />
+            {logoUrl ? (
+              <Image
+                src={logoUrl}
+                alt=""
+                fill
+                sizes="(min-width: 768px) 64px, 56px"
+                className="object-contain p-1.5"
+                priority
+              />
+            ) : (
+              <Image
+                src="/ronningen-selskapslokale-logo.png"
+                alt=""
+                fill
+                sizes="(min-width: 768px) 64px, 56px"
+                className="object-contain p-1.5"
+                priority
+              />
+            )}
           </Link>
           <div className="min-w-0">
             <p className="font-heading text-app-base font-bold tracking-tight text-rn-text-heading">
-              {APP_NAME}
+              {displayName}
             </p>
             <p className="text-app-xs font-medium text-rn-text-slate">
               Admin

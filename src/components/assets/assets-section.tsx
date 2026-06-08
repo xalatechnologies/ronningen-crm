@@ -30,6 +30,8 @@ import {
 } from "@/lib/asset-status-bucket";
 import { assetFormSchema, type AssetFormInput } from "@/lib/validations";
 import { cn } from "@/lib/utils";
+import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -189,6 +191,7 @@ function AssetFormFields({
   onClose: () => void;
 }) {
   const supabase = useSupabase();
+  const { currentOrganizationId } = useCurrentOrganization();
   const router = useRouter();
   const isEdit = row != null;
 
@@ -263,7 +266,20 @@ function AssetFormFields({
       }
       toast.success("Inventarpost oppdatert");
     } else {
-      const { error } = await supabase.from("assets").insert(payload);
+      let orgId: string;
+      try {
+        orgId = requireOrganizationId(currentOrganizationId);
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+        );
+        return;
+      }
+
+      const { error } = await supabase.from("assets").insert({
+        ...payload,
+        organization_id: orgId,
+      });
       if (error) {
         toast.error("Kunne ikke opprette inventarpost", {
           description: error.message,
