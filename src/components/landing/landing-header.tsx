@@ -16,6 +16,7 @@ import {
 } from "@/components/landing/landing-layout";
 import { cn } from "@/lib/utils";
 import { MenuIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -45,11 +46,15 @@ export function LandingHeader() {
           href="/"
           className="flex min-w-0 items-center gap-3 font-heading text-lg font-bold tracking-tight text-rn-text-heading"
         >
-          <span
-            className="flex size-10 shrink-0 items-center justify-center rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-success text-sm font-bold text-white"
-            aria-hidden
-          >
-            R
+          <span className="relative flex size-12 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-black shadow-sm md:size-14">
+            <Image
+              src="/event-manager-logo.png"
+              alt=""
+              fill
+              sizes="(min-width: 768px) 56px, 48px"
+              className="object-cover"
+              priority
+            />
           </span>
           <span className="truncate">{APP_NAME}</span>
         </Link>

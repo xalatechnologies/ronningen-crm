@@ -579,18 +579,18 @@ export function PricingSection({
                     <TableCell
                       className={cn(
                         pricingTableCellClass,
-                        "whitespace-normal text-muted-foreground",
+                        "whitespace-normal",
                       )}
                     >
                       <span className="pricing-service-price text-app-base tabular-nums">
                         {formatNok(svc.price)}
                       </span>
                       {svc.description?.trim() ? (
-                        <span className="pricing-service-desc mt-1 block text-muted-foreground">
+                        <span className="pricing-service-desc mt-1 block">
                           {svc.description}
                         </span>
                       ) : (
-                        <span className="pricing-service-desc mt-1 block text-muted-foreground">
+                        <span className="pricing-service-desc mt-1 block">
                           Fast pris
                         </span>
                       )}

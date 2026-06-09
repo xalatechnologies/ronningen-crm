@@ -6,6 +6,20 @@ import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 
 const CHART_HEIGHTS = [40, 65, 52, 78, 58, 88, 72, 48, 82, 60, 70, 55] as const;
+const CHART_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Des",
+] as const;
 
 export function HeroDashboardPreview() {
   return (
@@ -40,17 +54,32 @@ export function HeroDashboardPreview() {
         ))}
       </div>
 
-      <div className="mt-4 rounded-[length:var(--app-radius)] border border-rn-border-strong/70 bg-rn-surface-wash p-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-rn-text-slate">
-          Månedlig omsetning
-        </p>
-        <div className="flex h-28 items-end justify-between gap-1.5">
+      <div className="mt-4 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-success/25 bg-gradient-to-br from-rn-primary-soft via-white to-rn-surface-gradient-from p-4 shadow-rn-card">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="font-heading text-xs font-bold uppercase tracking-wide text-success">
+            Månedlig omsetning
+          </p>
+          <span className="rounded-full border border-success/20 bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">
+            kr 128 400
+          </span>
+        </div>
+        <div className="flex h-32 items-end justify-between gap-1.5 rounded-md border border-success/15 bg-white/70 p-3">
           {CHART_HEIGHTS.map((height, index) => (
             <div
               key={index}
-              className="flex-1 rounded-t-sm bg-success/25"
+              className={cn(
+                "min-h-[4px] flex-1 rounded-t-md bg-gradient-to-t from-success to-emerald-500 shadow-sm transition-colors hover:to-emerald-600",
+                index === 5 && "ring-2 ring-success/35 ring-offset-2 ring-offset-white",
+              )}
               style={{ height: `${height}%` }}
             />
+          ))}
+        </div>
+        <div className="mt-3 flex justify-between gap-0.5 text-[10px] font-semibold uppercase tracking-wide text-success/75">
+          {CHART_MONTHS.map((month) => (
+            <span key={month} className="min-w-0 flex-1 text-center">
+              {month}
+            </span>
           ))}
         </div>
       </div>

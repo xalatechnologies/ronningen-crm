@@ -925,7 +925,7 @@ export function OvernattingSection({
                     <TableRow>
                       <TableCell
                         colSpan={canManage ? 7 : 6}
-                        className="text-muted-foreground"
+                        className="text-rn-text-body"
                       >
                         {resInMonth.length === 0
                           ? "Ingen reservasjoner i valgt måned."

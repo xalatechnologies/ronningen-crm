@@ -35,7 +35,7 @@ export function AppSidebar({ className }: { className?: string }) {
             {logoUrl ? (
               <Image
                 src={logoUrl}
-                alt=""
+                alt={APP_NAME}
                 fill
                 sizes="(min-width: 768px) 64px, 56px"
                 className="object-contain p-1.5"
@@ -43,11 +43,11 @@ export function AppSidebar({ className }: { className?: string }) {
               />
             ) : (
               <Image
-                src="/ronningen-selskapslokale-logo.png"
-                alt=""
+                src="/event-manager-logo.png"
+                alt={APP_NAME}
                 fill
                 sizes="(min-width: 768px) 64px, 56px"
-                className="object-contain p-1.5"
+                className="object-cover"
                 priority
               />
             )}
@@ -57,7 +57,7 @@ export function AppSidebar({ className }: { className?: string }) {
               {displayName}
             </p>
             <p className="text-app-xs font-medium text-rn-text-slate">
-              Admin
+              {currentOrganization ? APP_NAME : "Administrasjon"}
             </p>
           </div>
         </div>

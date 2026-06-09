@@ -13,7 +13,7 @@ import { ProductPreviewSection } from "@/components/landing/product-preview-sect
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Rønningen Manager | Venue Booking and Finance Dashboard",
+  title: "Event Manager | Venue Booking and Finance Dashboard",
   description:
     "Manage venue bookings, customers, payments, pricing, assets, and reports from one simple SaaS dashboard.",
 };

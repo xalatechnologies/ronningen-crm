@@ -927,7 +927,7 @@ export function AssetsSection({
                     <TableCell
                       className={cn(
                         assetsTableCellClass,
-                        "assets-row-meta text-muted-foreground",
+                        "assets-row-meta",
                       )}
                     >
                       {a.propertyName ?? "—"}

@@ -353,7 +353,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
         </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            <div className="app-table overflow-x-auto">
               <table className="w-full min-w-[640px] text-left text-app-base">
                 <thead>
                   <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
@@ -398,10 +398,10 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
                             {partnerCategoryLabelNb(p.category)}
                           </span>
                         </td>
-                        <td className="customers-partners-row-meta px-6 py-5 text-muted-foreground md:px-8 md:py-6">
+                        <td className="customers-partners-row-meta px-6 py-5 md:px-8 md:py-6">
                           {p.phone ?? "—"}
                         </td>
-                        <td className="customers-partners-row-meta px-6 py-5 text-muted-foreground md:px-8 md:py-6">
+                        <td className="customers-partners-row-meta px-6 py-5 md:px-8 md:py-6">
                           {p.email ?? "—"}
                         </td>
                         <td className="px-6 py-5 text-right md:px-8 md:py-6">

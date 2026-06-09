@@ -1002,7 +1002,7 @@ export function FinanceSection({
                     <TableCell
                       className={cn(
                         financeTableCellClass,
-                        "finance-row-date tabular-nums text-foreground",
+                        "finance-row-date tabular-nums",
                       )}
                     >
                       {formatDisplayDate(r.transaction_date)}
@@ -1020,7 +1020,7 @@ export function FinanceSection({
                     <TableCell
                       className={cn(
                         financeTableCellClass,
-                        "finance-row-meta text-muted-foreground",
+                        "finance-row-meta",
                       )}
                     >
                       {r.propertyName ?? "—"}

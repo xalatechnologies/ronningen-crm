@@ -1174,6 +1174,12 @@
   .app-table table {
     font-size: inherit;
   }
+
+  /** Table body cells — one readable color app-wide (overrides muted meta copy). */
+  .app-table [data-slot="table-cell"],
+  .app-table td {
+    color: var(--rn-text-body);
+  }
 }
 
 /* Faktura utskrift / PDF: skjul app-shell og A4 */

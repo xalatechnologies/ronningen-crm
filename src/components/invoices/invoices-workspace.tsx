@@ -91,7 +91,7 @@ function DueAndWarnings({
           {formatMediumDate(due)}
         </div>
         {customDue ? (
-          <p className="invoices-row-caption mt-0.5 text-muted-foreground">
+          <p className="invoices-row-caption mt-0.5">
             Eget forfall
           </p>
         ) : null}
@@ -112,7 +112,7 @@ function DueAndWarnings({
             Forfall i dag
           </Badge>
         ) : (
-          <span className="invoices-row-meta leading-snug text-muted-foreground">
+          <span className="invoices-row-meta leading-snug">
             {relLabel}
           </span>
         )}
@@ -174,7 +174,7 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
         {statusLabel}
       </Badge>
       {row.paymentStatus === "partial" ? (
-        <span className="invoices-row-caption font-semibold text-muted-foreground">
+        <span className="invoices-row-caption font-semibold">
           {pct}% betalt
         </span>
       ) : null}
@@ -182,7 +182,7 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
         <span className="invoices-payment-major font-bold text-success">
           {formatNok(row.paidNok)}
         </span>
-        <span className="invoices-payment-slash text-muted-foreground">/</span>
+        <span className="invoices-payment-slash">/</span>
         <span className="invoices-payment-major font-semibold text-foreground">
           {formatNok(row.totalNok)}
         </span>
@@ -335,7 +335,7 @@ export function InvoicesWorkspace({
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="app-table overflow-x-auto">
           <table className="min-w-[920px] w-full border-collapse text-left">
             <thead>
               <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
@@ -382,20 +382,20 @@ export function InvoicesWorkspace({
                         {r.customerName}
                       </div>
                       {r.customerEmail ? (
-                        <div className="invoices-row-meta mt-0.5 truncate text-muted-foreground">
+                        <div className="invoices-row-meta mt-0.5 truncate">
                           {r.customerEmail}
                         </div>
                       ) : null}
-                      <div className="invoices-row-meta mt-2 text-muted-foreground lg:hidden">
+                      <div className="invoices-row-meta mt-2 lg:hidden">
                         <span className="font-medium text-foreground">
                           {r.eventType}
                         </span>
-                        <span className="text-muted-foreground"> · </span>
+                        <span> · </span>
                         <span className="tabular-nums">{r.eventDateLabel}</span>
                       </div>
                       <div className="invoices-rest-amount-mobile mt-2 text-destructive md:hidden">
                         {formatNok(r.remainingNok)}
-                        <div className="invoices-row-caption mt-0.5 font-normal text-muted-foreground">
+                        <div className="invoices-row-caption mt-0.5 font-normal">
                           å betale
                         </div>
                       </div>
@@ -411,16 +411,16 @@ export function InvoicesWorkspace({
                       <span className="invoices-row-pill inline-flex w-fit rounded-md border border-success/30 bg-emerald-50 px-2.5 py-1 font-bold text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-100">
                         {r.eventType}
                       </span>
-                      <div className="invoices-row-meta tabular-nums text-muted-foreground">
+                      <div className="invoices-row-meta tabular-nums">
                         {r.eventDateLabel}
                       </div>
                       {r.propertyName ? (
-                        <div className="invoices-row-caption font-medium text-muted-foreground">
+                        <div className="invoices-row-caption font-medium">
                           {r.propertyName}
                         </div>
                       ) : null}
                       {r.bookingReference ? (
-                        <div className="invoices-row-caption tabular-nums text-muted-foreground">
+                        <div className="invoices-row-caption tabular-nums">
                           Ref.&nbsp;{r.bookingReference}
                         </div>
                       ) : null}
@@ -442,7 +442,7 @@ export function InvoicesWorkspace({
                       <div className="invoices-rest-amount font-heading font-bold text-destructive">
                         {formatNok(r.remainingNok)}
                       </div>
-                      <p className="invoices-row-caption mt-1 text-muted-foreground">
+                      <p className="invoices-row-caption mt-1">
                         Faktura {formatNok(r.totalNok)}
                       </p>
                     </div>

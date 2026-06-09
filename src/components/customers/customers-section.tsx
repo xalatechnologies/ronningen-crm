@@ -302,7 +302,7 @@ export function CustomersSection({
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                <div className="app-table overflow-x-auto">
                   <table className="w-full min-w-[720px] text-left text-app-base">
                     <thead>
                       <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
@@ -350,19 +350,17 @@ export function CustomersSection({
                               {c.name}
                             </span>
                           </td>
-                          <td className="customers-row-meta px-6 py-5 text-muted-foreground md:px-8 md:py-6">
+                          <td className="customers-row-meta px-6 py-5 md:px-8 md:py-6">
                             {c.phone ?? "—"}
                           </td>
-                          <td className="customers-row-meta px-6 py-5 text-muted-foreground md:px-8 md:py-6">
+                          <td className="customers-row-meta px-6 py-5 md:px-8 md:py-6">
                             {c.email ?? "—"}
                           </td>
                           <td className="px-6 py-5 md:px-8 md:py-6">
                             <span
                               className={cn(
                                 "customers-booking-count-pill inline-flex items-center tabular-nums",
-                                st.count > 0
-                                  ? "text-success"
-                                  : "text-muted-foreground",
+                                st.count > 0 ? "text-success" : "text-rn-text-body",
                               )}
                             >
                               {st.count}

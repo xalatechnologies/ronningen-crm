@@ -476,7 +476,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="px-6 py-12 text-center text-base text-muted-foreground md:py-16"
+                  className="px-6 py-12 text-center text-base md:py-16"
                 >
                   Ingen kommende bookinger i vinduet.{" "}
                   <Link
@@ -498,7 +498,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                       <span className="text-base font-semibold text-foreground">
                         {row.dateLabel}
                       </span>
-                      <span className="text-sm text-muted-foreground md:text-base">
+                      <span className="text-sm md:text-base">
                         {row.timeLabel}
                       </span>
                     </div>
@@ -529,7 +529,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   <TableCell
                     className={cn(
                       tableCellClass,
-                      "whitespace-normal text-base text-muted-foreground",
+                      "whitespace-normal text-base",
                     )}
                   >
                     {row.venue}

@@ -436,10 +436,10 @@ export function InquiriesSection({
                     <TableCell className="px-6 py-4 font-medium text-rn-text-heading md:px-8 md:py-5">
                       {row.customerName}
                     </TableCell>
-                    <TableCell className="px-6 py-4 text-rn-text-body md:px-8 md:py-5">
+                    <TableCell className="px-6 py-4 md:px-8 md:py-5">
                       {row.propertyName ?? "—"}
                     </TableCell>
-                    <TableCell className="px-6 py-4 text-rn-text-body md:px-8 md:py-5 tabular-nums">
+                    <TableCell className="px-6 py-4 tabular-nums md:px-8 md:py-5">
                       {row.preferredEventDateIso
                         ? format(
                             new Date(`${row.preferredEventDateIso}T12:00:00`),
@@ -458,14 +458,14 @@ export function InquiriesSection({
                         {INQUIRY_STATUS_LABELS[row.status]}
                       </span>
                     </TableCell>
-                    <TableCell className="px-6 py-4 text-sm text-muted-foreground md:px-8 md:py-5 tabular-nums">
+                    <TableCell className="px-6 py-4 tabular-nums md:px-8 md:py-5">
                       {row.nextFollowUpAtIso
                         ? formatAppDateTime(row.nextFollowUpAtIso)
                         : "—"}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-right md:px-8 md:py-5">
                       <span className="inline-flex w-full items-center justify-end gap-2 tabular-nums">
-                        <span className="text-sm text-muted-foreground">
+                        <span>
                           {format(new Date(row.updatedAtIso), "d. MMM yyyy", {
                             locale: nb,
                           })}
