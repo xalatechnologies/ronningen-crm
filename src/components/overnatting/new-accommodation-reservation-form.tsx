@@ -491,7 +491,7 @@ export function NewAccommodationReservationForm({
               href="/app/overnatting"
               className={cn(
                 buttonVariants({ variant: "outline", size: "cta" }),
-                "inline-flex items-center justify-center",
+                "inline-flex items-center justify-center border-2 border-rn-border-strong font-heading font-bold",
               )}
             >
               Avbryt

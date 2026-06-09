@@ -20,6 +20,7 @@ import {
   type BookingInquiryFormStatus,
   type BookingInquiryStatus,
 } from "@/lib/validations";
+import { formatAppDateTime } from "@/lib/format-datetime";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -304,9 +305,7 @@ export function InquiryDetailSheet({
           </SheetTitle>
           <SheetDescription className="text-left text-base text-muted-foreground">
             Forespørsel · Oppdatert{" "}
-            {format(new Date(inquiry.updatedAtIso), "d. MMM yyyy HH:mm", {
-              locale: nb,
-            })}
+            {formatAppDateTime(inquiry.updatedAtIso)}
           </SheetDescription>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span
@@ -464,9 +463,7 @@ export function InquiryDetailSheet({
                           {a.body}
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {format(new Date(a.createdAtIso), "d. MMM yyyy HH:mm", {
-                            locale: nb,
-                          })}
+                          {formatAppDateTime(a.createdAtIso)}
                         </p>
                       </li>
                     ))

@@ -1,6 +1,7 @@
 "use client";
 
 import { DatePickerField } from "@/components/ui/date-picker-field";
+import { DateTimePickerField } from "@/components/ui/datetime-picker-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -358,12 +359,20 @@ export function InquiryFormBody({
           <Label className={labelClass} htmlFor={`${rid}-followup`}>
             Neste oppfølging (valgfritt)
           </Label>
-          <Input
-            id={`${rid}-followup`}
-            type="datetime-local"
-            disabled={disabled}
-            className={fieldClass}
-            {...register("nextFollowUpAt")}
+          <Controller
+            control={control}
+            name="nextFollowUpAt"
+            render={({ field }) => (
+              <DateTimePickerField
+                id={`${rid}-followup`}
+                variant="toolbar"
+                disabled={disabled}
+                className={cn(fieldClass, "shadow-sm")}
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                aria-invalid={Boolean(errors.nextFollowUpAt)}
+              />
+            )}
           />
           {errors.nextFollowUpAt ? (
             <p className="text-sm text-destructive">

@@ -5,11 +5,16 @@ import type {
   BookingStatus,
   BookingsQuickStats,
 } from "@/components/bookings/types";
-import { BookingsMonthCalendar } from "@/components/bookings/bookings-month-calendar";
+import {
+  BookingsMonthCalendar,
+  BookingsMonthCalendarToolbar,
+  useBookingsMonthCalendarNavigation,
+} from "@/components/bookings/bookings-month-calendar";
 import { BookingDetailSheet } from "@/components/bookings/booking-detail-sheet";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { DatePickerField } from "@/components/ui/date-picker-field";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +24,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
+import { BOOKING_PAYMENT_STATUS_LABELS } from "@/constants/booking-payment-status";
 import { cn } from "@/lib/utils";
 import {
   ArrowDownRight,
@@ -27,14 +35,16 @@ import {
   ChevronLeft,
   ChevronRight,
   List,
+  Phone,
   Plus,
+  RotateCcw,
   Search,
   TrendingUp,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { useSupabase } from "@/providers/supabase-provider";
@@ -44,6 +54,47 @@ import { eachBookingYmdInRange } from "@/lib/booking-period";
 
 const bookingsTableHeadClass =
   "bookings-list-table-head font-semibold tracking-wider text-rn-text-column uppercase";
+
+const filterEyebrowClass =
+  "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
+
+type BookingStatusFilter = "all" | "confirmed" | "pending" | "cancelled";
+type BookingPaymentFilter = "" | "unpaid" | "partial" | "paid";
+type BookingAudienceFilter = "" | "Privat" | "Bedrift";
+
+function matchesBookingSearch(row: BookingListRow, query: string): boolean {
+  if (!query) return true;
+  const blob = [
+    row.customer,
+    row.customerPhone ?? "",
+    row.customerEmail ?? "",
+    row.bookingReference ?? "",
+    row.eventType,
+    row.festType ?? "",
+    row.notes ?? "",
+  ]
+    .join(" ")
+    .toLowerCase();
+  return blob.includes(query);
+}
+
+function matchesBookingDateRange(
+  row: BookingListRow,
+  fromYmd: string,
+  toYmd: string,
+): boolean {
+  const start = row.eventDateIso.slice(0, 10);
+  const end = row.eventEndDateIso?.slice(0, 10) ?? start;
+
+  if (fromYmd && toYmd) {
+    const from = fromYmd <= toYmd ? fromYmd : toYmd;
+    const to = fromYmd <= toYmd ? toYmd : fromYmd;
+    return start <= to && end >= from;
+  }
+  if (fromYmd) return end >= fromYmd;
+  if (toYmd) return start <= toYmd;
+  return true;
+}
 
 function formatNok(n: number) {
   return `${new Intl.NumberFormat("nb-NO").format(Math.round(n))} NOK`;
@@ -146,97 +197,253 @@ function BookingsFiltersSection({
   setQuery,
   filter,
   setFilter,
+  paymentFilter,
+  setPaymentFilter,
+  audienceFilter,
+  setAudienceFilter,
+  dateFrom,
+  setDateFrom,
+  dateTo,
+  setDateTo,
+  onResetFilters,
   filterCounts,
+  secondaryRowEnd,
 }: {
   query: string;
   setQuery: (q: string) => void;
-  filter: "all" | "confirmed" | "pending" | "cancelled";
-  setFilter: (f: "all" | "confirmed" | "pending" | "cancelled") => void;
+  filter: BookingStatusFilter;
+  setFilter: (f: BookingStatusFilter) => void;
+  paymentFilter: BookingPaymentFilter;
+  setPaymentFilter: (f: BookingPaymentFilter) => void;
+  audienceFilter: BookingAudienceFilter;
+  setAudienceFilter: (f: BookingAudienceFilter) => void;
+  dateFrom: string;
+  setDateFrom: (value: string) => void;
+  dateTo: string;
+  setDateTo: (value: string) => void;
+  onResetFilters: () => void;
   filterCounts: {
     all: number;
     confirmed: number;
     pending: number;
     cancelled: number;
   };
+  secondaryRowEnd?: ReactNode;
 }) {
+  const hasActiveFilters =
+    query.trim() !== "" ||
+    filter !== "all" ||
+    paymentFilter !== "" ||
+    audienceFilter !== "" ||
+    dateFrom !== "" ||
+    dateTo !== "";
+
   return (
     <section
       className="bookings-list-filters border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6"
-      aria-label="Søk og filtrer bookinger"
+      aria-label="Søk og filtrer reservasjoner"
     >
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:gap-4">
-        <div className="relative min-w-0 flex-1">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
-            aria-hidden
-          />
-          <Input
-            id="bookings-search"
-            aria-label="Søk blant bookinger etter kunde eller arrangementstype"
-            className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-            placeholder="Kunde eller arrangementstype…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            autoComplete="off"
-          />
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:gap-4">
+          <div className="relative min-w-0 flex-1">
+            <Label htmlFor="bookings-search" className={filterEyebrowClass}>
+              Søk
+            </Label>
+            <Search
+              className="pointer-events-none absolute top-[calc(50%+0.625rem)] left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
+              aria-hidden
+            />
+            <Input
+              id="bookings-search"
+              aria-label="Søk blant reservasjoner"
+              className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+              placeholder="Kunde, telefon, referanse eller type …"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="flex min-w-0 flex-col lg:flex-1 lg:items-end">
+            <p className={cn(filterEyebrowClass, "w-full lg:text-right")}>Status</p>
+            <div
+              className="grid min-w-0 w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:flex lg:flex-row lg:flex-wrap lg:items-stretch lg:justify-end lg:gap-2.5 xl:w-auto xl:flex-nowrap"
+              role="group"
+              aria-label="Filtrer etter status"
+            >
+              {(
+                [
+                  ["all", "Alle", filterCounts.all, null],
+                  ["confirmed", "Bekreftet", filterCounts.confirmed, "emerald"],
+                  ["pending", "Avventer", filterCounts.pending, "amber"],
+                  ["cancelled", "Avbestilt", filterCounts.cancelled, "rose"],
+                ] as const
+              ).map(([key, label, count, tone]) => {
+                const active = filter === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setFilter(key)}
+                    className={cn(
+                      "flex min-h-12 w-full items-center justify-between gap-2 rounded-md border-2 px-3 py-3 text-left transition-all sm:gap-3 sm:px-4 md:min-h-[3.25rem] md:rounded-md md:px-5 md:py-3.5 lg:min-h-14 lg:w-auto lg:min-w-[7rem] lg:flex-1 lg:max-w-[10.5rem] xl:min-w-[7.5rem]",
+                      active
+                        ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
+                        : tone === "emerald"
+                          ? "border-emerald-400/90 bg-white text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50"
+                          : tone === "amber"
+                            ? "border-amber-400/90 bg-white text-amber-950 hover:border-amber-500 hover:bg-amber-50"
+                            : tone === "rose"
+                              ? "border-red-400/90 bg-white text-red-950 hover:border-red-500 hover:bg-red-50"
+                              : "border-rn-border-strong bg-white text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "font-heading text-app-base font-semibold",
+                        active ? "!text-white" : undefined,
+                      )}
+                    >
+                      {label}
+                    </span>
+                    <span
+                      className={cn(
+                        "bookings-list-filter-count inline-flex min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-app-sm font-bold tabular-nums md:text-app-base",
+                        active
+                          ? "border-white/30 bg-white/20 !text-white"
+                          : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
+                      )}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div
-          className="grid min-w-0 grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:flex lg:flex-1 lg:flex-row lg:flex-wrap lg:items-stretch lg:justify-end lg:gap-2.5 xl:flex-nowrap"
-          role="group"
-          aria-label="Filtrer bookinger etter status"
+          className={cn(
+            "flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4",
+            secondaryRowEnd && "xl:flex-nowrap xl:gap-3",
+          )}
         >
-          {(
-            [
-              ["all", "Alle", filterCounts.all, null],
-              ["confirmed", "Bekreftet", filterCounts.confirmed, "emerald"],
-              ["pending", "Avventer", filterCounts.pending, "amber"],
-              ["cancelled", "Avbestilt", filterCounts.cancelled, "rose"],
-            ] as const
-          ).map(([key, label, count, tone]) => {
-            const active = filter === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setFilter(key)}
-                className={cn(
-                  "flex min-h-12 w-full items-center justify-between gap-2 rounded-md border-2 px-3 py-3 text-left transition-all sm:gap-3 sm:px-4 md:min-h-[3.25rem] md:rounded-md md:px-5 md:py-3.5 lg:min-h-14 lg:w-auto lg:min-w-[7rem] lg:flex-1 lg:max-w-[10.5rem] xl:min-w-[7.5rem]",
-                  active
-                    ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
-                    : tone === "emerald"
-                      ? "border-emerald-400/90 bg-white text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50"
-                      : tone === "amber"
-                        ? "border-amber-400/90 bg-white text-amber-950 hover:border-amber-500 hover:bg-amber-50"
-                        : tone === "rose"
-                          ? "border-red-400/90 bg-white text-red-950 hover:border-red-500 hover:bg-red-50"
-                          : "border-rn-border-strong bg-white text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
-                )}
-              >
-                <span
-                  className={cn(
-                    "font-heading text-app-base font-semibold",
-                    active ? "!text-white" : undefined,
-                  )}
-                >
-                  {label}
-                </span>
-                <span
-                  className={cn(
-                    "bookings-list-filter-count inline-flex min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-app-sm font-bold tabular-nums md:text-app-base",
-                    active
-                      ? "border-white/30 bg-white/20 !text-white"
-                      : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
-                  )}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+          <div className="w-full shrink-0 sm:w-44 md:w-48">
+            <Label htmlFor="bookings-date-from" className={filterEyebrowClass}>
+              Fra dato
+            </Label>
+            <DatePickerField
+              id="bookings-date-from"
+              value={dateFrom}
+              onChange={setDateFrom}
+              maxYmd={dateTo || undefined}
+              variant="toolbar"
+              className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+            />
+          </div>
+          <div className="w-full shrink-0 sm:w-44 md:w-48">
+            <Label htmlFor="bookings-date-to" className={filterEyebrowClass}>
+              Til dato
+            </Label>
+            <DatePickerField
+              id="bookings-date-to"
+              value={dateTo}
+              onChange={setDateTo}
+              minYmd={dateFrom || undefined}
+              variant="toolbar"
+              className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+            />
+          </div>
+          <div className="w-full shrink-0 sm:w-52 md:w-56">
+            <Label htmlFor="bookings-payment-filter" className={filterEyebrowClass}>
+              Betaling
+            </Label>
+            <NativeSelect
+              id="bookings-payment-filter"
+              value={paymentFilter}
+              onChange={(e) =>
+                setPaymentFilter(e.target.value as BookingPaymentFilter)
+              }
+              aria-label="Filtrer etter betaling"
+              className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+            >
+              <option value="">Alle betalinger</option>
+              <option value="unpaid">{BOOKING_PAYMENT_STATUS_LABELS.unpaid}</option>
+              <option value="partial">{BOOKING_PAYMENT_STATUS_LABELS.partial}</option>
+              <option value="paid">{BOOKING_PAYMENT_STATUS_LABELS.paid}</option>
+            </NativeSelect>
+          </div>
+          <div className="w-full shrink-0 sm:w-52 md:w-56">
+            <Label htmlFor="bookings-audience-filter" className={filterEyebrowClass}>
+              Arrangementstype
+            </Label>
+            <NativeSelect
+              id="bookings-audience-filter"
+              value={audienceFilter}
+              onChange={(e) =>
+                setAudienceFilter(e.target.value as BookingAudienceFilter)
+              }
+              aria-label="Filtrer etter arrangementstype"
+              className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+            >
+              <option value="">Alle typer</option>
+              <option value="Privat">Privat</option>
+              <option value="Bedrift">Bedrift</option>
+            </NativeSelect>
+          </div>
+          <div className="flex w-full shrink-0 sm:w-auto sm:self-end">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!hasActiveFilters}
+              className="h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-sm font-semibold sm:h-12 sm:w-auto sm:px-5 sm:text-base"
+              onClick={onResetFilters}
+            >
+              <RotateCcw className="size-4 shrink-0" aria-hidden />
+              Nullstill filter
+            </Button>
+          </div>
+          {secondaryRowEnd ? (
+            <div className="flex w-full shrink-0 flex-wrap items-end justify-end gap-2 border-t border-rn-border-strong/35 pt-3 xl:ml-auto xl:w-auto xl:border-t-0 xl:border-l xl:pl-4 xl:pt-0">
+              {secondaryRowEnd}
+            </div>
+          ) : null}
         </div>
       </div>
     </section>
+  );
+}
+
+type BookingsFiltersSectionProps = Parameters<typeof BookingsFiltersSection>[0];
+
+function BookingsCalendarPanel({
+  filtered,
+  totalBookingsCount,
+  onSelectBooking,
+  filters,
+}: {
+  filtered: BookingListRow[];
+  totalBookingsCount: number;
+  onSelectBooking: (id: string) => void;
+  filters: Omit<BookingsFiltersSectionProps, "secondaryRowEnd">;
+}) {
+  const navigation = useBookingsMonthCalendarNavigation(filtered);
+
+  return (
+    <>
+      <BookingsFiltersSection
+        {...filters}
+        secondaryRowEnd={<BookingsMonthCalendarToolbar {...navigation} />}
+      />
+      <BookingsMonthCalendar
+        rows={filtered}
+        totalBookingsCount={totalBookingsCount}
+        onSelectBooking={onSelectBooking}
+        navigation={navigation}
+        hideToolbar
+      />
+    </>
   );
 }
 
@@ -253,7 +460,7 @@ function FindBookingsCardHeader({
         <AppPageHeader
           className="mb-0"
           surface="default"
-          title="Bookinger"
+          title="Reservasjoner"
           actions={
           <div className="flex flex-wrap items-center gap-3 lg:shrink-0">
             <div
@@ -299,7 +506,7 @@ function FindBookingsCardHeader({
               className={cn(buttonVariants({ variant: "success", size: "cta" }))}
             >
               <Plus className="size-5" aria-hidden />
-              Ny booking
+              Ny reservasjon
             </Link>
           </div>
         }
@@ -325,9 +532,21 @@ export function BookingsList({
   const router = useRouter();
   const [view, setView] = useState<"list" | "calendar">("list");
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<
-    "all" | "confirmed" | "pending" | "cancelled"
-  >("all");
+  const [filter, setFilter] = useState<BookingStatusFilter>("all");
+  const [paymentFilter, setPaymentFilter] = useState<BookingPaymentFilter>("");
+  const [audienceFilter, setAudienceFilter] = useState<BookingAudienceFilter>("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  function resetFilters() {
+    setQuery("");
+    setFilter("all");
+    setPaymentFilter("");
+    setAudienceFilter("");
+    setDateFrom("");
+    setDateTo("");
+  }
+
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
     null,
@@ -414,12 +633,7 @@ export function BookingsList({
     let rows = bookings;
     const q = query.trim().toLowerCase();
     if (q) {
-      rows = rows.filter(
-        (r) =>
-          r.customer.toLowerCase().includes(q) ||
-          r.eventType.toLowerCase().includes(q) ||
-          (r.festType ?? "").toLowerCase().includes(q),
-      );
+      rows = rows.filter((r) => matchesBookingSearch(r, q));
     }
     if (filter === "confirmed") {
       rows = rows.filter((r) => r.status === "confirmed");
@@ -428,8 +642,17 @@ export function BookingsList({
     } else if (filter === "cancelled") {
       rows = rows.filter((r) => r.status === "cancelled");
     }
+    if (paymentFilter) {
+      rows = rows.filter((r) => r.paymentStatus === paymentFilter);
+    }
+    if (audienceFilter) {
+      rows = rows.filter((r) => r.eventTypeForm === audienceFilter);
+    }
+    if (dateFrom || dateTo) {
+      rows = rows.filter((r) => matchesBookingDateRange(r, dateFrom, dateTo));
+    }
     return rows;
-  }, [bookings, query, filter]);
+  }, [bookings, query, filter, paymentFilter, audienceFilter, dateFrom, dateTo]);
 
   const trendPositive =
     quickStats.monthOverMonthPct != null &&
@@ -449,17 +672,26 @@ export function BookingsList({
       {view === "calendar" ? (
         <div className={cn("bookings-list-workspace overflow-hidden", RN_CARD_SHELL)}>
           <FindBookingsCardHeader view={view} setView={setView} />
-          <BookingsFiltersSection
-            query={query}
-            setQuery={setQuery}
-            filter={filter}
-            setFilter={setFilter}
-            filterCounts={filterCounts}
-          />
-          <BookingsMonthCalendar
-            rows={filtered}
+          <BookingsCalendarPanel
+            filtered={filtered}
             totalBookingsCount={bookings.length}
             onSelectBooking={setSelectedBookingId}
+            filters={{
+              query,
+              setQuery,
+              filter,
+              setFilter,
+              paymentFilter,
+              setPaymentFilter,
+              audienceFilter,
+              setAudienceFilter,
+              dateFrom,
+              setDateFrom,
+              dateTo,
+              setDateTo,
+              onResetFilters: resetFilters,
+              filterCounts,
+            }}
           />
         </div>
       ) : null}
@@ -474,6 +706,15 @@ export function BookingsList({
               setQuery={setQuery}
               filter={filter}
               setFilter={setFilter}
+              paymentFilter={paymentFilter}
+              setPaymentFilter={setPaymentFilter}
+              audienceFilter={audienceFilter}
+              setAudienceFilter={setAudienceFilter}
+              dateFrom={dateFrom}
+              setDateFrom={setDateFrom}
+              dateTo={dateTo}
+              setDateTo={setDateTo}
+              onResetFilters={resetFilters}
               filterCounts={filterCounts}
             />
 
@@ -526,7 +767,7 @@ export function BookingsList({
                   </p>
                   <p className="bookings-list-empty-body mx-auto max-w-lg text-muted-foreground">
                     {bookings.length === 0
-                      ? "Opprett en ny booking for å se den her. Du kan også importere eller legge til kunder fra Kunder."
+                      ? "Opprett en ny reservasjon for å se den her. Du kan også importere eller legge til kunder fra Kunder."
                       : "Juster søket eller bytt filter (Alle, Bekreftet, …). Nullstill ved å velge «Alle» og tømme søkefeltet."}
                   </p>
                 </div>
@@ -540,7 +781,7 @@ export function BookingsList({
                       "cursor-pointer border-0 outline-none hover:bg-rn-surface-row-hover focus-visible:bg-rn-surface-row-hover focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
                       row.dimmed && "opacity-60",
                     )}
-                    aria-label={`Åpne bookingdetaljer for ${row.customer}${row.festType?.trim() ? `, ${row.festType.trim()}` : ""}`}
+                    aria-label={`Åpne bookingdetaljer for ${row.customer}${row.customerPhone?.trim() ? `, ${row.customerPhone.trim()}` : ""}${row.festType?.trim() ? `, ${row.festType.trim()}` : ""}`}
                     onClick={() => setSelectedBookingId(row.id)}
                   >
                     <div className="col-span-12 flex items-center gap-4 sm:col-span-4">
@@ -556,6 +797,17 @@ export function BookingsList({
                         <h4 className="bookings-list-row-title font-heading font-semibold text-foreground">
                           {row.customer}
                         </h4>
+                        {row.customerPhone?.trim() ? (
+                          <p className="bookings-list-row-meta mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Phone
+                              className="size-3.5 shrink-0 text-rn-text-slate"
+                              aria-hidden
+                            />
+                            <span className="tabular-nums">
+                              {row.customerPhone.trim()}
+                            </span>
+                          </p>
+                        ) : null}
                         <div className="bookings-list-row-meta mt-1 flex flex-wrap items-center gap-2 text-muted-foreground">
                           <span>{row.date}</span>
                           <span
@@ -830,7 +1082,8 @@ export function BookingsList({
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 w-full rounded-md border-2 border-rn-border-strong sm:w-auto"
+                  size="cta"
+                  className="w-full border-2 border-rn-border-strong sm:w-auto"
                   onClick={() => setPendingStatusConfirm(null)}
                 >
                   Avbryt
@@ -871,7 +1124,7 @@ export function BookingsList({
       <Link
         href="/app/bookings/new"
         className="fixed bottom-8 right-8 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-2xl transition-transform active:scale-95 md:hidden"
-        aria-label="Ny booking"
+        aria-label="Ny reservasjon"
       >
         <Plus className="size-7" />
       </Link>

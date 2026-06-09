@@ -260,7 +260,8 @@ export function CustomerDrawerBody({
                 <Button
                   type="button"
                   variant="outline"
-                  className="flex-1 rounded-md"
+                  size="cta"
+                  className="flex-1 border-2 border-rn-border-strong font-heading font-bold"
                   onClick={() => {
                     setEditingProfile(false);
                     editForm.reset({
@@ -416,7 +417,7 @@ export function CustomerDrawerBody({
             "w-full",
           )}
         >
-          Ny booking
+          Ny reservasjon
         </Link>
         <Button
           type="button"

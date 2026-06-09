@@ -33,9 +33,9 @@ export function isProtectedPath(pathname: string): boolean {
 /** Sidebar + matching app routes */
 export const SIDEBAR_ROUTES: readonly SidebarNavItem[] = [
   { title: "Oversikt", href: "/app/dashboard", segment: "dashboard" },
-  { title: "Bookinger", href: "/app/bookings", segment: "bookings" },
-  { title: "Overnatting", href: "/app/overnatting", segment: "overnatting" },
   { title: "Forespørsler", href: "/app/inquiries", segment: "inquiries" },
+  { title: "Reservasjoner", href: "/app/bookings", segment: "bookings" },
+  { title: "Overnatting", href: "/app/overnatting", segment: "overnatting" },
   { title: "Partnere", href: "/app/customers", segment: "customers" },
   { title: "Priser", href: "/app/pricing", segment: "pricing" },
   { title: "Finans", href: "/app/finance", segment: "finance" },

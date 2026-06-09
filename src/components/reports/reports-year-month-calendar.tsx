@@ -17,9 +17,10 @@ import { REPORTS_CALENDAR_MIN_YEAR } from "./types";
 const MONTH_ALL = "alle";
 
 const selectTriggerBaseClass = cn(
-  "reports-filter-trigger !h-12 !min-h-12 rounded-md border-2 border-rn-border-strong bg-rn-surface-segment px-3 py-2 font-heading font-semibold leading-snug shadow-rn-segment-inset md:px-4",
+  "reports-filter-trigger rounded-md border-2 border-rn-border-strong bg-rn-surface-segment px-3 font-heading font-semibold leading-snug shadow-rn-segment-inset sm:px-4 md:px-5",
+  "data-[size=default]:h-12 data-[size=default]:min-h-12 md:data-[size=default]:h-14 md:data-[size=default]:min-h-14 md:py-3.5",
   "focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 data-popup-open:border-rn-accent-border",
-  "[&_svg]:size-4",
+  "[&_svg:not([class*='size-'])]:size-5",
 );
 
 const yearSelectTriggerClass = cn(
@@ -118,7 +119,7 @@ export function ReportsYearMonthCalendar({
   );
 
   return (
-    <div className="flex w-full flex-row flex-wrap items-center justify-end gap-2 py-0.5 sm:ml-auto sm:w-auto sm:shrink-0 sm:py-1 md:gap-3">
+    <div className="flex w-full flex-row flex-wrap items-center justify-end gap-2 sm:ml-auto sm:w-auto sm:shrink-0 md:gap-3">
       <Select value={String(reportYear)} onValueChange={onYearChange}>
         <SelectTrigger
           aria-label="Velg år for rapport"

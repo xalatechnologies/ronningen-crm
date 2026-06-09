@@ -726,7 +726,7 @@ export function AssetsSection({
 
         <div className="min-w-0">
           <div className="border-t-2 border-b-2 border-rn-border-strong/50 bg-card px-4 py-3 sm:px-6 md:px-8 md:py-4">
-          <div className="flex min-h-11 flex-nowrap items-center gap-2 overflow-x-auto sm:min-h-12 sm:gap-3 md:gap-4">
+          <div className="flex min-h-12 flex-nowrap items-center gap-2 overflow-x-auto sm:gap-3 md:min-h-14 md:gap-4">
             <div className="flex shrink-0 items-center gap-2 pr-1">
               <h2 className="assets-inventory-title font-heading font-bold tracking-tight text-rn-text-heading whitespace-nowrap">
                 Inventar
@@ -749,7 +749,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="assets-toolbar-btn h-11 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong px-3 font-semibold sm:h-12 sm:px-4"
+                className="assets-toolbar-btn h-12 min-h-12 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong px-3 font-semibold sm:px-4 md:h-14 md:min-h-14 md:px-5"
                 disabled={filtered.length === 0}
                 onClick={() => downloadAssetsCsv(filtered)}
                 aria-label="Last ned synlige rader som CSV"
@@ -761,7 +761,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="assets-toolbar-btn h-11 shrink-0 rounded-md border-2 border-rn-border-strong px-4 font-semibold sm:h-12"
+                className="assets-toolbar-btn h-12 min-h-12 shrink-0 rounded-md border-2 border-rn-border-strong px-4 font-semibold md:h-14 md:min-h-14 md:px-5"
                 disabled={!hasActiveFilters}
                 title={
                   hasActiveFilters
@@ -776,7 +776,7 @@ export function AssetsSection({
 
             <div className="relative min-w-[min(100%,12rem)] flex-1 basis-48">
               <Search
-                className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground sm:left-4"
+                className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground md:left-5"
                 aria-hidden
               />
               <Input
@@ -787,14 +787,14 @@ export function AssetsSection({
                 }}
                 placeholder="Søk …"
                 title="Søk i navn, lokale, tilstand eller forsikring"
-                className="assets-search-input h-11 w-full min-w-[10rem] rounded-md border-2 border-rn-border-strong bg-background pl-11 sm:h-12 sm:pl-12 focus-visible:border-success focus-visible:ring-success/25"
+                className="assets-search-input h-12 min-h-12 w-full min-w-[10rem] rounded-md border-2 border-rn-border-strong bg-background pl-12 focus-visible:border-success focus-visible:ring-success/25 md:h-14 md:min-h-14 md:pl-14"
                 aria-label="Søk i inventar"
               />
             </div>
 
             <div className="relative w-40 shrink-0 sm:w-48">
               <Building2
-                className="pointer-events-none absolute top-1/2 left-3.5 z-10 size-5 -translate-y-1/2 text-muted-foreground sm:left-4"
+                className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground md:left-5"
                 aria-hidden
               />
               <NativeSelect
@@ -804,7 +804,7 @@ export function AssetsSection({
                   setPage(1);
                 }}
                 aria-label="Filtrer etter lokale"
-                className="rounded-md py-0 pl-11 sm:pl-12"
+                className="assets-filter-select h-12 min-h-12 rounded-md py-0 pl-12 md:h-14 md:min-h-14 md:pl-14"
               >
                 <option value="">Alle lokaler</option>
                 {properties.map((p) => (
@@ -817,7 +817,7 @@ export function AssetsSection({
 
             <div className="relative w-36 shrink-0 sm:w-44">
               <Wrench
-                className="pointer-events-none absolute top-1/2 left-3.5 z-10 size-5 -translate-y-1/2 text-muted-foreground sm:left-4"
+                className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground md:left-5"
                 aria-hidden
               />
               <NativeSelect
@@ -827,7 +827,7 @@ export function AssetsSection({
                   setPage(1);
                 }}
                 aria-label="Filtrer etter tilstand"
-                className="rounded-md py-0 pl-11 sm:pl-12"
+                className="assets-filter-select h-12 min-h-12 rounded-md py-0 pl-12 md:h-14 md:min-h-14 md:pl-14"
               >
                 {STATUS_QUICK_FILTERS.map((opt) => (
                   <option key={opt.id} value={opt.id}>
@@ -1034,7 +1034,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="assets-toolbar-btn h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 font-semibold"
+                className="assets-toolbar-btn h-12 min-h-12 gap-1 rounded-md border-2 border-rn-border-strong px-4 font-semibold md:h-14 md:min-h-14 md:px-5"
                 disabled={currentPage <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
@@ -1047,7 +1047,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="assets-toolbar-btn h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 font-semibold"
+                className="assets-toolbar-btn h-12 min-h-12 gap-1 rounded-md border-2 border-rn-border-strong px-4 font-semibold md:h-14 md:min-h-14 md:px-5"
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >

@@ -63,7 +63,7 @@ export function AppSidebar({ className }: { className?: string }) {
         </div>
       </div>
       <nav
-        className="flex min-h-0 flex-1 flex-col gap-[length:var(--spacing-app-gap)] px-[length:calc(var(--app-card-padding)*0.35)] pb-[length:var(--app-card-padding)] pt-0 md:gap-[length:var(--spacing-app-gap)] md:px-[length:calc(var(--app-card-padding)*0.45)]"
+        className="flex min-h-0 flex-1 flex-col gap-[length:var(--spacing-app-gap)] overflow-y-auto px-[length:calc(var(--app-card-padding)*0.35)] pt-0 md:gap-[length:var(--spacing-app-gap)] md:px-[length:calc(var(--app-card-padding)*0.45)]"
         aria-label="Hovedmeny"
       >
         {mainNavigation.map((item) => {
@@ -97,6 +97,13 @@ export function AppSidebar({ className }: { className?: string }) {
           );
         })}
       </nav>
+      <footer
+        className="shrink-0 border-t border-rn-border-strong/50 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)] md:py-5"
+      >
+        <p className="text-app-xs leading-snug text-muted-foreground">
+          © {new Date().getFullYear()} {APP_NAME}
+        </p>
+      </footer>
     </aside>
   );
 }

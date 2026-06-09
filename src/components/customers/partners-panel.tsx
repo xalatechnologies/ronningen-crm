@@ -550,7 +550,8 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 w-full rounded-md border-2 border-rn-border-strong sm:w-auto"
+                  size="cta"
+                  className="w-full border-2 border-rn-border-strong sm:w-auto"
                   onClick={() => setPartnerDeleteTarget(null)}
                 >
                   Avbryt

@@ -868,8 +868,9 @@ export function BookingDetailSheet({
               <Button
                 type="button"
                 variant="outline"
+                size="cta"
                 disabled={busy}
-                className="h-11 w-full rounded-md border-2 border-red-200 bg-red-50/80 font-semibold text-red-900 hover:border-red-300 hover:bg-red-100 sm:flex-1"
+                className="w-full border-2 border-destructive/40 font-heading font-bold text-destructive hover:bg-destructive/10 sm:flex-1"
                 onClick={() =>
                   onSetStatus(bookingRow.id, "cancelled", {
                     confirmMessage:
@@ -885,8 +886,9 @@ export function BookingDetailSheet({
               <Button
                 type="button"
                 variant="outline"
+                size="cta"
                 disabled={busy}
-                className="h-11 w-full rounded-md border-2 border-rn-border-strong font-semibold sm:flex-1"
+                className="w-full border-2 border-rn-border-strong font-heading font-bold sm:flex-1"
                 onClick={() =>
                   onSetStatus(bookingRow.id, "pending", {
                     confirmMessage:
@@ -901,8 +903,9 @@ export function BookingDetailSheet({
               <Button
                 type="button"
                 variant="outline"
+                size="cta"
                 disabled={busy}
-                className="h-11 w-full rounded-md border-2 border-destructive/40 text-base font-semibold text-destructive hover:bg-destructive/10 sm:w-full"
+                className="w-full border-2 border-destructive/40 font-heading font-bold text-destructive hover:bg-destructive/10 sm:w-full"
                 onClick={() => setDeleteDialogOpen(true)}
               >
                 <Trash2 className="mr-2 size-4 shrink-0" aria-hidden />
@@ -937,7 +940,8 @@ export function BookingDetailSheet({
             <Button
               type="button"
               variant="outline"
-              className="h-11 w-full rounded-md border-2 border-rn-border-strong sm:w-auto"
+              size="cta"
+              className="w-full border-2 border-rn-border-strong sm:w-auto"
               disabled={deleteBusy}
               onClick={() => setDeleteDialogOpen(false)}
             >

@@ -552,7 +552,8 @@ function TransactionFormInner({
           <Button
             type="button"
             variant="outline"
-            className="h-12 w-full rounded-md border-2 border-rn-border-strong px-6 text-base font-semibold sm:w-auto"
+            size="cta"
+            className="w-full border-2 border-rn-border-strong sm:w-auto"
             onClick={onClose}
           >
             Avbryt
@@ -737,7 +738,7 @@ export function FinanceSection({
                       setPage(1);
                     }}
                     aria-label="Filtrer transaksjoner etter lokale"
-                    className="bg-card"
+                    className="finance-filter-control h-12 min-h-12 bg-card md:h-14 md:min-h-14"
                   >
                     <option value="">Alle lokaler</option>
                     {properties.map((p) => (
@@ -758,8 +759,9 @@ export function FinanceSection({
                     id="finance-filter-from"
                     value={range.from}
                     onChange={setDateFrom}
+                    maxYmd={range.to || undefined}
                     variant="toolbar"
-                    className="finance-date-input h-12"
+                    className="finance-date-input h-12 min-h-12 md:h-14 md:min-h-14"
                   />
                 </div>
                 <div className="min-w-[160px] flex-1 space-y-2">
@@ -773,14 +775,15 @@ export function FinanceSection({
                     id="finance-filter-to"
                     value={range.to}
                     onChange={setDateTo}
+                    minYmd={range.from || undefined}
                     variant="toolbar"
-                    className="finance-date-input h-12"
+                    className="finance-date-input h-12 min-h-12 md:h-14 md:min-h-14"
                   />
                 </div>
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-12 gap-2 rounded-md border-2 border-rn-border-strong px-5 text-base font-semibold"
+                  className="h-12 min-h-12 gap-2 rounded-md border-2 border-rn-border-strong px-5 text-base font-semibold md:h-14 md:min-h-14"
                   onClick={() => {
                     setRange(defaultMonthRange());
                     setPropertyId("");
@@ -1198,7 +1201,8 @@ export function FinanceSection({
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 w-full rounded-md border-2 border-rn-border-strong sm:w-auto"
+                  size="cta"
+                  className="w-full border-2 border-rn-border-strong sm:w-auto"
                   disabled={deleteBusy}
                   onClick={() => setDeleteTarget(null)}
                 >

@@ -6,9 +6,21 @@ import type { InquiryListRow } from "@/components/inquiries/types";
 import { INQUIRY_STATUS_LABELS } from "@/components/inquiries/types";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { DatePickerField } from "@/components/ui/date-picker-field";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
 import {
   Table,
   TableBody,
@@ -17,23 +29,67 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatAppDateTime } from "@/lib/format-datetime";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
-  BOOKING_INQUIRY_STATUSES,
   type BookingInquiryStatus,
 } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { format, isBefore } from "date-fns";
 import { nb } from "date-fns/locale";
-import { Inbox, Plus, Search, ChevronRight, Calendar } from "lucide-react";
+import { Calendar, ChevronDown, ChevronRight, Inbox, ListFilter, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
 const tableHeadClass =
   "font-semibold tracking-wider text-rn-text-column uppercase text-xs md:text-sm";
 
-const filterEyebrowClass =
-  "mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground";
+type InquiryStatusFilter = "all" | BookingInquiryStatus;
+
+function matchesInquirySearch(row: InquiryListRow, query: string): boolean {
+  if (!query.trim()) return true;
+  const q = query.trim().toLowerCase();
+  const blob = [
+    row.customerName,
+    row.customerPhone ?? "",
+    row.customerEmail ?? "",
+    row.propertyName ?? "",
+    row.festType ?? "",
+    row.eventType,
+    row.internalNotes ?? "",
+  ]
+    .join(" ")
+    .toLowerCase();
+  return blob.includes(q);
+}
+
+function matchesInquiryPreferredDateRange(
+  row: InquiryListRow,
+  fromYmd: string,
+  toYmd: string,
+): boolean {
+  if (!fromYmd && !toYmd) return true;
+  const start = row.preferredEventDateIso;
+  if (!start) return false;
+  const end = row.preferredEventEndDateIso?.slice(0, 10) ?? start;
+
+  if (fromYmd && toYmd) {
+    const from = fromYmd <= toYmd ? fromYmd : toYmd;
+    const to = fromYmd <= toYmd ? toYmd : fromYmd;
+    return start <= to && end >= from;
+  }
+  if (fromYmd) return end >= fromYmd;
+  if (toYmd) return start <= toYmd;
+  return true;
+}
+
+function isOverdueFollowUp(row: InquiryListRow, now = new Date()): boolean {
+  if (row.status === "converted" || row.convertedBookingId) return false;
+  if (!row.nextFollowUpAtIso) return false;
+  const d = new Date(row.nextFollowUpAtIso);
+  if (Number.isNaN(d.getTime())) return false;
+  return !isBefore(now, d);
+}
 
 function statusBadgeClass(status: BookingInquiryStatus): string {
   if (status === "converted")
@@ -58,40 +114,71 @@ export function InquiriesSection({
   loadError,
 }: InquiriesSectionProps) {
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"" | BookingInquiryStatus>(
-    "",
-  );
+  const [statusFilter, setStatusFilter] = useState<InquiryStatusFilter>("all");
   const [dueOnly, setDueOnly] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [selected, setSelected] = useState<InquiryListRow | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showCalendarView, setShowCalendarView] = useState(false);
 
+  const filterCounts = useMemo(() => {
+    const counts = {
+      all: inquiries.length,
+      new: 0,
+      contacted: 0,
+      quote_sent: 0,
+      awaiting_customer: 0,
+      converted: 0,
+      lost: 0,
+    } satisfies Record<InquiryStatusFilter, number>;
+    for (const row of inquiries) {
+      counts[row.status] += 1;
+    }
+    return counts;
+  }, [inquiries]);
+
+  const overdueCount = useMemo(
+    () => inquiries.filter((row) => isOverdueFollowUp(row)).length,
+    [inquiries],
+  );
+
+  const hasActiveFilters =
+    query.trim() !== "" ||
+    statusFilter !== "all" ||
+    dueOnly ||
+    dateFrom !== "" ||
+    dateTo !== "";
+
+  const menuFilterCount =
+    (statusFilter !== "all" ? 1 : 0) + (dueOnly ? 1 : 0);
+
+  const filterButtonLabel = useMemo(() => {
+    if (statusFilter !== "all" && dueOnly) return "Filter aktiv";
+    if (statusFilter !== "all") {
+      return INQUIRY_STATUS_LABELS[statusFilter];
+    }
+    if (dueOnly) return "Forfalt oppfølging";
+    return "Filter";
+  }, [statusFilter, dueOnly]);
+
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const now = new Date();
     return inquiries.filter((row) => {
-      if (statusFilter && row.status !== statusFilter) return false;
-      if (dueOnly) {
-        if (row.status === "converted" || row.convertedBookingId) return false;
-        if (!row.nextFollowUpAtIso) return false;
-        const d = new Date(row.nextFollowUpAtIso);
-        if (Number.isNaN(d.getTime())) return false;
-        if (isBefore(now, d)) return false;
-      }
-      if (!q) return true;
-      const blob = [
-        row.customerName,
-        row.customerPhone ?? "",
-        row.customerEmail ?? "",
-        row.propertyName ?? "",
-        row.festType ?? "",
-        row.eventType,
-      ]
-        .join(" ")
-        .toLowerCase();
-      return blob.includes(q);
+      if (statusFilter !== "all" && row.status !== statusFilter) return false;
+      if (dueOnly && !isOverdueFollowUp(row)) return false;
+      if (!matchesInquiryPreferredDateRange(row, dateFrom, dateTo)) return false;
+      if (!matchesInquirySearch(row, query)) return false;
+      return true;
     });
-  }, [inquiries, query, statusFilter, dueOnly]);
+  }, [inquiries, query, statusFilter, dueOnly, dateFrom, dateTo]);
+
+  function resetFilters() {
+    setQuery("");
+    setStatusFilter("all");
+    setDueOnly(false);
+    setDateFrom("");
+    setDateTo("");
+  }
 
   function openRow(row: InquiryListRow) {
     setSelected(row);
@@ -150,73 +237,151 @@ export function InquiriesSection({
         ) : null}
 
         {!loadError ? (
-          <div
-            className="border-t border-rn-border-strong/50 bg-linear-to-b from-muted/10 to-transparent px-4 py-4 sm:px-5 lg:px-6 lg:py-5"
-            role="search"
+          <section
+            className="border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6"
             aria-label="Søk og filtrer forespørsler"
           >
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:gap-6">
-              <div className="min-w-0 flex-1 lg:max-w-xl">
-                <Label htmlFor="inquiries-search" className={filterEyebrowClass}>
-                  Søk
-                </Label>
-                <div className="relative">
-                  <Search
-                    className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground sm:left-4"
-                    aria-hidden
-                  />
-                  <Input
-                    id="inquiries-search"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Kunde, telefon, lokale, type …"
-                    className="h-11 w-full rounded-md border-2 border-rn-border-strong bg-background pl-11 text-sm sm:h-12 sm:pl-12 sm:text-base"
-                  />
-                </div>
+            <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
+                  aria-hidden
+                />
+                <Input
+                  id="inquiries-search"
+                  aria-label="Søk blant forespørsler"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Kunde, telefon, lokale eller type …"
+                  autoComplete="off"
+                  className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                />
               </div>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-4">
-                <div className="w-full shrink-0 sm:w-52 md:w-56">
-                  <Label
-                    htmlFor="inquiries-status-filter"
-                    className={filterEyebrowClass}
-                  >
-                    Status
-                  </Label>
-                  <NativeSelect
-                    id="inquiries-status-filter"
-                    value={statusFilter}
-                    onChange={(e) =>
-                      setStatusFilter(e.target.value as "" | BookingInquiryStatus)
-                    }
-                    aria-label="Filtrer etter status"
-                    className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
-                  >
-                    <option value="">Alle statuser</option>
-                    {BOOKING_INQUIRY_STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {INQUIRY_STATUS_LABELS[s]}
-                      </option>
-                    ))}
-                  </NativeSelect>
-                </div>
-                <div className="flex sm:shrink-0 sm:pb-px">
-                  <label
-                    htmlFor="inquiries-due-only"
-                    className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-md border-2 border-rn-border-strong/60 bg-card px-3 py-2 text-sm font-medium text-rn-text-body shadow-sm transition-colors hover:border-rn-border-strong hover:bg-muted/20 sm:min-h-12 sm:w-auto sm:px-3.5"
-                  >
-                    <input
-                      id="inquiries-due-only"
-                      type="checkbox"
-                      checked={dueOnly}
-                      onChange={(e) => setDueOnly(e.target.checked)}
-                      className="size-4 shrink-0 rounded border-2 border-rn-border-strong text-success focus-visible:ring-2 focus-visible:ring-success/30"
-                    />
-                    <span className="leading-snug">Kun forfalte oppfølginger</span>
+
+              <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 lg:ml-auto">
+                <div className="w-full shrink-0 sm:w-40 md:w-44">
+                  <label htmlFor="inquiries-date-from" className="sr-only">
+                    Fra dato
                   </label>
+                  <DatePickerField
+                    id="inquiries-date-from"
+                    value={dateFrom}
+                    onChange={setDateFrom}
+                    maxYmd={dateTo || undefined}
+                    variant="toolbar"
+                    className="h-12 min-h-12 text-sm md:h-14 md:min-h-14 md:text-base"
+                  />
                 </div>
+                <div className="w-full shrink-0 sm:w-40 md:w-44">
+                  <label htmlFor="inquiries-date-to" className="sr-only">
+                    Til dato
+                  </label>
+                  <DatePickerField
+                    id="inquiries-date-to"
+                    value={dateTo}
+                    onChange={setDateTo}
+                    minYmd={dateFrom || undefined}
+                    variant="toolbar"
+                    className="h-12 min-h-12 text-sm md:h-14 md:min-h-14 md:text-base"
+                  />
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "h-12 min-h-12 gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-sm font-semibold shadow-sm md:h-14 md:min-h-14 md:px-5 md:text-base",
+                      menuFilterCount > 0 &&
+                        "border-success/50 bg-success/5 text-foreground",
+                    )}
+                    aria-label="Åpne filtermeny"
+                  >
+                    <ListFilter className="size-4 shrink-0" aria-hidden />
+                    <span>{filterButtonLabel}</span>
+                    {menuFilterCount > 0 ? (
+                      <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-md bg-success px-1.5 py-0.5 text-xs font-bold text-white tabular-nums">
+                        {menuFilterCount}
+                      </span>
+                    ) : null}
+                    <ChevronDown className="size-4 shrink-0 opacity-60" aria-hidden />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={8}
+                    className="min-w-56 rounded-md border-2 border-rn-border-strong p-2 shadow-rn-card"
+                  >
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Status
+                      </DropdownMenuLabel>
+                      <DropdownMenuRadioGroup
+                        value={statusFilter}
+                        onValueChange={(value) => {
+                          if (!value) return;
+                          setStatusFilter(value as InquiryStatusFilter);
+                        }}
+                      >
+                        {(
+                          [
+                            "all",
+                            "new",
+                            "contacted",
+                            "quote_sent",
+                            "awaiting_customer",
+                            "converted",
+                            "lost",
+                          ] as const
+                        ).map((key) => (
+                          <DropdownMenuRadioItem
+                            key={key}
+                            value={key}
+                            className="font-medium"
+                          >
+                            {key === "all"
+                              ? "Alle"
+                              : INQUIRY_STATUS_LABELS[key]}
+                            <DropdownMenuShortcut>
+                              {filterCounts[key]}
+                            </DropdownMenuShortcut>
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuGroup>
+
+                    <DropdownMenuSeparator className="my-2" />
+
+                    <DropdownMenuCheckboxItem
+                      checked={dueOnly}
+                      onCheckedChange={(checked) => setDueOnly(checked === true)}
+                      className="font-medium"
+                    >
+                      Forfalt oppfølging
+                      <DropdownMenuShortcut>{overdueCount}</DropdownMenuShortcut>
+                    </DropdownMenuCheckboxItem>
+
+                    {hasActiveFilters ? (
+                      <>
+                        <DropdownMenuSeparator className="my-2" />
+                        <DropdownMenuItem
+                          variant="destructive"
+                          className="font-medium"
+                          onSelect={() => resetFilters()}
+                        >
+                          Nullstill filter
+                        </DropdownMenuItem>
+                      </>
+                    ) : null}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
-          </div>
+
+            {hasActiveFilters ? (
+              <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
+                Viser {filtered.length} av {inquiries.length}{" "}
+                {inquiries.length === 1 ? "forespørsel" : "forespørsler"}
+              </p>
+            ) : null}
+          </section>
         ) : null}
 
         {!loadError && filtered.length === 0 ? (
@@ -295,11 +460,7 @@ export function InquiriesSection({
                     </TableCell>
                     <TableCell className="px-6 py-4 text-sm text-muted-foreground md:px-8 md:py-5 tabular-nums">
                       {row.nextFollowUpAtIso
-                        ? format(
-                            new Date(row.nextFollowUpAtIso),
-                            "d. MMM yyyy HH:mm",
-                            { locale: nb },
-                          )
+                        ? formatAppDateTime(row.nextFollowUpAtIso)
                         : "—"}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-right md:px-8 md:py-5">

@@ -127,11 +127,11 @@ export function ReportsSection({
               <Suspense
                 fallback={
                   <div
-                    className="flex w-full flex-row flex-wrap items-center justify-end gap-2 py-0.5 sm:ml-auto sm:w-auto sm:shrink-0 sm:py-1 md:gap-3"
+                    className="flex w-full flex-row flex-wrap items-center justify-end gap-2 sm:ml-auto sm:w-auto sm:shrink-0 md:gap-3"
                     aria-hidden
                   >
-                    <div className="h-12 w-[5rem] shrink-0 animate-pulse rounded-md bg-muted/60 md:w-[5.25rem]" />
-                    <div className="h-12 w-40 shrink-0 animate-pulse rounded-md bg-muted/60 md:w-48" />
+                    <div className="h-12 min-h-12 w-[5rem] shrink-0 animate-pulse rounded-md bg-muted/60 md:h-14 md:min-h-14 md:w-[5.25rem]" />
+                    <div className="h-12 min-h-12 w-40 shrink-0 animate-pulse rounded-md bg-muted/60 md:h-14 md:min-h-14 md:w-48" />
                   </div>
                 }
               >

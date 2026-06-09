@@ -4,13 +4,281 @@ import type { BookingListRow, BookingStatus } from "@/components/bookings/types"
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
 import { eachBookingYmdInRange } from "@/lib/booking-period";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
-import { ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
 const WEEKDAYS_NB = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"] as const;
+
+const CALENDAR_MIN_YEAR = 2020;
+
+const calendarSelectTriggerClass = cn(
+  "h-11 min-h-11 w-fit min-w-0 shrink-0 rounded-md border-2 border-rn-border-strong bg-background px-3 font-heading text-sm font-semibold shadow-none sm:h-12 sm:min-h-12 sm:text-base",
+  "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 data-popup-open:border-rn-accent-border",
+);
+
+const calendarNavButtonClass =
+  "h-11 rounded-md border-2 border-rn-border-strong px-4 text-sm font-semibold sm:h-12 sm:text-base";
+
+const calendarNavIconButtonClass =
+  "size-11 rounded-md border-2 border-rn-border-strong bg-background sm:size-12";
+
+export type BookingsMonthCalendarNavigation = {
+  cursor: Date;
+  setCursor: (date: Date) => void;
+  year: number;
+  monthIndex: number;
+  monthNames: string[];
+  monthSelectLabel: string;
+  yearOptions: number[];
+  goToday: () => void;
+  prevMonth: () => void;
+  nextMonth: () => void;
+  prevYear: () => void;
+  nextYear: () => void;
+  onMonthSelect: (value: string | null) => void;
+  onYearSelect: (value: string | null) => void;
+};
+
+export function useBookingsMonthCalendarNavigation(
+  rows: BookingListRow[],
+): BookingsMonthCalendarNavigation {
+  const [cursor, setCursor] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+
+  const year = cursor.getFullYear();
+  const monthIndex = cursor.getMonth();
+
+  const monthLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat("nb-NO", {
+        month: "long",
+        year: "numeric",
+      }).format(cursor),
+    [cursor],
+  );
+
+  const monthNames = useMemo(() => {
+    const fmt = new Intl.DateTimeFormat("nb-NO", { month: "long" });
+    return Array.from({ length: 12 }, (_, i) =>
+      fmt.format(new Date(2020, i, 1)),
+    );
+  }, []);
+
+  const monthSelectLabel = monthNames[monthIndex] ?? monthLabel;
+
+  const yearOptions = useMemo(() => {
+    const now = new Date().getFullYear();
+    let min = now;
+    let max = now;
+    for (const r of rows) {
+      for (const iso of [r.eventDateIso, r.eventEndDateIso]) {
+        if (!iso) continue;
+        const y = Number.parseInt(iso.slice(0, 4), 10);
+        if (!Number.isFinite(y)) continue;
+        min = Math.min(min, y);
+        max = Math.max(max, y);
+      }
+    }
+    min = Math.min(min, CALENDAR_MIN_YEAR, year);
+    max = Math.max(max, now + 2, year);
+    const list: number[] = [];
+    for (let y = max; y >= min; y--) {
+      list.push(y);
+    }
+    return list;
+  }, [rows, year]);
+
+  function prevMonth() {
+    setCursor(new Date(year, monthIndex - 1, 1));
+  }
+
+  function nextMonth() {
+    setCursor(new Date(year, monthIndex + 1, 1));
+  }
+
+  function prevYear() {
+    setCursor(new Date(year - 1, monthIndex, 1));
+  }
+
+  function nextYear() {
+    setCursor(new Date(year + 1, monthIndex, 1));
+  }
+
+  function goToday() {
+    const d = new Date();
+    setCursor(new Date(d.getFullYear(), d.getMonth(), 1));
+  }
+
+  function onMonthSelect(value: string | null) {
+    if (value == null) return;
+    const m = Number.parseInt(value, 10) - 1;
+    if (m < 0 || m > 11) return;
+    setCursor(new Date(year, m, 1));
+  }
+
+  function onYearSelect(value: string | null) {
+    if (value == null) return;
+    const y = Number.parseInt(value, 10);
+    if (!Number.isFinite(y)) return;
+    setCursor(new Date(y, monthIndex, 1));
+  }
+
+  return {
+    cursor,
+    setCursor,
+    year,
+    monthIndex,
+    monthNames,
+    monthSelectLabel,
+    yearOptions,
+    goToday,
+    prevMonth,
+    nextMonth,
+    prevYear,
+    nextYear,
+    onMonthSelect,
+    onYearSelect,
+  };
+}
+
+export function BookingsMonthCalendarToolbar({
+  monthIndex,
+  monthNames,
+  monthSelectLabel,
+  year,
+  yearOptions,
+  goToday,
+  prevMonth,
+  nextMonth,
+  prevYear,
+  nextYear,
+  onMonthSelect,
+  onYearSelect,
+}: BookingsMonthCalendarNavigation) {
+  return (
+    <div
+      className="flex flex-wrap items-end justify-end gap-2"
+      role="toolbar"
+      aria-label="Kalendernavigasjon"
+    >
+      <Select value={String(monthIndex + 1)} onValueChange={onMonthSelect}>
+        <SelectTrigger
+          aria-label="Velg måned"
+          size="default"
+          className={cn(
+            calendarSelectTriggerClass,
+            "min-w-[7.5rem] capitalize md:min-w-[8.5rem]",
+          )}
+        >
+          <SelectValue>{monthSelectLabel}</SelectValue>
+        </SelectTrigger>
+        <SelectContent
+          align="end"
+          alignItemWithTrigger={false}
+          className="min-w-[var(--anchor-width)] rounded-md border-2 border-rn-border-strong"
+        >
+          {monthNames.map((name, i) => (
+            <SelectItem
+              key={i + 1}
+              value={String(i + 1)}
+              className="py-2.5 font-heading font-semibold capitalize"
+            >
+              {name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={String(year)} onValueChange={onYearSelect}>
+        <SelectTrigger
+          aria-label="Velg år"
+          size="default"
+          className={cn(calendarSelectTriggerClass, "tabular-nums")}
+        >
+          <SelectValue>{year}</SelectValue>
+        </SelectTrigger>
+        <SelectContent
+          align="end"
+          alignItemWithTrigger={false}
+          className="min-w-[var(--anchor-width)] max-h-72 rounded-md border-2 border-rn-border-strong"
+        >
+          {yearOptions.map((y) => (
+            <SelectItem
+              key={y}
+              value={String(y)}
+              className="py-2.5 font-heading font-semibold tabular-nums"
+            >
+              {y}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Button
+        type="button"
+        variant="outline"
+        className={calendarNavButtonClass}
+        onClick={goToday}
+      >
+        I dag
+      </Button>
+      <div className="flex items-center gap-1">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          className={calendarNavIconButtonClass}
+          onClick={prevYear}
+          aria-label="Forrige år"
+        >
+          <ChevronsLeft className="size-[18px]" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          className={calendarNavIconButtonClass}
+          onClick={prevMonth}
+          aria-label="Forrige måned"
+        >
+          <ChevronLeft className="size-[18px]" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          className={calendarNavIconButtonClass}
+          onClick={nextMonth}
+          aria-label="Neste måned"
+        >
+          <ChevronRight className="size-[18px]" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          className={calendarNavIconButtonClass}
+          onClick={nextYear}
+          aria-label="Neste år"
+        >
+          <ChevronsRight className="size-[18px]" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 function pad2(n: number) {
   return String(n).padStart(2, "0");
@@ -135,27 +403,60 @@ export function BookingsMonthCalendar({
   rows,
   totalBookingsCount,
   onSelectBooking,
+  navigation,
+  hideToolbar = false,
 }: {
   rows: BookingListRow[];
   /** Alle bookinger (ufiltrert), for tom tilstandstekst. */
   totalBookingsCount: number;
   onSelectBooking: (id: string) => void;
+  navigation?: BookingsMonthCalendarNavigation;
+  hideToolbar?: boolean;
 }) {
-  const [cursor, setCursor] = useState(() => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1);
-  });
+  if (navigation) {
+    return (
+      <BookingsMonthCalendarView
+        rows={rows}
+        totalBookingsCount={totalBookingsCount}
+        onSelectBooking={onSelectBooking}
+        navigation={navigation}
+        hideToolbar={hideToolbar}
+      />
+    );
+  }
 
-  const year = cursor.getFullYear();
-  const monthIndex = cursor.getMonth();
+  return <BookingsMonthCalendarWithNavigation {...{ rows, totalBookingsCount, onSelectBooking, hideToolbar }} />;
+}
+
+function BookingsMonthCalendarWithNavigation(
+  props: Omit<Parameters<typeof BookingsMonthCalendarView>[0], "navigation">,
+) {
+  const navigation = useBookingsMonthCalendarNavigation(props.rows);
+  return <BookingsMonthCalendarView {...props} navigation={navigation} />;
+}
+
+function BookingsMonthCalendarView({
+  rows,
+  totalBookingsCount,
+  onSelectBooking,
+  navigation,
+  hideToolbar = false,
+}: {
+  rows: BookingListRow[];
+  totalBookingsCount: number;
+  onSelectBooking: (id: string) => void;
+  navigation: BookingsMonthCalendarNavigation;
+  hideToolbar?: boolean;
+}) {
+  const { year, monthIndex } = navigation;
 
   const monthLabel = useMemo(
     () =>
       new Intl.DateTimeFormat("nb-NO", {
         month: "long",
         year: "numeric",
-      }).format(cursor),
-    [cursor],
+      }).format(new Date(year, monthIndex, 1)),
+    [year, monthIndex],
   );
 
   const rowsInMonth = useMemo(() => {
@@ -199,19 +500,6 @@ export function BookingsMonthCalendar({
     const ty = `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`;
     return { daysInMonth: dim, startPad: start, todayYmd: ty };
   }, [year, monthIndex]);
-
-  function prevMonth() {
-    setCursor(new Date(year, monthIndex - 1, 1));
-  }
-
-  function nextMonth() {
-    setCursor(new Date(year, monthIndex + 1, 1));
-  }
-
-  function goToday() {
-    const d = new Date();
-    setCursor(new Date(d.getFullYear(), d.getMonth(), 1));
-  }
 
   const filteredCount = rows.length;
 
@@ -367,43 +655,11 @@ export function BookingsMonthCalendar({
 
   return (
     <div className="border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="font-heading text-xl font-bold capitalize tracking-tight text-rn-text-heading md:text-2xl">
-          {monthLabel}
-        </h2>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10 rounded-md border-2 border-rn-border-strong px-4 text-sm font-semibold"
-            onClick={goToday}
-          >
-            I dag
-          </Button>
-          <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
-              onClick={prevMonth}
-              aria-label="Forrige måned"
-            >
-              <ChevronLeft className="size-[18px]" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
-              onClick={nextMonth}
-              aria-label="Neste måned"
-            >
-              <ChevronRight className="size-[18px]" />
-            </Button>
-          </div>
+      {!hideToolbar ? (
+        <div className="mb-4 flex justify-end">
+          <BookingsMonthCalendarToolbar {...navigation} />
         </div>
-      </div>
+      ) : null}
 
       <div className="overflow-x-auto pb-1">
         <div

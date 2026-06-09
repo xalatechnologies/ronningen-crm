@@ -78,6 +78,14 @@ export function NewInquiryForm({
     },
   });
 
+  const {
+    register,
+    control,
+    watch,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = form;
+
   async function onSubmit(data: BookingInquiryFormInput) {
     if (!supabase || !canManageInquiries) return;
 
@@ -200,19 +208,13 @@ export function NewInquiryForm({
       </header>
 
       <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <form
-          className="flex flex-col"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void form.handleSubmit(onSubmit)();
-          }}
-        >
+        <form className="flex flex-col" onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-6 border-b-2 border-rn-border-strong bg-card px-6 py-6 sm:px-8 sm:py-7">
             <InquiryFormBody
-              register={form.register}
-              control={form.control}
-              watch={form.watch}
-              errors={form.formState.errors}
+              register={register}
+              control={control}
+              watch={watch}
+              errors={errors}
               properties={properties}
               customers={customers}
               layout="sectioned"
@@ -223,13 +225,13 @@ export function NewInquiryForm({
               href="/app/inquiries"
               className={cn(
                 buttonVariants({ variant: "outline", size: "cta" }),
-                "inline-flex items-center justify-center",
+                "inline-flex items-center justify-center border-2 border-rn-border-strong font-heading font-bold",
               )}
             >
               Avbryt
             </Link>
-            <Button type="submit" variant="success" size="cta">
-              Registrer forespørsel
+            <Button type="submit" variant="success" size="cta" disabled={isSubmitting}>
+              {isSubmitting ? "Registrerer …" : "Registrer forespørsel"}
             </Button>
           </div>
         </form>

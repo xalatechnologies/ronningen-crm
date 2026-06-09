@@ -7,8 +7,7 @@ import { cn } from "@/lib/utils";
 import type { BookingInquiryStatus } from "@/lib/validations";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { formatAppDateTime } from "@/lib/format-datetime";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
@@ -84,9 +83,7 @@ function InquiryHoverPreview({
         {row.nextFollowUpAtIso ? (
           <p className="tabular-nums">
             <span className="font-semibold text-rn-text-body">Oppfølging:</span>{" "}
-            {format(new Date(row.nextFollowUpAtIso), "d. MMM yyyy HH:mm", {
-              locale: nb,
-            })}
+            {formatAppDateTime(row.nextFollowUpAtIso)}
           </p>
         ) : null}
         <p>

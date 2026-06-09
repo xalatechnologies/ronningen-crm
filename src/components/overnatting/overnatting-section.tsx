@@ -37,21 +37,22 @@ import {
 } from "@/lib/validations";
 import {
   accommodationTimeToInputValue,
-  formatAccommodationTimeLabel,
 } from "@/lib/accommodation-time";
+import { formatAppDateFromParts } from "@/lib/format-datetime";
 import {
   dayBeforeYmd,
   monthEndExclusiveYm,
   monthFirstDayYm,
 } from "@/lib/overnatting-month";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";import { cn } from "@/lib/utils";
+import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { cn } from "@/lib/utils";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { BedDouble, Building2, Calendar, Plus, Users } from "lucide-react";
+import { BedDouble, Building2, Calendar, Plus, RotateCcw, Search, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
@@ -63,6 +64,41 @@ const fieldClass =
 
 const labelClass =
   "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs";
+
+const filterEyebrowClass =
+  "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
+
+type AccommodationStatusFilter = "all" | "tentative" | "confirmed" | "cancelled";
+
+function matchesAccommodationSearch(
+  row: AccommodationReservationRow,
+  query: string,
+): boolean {
+  if (!query.trim()) return true;
+  const q = query.trim().toLowerCase();
+  const blob = [row.customerName, row.unitName, row.notes ?? ""]
+    .join(" ")
+    .toLowerCase();
+  return blob.includes(q);
+}
+
+function matchesAccommodationDateRange(
+  row: AccommodationReservationRow,
+  fromYmd: string,
+  toYmd: string,
+): boolean {
+  const start = row.checkInDate;
+  const end = row.checkOutDate;
+
+  if (fromYmd && toYmd) {
+    const from = fromYmd <= toYmd ? fromYmd : toYmd;
+    const to = fromYmd <= toYmd ? toYmd : fromYmd;
+    return start <= to && end > from;
+  }
+  if (fromYmd) return end > fromYmd;
+  if (toYmd) return start <= toYmd;
+  return true;
+}
 
 const dialogSectionTitleClass =
   "text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground";
@@ -157,6 +193,11 @@ export function OvernattingSection({
   const [editingRes, setEditingRes] =
     useState<AccommodationReservationRow | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<AccommodationStatusFilter>("all");
+  const [unitFilter, setUnitFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const unitForm = useForm<AccommodationUnitFormInput>({
     resolver: zodResolver(accommodationUnitFormSchema) as Resolver<
@@ -419,6 +460,50 @@ export function OvernattingSection({
     [reservations, monthYm],
   );
 
+  const filterCounts = useMemo(
+    () => ({
+      all: resInMonth.length,
+      tentative: resInMonth.filter((r) => r.status === "tentative").length,
+      confirmed: resInMonth.filter((r) => r.status === "confirmed").length,
+      cancelled: resInMonth.filter((r) => r.status === "cancelled").length,
+    }),
+    [resInMonth],
+  );
+
+  const hasActiveFilters =
+    query.trim() !== "" ||
+    statusFilter !== "all" ||
+    unitFilter !== "" ||
+    dateFrom !== "" ||
+    dateTo !== "";
+
+  const filteredReservations = useMemo(() => {
+    let rows = resInMonth;
+    if (query.trim()) {
+      rows = rows.filter((r) => matchesAccommodationSearch(r, query));
+    }
+    if (statusFilter !== "all") {
+      rows = rows.filter((r) => r.status === statusFilter);
+    }
+    if (unitFilter) {
+      rows = rows.filter((r) => r.unitId === unitFilter);
+    }
+    if (dateFrom || dateTo) {
+      rows = rows.filter((r) =>
+        matchesAccommodationDateRange(r, dateFrom, dateTo),
+      );
+    }
+    return rows;
+  }, [resInMonth, query, statusFilter, unitFilter, dateFrom, dateTo]);
+
+  function resetFilters() {
+    setQuery("");
+    setStatusFilter("all");
+    setUnitFilter("");
+    setDateFrom("");
+    setDateTo("");
+  }
+
   return (
     <div className="overnatting-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
@@ -660,6 +745,168 @@ export function OvernattingSection({
             <h2 className="font-heading text-lg font-bold capitalize text-rn-text-heading md:text-xl">
               Reservasjoner · {monthLabel}
             </h2>
+
+            <section
+              className="mt-4 flex flex-col gap-4"
+              aria-label="Filtrer reservasjoner"
+            >
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:gap-4">
+                <div className="relative min-w-0 flex-1">
+                  <Label htmlFor={`${rid}-res-search`} className={filterEyebrowClass}>
+                    Søk
+                  </Label>
+                  <Search
+                    className="pointer-events-none absolute top-[calc(50%+0.625rem)] left-4 size-5 -translate-y-1/2 text-rn-text-slate"
+                    aria-hidden
+                  />
+                  <Input
+                    id={`${rid}-res-search`}
+                    aria-label="Søk blant reservasjoner"
+                    className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                    placeholder="Kunde, enhet eller notat …"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="flex min-w-0 flex-col lg:flex-1 lg:items-end">
+                  <p className={cn(filterEyebrowClass, "w-full lg:text-right")}>
+                    Status
+                  </p>
+                  <div
+                    className="grid min-w-0 w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:flex lg:flex-row lg:flex-wrap lg:items-stretch lg:justify-end lg:gap-2.5 xl:w-auto xl:flex-nowrap"
+                    role="group"
+                    aria-label="Filtrer etter status"
+                  >
+                    {(
+                      [
+                        ["all", "Alle", filterCounts.all, null],
+                        [
+                          "confirmed",
+                          ACCOMMODATION_RESERVATION_LABELS.confirmed,
+                          filterCounts.confirmed,
+                          "emerald",
+                        ],
+                        [
+                          "tentative",
+                          ACCOMMODATION_RESERVATION_LABELS.tentative,
+                          filterCounts.tentative,
+                          "amber",
+                        ],
+                        [
+                          "cancelled",
+                          ACCOMMODATION_RESERVATION_LABELS.cancelled,
+                          filterCounts.cancelled,
+                          "rose",
+                        ],
+                      ] as const
+                    ).map(([key, label, count, tone]) => {
+                      const active = statusFilter === key;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setStatusFilter(key)}
+                          className={cn(
+                            "flex min-h-12 w-full items-center justify-between gap-2 rounded-md border-2 px-3 py-3 text-left transition-all sm:gap-3 sm:px-4 lg:min-h-14 lg:w-auto lg:min-w-[7rem] lg:max-w-[10.5rem] xl:min-w-[7.5rem]",
+                            active
+                              ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
+                              : tone === "emerald"
+                                ? "border-emerald-400/90 bg-white text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50"
+                                : tone === "amber"
+                                  ? "border-amber-400/90 bg-white text-amber-950 hover:border-amber-500 hover:bg-amber-50"
+                                  : tone === "rose"
+                                    ? "border-red-400/90 bg-white text-red-950 hover:border-red-500 hover:bg-red-50"
+                                    : "border-rn-border-strong bg-white text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "font-heading text-app-base font-semibold",
+                              active ? "!text-white" : undefined,
+                            )}
+                          >
+                            {label}
+                          </span>
+                          <span
+                            className={cn(
+                              "inline-flex min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-app-sm font-bold tabular-nums",
+                              active
+                                ? "border-white/30 bg-white/20 !text-white"
+                                : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
+                            )}
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
+                <div className="w-full shrink-0 sm:w-44 md:w-48">
+                  <Label htmlFor={`${rid}-res-unit`} className={filterEyebrowClass}>
+                    Enhet
+                  </Label>
+                  <NativeSelect
+                    id={`${rid}-res-unit`}
+                    value={unitFilter}
+                    onChange={(e) => setUnitFilter(e.target.value)}
+                    aria-label="Filtrer etter enhet"
+                    className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+                  >
+                    <option value="">Alle enheter</option>
+                    {sortedUnits.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </div>
+                <div className="w-full shrink-0 sm:w-44 md:w-48">
+                  <Label htmlFor={`${rid}-res-from`} className={filterEyebrowClass}>
+                    Fra dato
+                  </Label>
+                  <DatePickerField
+                    id={`${rid}-res-from`}
+                    value={dateFrom}
+                    onChange={setDateFrom}
+                    maxYmd={dateTo || undefined}
+                    variant="toolbar"
+                    className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+                  />
+                </div>
+                <div className="w-full shrink-0 sm:w-44 md:w-48">
+                  <Label htmlFor={`${rid}-res-to`} className={filterEyebrowClass}>
+                    Til dato
+                  </Label>
+                  <DatePickerField
+                    id={`${rid}-res-to`}
+                    value={dateTo}
+                    onChange={setDateTo}
+                    minYmd={dateFrom || undefined}
+                    variant="toolbar"
+                    className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+                  />
+                </div>
+                <div className="flex w-full shrink-0 sm:w-auto sm:self-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!hasActiveFilters}
+                    className="h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-sm font-semibold sm:h-12 sm:w-auto sm:px-5 sm:text-base"
+                    onClick={resetFilters}
+                  >
+                    <RotateCcw className="size-4 shrink-0" aria-hidden />
+                    Nullstill filter
+                  </Button>
+                </div>
+              </div>
+            </section>
+
             <div className="mt-4 overflow-x-auto">
               <Table className="min-w-[720px]">
                 <TableHeader>
@@ -674,47 +921,29 @@ export function OvernattingSection({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {resInMonth.length === 0 ? (
+                  {filteredReservations.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={canManage ? 7 : 6}
                         className="text-muted-foreground"
                       >
-                        Ingen reservasjoner i valgt måned.
+                        {resInMonth.length === 0
+                          ? "Ingen reservasjoner i valgt måned."
+                          : hasActiveFilters
+                            ? "Ingen treff med søk eller filter."
+                            : "Ingen reservasjoner i valgt måned."}
                       </TableCell>
                     </TableRow>
                   ) : (
-                    resInMonth.map((r) => (
+                    filteredReservations.map((r) => (
                       <TableRow key={r.id}>
                         <TableCell className="font-medium">{r.customerName}</TableCell>
                         <TableCell>{r.unitName}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-0.5 tabular-nums">
-                            <span>
-                              {format(new Date(`${r.checkInDate}T12:00:00`), "d. MMM yyyy", {
-                                locale: nb,
-                              })}
-                            </span>
-                            {formatAccommodationTimeLabel(r.checkInTime) ? (
-                              <span className="text-xs text-muted-foreground">
-                                kl. {formatAccommodationTimeLabel(r.checkInTime)}
-                              </span>
-                            ) : null}
-                          </div>
+                        <TableCell className="tabular-nums">
+                          {formatAppDateFromParts(r.checkInDate, r.checkInTime)}
                         </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-0.5 tabular-nums">
-                            <span>
-                              {format(new Date(`${r.checkOutDate}T12:00:00`), "d. MMM yyyy", {
-                                locale: nb,
-                              })}
-                            </span>
-                            {formatAccommodationTimeLabel(r.checkOutTime) ? (
-                              <span className="text-xs text-muted-foreground">
-                                kl. {formatAccommodationTimeLabel(r.checkOutTime)}
-                              </span>
-                            ) : null}
-                          </div>
+                        <TableCell className="tabular-nums">
+                          {formatAppDateFromParts(r.checkOutDate, r.checkOutTime)}
                         </TableCell>
                         <TableCell>{r.guestCount}</TableCell>
                         <TableCell>

@@ -69,9 +69,8 @@ export function InvoiceSegmentFilter({
             aria-pressed={active ? "true" : "false"}
             onClick={() => onFilterChange(spec.id)}
             className={cn(
-              "inline-flex min-h-11 min-w-0 items-center gap-2 rounded-md border-2 px-3 py-2.5 text-left transition-colors md:min-h-12 md:rounded-md md:px-4 md:py-3",
+              "inline-flex h-12 min-h-12 min-w-0 items-center gap-2 rounded-md border-2 px-3 py-3 text-left transition-colors sm:px-4 md:h-14 md:min-h-14 md:px-5 md:py-3.5",
               RN_TEXT_SEGMENT,
-              "font-bold",
               active
                 ? segmentActiveClass(spec.id)
                 : "border-rn-border-strong bg-card text-muted-foreground hover:border-rn-border-strong/80 hover:bg-muted/35",
@@ -79,19 +78,28 @@ export function InvoiceSegmentFilter({
           >
             {isAll ? (
               <CalendarClock
-                className="size-5 shrink-0 text-primary md:size-6"
+                className="size-5 shrink-0 text-primary"
                 aria-hidden
               />
             ) : isInk ? (
               <Scale
                 className={cn(
-                  "size-5 shrink-0 md:size-6",
+                  "size-5 shrink-0",
                   active ? "text-violet-800" : "text-muted-foreground",
                 )}
                 aria-hidden
               />
             ) : null}
-            <span className="tabular-nums">{count}</span>
+            <span
+              className={cn(
+                "inline-flex min-w-5 items-center justify-center rounded-md border px-2 py-0.5 text-app-sm font-bold tabular-nums md:text-app-base",
+                active
+                  ? "border-white/30 bg-white/20 text-inherit"
+                  : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
+              )}
+            >
+              {count}
+            </span>
             <span className="font-semibold tracking-wide">{spec.label}</span>
           </button>
         );

@@ -4,7 +4,7 @@ import type { AccommodationReservationRow } from "@/components/overnatting/types
 import { ACCOMMODATION_RESERVATION_LABELS } from "@/components/overnatting/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatAccommodationTimeLabel } from "@/lib/accommodation-time";
+import { formatAppDateFromParts } from "@/lib/format-datetime";
 import { ymAdd } from "@/lib/overnatting-month";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { BedDouble, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
@@ -81,14 +81,8 @@ function StayHoverPreview({
       <div className="space-y-1 border-t border-border pt-2 text-xs md:text-sm">
         <p className="tabular-nums">
           <span className="font-semibold text-rn-text-body">Periode:</span>{" "}
-          {row.checkInDate}
-          {formatAccommodationTimeLabel(row.checkInTime)
-            ? ` kl. ${formatAccommodationTimeLabel(row.checkInTime)}`
-            : ""}{" "}
-          → {row.checkOutDate}
-          {formatAccommodationTimeLabel(row.checkOutTime)
-            ? ` kl. ${formatAccommodationTimeLabel(row.checkOutTime)}`
-            : ""}
+          {formatAppDateFromParts(row.checkInDate, row.checkInTime)} →{" "}
+          {formatAppDateFromParts(row.checkOutDate, row.checkOutTime)}
         </p>
         <p>
           <span className="font-semibold text-rn-text-body">Gjester:</span>{" "}

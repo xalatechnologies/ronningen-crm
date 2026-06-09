@@ -22,14 +22,28 @@ import {
 } from "@/lib/validations";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
+import {
+  referenceYearFromEventDate,
+  suggestNextBookingReference,
+} from "@/lib/bookings/booking-reference";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Calendar, Copy, Package, Plus, Trash2, User, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Copy,
+  Package,
+  Plus,
+  RefreshCw,
+  Trash2,
+  User,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   type Resolver,
   Controller,
@@ -230,7 +244,14 @@ export function NewBookingForm({
   const selectedPackageId = useWatch({ control, name: "selectedPackageId" });
   const packageSource = useWatch({ control, name: "packageSource" });
   const festType = useWatch({ control, name: "festType" });
+  const eventDate = useWatch({ control, name: "eventDate" });
   const watched = useWatch({ control });
+  const referenceYear = useMemo(
+    () => referenceYearFromEventDate(eventDate),
+    [eventDate],
+  );
+  const [isGeneratingReference, setIsGeneratingReference] = useState(false);
+  const didAutoGenerateRef = useRef(false);
   const selectedAddonIds = watched?.selectedAddonIds ?? [];
 
   useEffect(() => {
@@ -345,6 +366,51 @@ export function NewBookingForm({
       ? Math.round((customerDiscountNok / estimatedTotal) * 100)
       : 0;
 
+  const generateBookingReference = useCallback(
+    async (options?: { force?: boolean }) => {
+      let orgId: string;
+      try {
+        orgId = requireOrganizationId(currentOrganizationId);
+      } catch {
+        return;
+      }
+
+      const current = getValues("bookingReference").trim();
+      if (!options?.force && current) return;
+
+      setIsGeneratingReference(true);
+      try {
+        const next = await suggestNextBookingReference(
+          supabase,
+          orgId,
+          referenceYear,
+        );
+        setValue("bookingReference", next, { shouldValidate: true });
+      } catch (err) {
+        toast.error("Kunne ikke generere referanse", {
+          description:
+            err instanceof Error ? err.message : "Prøv igjen eller skriv inn selv.",
+        });
+      } finally {
+        setIsGeneratingReference(false);
+      }
+    },
+    [currentOrganizationId, getValues, referenceYear, setValue, supabase],
+  );
+
+  useEffect(() => {
+    if (didAutoGenerateRef.current || savedBookingId) return;
+    if (!currentOrganizationId) return;
+    if (getValues("bookingReference").trim()) return;
+    didAutoGenerateRef.current = true;
+    void generateBookingReference();
+  }, [
+    currentOrganizationId,
+    generateBookingReference,
+    getValues,
+    savedBookingId,
+  ]);
+
   async function submitBooking(data: NewBookingFormInput) {
     if (savedBookingId) return;
 
@@ -356,6 +422,23 @@ export function NewBookingForm({
         err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
       );
       return;
+    }
+
+    let bookingReference = data.bookingReference.trim();
+    if (!bookingReference) {
+      try {
+        bookingReference = await suggestNextBookingReference(
+          supabase,
+          orgId,
+          referenceYearFromEventDate(data.eventDate),
+        );
+      } catch (err) {
+        toast.error("Kunne ikke generere referansenummer", {
+          description:
+            err instanceof Error ? err.message : "Skriv inn referanse manuelt.",
+        });
+        return;
+      }
     }
 
     const estimated = estimateNewBookingTotalNok(
@@ -396,9 +479,7 @@ export function NewBookingForm({
       .join(" · ");
     const parts = [
       pricingSummary,
-      data.bookingReference.trim()
-        ? `Egen referanse: ${data.bookingReference.trim()}`
-        : null,
+      bookingReference ? `Referanse: ${bookingReference}` : null,
       data.notes?.trim(),
       addOnLabels.length ? `Tillegg: ${addOnLabels.join(", ")}` : null,
       data.packageSource === "custom"
@@ -478,7 +559,7 @@ export function NewBookingForm({
         paid_amount: paid,
         remaining_amount: remaining,
         notes: notesCombined || null,
-        booking_reference: data.bookingReference.trim() || null,
+        booking_reference: bookingReference,
         payment_status,
         organization_id: orgId,
       })
@@ -558,7 +639,7 @@ export function NewBookingForm({
         </Link>
         <div className="min-w-0 flex-1">
           <h1 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading sm:text-2xl md:text-3xl">
-            Ny booking
+            Ny reservasjon
           </h1>
           <p className="mt-0.5 text-xs leading-snug text-muted-foreground sm:text-sm md:text-base md:leading-relaxed">
             Registrer arrangement, kunde og økonomi — felles mønster som øvrige
@@ -567,7 +648,7 @@ export function NewBookingForm({
         </div>
         <Link
           href="/app/bookings"
-          aria-label="Lukk og gå til bookinger"
+          aria-label="Lukk og gå til reservasjoner"
           className={cn(
             buttonVariants({ variant: "ghost", size: "icon-sm" }),
             "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
@@ -582,7 +663,7 @@ export function NewBookingForm({
           className="rounded-md border-2 border-success/35 bg-success/5 px-4 py-3 text-sm text-rn-text-body"
           role="status"
         >
-          Ny booking for eksisterende kunde — navn, telefon og e-post kan ikke
+          Ny reservasjon for eksisterende kunde — navn, telefon og e-post kan ikke
           endres her når de allerede er registrert. Mangler telefon eller
           adresse, kan du fylle dem inn nedenfor; de lagres på kunden ved
           booking.
@@ -622,22 +703,40 @@ export function NewBookingForm({
         <div className="border-b-2 border-rn-border-strong bg-rn-surface-wash px-6 py-4 md:px-8">
           <div className="flex flex-col gap-4">
             <div className="min-w-0 flex-1 space-y-2">
-              <Label className={labelClass}>Booking-ID / referanse</Label>
-              <Input
-                className={cn(fieldClass, "font-mono text-sm")}
-                placeholder="Valgfritt — f.eks. saksnummer eller eget avtalenummer"
-                disabled={!!savedBookingId}
-                {...register("bookingReference")}
-                aria-invalid={!!errors.bookingReference}
-              />
+              <Label className={labelClass}>Referansenummer</Label>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+                <Input
+                  className={cn(fieldClass, "font-mono text-sm sm:flex-1")}
+                  placeholder="RN-2026-013 eller eget saksnummer"
+                  disabled={!!savedBookingId}
+                  {...register("bookingReference")}
+                  aria-invalid={!!errors.bookingReference}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!!savedBookingId || isGeneratingReference}
+                  className="h-11 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-sm font-semibold md:h-12"
+                  onClick={() => void generateBookingReference({ force: true })}
+                >
+                  <RefreshCw
+                    className={cn(
+                      "size-4",
+                      isGeneratingReference && "animate-spin",
+                    )}
+                    aria-hidden
+                  />
+                  Generer referanse
+                </Button>
+              </div>
               {errors.bookingReference ? (
                 <p className="text-xs text-destructive">
                   {errors.bookingReference.message}
                 </p>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  Skriv inn egen referanse ved behov. System-ID (UUID) vises
-                  under etter lagring.
+                  Fylles ut automatisk som RN-{referenceYear}-xxx, eller skriv inn
+                  eget saksnummer. System-ID (UUID) vises under etter lagring.
                 </p>
               )}
             </div>
@@ -1455,12 +1554,12 @@ export function NewBookingForm({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-4 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 md:px-8">
+        <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:justify-end md:px-8">
           <Link
             href="/app/bookings"
             className={cn(
-              buttonVariants({ variant: "ghost" }),
-              "rounded-md font-semibold text-rn-text-body hover:text-rn-text-heading",
+              buttonVariants({ variant: "outline", size: "cta" }),
+              "inline-flex items-center justify-center border-2 border-rn-border-strong font-heading font-bold",
             )}
           >
             Avbryt
