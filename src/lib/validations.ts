@@ -84,6 +84,69 @@ export const partnerFormSchema = z.object({
 
 export type PartnerFormInput = z.infer<typeof partnerFormSchema>;
 
+export const PROPERTY_TYPES = [
+  "selskaplokale",
+  "gård",
+  "møterom",
+  "festlokale",
+  "annet",
+] as const;
+
+export type PropertyType = (typeof PROPERTY_TYPES)[number];
+
+/** Lokaler / eiendommer (properties) */
+export const propertyFormSchema = z.object({
+  name: z
+    .string()
+    .transform((s) => s.trim())
+    .pipe(z.string().min(2, "Navn må være minst 2 tegn").max(200)),
+  address: z.union([
+    z.literal(""),
+    z.string().min(3, "Adresse må være minst 3 tegn"),
+  ]),
+  type: z.union([z.literal(""), z.enum(PROPERTY_TYPES)]),
+  notes: z.string().max(4000, "Maks 4000 tegn").optional(),
+});
+
+export type PropertyFormInput = z.infer<typeof propertyFormSchema>;
+
+/** Organisasjonsprofil / fakturaavsender */
+export const organizationProfileFormSchema = z.object({
+  name: z
+    .string()
+    .transform((s) => s.trim())
+    .pipe(z.string().min(2, "Navn må være minst 2 tegn").max(200)),
+  legalName: z.string().max(200),
+  tagline: z.string().max(200),
+  orgNumber: z.string().max(20),
+  addressLine1: z.string().max(200),
+  addressLine2: z.string().max(200),
+  postalCode: z.string().max(12),
+  city: z.string().max(100),
+  contactEmail: z.union([
+    z.literal(""),
+    z.string().email("Ugyldig e-postadresse"),
+  ]),
+  contactPhone: z.string().max(30),
+  logoUrl: z.union([z.literal(""), z.string().url("Ugyldig URL")]),
+  bankAccount: z.string().max(200),
+  paymentInstructions: z.string().max(2000, "Maks 2000 tegn"),
+});
+
+export type OrganizationProfileFormInput = z.infer<
+  typeof organizationProfileFormSchema
+>;
+
+export const teamMemberAddSchema = z.object({
+  email: z
+    .string()
+    .transform((s) => s.trim().toLowerCase())
+    .pipe(z.string().email("Skriv inn en gyldig e-postadresse")),
+  role: z.enum(["admin", "manager", "accountant", "viewer"]),
+});
+
+export type TeamMemberAddInput = z.infer<typeof teamMemberAddSchema>;
+
 export const bookingSchema = z.object({
   customerId: z.string().uuid(),
   propertyId: z.string().uuid(),

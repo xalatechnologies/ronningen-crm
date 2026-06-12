@@ -4,7 +4,11 @@ import { DatePickerField } from "@/components/ui/date-picker-field";
 import { DateTimePickerField } from "@/components/ui/datetime-picker-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import {
+  FormSelectField,
+  toIdNameOptions,
+  toStringOptions,
+} from "@/components/ui/form-select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   BOOKING_INQUIRY_FORM_STATUSES,
@@ -90,19 +94,15 @@ export function InquiryFormBody({
           <Label className={labelClass} htmlFor={`${rid}-customer`}>
             Eksisterende kunde
           </Label>
-          <NativeSelect
+          <FormSelectField
+            name="customerId"
+            control={control}
             id={`${rid}-customer`}
             disabled={disabled}
-            className={cn(fieldClass, "font-medium")}
-            {...register("customerId")}
-          >
-            <option value="">— Registrer som ny kunde (fyll inn under) —</option>
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </NativeSelect>
+            className="font-medium"
+            placeholder="— Registrer som ny kunde (fyll inn under) —"
+            options={toIdNameOptions(customers)}
+          />
           {errors.customerId ? (
             <p className="text-sm text-destructive">{errors.customerId.message}</p>
           ) : null}
@@ -190,19 +190,15 @@ export function InquiryFormBody({
         <Label className={labelClass} htmlFor={`${rid}-property`}>
           Lokale (valgfritt)
         </Label>
-        <NativeSelect
+        <FormSelectField
+          name="propertyId"
+          control={control}
           id={`${rid}-property`}
           disabled={disabled}
-          className={cn(fieldClass, "font-medium")}
-          {...register("propertyId")}
-        >
-          <option value="">— Ikke valgt —</option>
-          {properties.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </NativeSelect>
+          className="font-medium"
+          placeholder="— Ikke valgt —"
+          options={toIdNameOptions(properties)}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -210,18 +206,14 @@ export function InquiryFormBody({
           <Label className={labelClass} htmlFor={`${rid}-event-type`}>
             Bedrift eller privat
           </Label>
-          <NativeSelect
+          <FormSelectField
+            name="eventType"
+            control={control}
             id={`${rid}-event-type`}
             disabled={disabled}
-            className={cn(fieldClass, "font-medium")}
-            {...register("eventType")}
-          >
-            {NEW_BOOKING_EVENT_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </NativeSelect>
+            className="font-medium"
+            options={toStringOptions(NEW_BOOKING_EVENT_TYPES)}
+          />
           {errors.eventType ? (
             <p className="text-sm text-destructive">{errors.eventType.message}</p>
           ) : null}
@@ -339,18 +331,17 @@ export function InquiryFormBody({
           <Label className={labelClass} htmlFor={`${rid}-status`}>
             Status
           </Label>
-          <NativeSelect
+          <FormSelectField
+            name="status"
+            control={control}
             id={`${rid}-status`}
             disabled={disabled}
-            className={cn(fieldClass, "font-medium")}
-            {...register("status")}
-          >
-            {BOOKING_INQUIRY_FORM_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {INQUIRY_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </NativeSelect>
+            className="font-medium"
+            options={BOOKING_INQUIRY_FORM_STATUSES.map((s) => ({
+              value: s,
+              label: INQUIRY_STATUS_LABELS[s],
+            }))}
+          />
           {errors.status ? (
             <p className="text-sm text-destructive">{errors.status.message}</p>
           ) : null}

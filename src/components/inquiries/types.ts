@@ -30,6 +30,13 @@ export type InquiryActivityRow = {
   createdAtIso: string;
 };
 
+/** Open inquiries shown in Forespørsler (excludes converted bookings). */
+export function isActiveInquiry(
+  row: Pick<InquiryListRow, "status" | "convertedBookingId">,
+): boolean {
+  return row.status !== "converted" && !row.convertedBookingId;
+}
+
 export const INQUIRY_STATUS_LABELS: Record<BookingInquiryStatus, string> = {
   new: "Ny",
   contacted: "Kontaktet",

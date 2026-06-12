@@ -9,6 +9,10 @@ export type OrganizationSummary = {
   logoUrl: string | null;
   subscriptionStatus: SubscriptionStatus;
   subscriptionPlan: SubscriptionPlan;
+  isSuspended: boolean;
+  suspendedReason: string | null;
+  periodEnd: string | null;
+  providerSubscriptionId: string | null;
 };
 
 export type OrganizationMembership = {

@@ -68,6 +68,14 @@ function formatNok(n: number) {
   }).format(n);
 }
 
+/** Liste-tegn brukere skriver foran punkter (-, –, —, •, *). */
+const PACKAGE_LIST_BULLET = /^[-•*–—]\s*/;
+
+const PACKAGE_DESCRIPTION_EXAMPLE = `Perfekt for mindre selskap
+– Lokale til 50 gjester
+– Dekket bord og stoler
+– Enkel servering`;
+
 /** Første linje uten innledende liste-tegn (= undertittel under pakkenavn). Resten = punktliste. */
 function parsePackageDescription(description: string | null): {
   tagline: string | null;
@@ -80,13 +88,13 @@ function parsePackageDescription(description: string | null): {
     .filter(Boolean);
   let start = 0;
   let tagline: string | null = null;
-  if (rawLines.length > 0 && !/^[-•*]/.test(rawLines[0]!)) {
+  if (rawLines.length > 0 && !PACKAGE_LIST_BULLET.test(rawLines[0]!)) {
     tagline = rawLines[0]!;
     start = 1;
   }
   const features = rawLines
     .slice(start)
-    .map((line) => line.replace(/^\s*[-•*]\s*/, "").trim())
+    .map((line) => line.replace(PACKAGE_LIST_BULLET, "").trim())
     .filter(Boolean);
   return { tagline, features };
 }
@@ -227,12 +235,27 @@ function PricingCatalogFields({
           ) : null}
         </div>
         <div className="space-y-2">
-          <Label>Beskrivelse / punkter</Label>
+          <Label>
+            {kind === "packages" ? "Beskrivelse / punkter" : "Beskrivelse"}
+          </Label>
           <Textarea
-            className="min-h-28 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
-            placeholder="Valgfri undertittel først (uten – foran), deretter ett punkt per linje med – foran."
+            className={cn(
+              "rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25",
+              kind === "packages" ? "min-h-36" : "min-h-28",
+            )}
+            placeholder={
+              kind === "packages"
+                ? PACKAGE_DESCRIPTION_EXAMPLE
+                : "Kort beskrivelse av tilleggstjenesten"
+            }
             {...register("description")}
           />
+          {kind === "packages" ? (
+            <p className="text-xs leading-relaxed text-muted-foreground md:text-sm">
+              Første linje uten «–» blir undertittel. Linjer med «–» vises som
+              punkter med hake i pakkekortet.
+            </p>
+          ) : null}
         </div>
         <div className="space-y-2">
           <Label>Pris (NOK)</Label>

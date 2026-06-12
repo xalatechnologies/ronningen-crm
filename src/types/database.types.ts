@@ -390,6 +390,24 @@ export type Database = {
           logo_url: string | null;
           subscription_status: string;
           subscription_plan: string;
+          legal_name: string | null;
+          tagline: string | null;
+          org_number: string | null;
+          address_line1: string | null;
+          address_line2: string | null;
+          postal_code: string | null;
+          city: string | null;
+          contact_email: string | null;
+          contact_phone: string | null;
+          bank_account: string | null;
+          payment_instructions: string | null;
+          is_suspended: boolean;
+          suspended_at: string | null;
+          suspended_reason: string | null;
+          admin_notes: string | null;
+          billing_email: string | null;
+          last_activity_at: string | null;
+          trial_ends_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -400,6 +418,24 @@ export type Database = {
           logo_url?: string | null;
           subscription_status?: string;
           subscription_plan?: string;
+          legal_name?: string | null;
+          tagline?: string | null;
+          org_number?: string | null;
+          address_line1?: string | null;
+          address_line2?: string | null;
+          postal_code?: string | null;
+          city?: string | null;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          bank_account?: string | null;
+          payment_instructions?: string | null;
+          is_suspended?: boolean;
+          suspended_at?: string | null;
+          suspended_reason?: string | null;
+          admin_notes?: string | null;
+          billing_email?: string | null;
+          last_activity_at?: string | null;
+          trial_ends_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -410,8 +446,323 @@ export type Database = {
           logo_url?: string | null;
           subscription_status?: string;
           subscription_plan?: string;
+          legal_name?: string | null;
+          tagline?: string | null;
+          org_number?: string | null;
+          address_line1?: string | null;
+          address_line2?: string | null;
+          postal_code?: string | null;
+          city?: string | null;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          bank_account?: string | null;
+          payment_instructions?: string | null;
+          is_suspended?: boolean;
+          suspended_at?: string | null;
+          suspended_reason?: string | null;
+          admin_notes?: string | null;
+          billing_email?: string | null;
+          last_activity_at?: string | null;
+          trial_ends_at?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      platform_email_templates: {
+        Row: {
+          id: string;
+          key: string;
+          subject: string;
+          body_html: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          key: string;
+          subject: string;
+          body_html: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          key?: string;
+          subject?: string;
+          body_html?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      platform_feature_flags: {
+        Row: {
+          key: string;
+          description: string;
+          enabled_global: boolean;
+          rollout_percentage: number;
+          organization_overrides: Json;
+          enabled_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          key: string;
+          description?: string;
+          enabled_global?: boolean;
+          rollout_percentage?: number;
+          organization_overrides?: Json;
+          enabled_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          key?: string;
+          description?: string;
+          enabled_global?: boolean;
+          rollout_percentage?: number;
+          organization_overrides?: Json;
+          enabled_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      platform_impersonation_sessions: {
+        Row: {
+          id: string;
+          admin_user_id: string;
+          organization_id: string;
+          reason: string;
+          started_at: string;
+          ended_at: string | null;
+          ip_address: string | null;
+        };
+        Insert: {
+          id?: string;
+          admin_user_id: string;
+          organization_id: string;
+          reason: string;
+          started_at?: string;
+          ended_at?: string | null;
+          ip_address?: string | null;
+        };
+        Update: {
+          id?: string;
+          admin_user_id?: string;
+          organization_id?: string;
+          reason?: string;
+          started_at?: string;
+          ended_at?: string | null;
+          ip_address?: string | null;
+        };
+        Relationships: [];
+      };
+      platform_job_runs: {
+        Row: {
+          id: string;
+          job_name: string;
+          status: string;
+          metadata: Json;
+          started_at: string;
+          finished_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          job_name: string;
+          status?: string;
+          metadata?: Json;
+          started_at?: string;
+          finished_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          job_name?: string;
+          status?: string;
+          metadata?: Json;
+          started_at?: string;
+          finished_at?: string | null;
+        };
+        Relationships: [];
+      };
+      platform_login_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          organization_id: string | null;
+          ip_address: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          organization_id?: string | null;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          organization_id?: string | null;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      platform_notification_campaigns: {
+        Row: {
+          id: string;
+          name: string;
+          template_key: string | null;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          template_key?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          template_key?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      platform_notification_deliveries: {
+        Row: {
+          id: string;
+          campaign_id: string | null;
+          recipient_email: string;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          campaign_id?: string | null;
+          recipient_email: string;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          campaign_id?: string | null;
+          recipient_email?: string;
+          status?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      platform_notification_send_log: {
+        Row: {
+          id: string;
+          template_key: string;
+          recipient_email: string;
+          context_key: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          template_key: string;
+          recipient_email: string;
+          context_key: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          template_key?: string;
+          recipient_email?: string;
+          context_key?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      platform_support_notes: {
+        Row: {
+          id: string;
+          ticket_id: string;
+          author_user_id: string;
+          body: string;
+          tags: string[];
+          is_internal: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          ticket_id: string;
+          author_user_id: string;
+          body: string;
+          tags?: string[];
+          is_internal?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          ticket_id?: string;
+          author_user_id?: string;
+          body?: string;
+          tags?: string[];
+          is_internal?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      platform_support_tickets: {
+        Row: {
+          id: string;
+          organization_id: string;
+          status: string;
+          subject: string;
+          category: string;
+          assigned_to: string | null;
+          created_by_user_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          status?: string;
+          subject: string;
+          category?: string;
+          assigned_to?: string | null;
+          created_by_user_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          status?: string;
+          subject?: string;
+          category?: string;
+          assigned_to?: string | null;
+          created_by_user_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      stripe_webhook_events: {
+        Row: {
+          event_id: string;
+          event_type: string;
+          processed_at: string | null;
+          payload: Json | null;
+        };
+        Insert: {
+          event_id: string;
+          event_type: string;
+          processed_at?: string | null;
+          payload?: Json | null;
+        };
+        Update: {
+          event_id?: string;
+          event_type?: string;
+          processed_at?: string | null;
+          payload?: Json | null;
         };
         Relationships: [];
       };
@@ -552,6 +903,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      platform_audit_log: {
+        Row: {
+          action: string;
+          actor_user_id: string;
+          created_at: string;
+          id: string;
+          metadata: Json;
+          target_id: string | null;
+          target_type: string;
+        };
+        Insert: {
+          action: string;
+          actor_user_id: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          target_id?: string | null;
+          target_type: string;
+        };
+        Update: {
+          action?: string;
+          actor_user_id?: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          target_id?: string | null;
+          target_type?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           active_organization_id: string | null;
@@ -560,6 +941,7 @@ export type Database = {
           email: string | null;
           full_name: string | null;
           id: string;
+          is_platform_admin: boolean;
           role: string;
           updated_at: string;
         };
@@ -570,6 +952,7 @@ export type Database = {
           email?: string | null;
           full_name?: string | null;
           id: string;
+          is_platform_admin?: boolean;
           role?: string;
           updated_at?: string;
         };
@@ -580,6 +963,7 @@ export type Database = {
           email?: string | null;
           full_name?: string | null;
           id?: string;
+          is_platform_admin?: boolean;
           role?: string;
           updated_at?: string;
         };
@@ -662,6 +1046,12 @@ export type Database = {
           status: string;
           current_period_start: string | null;
           current_period_end: string | null;
+          provider_price_id: string | null;
+          provider_product_id: string | null;
+          cancel_at_period_end: boolean;
+          canceled_at: string | null;
+          metadata: Json;
+          last_synced_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -675,6 +1065,12 @@ export type Database = {
           status?: string;
           current_period_start?: string | null;
           current_period_end?: string | null;
+          provider_price_id?: string | null;
+          provider_product_id?: string | null;
+          cancel_at_period_end?: boolean;
+          canceled_at?: string | null;
+          metadata?: Json;
+          last_synced_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -688,6 +1084,12 @@ export type Database = {
           status?: string;
           current_period_start?: string | null;
           current_period_end?: string | null;
+          provider_price_id?: string | null;
+          provider_product_id?: string | null;
+          cancel_at_period_end?: boolean;
+          canceled_at?: string | null;
+          metadata?: Json;
+          last_synced_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -748,12 +1150,85 @@ export type Database = {
           },
         ];
       };
+      user_notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          body: string;
+          template_key: string | null;
+          campaign_id: string | null;
+          context_key: string;
+          read_at: string | null;
+          created_at: string;
+          category: string;
+          priority: string;
+          organization_id: string | null;
+          event_key: string | null;
+          action_url: string | null;
+          action_label: string | null;
+          acknowledged_at: string | null;
+          metadata: Json;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          body: string;
+          template_key?: string | null;
+          campaign_id?: string | null;
+          context_key: string;
+          read_at?: string | null;
+          created_at?: string;
+          category?: string;
+          priority?: string;
+          organization_id?: string | null;
+          event_key?: string | null;
+          action_url?: string | null;
+          action_label?: string | null;
+          acknowledged_at?: string | null;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          body?: string;
+          template_key?: string | null;
+          campaign_id?: string | null;
+          context_key?: string;
+          read_at?: string | null;
+          created_at?: string;
+          category?: string;
+          priority?: string;
+          organization_id?: string | null;
+          event_key?: string | null;
+          action_url?: string | null;
+          action_label?: string | null;
+          acknowledged_at?: string | null;
+          metadata?: Json;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      audit_action_counts: {
+        Args: Record<PropertyKey, never>;
+        Returns: { action: string; count: number }[];
+      };
+      audit_unique_actors_since: {
+        Args: { since_at: string };
+        Returns: number;
+      };
       current_profile_role: { Args: never; Returns: string };
+      find_user_id_by_email: {
+        Args: { lookup_email: string };
+        Returns: string | null;
+      };
+      is_current_user_platform_admin: { Args: never; Returns: boolean };
     };
     Enums: {
       [_ in never]: never;

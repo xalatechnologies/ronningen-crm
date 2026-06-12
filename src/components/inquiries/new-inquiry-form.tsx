@@ -8,6 +8,7 @@ import {
 } from "@/lib/validations";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
+import { notifyInquiryCreated } from "@/lib/notifications/actions/org-events";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -121,30 +122,39 @@ export function NewInquiryForm({
       customerId = custRow.id;
     }
 
-    const { error } = await supabase.from("booking_inquiries").insert({
-      customer_id: customerId,
-      property_id: data.propertyId || null,
-      event_type: data.eventType,
-      fest_type: data.festType.trim() || null,
-      preferred_event_date: data.preferredEventDate.trim() || null,
-      preferred_event_end_date: data.preferredEventEndDate.trim() || null,
-      guest_count: data.guestCount,
-      estimated_total:
-        data.estimatedTotal === undefined || Number.isNaN(data.estimatedTotal)
-          ? null
-          : data.estimatedTotal,
-      status: data.status,
-      next_follow_up_at: fromDatetimeLocalValue(data.nextFollowUpAt),
-      internal_notes: data.internalNotes?.trim() || null,
-      organization_id: orgId,
-    });
+    const { data: inquiryRow, error } = await supabase
+      .from("booking_inquiries")
+      .insert({
+        customer_id: customerId,
+        property_id: data.propertyId || null,
+        event_type: data.eventType,
+        fest_type: data.festType.trim() || null,
+        preferred_event_date: data.preferredEventDate.trim() || null,
+        preferred_event_end_date: data.preferredEventEndDate.trim() || null,
+        guest_count: data.guestCount,
+        estimated_total:
+          data.estimatedTotal === undefined || Number.isNaN(data.estimatedTotal)
+            ? null
+            : data.estimatedTotal,
+        status: data.status,
+        next_follow_up_at: fromDatetimeLocalValue(data.nextFollowUpAt),
+        internal_notes: data.internalNotes?.trim() || null,
+        organization_id: orgId,
+      })
+      .select("id")
+      .single();
 
-    if (error) {
+    if (error || !inquiryRow) {
       toast.error("Kunne ikke opprette forespørsel", {
-        description: error.message,
+        description: error?.message ?? "Ukjent feil",
       });
       return;
     }
+
+    void notifyInquiryCreated({
+      organizationId: orgId,
+      inquiryId: inquiryRow.id,
+    });
 
     toast.success("Forespørsel registrert");
     router.push("/app/inquiries");

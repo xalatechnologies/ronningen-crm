@@ -881,17 +881,6 @@
     }
   }
 
-  .assets-page-workspace .assets-inventory-title {
-    font-size: calc(19px * var(--app-type-scale));
-    line-height: 1.25;
-  }
-
-  @media (min-width: 768px) {
-    .assets-page-workspace .assets-inventory-title {
-      font-size: calc(19px * var(--app-type-scale));
-    }
-  }
-
   .assets-page-workspace .assets-toolbar-meta {
     font-size: calc(14px * var(--app-read-type-scale));
     line-height: 1.45;
@@ -1015,6 +1004,51 @@
   .reports-page-workspace .reports-load-error {
     font-size: calc(14px * var(--app-read-type-scale));
     line-height: 1.5;
+  }
+
+  /**
+   * Plattformadmin — samme typografi- og tabellskala som øvrige arbeidsflater.
+   */
+  .admin-page-workspace .app-title {
+    font-size: calc(24px * var(--app-type-scale));
+  }
+
+  .admin-page-workspace .app-section-title {
+    font-size: calc(21px * var(--app-type-scale));
+  }
+
+  .admin-page-workspace .app-text-muted,
+  .admin-page-workspace .admin-page-description {
+    font-size: calc(15px * var(--app-read-type-scale));
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+
+  .admin-page-workspace .admin-inline-link {
+    font-size: calc(14px * var(--app-type-scale));
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  .admin-page-workspace .admin-kpi-grid .dashboard-kpi-value {
+    font-size: calc(28px * var(--app-type-scale));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (min-width: 1280px) {
+    .admin-page-workspace .admin-kpi-grid .dashboard-kpi-value {
+      font-size: calc(26px * var(--app-type-scale));
+    }
+  }
+
+  .admin-page-workspace .admin-ops-table th {
+    letter-spacing: 0.05em;
+  }
+
+  .admin-page-workspace .admin-segment-bar {
+    margin-top: 0;
   }
 
   @media (min-width: 768px) {

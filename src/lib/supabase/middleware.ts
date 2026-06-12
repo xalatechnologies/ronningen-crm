@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-import { isAuthPath, isProtectedPath } from "@/config/routes";
+import { isAdminPath, isAuthPath, isProtectedPath } from "@/config/routes";
 import {
   getSupabasePublicEnvForClient,
   isSupabasePublicConfigured,
@@ -10,6 +10,12 @@ import {
 import type { Database } from "@/types/database.types";
 
 let missingMiddlewareEnvWarned = false;
+
+function hasSupabaseAuthCookie(request: NextRequest): boolean {
+  return request.cookies.getAll().some((cookie) =>
+    cookie.name.startsWith("sb-") && cookie.name.includes("auth-token"),
+  );
+}
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
@@ -20,6 +26,7 @@ export async function updateSession(request: NextRequest) {
     if (
       !missingMiddlewareEnvWarned &&
       (isProtectedPath(request.nextUrl.pathname) ||
+        isAdminPath(request.nextUrl.pathname) ||
         isAuthPath(request.nextUrl.pathname))
     ) {
       missingMiddlewareEnvWarned = true;
@@ -46,13 +53,19 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
+  const pathname = request.nextUrl.pathname;
+  const guestAuthPage = isAuthPath(pathname) && !hasSupabaseAuthCookie(request);
+
+  if (guestAuthPage) {
+    response.headers.set("x-pathname", pathname);
+    return response;
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
-
-  if (isProtectedPath(pathname) && !user) {
+  if ((isProtectedPath(pathname) || isAdminPath(pathname)) && !user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/auth/login";
     redirectUrl.searchParams.set("redirect", pathname);
@@ -61,9 +74,28 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthPath(pathname)) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/app";
+    const target = request.nextUrl.searchParams.get("redirect");
+    redirectUrl.pathname =
+      target && target.startsWith("/") && !target.startsWith("//")
+        ? target
+        : "/app";
+    redirectUrl.search = "";
     return NextResponse.redirect(redirectUrl);
   }
+
+  if (isAdminPath(pathname) && user) {
+    const { data: isPlatformAdmin, error } = await supabase.rpc(
+      "is_current_user_platform_admin",
+    );
+    if (error || !isPlatformAdmin) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/app";
+      redirectUrl.search = "";
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  response.headers.set("x-pathname", pathname);
 
   return response;
 }

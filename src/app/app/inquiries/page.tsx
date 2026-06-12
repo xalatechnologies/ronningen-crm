@@ -1,5 +1,5 @@
 import { InquiriesSection } from "@/components/inquiries/inquiries-section";
-import type { InquiryListRow } from "@/components/inquiries/types";
+import { isActiveInquiry, type InquiryListRow } from "@/components/inquiries/types";
 import type { BookingInquiryStatus } from "@/lib/validations";
 import { canManageBookings } from "@/lib/role-access";
 import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
@@ -67,11 +67,14 @@ export default async function InquiriesPage() {
       "id, customer_id, property_id, event_type, fest_type, preferred_event_date, preferred_event_end_date, guest_count, estimated_total, status, next_follow_up_at, internal_notes, converted_booking_id, converted_at, updated_at, customers(name, phone, email), properties(name)",
     )
     .eq("organization_id", orgId)
+    .is("converted_booking_id", null)
+    .neq("status", "converted")
     .order("updated_at", { ascending: false });
 
   const loadError = pErr?.message ?? cErr?.message ?? iErr?.message ?? null;
 
-  const inquiries: InquiryListRow[] = (rawList ?? []).map((row) => {
+  const inquiries: InquiryListRow[] = (rawList ?? [])
+    .map((row) => {
     const r = row as unknown as RawInquiry;
     const ymd = (x: string | null | undefined) =>
       x && /^\d{4}-\d{2}-\d{2}/.test(x) ? x.slice(0, 10) : null;
@@ -97,7 +100,8 @@ export default async function InquiriesPage() {
       convertedAtIso: r.converted_at,
       updatedAtIso: r.updated_at,
     };
-  });
+  })
+    .filter(isActiveInquiry);
 
   return (
     <InquiriesSection

@@ -2,8 +2,11 @@
 
 import { InquiryDetailSheet } from "@/components/inquiries/inquiry-detail-sheet";
 import { InquiriesFollowUpMonthCalendar } from "@/components/inquiries/inquiries-follow-up-calendar";
-import type { InquiryListRow } from "@/components/inquiries/types";
-import { INQUIRY_STATUS_LABELS } from "@/components/inquiries/types";
+import {
+  INQUIRY_STATUS_LABELS,
+  isActiveInquiry,
+  type InquiryListRow,
+} from "@/components/inquiries/types";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
@@ -44,7 +47,7 @@ import { useMemo, useState } from "react";
 const tableHeadClass =
   "font-semibold tracking-wider text-rn-text-column uppercase text-xs md:text-sm";
 
-type InquiryStatusFilter = "all" | BookingInquiryStatus;
+type InquiryStatusFilter = "all" | Exclude<BookingInquiryStatus, "converted">;
 
 function matchesInquirySearch(row: InquiryListRow, query: string): boolean {
   if (!query.trim()) return true;
@@ -122,25 +125,30 @@ export function InquiriesSection({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showCalendarView, setShowCalendarView] = useState(false);
 
+  const activeInquiries = useMemo(
+    () => inquiries.filter(isActiveInquiry),
+    [inquiries],
+  );
+
   const filterCounts = useMemo(() => {
     const counts = {
-      all: inquiries.length,
+      all: activeInquiries.length,
       new: 0,
       contacted: 0,
       quote_sent: 0,
       awaiting_customer: 0,
-      converted: 0,
       lost: 0,
     } satisfies Record<InquiryStatusFilter, number>;
-    for (const row of inquiries) {
+    for (const row of activeInquiries) {
+      if (row.status === "converted") continue;
       counts[row.status] += 1;
     }
     return counts;
-  }, [inquiries]);
+  }, [activeInquiries]);
 
   const overdueCount = useMemo(
-    () => inquiries.filter((row) => isOverdueFollowUp(row)).length,
-    [inquiries],
+    () => activeInquiries.filter((row) => isOverdueFollowUp(row)).length,
+    [activeInquiries],
   );
 
   const hasActiveFilters =
@@ -163,14 +171,14 @@ export function InquiriesSection({
   }, [statusFilter, dueOnly]);
 
   const filtered = useMemo(() => {
-    return inquiries.filter((row) => {
+    return activeInquiries.filter((row) => {
       if (statusFilter !== "all" && row.status !== statusFilter) return false;
       if (dueOnly && !isOverdueFollowUp(row)) return false;
       if (!matchesInquiryPreferredDateRange(row, dateFrom, dateTo)) return false;
       if (!matchesInquirySearch(row, query)) return false;
       return true;
     });
-  }, [inquiries, query, statusFilter, dueOnly, dateFrom, dateTo]);
+  }, [activeInquiries, query, statusFilter, dueOnly, dateFrom, dateTo]);
 
   function resetFilters() {
     setQuery("");
@@ -327,7 +335,6 @@ export function InquiriesSection({
                             "contacted",
                             "quote_sent",
                             "awaiting_customer",
-                            "converted",
                             "lost",
                           ] as const
                         ).map((key) => (
@@ -377,8 +384,8 @@ export function InquiriesSection({
 
             {hasActiveFilters ? (
               <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
-                Viser {filtered.length} av {inquiries.length}{" "}
-                {inquiries.length === 1 ? "forespørsel" : "forespørsler"}
+                Viser {filtered.length} av {activeInquiries.length}{" "}
+                {activeInquiries.length === 1 ? "forespørsel" : "forespørsler"}
               </p>
             ) : null}
           </section>
@@ -390,7 +397,7 @@ export function InquiriesSection({
               <Inbox className="size-8 text-muted-foreground" aria-hidden />
             </div>
             <p className="max-w-sm text-muted-foreground">
-              {inquiries.length === 0
+              {activeInquiries.length === 0
                 ? "Ingen forespørsler ennå. Bruk «Ny forespørsel» for å registrere første henvendelse."
                 : "Ingen rader samsvarer med filter eller søk."}
             </p>
@@ -400,7 +407,7 @@ export function InquiriesSection({
         {!loadError && filtered.length > 0 && showCalendarView ? (
           <InquiriesFollowUpMonthCalendar
             rows={filtered}
-            totalInquiriesCount={inquiries.length}
+            totalInquiriesCount={activeInquiries.length}
             onSelectInquiry={openRow}
           />
         ) : null}
@@ -426,10 +433,7 @@ export function InquiriesSection({
                 {filtered.map((row) => (
                   <TableRow
                     key={row.id}
-                    className={cn(
-                      "group cursor-pointer border-rn-border-strong/40 hover:bg-rn-surface-row-hover",
-                      row.status === "converted" && "opacity-90",
-                    )}
+                    className="group cursor-pointer border-rn-border-strong/40 hover:bg-rn-surface-row-hover"
                     onClick={() => openRow(row)}
                     aria-label={`Åpne forespørsel: ${row.customerName}`}
                   >

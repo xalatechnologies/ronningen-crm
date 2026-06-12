@@ -13,7 +13,11 @@ import {
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import {
+  FormSelect,
+  FormSelectField,
+  toIdNameOptions,
+} from "@/components/ui/form-select";
 import {
   Table,
   TableBody,
@@ -279,7 +283,7 @@ function TransactionFormInner({
     defaultValues: transactionFormDefaults(properties, existing ?? null),
   });
 
-  const { register, handleSubmit, formState, setValue, watch } = form;
+  const { register, control, handleSubmit, formState, setValue, watch } = form;
   const txType = watch("type");
   const transactionDate = watch("transactionDate");
   const hiddenTransactionDateRegister = register("transactionDate");
@@ -367,18 +371,14 @@ function TransactionFormInner({
                 className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground"
                 aria-hidden
               />
-              <NativeSelect
+              <FormSelectField
+                name="propertyId"
+                control={control}
+                id={`tx-property-${categoryListId}`}
                 className="bg-background py-0 pl-12"
                 aria-label="Lokale for transaksjonen"
-                {...register("propertyId")}
-                id={`tx-property-${categoryListId}`}
-              >
-                {properties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </NativeSelect>
+                options={toIdNameOptions(properties)}
+              />
             </div>
             {formState.errors.propertyId ? (
               <p className="text-sm text-destructive">
@@ -731,22 +731,17 @@ export function FinanceSection({
                   <Label className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase">
                     Lokale
                   </Label>
-                  <NativeSelect
+                  <FormSelect
                     value={propertyId}
-                    onChange={(e) => {
-                      setPropertyId(e.target.value);
+                    onValueChange={(v) => {
+                      setPropertyId(v);
                       setPage(1);
                     }}
                     aria-label="Filtrer transaksjoner etter lokale"
                     className="finance-filter-control h-12 min-h-12 bg-card md:h-14 md:min-h-14"
-                  >
-                    <option value="">Alle lokaler</option>
-                    {properties.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </NativeSelect>
+                    placeholder="Alle lokaler"
+                    options={toIdNameOptions(properties)}
+                  />
                 </div>
                 <div className="min-w-[160px] flex-1 space-y-2">
                   <Label
@@ -1210,11 +1205,9 @@ export function FinanceSection({
                 </Button>
                 <Button
                   type="button"
+                  size="cta"
                   disabled={deleteBusy}
-                  className={cn(
-                    buttonVariants({ variant: "default" }),
-                    "h-11 w-full rounded-md border-2 border-red-200 bg-red-600 font-semibold text-white hover:bg-red-700 sm:w-auto",
-                  )}
+                  className="w-full border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700 sm:w-auto"
                   onClick={() => void confirmDeleteTransaction()}
                 >
                   {deleteBusy ? "Sletter…" : "Ja, slett"}

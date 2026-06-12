@@ -13,6 +13,9 @@ export const AUTH_ROUTE_PREFIXES = [
 /** Application shell (requires session) */
 export const PROTECTED_ROUTE_PREFIX = "/app" as const;
 
+/** Platform admin console (requires session; role checked in layout) */
+export const ADMIN_ROUTE_PREFIX = "/admin" as const;
+
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_ROUTE_PREFIXES.some((prefix) => pathname === prefix);
 }
@@ -27,6 +30,13 @@ export function isProtectedPath(pathname: string): boolean {
   return (
     pathname === PROTECTED_ROUTE_PREFIX ||
     pathname.startsWith(`${PROTECTED_ROUTE_PREFIX}/`)
+  );
+}
+
+export function isAdminPath(pathname: string): boolean {
+  return (
+    pathname === ADMIN_ROUTE_PREFIX ||
+    pathname.startsWith(`${ADMIN_ROUTE_PREFIX}/`)
   );
 }
 

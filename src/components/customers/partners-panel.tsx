@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import { FormSelectField } from "@/components/ui/form-select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -61,18 +61,23 @@ function PartnerFields({
   form: UseFormReturn<PartnerFormInput>;
   idPrefix: string;
 }) {
-  const { register, formState } = form;
+  const { register, control, formState } = form;
   const err = formState.errors;
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor={`${idPrefix}-cat`}>Kategori</Label>
-        <NativeSelect id={`${idPrefix}-cat`} {...register("category")}>
-          <option value="catering">Catering</option>
-          <option value="decoration">Dekorasjon</option>
-          <option value="cleaning">Renhold</option>
-          <option value="other">Annet</option>
-        </NativeSelect>
+        <FormSelectField
+          name="category"
+          control={control}
+          id={`${idPrefix}-cat`}
+          options={[
+            { value: "catering", label: "Catering" },
+            { value: "decoration", label: "Dekorasjon" },
+            { value: "cleaning", label: "Renhold" },
+            { value: "other", label: "Annet" },
+          ]}
+        />
         {err.category ? (
           <p className="text-xs text-destructive">{err.category.message}</p>
         ) : null}
@@ -558,11 +563,9 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
                 </Button>
                 <Button
                   type="button"
+                  size="cta"
                   disabled={deleteBusyId != null}
-                  className={cn(
-                    buttonVariants({ variant: "default" }),
-                    "h-11 w-full rounded-md border-2 border-red-200 bg-red-600 font-semibold text-white hover:bg-red-700 sm:w-auto",
-                  )}
+                  className="w-full border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700 sm:w-auto"
                   onClick={() => void confirmPartnerDelete()}
                 >
                   Ja, slett partner

@@ -27,7 +27,13 @@ const OrganizationContext = createContext<OrganizationContextValue | null>(
   null,
 );
 
-export function OrganizationProvider({ children }: { children: ReactNode }) {
+export function OrganizationProvider({
+  children,
+  impersonationOrgId = null,
+}: {
+  children: ReactNode;
+  impersonationOrgId?: string | null;
+}) {
   const supabase = useSupabase();
   const { user, loading: authLoading } = useAuthUser();
   const [organizations, setOrganizations] = useState<
@@ -62,12 +68,17 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
           ? window.localStorage.getItem(ACTIVE_ORGANIZATION_STORAGE_KEY)
           : null;
 
-      const [memberships, profileOrgId] = await Promise.all([
-        fetchUserOrganizations(supabase, user.id),
-        fetchActiveOrganizationId(supabase, user.id),
-      ]);
+      const memberships = await fetchUserOrganizations(supabase, user.id);
 
-      const preferredOrgId = profileOrgId ?? storedOrgId;
+      let profileOrgId: string | null = null;
+      try {
+        profileOrgId = await fetchActiveOrganizationId(supabase, user.id);
+      } catch {
+        profileOrgId = null;
+      }
+
+      const preferredOrgId =
+        impersonationOrgId ?? profileOrgId ?? storedOrgId;
       const resolved = resolveCurrentOrganization(memberships, preferredOrgId);
 
       setOrganizations(memberships);
@@ -76,6 +87,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       setCurrentRole(resolved.role);
 
       if (
+        !impersonationOrgId &&
         resolved.organizationId &&
         resolved.organizationId !== profileOrgId
       ) {
@@ -92,7 +104,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [supabase, user]);
+  }, [impersonationOrgId, supabase, user]);
 
   useEffect(() => {
     if (authLoading) return;

@@ -31,7 +31,8 @@ export const HERO = {
   primaryCta: "Start gratis prøveperiode",
   secondaryCta: "Se funksjoner",
   secondaryHref: "#funksjoner",
-  trust: "Ingen kredittkort. 30 dagers gratis prøveperiode.",
+  trust:
+    "30 dagers gratis prøveperiode. Kort registreres ved oppstart, første trekk etter prøven.",
 } as const;
 
 export const HERO_DEMO_STATS = [
@@ -162,25 +163,11 @@ export const BENEFITS = [
 
 export const PRICING_PLANS = [
   {
-    id: "starter",
-    name: "Starter",
-    price: "499",
-    description: "For små lokaler",
-    recommended: false,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "999",
-    description: "For voksende bedrifter",
+    id: "standard",
+    name: "Standard",
+    price: "500",
+    description: "Full tilgang til Event Manager for lokalet ditt",
     recommended: true,
-  },
-  {
-    id: "business",
-    name: "Business",
-    price: "1 999",
-    description: "For flere lokasjoner",
-    recommended: false,
   },
 ] as const;
 
@@ -191,9 +178,9 @@ export const FAQ_ITEMS = [
       "Eventlokaler, utleiebedrifter, eiendomseiere og team som håndterer bookinger, kunder, betalinger og rapporter.",
   },
   {
-    question: "Trenger jeg kredittkort for å starte?",
+    question: "Hvordan fungerer prøveperioden?",
     answer:
-      "Nei. Den planlagte prøveperioden gir deg 30 dager til å teste systemet før du velger plan.",
+      "Du får 30 dager gratis. Kort registreres ved oppstart, og du belastes 500 kr/mnd først når prøveperioden er over. Du kan si opp når som helst.",
   },
   {
     question: "Kan jeg administrere flere lokaler?",
@@ -231,7 +218,7 @@ export const SECTION_TITLES = {
   productPreview: "Bygget for daglig drift — ikke bare regnskap.",
   audience: "Laget for lokaler og utleiebedrifter.",
   benefits: "Mindre manuelt arbeid. Bedre kontroll.",
-  pricing: "Start enkelt. Oppgrader når du vokser.",
+  pricing: "Én enkel pris. Full tilgang.",
   faq: "Ofte stilte spørsmål",
 } as const;
 

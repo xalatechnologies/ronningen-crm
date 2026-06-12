@@ -4,6 +4,7 @@ import { InquiryFormBody } from "@/components/inquiries/inquiry-form-body";
 import type { InquiryActivityRow, InquiryListRow } from "@/components/inquiries/types";
 import { INQUIRY_STATUS_LABELS } from "@/components/inquiries/types";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -114,6 +115,8 @@ export function InquiryDetailSheet({
   const router = useRouter();
   const [activities, setActivities] = useState<InquiryActivityRow[]>([]);
   const [loadingActivities, setLoadingActivities] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const isConverted =
     inquiry?.status === "converted" || !!inquiry?.convertedBookingId;
@@ -239,25 +242,25 @@ export function InquiryDetailSheet({
     onOpenChange(false);
   }
 
-  async function onDeleteInquiry() {
+  async function confirmDeleteInquiry() {
     if (!inquiry || !supabase || !canManage || isConverted) return;
-    if (
-      !confirm(
-        `Slette forespørselen for ${inquiry.customerName}? Notater og aktivitet slettes også. Dette kan ikke angres.`,
-      )
-    )
-      return;
-    const { error } = await supabase
-      .from("booking_inquiries")
-      .delete()
-      .eq("id", inquiry.id);
-    if (error) {
-      toast.error("Kunne ikke slette", { description: error.message });
-      return;
+    setDeleteBusy(true);
+    try {
+      const { error } = await supabase
+        .from("booking_inquiries")
+        .delete()
+        .eq("id", inquiry.id);
+      if (error) {
+        toast.error("Kunne ikke slette", { description: error.message });
+        return;
+      }
+      toast.success("Forespørsel slettet");
+      setDeleteDialogOpen(false);
+      onOpenChange(false);
+      router.refresh();
+    } finally {
+      setDeleteBusy(false);
     }
-    toast.success("Forespørsel slettet");
-    onOpenChange(false);
-    router.refresh();
   }
 
   async function onAddNote(values: { body: string }) {
@@ -293,6 +296,7 @@ export function InquiryDetailSheet({
   if (!inquiry) return null;
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
@@ -480,7 +484,7 @@ export function InquiryDetailSheet({
                 variant="destructive"
                 size="cta"
                 className="w-full sm:w-auto"
-                onClick={() => void onDeleteInquiry()}
+                onClick={() => setDeleteDialogOpen(true)}
               >
                 Slett forespørsel
               </Button>
@@ -510,5 +514,20 @@ export function InquiryDetailSheet({
         </div>
       </SheetContent>
     </Sheet>
+
+    <ConfirmDeleteDialog
+      open={deleteDialogOpen}
+      onOpenChange={setDeleteDialogOpen}
+      title="Slette forespørsel?"
+      description={
+        inquiry
+          ? `Forespørselen for ${inquiry.customerName} slettes permanent, inkludert notater og aktivitet. Dette kan ikke angres.`
+          : null
+      }
+      confirmLabel="Ja, slett forespørsel"
+      busy={deleteBusy}
+      onConfirm={confirmDeleteInquiry}
+    />
+    </>
   );
 }

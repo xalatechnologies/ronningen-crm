@@ -1,5 +1,9 @@
 import { InvoicePrintToolbar } from "@/components/invoices/print-toolbar";
 import { formatBookingListDateLabel } from "@/lib/booking-period";
+import {
+  mapOrganizationToInvoiceIssuer,
+  type OrganizationProfileRow,
+} from "@/lib/organizations/organization-profile";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -7,20 +11,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 type PageProps = { params: Promise<{ bookingId: string }> };
-
-/** Rediger her eller flytt til innstillinger / miljøvariabel senere. */
-const ISSUER = {
-  name: "Rønningen",
-  tagline: "Selskapslokale og arrangement",
-  subtitle:
-    "Oppdatér virksomhetsadresse, org.nr. og betalingsinformasjon under Innstillinger når feltene er klare.",
-  orgNo: "" as string,
-  addressLines: [] as string[],
-  contactEmail: "" as string,
-  contactPhone: "" as string,
-  bankInfo:
-    "Kontonummer og KID sendes på e-post fra administrator, eller avtales direkte ved fakturering.",
-} as const;
 
 function isCancelledStatus(status: string) {
   const x = status.toLowerCase();
@@ -79,6 +69,35 @@ export default async function InvoicePrintPage({ params }: PageProps) {
 
   const supabase = await createServerSupabaseClient();
   const orgId = await requireServerOrganizationId();
+
+  const { data: orgRow } = await supabase
+    .from("organizations")
+    .select(
+      "id, name, slug, logo_url, legal_name, tagline, org_number, address_line1, address_line2, postal_code, city, contact_email, contact_phone, bank_account, payment_instructions",
+    )
+    .eq("id", orgId)
+    .maybeSingle();
+
+  const ISSUER = orgRow
+    ? mapOrganizationToInvoiceIssuer(orgRow as OrganizationProfileRow)
+    : mapOrganizationToInvoiceIssuer({
+        id: orgId,
+        name: "Virksomhet",
+        slug: "virksomhet",
+        logo_url: null,
+        legal_name: null,
+        tagline: null,
+        org_number: null,
+        address_line1: null,
+        address_line2: null,
+        postal_code: null,
+        city: null,
+        contact_email: null,
+        contact_phone: null,
+        bank_account: null,
+        payment_instructions: null,
+      });
+
   const { data: row, error } = await supabase
     .from("bookings")
     .select(

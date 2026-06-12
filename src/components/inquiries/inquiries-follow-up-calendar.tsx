@@ -1,6 +1,6 @@
 "use client";
 
-import type { InquiryListRow } from "@/components/inquiries/types";
+import { isActiveInquiry, type InquiryListRow } from "@/components/inquiries/types";
 import { INQUIRY_STATUS_LABELS } from "@/components/inquiries/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,7 @@ export function inquiryFollowUpYmd(iso: string | null | undefined): string | nul
 
 function dayCellFillClass(rows: InquiryListRow[]): string {
   if (rows.length === 0) return "";
-  const open = rows.filter((r) => r.status !== "converted" && r.status !== "lost");
+  const open = rows.filter((r) => isActiveInquiry(r) && r.status !== "lost");
   if (open.length === 0) {
     if (rows.some((r) => r.status === "converted")) {
       return "bg-emerald-100/85 ring-1 ring-inset ring-emerald-400/35 dark:bg-emerald-950/25 dark:ring-emerald-700/35";

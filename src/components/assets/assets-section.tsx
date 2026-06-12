@@ -2,6 +2,7 @@
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AppPageHeader } from "@/components/layout/app-page-header";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import {
+  FormSelect,
+  FormSelectField,
+  toIdNameOptions,
+} from "@/components/ui/form-select";
 import {
   Table,
   TableBody,
@@ -34,6 +39,7 @@ import { requireOrganizationId } from "@/lib/organizations/require-organization-
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import {
   Armchair,
   Box,
@@ -238,7 +244,7 @@ function AssetFormFields({
     return INSURANCE_PRESETS;
   }, [row?.insurance_status]);
 
-  const { register, handleSubmit, formState, setValue, watch } = form;
+  const { register, control, handleSubmit, formState, setValue, watch } = form;
   const { isSubmitting } = formState;
   const conditionVal = watch("condition");
   const insuranceVal = watch("insuranceStatus");
@@ -318,18 +324,14 @@ function AssetFormFields({
             >
               Lokale
             </Label>
-            <NativeSelect
+            <FormSelectField
+              name="propertyId"
+              control={control}
               id={idProperty}
-              aria-invalid={!!formState.errors.propertyId}
               aria-label="Lokale"
-              {...register("propertyId")}
-            >
-              {properties.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </NativeSelect>
+              aria-invalid={!!formState.errors.propertyId}
+              options={toIdNameOptions(properties)}
+            />
             {formState.errors.propertyId ? (
               <p className="text-sm text-destructive" role="alert">
                 {formState.errors.propertyId.message}
@@ -421,18 +423,13 @@ function AssetFormFields({
               >
                 Tilstand
               </Label>
-              <NativeSelect
+              <FormSelect
                 id={idCondition}
                 aria-label="Tilstand"
                 value={conditionVal ?? ""}
-                onChange={(e) => setValue("condition", e.target.value)}
-              >
-                {conditionOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </NativeSelect>
+                onValueChange={(v) => setValue("condition", v)}
+                options={conditionOptions}
+              />
             </div>
             <div className="space-y-2">
               <Label
@@ -441,18 +438,13 @@ function AssetFormFields({
               >
                 Forsikring
               </Label>
-              <NativeSelect
+              <FormSelect
                 id={idInsurance}
                 aria-label="Forsikringsstatus"
                 value={insuranceVal ?? ""}
-                onChange={(e) => setValue("insuranceStatus", e.target.value)}
-              >
-                {insuranceOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </NativeSelect>
+                onValueChange={(v) => setValue("insuranceStatus", v)}
+                options={insuranceOptions}
+              />
             </div>
           </div>
         </div>
@@ -506,6 +498,11 @@ export function AssetsSection({
     open: boolean;
     row: AssetListItem | null;
   }>({ open: false, row: null });
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -586,21 +583,24 @@ export function AssetsSection({
     setPage(1);
   }, []);
 
-  async function deleteAsset(id: string, name: string) {
-    if (
-      !confirm(
-        `Slette «${name}»? Dette kan ikke angres.`,
-      )
-    ) {
-      return;
+  async function confirmDeleteAsset() {
+    if (!deleteTarget) return;
+    setDeleteBusy(true);
+    try {
+      const { error } = await supabase
+        .from("assets")
+        .delete()
+        .eq("id", deleteTarget.id);
+      if (error) {
+        toast.error("Kunne ikke slette", { description: error.message });
+        return;
+      }
+      toast.success("Inventarpost slettet");
+      setDeleteTarget(null);
+      router.refresh();
+    } finally {
+      setDeleteBusy(false);
     }
-    const { error } = await supabase.from("assets").delete().eq("id", id);
-    if (error) {
-      toast.error("Kunne ikke slette", { description: error.message });
-      return;
-    }
-    toast.success("Inventarpost slettet");
-    router.refresh();
   }
 
   return (
@@ -655,9 +655,14 @@ export function AssetsSection({
             role="status"
           >
             <div className="assets-setup-hint rounded-md border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-amber-950 dark:text-amber-50">
-              Det finnes ingen lokaler ennå. Inventar må knyttes til et lokale — legg inn
-              eiendommer i databasen (eller kontakt administrator) før du registrerer
-              inventar.
+              Det finnes ingen lokaler ennå. Inventar må knyttes til et lokale —{" "}
+              <Link
+                href="/app/settings/lokaler"
+                className="font-semibold text-amber-950 underline underline-offset-2 dark:text-amber-50"
+              >
+                registrer lokaler under Innstillinger
+              </Link>{" "}
+              før du legger til inventar.
             </div>
           </div>
         ) : null}
@@ -727,25 +732,80 @@ export function AssetsSection({
         <div className="min-w-0">
           <div className="border-t-2 border-b-2 border-rn-border-strong/50 bg-card px-4 py-3 sm:px-6 md:px-8 md:py-4">
           <div className="flex min-h-12 flex-nowrap items-center gap-2 overflow-x-auto sm:gap-3 md:min-h-14 md:gap-4">
-            <div className="flex shrink-0 items-center gap-2 pr-1">
-              <h2 className="assets-inventory-title font-heading font-bold tracking-tight text-rn-text-heading whitespace-nowrap">
-                Inventar
-              </h2>
-              {assets.length === 0 ? (
-                <span className="assets-toolbar-meta text-muted-foreground whitespace-nowrap">
-                  Ingen data
-                </span>
-              ) : hasActiveFilters ? (
-                <span
-                  className="assets-toolbar-meta tabular-nums text-muted-foreground whitespace-nowrap"
-                  title="Synlige av totalt antall linjer"
-                >
-                  {filtered.length}/{assets.length}
-                </span>
-              ) : null}
+            {assets.length === 0 || hasActiveFilters ? (
+              <div className="flex shrink-0 items-center pr-1">
+                {assets.length === 0 ? (
+                  <span className="assets-toolbar-meta text-muted-foreground whitespace-nowrap">
+                    Ingen data
+                  </span>
+                ) : (
+                  <span
+                    className="assets-toolbar-meta tabular-nums text-muted-foreground whitespace-nowrap"
+                    title="Synlige av totalt antall linjer"
+                  >
+                    {filtered.length}/{assets.length}
+                  </span>
+                )}
+              </div>
+            ) : null}
+
+            <div className="relative min-w-[10rem] flex-1 basis-48">
+              <Search
+                className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground md:left-5"
+                aria-hidden
+              />
+              <Input
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Søk …"
+                title="Søk i navn, lokale, tilstand eller forsikring"
+                className="assets-search-input h-12 min-h-12 w-full min-w-[10rem] rounded-md border-2 border-rn-border-strong bg-background pl-12 focus-visible:border-success focus-visible:ring-success/25 md:h-14 md:min-h-14 md:pl-14"
+                aria-label="Søk i inventar"
+              />
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="relative w-48 shrink-0 sm:w-56 md:w-60">
+              <Building2
+                className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground md:left-5"
+                aria-hidden
+              />
+              <FormSelect
+                value={propertyId}
+                onValueChange={(v) => {
+                  setPropertyId(v);
+                  setPage(1);
+                }}
+                aria-label="Filtrer etter lokale"
+                className="assets-filter-select h-12 min-h-12 rounded-md py-0 pl-12 md:h-14 md:min-h-14 md:pl-14"
+                placeholder="Alle lokaler"
+                options={toIdNameOptions(properties)}
+              />
+            </div>
+
+            <div className="relative w-36 shrink-0 sm:w-44">
+              <Wrench
+                className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground md:left-5"
+                aria-hidden
+              />
+              <FormSelect
+                value={statusFilter}
+                onValueChange={(v) => {
+                  setStatusFilter(v as "all" | AssetStatusBucket);
+                  setPage(1);
+                }}
+                aria-label="Filtrer etter tilstand"
+                className="assets-filter-select h-12 min-h-12 rounded-md py-0 pl-12 md:h-14 md:min-h-14 md:pl-14"
+                options={STATUS_QUICK_FILTERS.map((opt) => ({
+                  value: opt.id,
+                  label: opt.label,
+                }))}
+              />
+            </div>
+
+            <div className="ml-auto flex shrink-0 items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -772,69 +832,6 @@ export function AssetsSection({
               >
                 Nullstill
               </Button>
-            </div>
-
-            <div className="relative min-w-[min(100%,12rem)] flex-1 basis-48">
-              <Search
-                className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground md:left-5"
-                aria-hidden
-              />
-              <Input
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setPage(1);
-                }}
-                placeholder="Søk …"
-                title="Søk i navn, lokale, tilstand eller forsikring"
-                className="assets-search-input h-12 min-h-12 w-full min-w-[10rem] rounded-md border-2 border-rn-border-strong bg-background pl-12 focus-visible:border-success focus-visible:ring-success/25 md:h-14 md:min-h-14 md:pl-14"
-                aria-label="Søk i inventar"
-              />
-            </div>
-
-            <div className="relative w-40 shrink-0 sm:w-48">
-              <Building2
-                className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground md:left-5"
-                aria-hidden
-              />
-              <NativeSelect
-                value={propertyId}
-                onChange={(e) => {
-                  setPropertyId(e.target.value);
-                  setPage(1);
-                }}
-                aria-label="Filtrer etter lokale"
-                className="assets-filter-select h-12 min-h-12 rounded-md py-0 pl-12 md:h-14 md:min-h-14 md:pl-14"
-              >
-                <option value="">Alle lokaler</option>
-                {properties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </NativeSelect>
-            </div>
-
-            <div className="relative w-36 shrink-0 sm:w-44">
-              <Wrench
-                className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground md:left-5"
-                aria-hidden
-              />
-              <NativeSelect
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value as "all" | AssetStatusBucket);
-                  setPage(1);
-                }}
-                aria-label="Filtrer etter tilstand"
-                className="assets-filter-select h-12 min-h-12 rounded-md py-0 pl-12 md:h-14 md:min-h-14 md:pl-14"
-              >
-                {STATUS_QUICK_FILTERS.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.label}
-                  </option>
-                ))}
-              </NativeSelect>
             </div>
           </div>
         </div>
@@ -1004,7 +1001,9 @@ export function AssetsSection({
                           disabled={!canEdit}
                           className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10 disabled:opacity-40"
                           aria-label={`Slett ${a.name}`}
-                          onClick={() => void deleteAsset(a.id, a.name)}
+                          onClick={() =>
+                            setDeleteTarget({ id: a.id, name: a.name })
+                          }
                         >
                           <Trash2 className="size-5" aria-hidden />
                         </Button>
@@ -1108,6 +1107,22 @@ export function AssetsSection({
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <ConfirmDeleteDialog
+        open={deleteTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title="Slette inventarpost?"
+        description={
+          deleteTarget
+            ? `«${deleteTarget.name}» fjernes permanent. Dette kan ikke angres.`
+            : null
+        }
+        confirmLabel="Ja, slett"
+        busy={deleteBusy}
+        onConfirm={confirmDeleteAsset}
+      />
     </div>
   );
 }

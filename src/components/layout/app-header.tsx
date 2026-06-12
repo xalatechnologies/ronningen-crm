@@ -21,6 +21,7 @@ import {
 import { OrganizationSwitcher } from "@/components/organizations/organization-switcher";
 import { APP_NAME } from "@/config/app";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { usePlatformAdmin } from "@/hooks/use-platform-admin";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { MenuIcon, ChevronDown } from "lucide-react";
@@ -82,6 +83,7 @@ function HeaderAvatarOrInitials({
 
 export function AppHeader({ children }: { children?: ReactNode }) {
   const { user, loading } = useAuthUser();
+  const { isPlatformAdmin } = usePlatformAdmin();
   const supabase = useSupabase();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -181,10 +183,18 @@ export function AppHeader({ children }: { children?: ReactNode }) {
               <DropdownMenuSeparator className="my-2 bg-border" />
               <DropdownMenuItem
                 className="px-3 py-2.5 font-heading text-app-md md:px-3.5 md:py-3"
-                render={<Link href="/app/settings/billing" />}
+                render={<Link href="/app/settings" />}
               >
-                Fakturering
+                Innstillinger
               </DropdownMenuItem>
+              {isPlatformAdmin ? (
+                <DropdownMenuItem
+                  className="px-3 py-2.5 font-heading text-app-md md:px-3.5 md:py-3"
+                  render={<Link href="/admin" />}
+                >
+                  Plattformadmin
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem
                 className="px-3 py-2.5 font-heading text-app-md font-bold md:px-3.5 md:py-3"
                 onSelect={() => void signOut()}

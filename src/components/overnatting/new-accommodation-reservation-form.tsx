@@ -4,7 +4,11 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import {
+  FormSelectField,
+  toIdNameOptions,
+  toStringOptions,
+} from "@/components/ui/form-select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ACCOMMODATION_RESERVATION_STATUSES,
@@ -13,6 +17,7 @@ import {
 } from "@/lib/validations";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
+import { notifyAccommodationCreated } from "@/lib/notifications/actions/org-events";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -119,29 +124,38 @@ export function NewAccommodationReservationForm({
       custId = row.id;
     }
 
-    const { error } = await supabase.from("accommodation_reservations").insert({
-      unit_id: data.unitId,
-      customer_id: custId,
-      check_in_date: data.checkInDate,
-      check_out_date: data.checkOutDate,
-      check_in_time: data.checkInTime === "" ? null : data.checkInTime,
-      check_out_time: data.checkOutTime === "" ? null : data.checkOutTime,
-      status: data.status,
-      guest_count: data.guestCount,
-      notes: data.notes?.trim() || null,
-      total_price:
-        data.totalPrice === undefined || Number.isNaN(data.totalPrice)
-          ? null
-          : data.totalPrice,
-      organization_id: orgId,
-    });
+    const { data: reservationRow, error } = await supabase
+      .from("accommodation_reservations")
+      .insert({
+        unit_id: data.unitId,
+        customer_id: custId,
+        check_in_date: data.checkInDate,
+        check_out_date: data.checkOutDate,
+        check_in_time: data.checkInTime === "" ? null : data.checkInTime,
+        check_out_time: data.checkOutTime === "" ? null : data.checkOutTime,
+        status: data.status,
+        guest_count: data.guestCount,
+        notes: data.notes?.trim() || null,
+        total_price:
+          data.totalPrice === undefined || Number.isNaN(data.totalPrice)
+            ? null
+            : data.totalPrice,
+        organization_id: orgId,
+      })
+      .select("id")
+      .single();
 
-    if (error) {
+    if (error || !reservationRow) {
       toast.error("Kunne ikke registrere reservasjon", {
-        description: error.message,
+        description: error?.message ?? "Ukjent feil",
       });
       return;
     }
+
+    void notifyAccommodationCreated({
+      organizationId: orgId,
+      reservationId: reservationRow.id,
+    });
 
     toast.success("Reservasjon registrert");
     router.push("/app/overnatting");
@@ -217,21 +231,24 @@ export function NewAccommodationReservationForm({
               <Label className={labelClass} htmlFor={`${rid}-unit`}>
                 Enhet
               </Label>
-              <NativeSelect
+              <FormSelectField
+                name="unitId"
+                control={form.control}
                 id={`${rid}-unit`}
                 className={cn(fieldClass, "font-medium")}
-                {...form.register("unitId")}
-              >
-                {activeUnits.length === 0 ? (
-                  <option value="">Ingen aktive enheter</option>
-                ) : (
-                  activeUnits.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} (maks {u.maxGuests} gjester)
-                    </option>
-                  ))
-                )}
-              </NativeSelect>
+                disabled={activeUnits.length === 0}
+                placeholder={
+                  activeUnits.length === 0 ? "Ingen aktive enheter" : undefined
+                }
+                options={
+                  activeUnits.length === 0
+                    ? []
+                    : activeUnits.map((u) => ({
+                        value: u.id,
+                        label: `${u.name} (maks ${u.maxGuests} gjester)`,
+                      }))
+                }
+              />
               {form.formState.errors.unitId ? (
                 <p className="text-sm text-destructive">
                   {form.formState.errors.unitId.message}
@@ -243,18 +260,14 @@ export function NewAccommodationReservationForm({
               <Label className={labelClass} htmlFor={`${rid}-customer`}>
                 Kunde
               </Label>
-              <NativeSelect
+              <FormSelectField
+                name="customerId"
+                control={form.control}
                 id={`${rid}-customer`}
                 className={cn(fieldClass, "font-medium")}
-                {...form.register("customerId")}
-              >
-                <option value="">— Registrer som ny kunde (fyll inn under) —</option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </NativeSelect>
+                placeholder="— Registrer som ny kunde (fyll inn under) —"
+                options={toIdNameOptions(customers)}
+              />
               {form.formState.errors.customerId ? (
                 <p className="text-sm text-destructive">
                   {form.formState.errors.customerId.message}
@@ -440,17 +453,19 @@ export function NewAccommodationReservationForm({
                 <Label className={labelClass} htmlFor={`${rid}-status`}>
                   Status
                 </Label>
-                <NativeSelect
+                <FormSelectField
+                  name="status"
+                  control={form.control}
                   id={`${rid}-status`}
                   className={cn(fieldClass, "font-medium")}
-                  {...form.register("status")}
-                >
-                  {ACCOMMODATION_RESERVATION_STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {ACCOMMODATION_RESERVATION_LABELS[s]}
-                    </option>
-                  ))}
-                </NativeSelect>
+                  options={toStringOptions(
+                    ACCOMMODATION_RESERVATION_STATUSES,
+                    (s) =>
+                      ACCOMMODATION_RESERVATION_LABELS[
+                        s as keyof typeof ACCOMMODATION_RESERVATION_LABELS
+                      ],
+                  )}
+                />
               </div>
             </div>
 

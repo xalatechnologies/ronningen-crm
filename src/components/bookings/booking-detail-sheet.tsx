@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import { FormSelectField, toStringOptions } from "@/components/ui/form-select";
 import {
   Sheet,
   SheetContent,
@@ -476,18 +476,14 @@ export function BookingDetailSheet({
                   <Label htmlFor="bde-event-type" className={labelClass}>
                     Kategori
                   </Label>
-                  <NativeSelect
+                  <FormSelectField
+                    name="eventType"
+                    control={control}
                     id="bde-event-type"
-                    {...register("eventType")}
-                    wrapperClassName="mt-1.5"
+                    className="mt-1.5"
                     aria-invalid={!!errors.eventType}
-                  >
-                    {NEW_BOOKING_EVENT_TYPES.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </NativeSelect>
+                    options={toStringOptions(NEW_BOOKING_EVENT_TYPES)}
+                  />
                   {errors.eventType ? (
                     <p className="mt-1 text-xs text-destructive">
                       {errors.eventType.message}
@@ -644,18 +640,17 @@ export function BookingDetailSheet({
                 <Label htmlFor="bde-pay-status" className={labelClass}>
                   Betalingsstatus
                 </Label>
-                <NativeSelect
+                <FormSelectField
+                  name="paymentStatus"
+                  control={control}
                   id="bde-pay-status"
-                  {...register("paymentStatus")}
-                  wrapperClassName="mt-1.5"
+                  className="mt-1.5"
                   aria-invalid={!!errors.paymentStatus}
-                >
-                  {BOOKING_PAYMENT_STATUS_VALUES.map((v) => (
-                    <option key={v} value={v}>
-                      {BOOKING_PAYMENT_STATUS_LABELS[v]}
-                    </option>
-                  ))}
-                </NativeSelect>
+                  options={BOOKING_PAYMENT_STATUS_VALUES.map((v) => ({
+                    value: v,
+                    label: BOOKING_PAYMENT_STATUS_LABELS[v],
+                  }))}
+                />
                 {errors.paymentStatus ? (
                   <p className="mt-1 text-xs text-destructive">
                     {errors.paymentStatus.message}
@@ -949,11 +944,9 @@ export function BookingDetailSheet({
             </Button>
             <Button
               type="button"
+              size="cta"
               disabled={deleteBusy}
-              className={cn(
-                buttonVariants({ variant: "default" }),
-                "h-11 w-full rounded-md border-2 border-red-200 bg-red-600 font-semibold text-white hover:bg-red-700 sm:w-auto",
-              )}
+              className="w-full border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700 sm:w-auto"
               onClick={() => void performDeleteBooking()}
             >
               {deleteBusy ? "Sletter…" : "Ja, slett booking"}

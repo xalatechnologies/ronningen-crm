@@ -4,7 +4,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import { FormSelectField, toStringOptions } from "@/components/ui/form-select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   bookingPackageListBlurb,
@@ -26,6 +26,7 @@ import {
   referenceYearFromEventDate,
   suggestNextBookingReference,
 } from "@/lib/bookings/booking-reference";
+import { notifyBookingCreated } from "@/lib/notifications/actions/org-events";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -576,6 +577,12 @@ export function NewBookingForm({
     setSavedBookingId(bookingRow.id);
     toast.success("Booking opprettet", { description: bookingRow.id });
 
+    void notifyBookingCreated({
+      organizationId: orgId,
+      bookingId: bookingRow.id,
+      bookingReference,
+    });
+
     if (inquiryPrefill?.inquiryId) {
       const { error: convErr } = await supabase
         .from("booking_inquiries")
@@ -876,20 +883,19 @@ export function NewBookingForm({
                   Festtype
                   <RequiredMark />
                 </Label>
-                <NativeSelect
+                <FormSelectField
+                  name="festType"
+                  control={control}
+                  placeholder="Velg…"
                   className={cn(errors.festType && "border-destructive")}
-                  {...register("festType")}
-                >
-                  <option value="">Velg…</option>
-                  {NEW_BOOKING_FEST_TYPE_PRESETS.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                  <option value={NEW_BOOKING_FEST_TYPE_ANNET}>
-                    Annet (eget)
-                  </option>
-                </NativeSelect>
+                  options={[
+                    ...toStringOptions(NEW_BOOKING_FEST_TYPE_PRESETS),
+                    {
+                      value: NEW_BOOKING_FEST_TYPE_ANNET,
+                      label: "Annet (eget)",
+                    },
+                  ]}
+                />
                 {festType === NEW_BOOKING_FEST_TYPE_ANNET ? (
                   <div className="space-y-2 pt-1">
                     <Label className={labelClass}>
@@ -922,14 +928,16 @@ export function NewBookingForm({
                   Bedrift eller privat
                   <RequiredMark />
                 </Label>
-                <NativeSelect
+                <FormSelectField
+                  name="eventType"
+                  control={control}
+                  placeholder="Velg…"
                   className={cn(errors.eventType && "border-destructive")}
-                  {...register("eventType")}
-                >
-                  <option value="">Velg…</option>
-                  <option value="Bedrift">Bedrift</option>
-                  <option value="Privat">Privat</option>
-                </NativeSelect>
+                  options={[
+                    { value: "Bedrift", label: "Bedrift" },
+                    { value: "Privat", label: "Privat" },
+                  ]}
+                />
                 {errors.eventType ? (
                   <p className="text-xs text-destructive">
                     {errors.eventType.message}

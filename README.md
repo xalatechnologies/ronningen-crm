@@ -38,8 +38,11 @@ Property finance and event venue management (foundation). Feature screens are in
    | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous (public) key |
    | `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server-side scripts / admin ops only — never expose to the client) |
+   | `PLATFORM_ADMIN_PASSWORD` | Password for the platform super-admin (`admin@eventmanager.no`) — used only by `npm run admin:seed` |
 
    Without public keys, the app uses **placeholder** Supabase URLs during build/SSR so `next build` succeeds; auth and data will not work until real keys are set.
+
+   **Platform admin:** After migrations, run `PLATFORM_ADMIN_PASSWORD='…' npm run admin:seed` (requires `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`). Sign in at `/auth/login`, then open `/admin` or use **Plattformadmin** in the account menu.
 
    **Local test sign-in:** In development, `/auth/login` is pre-filled with `admin@ronningen.no` / `Admin1234@` (see `src/config/dev-login.ts`). On a **new** Supabase project, apply migrations (includes `seed_dev_auth_admin`) so that user exists; or add the user under **Authentication → Users**, or use **Register**. Optional env overrides: `NEXT_PUBLIC_DEV_LOGIN_EMAIL`, `NEXT_PUBLIC_DEV_LOGIN_PASSWORD`.
 
@@ -54,6 +57,8 @@ Property finance and event venue management (foundation). Feature screens are in
 4. **Auth URLs (dashboard)**
 
    In Supabase → Authentication → URL configuration, set **Site URL** and **Redirect URLs** to match your app (e.g. `http://localhost:3000` for local dev).
+
+   **Stripe sandbox billing (optional):** See [docs/stripe-sandbox-setup.md](docs/stripe-sandbox-setup.md) for test-mode checkout, webhooks, and `BILLING_MODE=sandbox` configuration.
 
 5. **Generate types (when ready)**
 

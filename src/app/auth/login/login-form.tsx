@@ -16,16 +16,12 @@ import { loginSchema, type LoginInput } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 
-export function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") ?? "/app";
+export function LoginForm({ redirect = "/app" }: { redirect?: string }) {
   const [formError, setFormError] = useState<string | null>(null);
-  const supabase = createBrowserSupabaseClient();
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   const loginDefaults = getDevLoginDefaultValues();
 
@@ -54,12 +50,25 @@ export function LoginForm() {
       setFormError(message);
       return;
     }
-    router.push(redirect);
-    router.refresh();
+
+    // Full navigation avoids a blank RSC transition while /app layouts load.
+    window.location.assign(redirect);
   }
 
   return (
-    <main className="flex min-h-[min(100dvh,100svh)] flex-1 flex-col items-center justify-center px-4 py-16 md:px-8 md:py-24">
+    <main className="relative flex min-h-[min(100dvh,100svh)] flex-1 flex-col items-center justify-center px-4 py-16 md:px-8 md:py-24">
+      {form.formState.isSubmitting ? (
+        <div
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="size-10 animate-spin rounded-full border-4 border-muted border-t-success" />
+          <p className="text-base font-medium text-muted-foreground">
+            Logger inn …
+          </p>
+        </div>
+      ) : null}
       <div className="flex w-full max-w-xl flex-col items-stretch gap-8">
         <Link
           href="/"

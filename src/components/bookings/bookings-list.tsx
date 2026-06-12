@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import { FormSelect } from "@/components/ui/form-select";
 import { BOOKING_PAYMENT_STATUS_LABELS } from "@/constants/booking-payment-status";
 import { cn } from "@/lib/utils";
 import {
@@ -359,38 +359,36 @@ function BookingsFiltersSection({
             <Label htmlFor="bookings-payment-filter" className={filterEyebrowClass}>
               Betaling
             </Label>
-            <NativeSelect
+            <FormSelect
               id="bookings-payment-filter"
               value={paymentFilter}
-              onChange={(e) =>
-                setPaymentFilter(e.target.value as BookingPaymentFilter)
-              }
+              onValueChange={(v) => setPaymentFilter(v as BookingPaymentFilter)}
               aria-label="Filtrer etter betaling"
               className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
-            >
-              <option value="">Alle betalinger</option>
-              <option value="unpaid">{BOOKING_PAYMENT_STATUS_LABELS.unpaid}</option>
-              <option value="partial">{BOOKING_PAYMENT_STATUS_LABELS.partial}</option>
-              <option value="paid">{BOOKING_PAYMENT_STATUS_LABELS.paid}</option>
-            </NativeSelect>
+              placeholder="Alle betalinger"
+              options={[
+                { value: "unpaid", label: BOOKING_PAYMENT_STATUS_LABELS.unpaid },
+                { value: "partial", label: BOOKING_PAYMENT_STATUS_LABELS.partial },
+                { value: "paid", label: BOOKING_PAYMENT_STATUS_LABELS.paid },
+              ]}
+            />
           </div>
           <div className="w-full shrink-0 sm:w-52 md:w-56">
             <Label htmlFor="bookings-audience-filter" className={filterEyebrowClass}>
               Arrangementstype
             </Label>
-            <NativeSelect
+            <FormSelect
               id="bookings-audience-filter"
               value={audienceFilter}
-              onChange={(e) =>
-                setAudienceFilter(e.target.value as BookingAudienceFilter)
-              }
+              onValueChange={(v) => setAudienceFilter(v as BookingAudienceFilter)}
               aria-label="Filtrer etter arrangementstype"
               className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
-            >
-              <option value="">Alle typer</option>
-              <option value="Privat">Privat</option>
-              <option value="Bedrift">Bedrift</option>
-            </NativeSelect>
+              placeholder="Alle typer"
+              options={[
+                { value: "Privat", label: "Privat" },
+                { value: "Bedrift", label: "Bedrift" },
+              ]}
+            />
           </div>
           <div className="flex w-full shrink-0 sm:w-auto sm:self-end">
             <Button

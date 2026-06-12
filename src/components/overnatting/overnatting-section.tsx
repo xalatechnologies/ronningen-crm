@@ -8,6 +8,7 @@ import type {
 import { ACCOMMODATION_RESERVATION_LABELS } from "@/components/overnatting/types";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import {
   Dialog,
@@ -18,7 +19,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import {
+  FormSelect,
+  FormSelectField,
+  toIdNameOptions,
+  toStringOptions,
+} from "@/components/ui/form-select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
@@ -192,6 +198,10 @@ export function OvernattingSection({
   const [editResOpen, setEditResOpen] = useState(false);
   const [editingRes, setEditingRes] =
     useState<AccommodationReservationRow | null>(null);
+  const [deleteUnitTarget, setDeleteUnitTarget] =
+    useState<AccommodationUnitRow | null>(null);
+  const [deleteResConfirmOpen, setDeleteResConfirmOpen] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<AccommodationStatusFilter>("all");
@@ -363,20 +373,24 @@ export function OvernattingSection({
     router.refresh();
   }
 
-  async function onDeleteUnit(u: AccommodationUnitRow) {
-    if (!supabase || !canManage) return;
-    if (!confirm(`Slette «${u.name}»? Krever at det ikke finnes reservasjoner.`))
-      return;
-    const { error } = await supabase
-      .from("accommodation_units")
-      .delete()
-      .eq("id", u.id);
-    if (error) {
-      toast.error("Kunne ikke slette", { description: error.message });
-      return;
+  async function confirmDeleteUnit() {
+    if (!supabase || !canManage || !deleteUnitTarget) return;
+    setDeleteBusy(true);
+    try {
+      const { error } = await supabase
+        .from("accommodation_units")
+        .delete()
+        .eq("id", deleteUnitTarget.id);
+      if (error) {
+        toast.error("Kunne ikke slette", { description: error.message });
+        return;
+      }
+      toast.success("Enhet slettet");
+      setDeleteUnitTarget(null);
+      router.refresh();
+    } finally {
+      setDeleteBusy(false);
     }
-    toast.success("Enhet slettet");
-    router.refresh();
   }
 
   function openEditRes(r: AccommodationReservationRow) {
@@ -424,27 +438,27 @@ export function OvernattingSection({
     router.refresh();
   }
 
-  async function onDeleteReservation() {
+  async function confirmDeleteReservation() {
     if (!supabase || !canManage || !editingRes) return;
-    if (
-      !confirm(
-        `Slette reservasjonen for ${editingRes.customerName}? Dette kan ikke angres.`,
-      )
-    )
-      return;
-    const { error } = await supabase
-      .from("accommodation_reservations")
-      .delete()
-      .eq("id", editingRes.id);
-    if (error) {
-      toast.error("Kunne ikke slette", { description: error.message });
-      return;
+    setDeleteBusy(true);
+    try {
+      const { error } = await supabase
+        .from("accommodation_reservations")
+        .delete()
+        .eq("id", editingRes.id);
+      if (error) {
+        toast.error("Kunne ikke slette", { description: error.message });
+        return;
+      }
+      toast.success("Reservasjon slettet");
+      setDeleteResConfirmOpen(false);
+      setEditResOpen(false);
+      setEditingRes(null);
+      void fetchReservations();
+      router.refresh();
+    } finally {
+      setDeleteBusy(false);
     }
-    toast.success("Reservasjon slettet");
-    setEditResOpen(false);
-    setEditingRes(null);
-    void fetchReservations();
-    router.refresh();
   }
 
   const resInMonth = useMemo(
@@ -727,7 +741,7 @@ export function OvernattingSection({
                           variant="destructive"
                           size="sm"
                           className="font-semibold"
-                          onClick={() => void onDeleteUnit(u)}
+                          onClick={() => setDeleteUnitTarget(u)}
                         >
                           Slett
                         </Button>
@@ -851,20 +865,15 @@ export function OvernattingSection({
                   <Label htmlFor={`${rid}-res-unit`} className={filterEyebrowClass}>
                     Enhet
                   </Label>
-                  <NativeSelect
+                  <FormSelect
                     id={`${rid}-res-unit`}
                     value={unitFilter}
-                    onChange={(e) => setUnitFilter(e.target.value)}
+                    onValueChange={setUnitFilter}
                     aria-label="Filtrer etter enhet"
                     className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
-                  >
-                    <option value="">Alle enheter</option>
-                    {sortedUnits.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name}
-                      </option>
-                    ))}
-                  </NativeSelect>
+                    placeholder="Alle enheter"
+                    options={toIdNameOptions(sortedUnits)}
+                  />
                 </div>
                 <div className="w-full shrink-0 sm:w-44 md:w-48">
                   <Label htmlFor={`${rid}-res-from`} className={filterEyebrowClass}>
@@ -1004,18 +1013,14 @@ export function OvernattingSection({
               <Label className={labelClass} htmlFor={`${rid}-p`}>
                 Lokale (valgfritt)
               </Label>
-              <NativeSelect
+              <FormSelectField
+                name="propertyId"
+                control={unitForm.control}
                 id={`${rid}-p`}
                 className={cn(fieldClass, "font-medium")}
-                {...unitForm.register("propertyId")}
-              >
-                <option value="">— Ingen kobling —</option>
-                {properties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </NativeSelect>
+                placeholder="— Ingen kobling —"
+                options={toIdNameOptions(properties)}
+              />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -1113,17 +1118,16 @@ export function OvernattingSection({
                   <Label className={labelClass} htmlFor={`${rid}-erun`}>
                     Enhet
                   </Label>
-                  <NativeSelect
+                  <FormSelectField
+                    name="unitId"
+                    control={editResForm.control}
                     id={`${rid}-erun`}
                     className={cn(fieldClass, "font-medium")}
-                    {...editResForm.register("unitId")}
-                  >
-                    {sortedUnits.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name} (maks {u.maxGuests} gjester)
-                      </option>
-                    ))}
-                  </NativeSelect>
+                    options={sortedUnits.map((u) => ({
+                      value: u.id,
+                      label: `${u.name} (maks ${u.maxGuests} gjester)`,
+                    }))}
+                  />
                   {editResForm.formState.errors.unitId ? (
                     <p className="text-sm text-destructive">
                       {editResForm.formState.errors.unitId.message}
@@ -1251,17 +1255,19 @@ export function OvernattingSection({
                     <Label className={labelClass} htmlFor={`${rid}-rst`}>
                       Status
                     </Label>
-                    <NativeSelect
+                    <FormSelectField
+                      name="status"
+                      control={editResForm.control}
                       id={`${rid}-rst`}
                       className={cn(fieldClass, "font-medium")}
-                      {...editResForm.register("status")}
-                    >
-                      {ACCOMMODATION_RESERVATION_STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {ACCOMMODATION_RESERVATION_LABELS[s]}
-                        </option>
-                      ))}
-                    </NativeSelect>
+                      options={toStringOptions(
+                        ACCOMMODATION_RESERVATION_STATUSES,
+                        (s) =>
+                          ACCOMMODATION_RESERVATION_LABELS[
+                            s as keyof typeof ACCOMMODATION_RESERVATION_LABELS
+                          ],
+                      )}
+                    />
                   </div>
                 </div>
 
@@ -1305,7 +1311,7 @@ export function OvernattingSection({
                   type="button"
                   variant="destructive"
                   className="w-full sm:w-auto"
-                  onClick={() => void onDeleteReservation()}
+                  onClick={() => setDeleteResConfirmOpen(true)}
                 >
                   Slett reservasjon
                 </Button>
@@ -1331,6 +1337,36 @@ export function OvernattingSection({
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <ConfirmDeleteDialog
+        open={deleteUnitTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteUnitTarget(null);
+        }}
+        title="Slette enhet?"
+        description={
+          deleteUnitTarget
+            ? `«${deleteUnitTarget.name}» fjernes permanent. Enheten kan ikke slettes hvis den har reservasjoner.`
+            : null
+        }
+        confirmLabel="Ja, slett enhet"
+        busy={deleteBusy}
+        onConfirm={confirmDeleteUnit}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteResConfirmOpen}
+        onOpenChange={setDeleteResConfirmOpen}
+        title="Slette reservasjon?"
+        description={
+          editingRes
+            ? `Reservasjonen for ${editingRes.customerName} slettes permanent. Dette kan ikke angres.`
+            : null
+        }
+        confirmLabel="Ja, slett reservasjon"
+        busy={deleteBusy}
+        onConfirm={confirmDeleteReservation}
+      />
     </div>
   );
 }

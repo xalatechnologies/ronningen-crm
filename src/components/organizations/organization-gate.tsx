@@ -7,18 +7,17 @@ import { OrganizationEmptyState } from "@/components/organizations/organization-
 import { SubscriptionWarningBanner } from "@/components/organizations/subscription-warning-banner";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useAuthUser } from "@/hooks/use-auth-user";
-import { isBillingOnlyAccess } from "@/lib/subscriptions/subscription-utils";
-
-const ONBOARDING_PATH = "/app/onboarding";
-const BILLING_PATH = "/app/settings/billing";
-
-function isAllowedWhenBillingBlocked(pathname: string): boolean {
-  return (
-    pathname === BILLING_PATH ||
-    pathname.startsWith(`${BILLING_PATH}/`) ||
-    pathname === ONBOARDING_PATH
-  );
-}
+import { isBillingEnabled } from "@/lib/billing/constants";
+import {
+  isAllowedWhenBillingBlocked,
+  isAllowedWhenSuspended,
+  isBillingOnlyAccess,
+  isSuspendedAccess,
+  TENANT_BILLING_PATH,
+  TENANT_ONBOARDING_PATH,
+  TENANT_SUSPENDED_PATH,
+  toTenantAccessInput,
+} from "@/lib/subscriptions/subscription-utils";
 
 export function OrganizationGate({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -32,16 +31,22 @@ export function OrganizationGate({ children }: { children: ReactNode }) {
 
   const loading = authLoading || orgLoading;
   const hasOrganizations = organizations.length > 0;
-  const onOnboarding = pathname === ONBOARDING_PATH;
+  const showInitialLoader = loading && !hasOrganizations;
+  const onOnboarding = pathname === TENANT_ONBOARDING_PATH;
+  const suspendedBlocked =
+    currentOrganization && isSuspendedAccess(currentOrganization);
   const billingBlocked =
     currentOrganization &&
-    isBillingOnlyAccess(currentOrganization.subscriptionStatus);
+    !currentOrganization.isSuspended &&
+    isBillingOnlyAccess(toTenantAccessInput(currentOrganization), {
+      billingEnabled: isBillingEnabled(),
+    });
 
   useEffect(() => {
     if (loading || !isAuthenticated) return;
 
     if (!hasOrganizations && !onOnboarding) {
-      router.replace(ONBOARDING_PATH);
+      router.replace(TENANT_ONBOARDING_PATH);
       return;
     }
 
@@ -50,8 +55,13 @@ export function OrganizationGate({ children }: { children: ReactNode }) {
       return;
     }
 
+    if (suspendedBlocked && !isAllowedWhenSuspended(pathname)) {
+      router.replace(TENANT_SUSPENDED_PATH);
+      return;
+    }
+
     if (billingBlocked && !isAllowedWhenBillingBlocked(pathname)) {
-      router.replace(BILLING_PATH);
+      router.replace(TENANT_BILLING_PATH);
     }
   }, [
     billingBlocked,
@@ -61,12 +71,18 @@ export function OrganizationGate({ children }: { children: ReactNode }) {
     onOnboarding,
     pathname,
     router,
+    suspendedBlocked,
   ]);
 
-  if (loading) {
+  if (showInitialLoader) {
     return (
-      <div className="flex flex-1 items-center justify-center py-16 text-muted-foreground">
-        Laster…
+      <div
+        className="flex min-h-svh flex-col items-center justify-center gap-4 bg-background px-4 py-16 text-foreground"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="size-10 animate-spin rounded-full border-4 border-muted border-t-success" />
+        <p className="text-base font-medium text-muted-foreground">Laster …</p>
       </div>
     );
   }

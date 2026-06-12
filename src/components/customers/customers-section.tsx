@@ -501,11 +501,9 @@ export function CustomersSection({
                 </Button>
                 <Button
                   type="button"
+                  size="cta"
                   disabled={deleteBusyId != null}
-                  className={cn(
-                    buttonVariants({ variant: "default" }),
-                    "h-11 w-full rounded-md border-2 border-red-200 bg-red-600 font-semibold text-white hover:bg-red-700 sm:w-auto",
-                  )}
+                  className="w-full border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700 sm:w-auto"
                   onClick={() => void confirmCustomerDelete()}
                 >
                   Ja, slett kunde

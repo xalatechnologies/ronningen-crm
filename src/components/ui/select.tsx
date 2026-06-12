@@ -43,7 +43,7 @@ function SelectTrigger({
       data-size={size}
       className={cn(
         RN_SELECT_TRIGGER_FIELD_CLASS,
-        "w-fit whitespace-nowrap",
+        "w-full min-w-0",
         "data-[size=default]:min-h-12 data-[size=default]:py-2.5 data-[size=default]:text-base",
         "data-[size=sm]:h-7 data-[size=sm]:min-h-0 data-[size=sm]:gap-1 data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-[size=sm]:py-0 data-[size=sm]:pr-1.5 data-[size=sm]:pl-2 data-[size=sm]:text-app-sm data-[size=sm]:shadow-none [&_svg:not([class*='size-'])]:data-[size=sm]:size-3.5",
         className
