@@ -5,7 +5,7 @@ import type { AdminAuditCategory } from "@/components/admin/admin-audit-filters"
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { FormSelect } from "@/components/ui/form-select";
 import { ADMIN_SEGMENT_BAR_CLASS } from "@/components/admin/admin-segment-filter-bar";
-import { RN_TEXT_SEGMENT } from "@/lib/rn-ui";
+import { RN_ADMIN_SEGMENT_ACTIVE, RN_TEXT_SEGMENT } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { Download, RotateCcw } from "lucide-react";
 
@@ -139,7 +139,7 @@ export function AdminAuditToolbar({
                   RN_TEXT_SEGMENT,
                   "min-h-11 rounded-[length:calc(var(--app-radius)-2px)] border-2 px-3 py-2 text-app-sm transition-colors",
                   active
-                    ? "border-rn-accent-border bg-rn-surface-gradient-from font-bold text-success shadow-sm"
+                    ? RN_ADMIN_SEGMENT_ACTIVE
                     : "border-transparent font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground",
                 )}
                 aria-pressed={active ? "true" : "false"}

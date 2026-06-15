@@ -283,7 +283,7 @@ export function AdminOrganizationsWorkspace({
               valueClassName={
                 overview.needsFollowUp > 0
                   ? "text-amber-800 dark:text-amber-300"
-                  : "text-success"
+                  : "text-success dark:!text-white"
               }
               active={
                 status === "incomplete" ||

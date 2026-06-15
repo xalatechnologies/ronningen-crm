@@ -58,7 +58,7 @@ function SubscriptionStatusBadge({
       : status === "past_due"
         ? "border-destructive/40 bg-destructive/10 text-destructive"
         : status === "trialing"
-          ? "border-rn-accent-border/50 bg-rn-surface-gradient-from text-success"
+          ? "border-rn-accent-border/50 bg-rn-surface-gradient-from text-success dark:!text-white"
           : status === "incomplete"
             ? "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200"
             : "border-rn-border-strong bg-muted/30 text-muted-foreground";

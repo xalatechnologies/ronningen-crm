@@ -47,7 +47,7 @@ function statusTone(status: OrgSupportTicket["status"]): string {
     return "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300";
   if (status === "waiting")
     return "border-rn-border-strong bg-muted/40 text-muted-foreground";
-  return "border-success/35 bg-success/8 text-success";
+  return "border-success/35 bg-success/8 text-success dark:!text-white";
 }
 
 function TicketThread({

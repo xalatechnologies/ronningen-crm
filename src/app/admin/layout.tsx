@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   await requirePlatformAdmin();
 
   return (
-    <div className="flex min-h-svh bg-background text-foreground">
+    <div className="platform-admin flex min-h-svh bg-background text-foreground">
       <AdminSidebar className="sticky top-0 hidden h-svh shrink-0 md:flex" />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">
         <AdminHeader />

@@ -1,9 +1,18 @@
 "use client";
 
 import type { ThemePreference } from "@/config/theme";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { ChevronDown, Monitor, Moon, Sun } from "lucide-react";
 
 const options: {
   value: ThemePreference;
@@ -28,39 +37,58 @@ export function ThemeToggle({
   const { theme, setTheme } = useTheme();
 
   if (variant === "header") {
+    const current =
+      options.find((option) => option.value === theme) ?? options[2];
+    const CurrentIcon = current.icon;
+
     return (
-      <div
-        className={cn(
-          "inline-flex shrink-0 gap-0.5 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment p-0.5",
-          className,
-        )}
-        role="radiogroup"
-        aria-label="Velg fargetema"
-      >
-        {options.map(({ value, label, icon: Icon }) => {
-          const active = theme === value;
-          return (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              aria-label={label}
-              title={label}
-              onClick={() => setTheme(value)}
-              className={cn(
-                "flex size-9 items-center justify-center rounded-[calc(var(--app-radius)-2px)] transition-colors sm:size-10",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                active
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className={cn(
+            "inline-flex h-9 shrink-0 items-center gap-1 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment px-2 outline-none transition-colors sm:h-10 sm:gap-1.5 sm:px-2.5",
+            "hover:bg-muted/45 focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "data-popup-open:bg-muted/30",
+            className,
+          )}
+          aria-label={`Fargetema: ${current.label}`}
+          title={current.label}
+        >
+          <CurrentIcon className="size-4 shrink-0 text-foreground" aria-hidden />
+          <ChevronDown
+            className="size-4 shrink-0 text-muted-foreground opacity-70"
+            aria-hidden
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          sideOffset={8}
+          className="min-w-44 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-2 shadow-rn-card"
+        >
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="px-2 py-1.5 font-heading text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Fargetema
+            </DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={theme}
+              onValueChange={(value) => {
+                if (!value) return;
+                setTheme(value as ThemePreference);
+              }}
             >
-              <Icon className="size-4 shrink-0" aria-hidden />
-            </button>
-          );
-        })}
-      </div>
+              {options.map(({ value, label, icon: Icon }) => (
+                <DropdownMenuRadioItem
+                  key={value}
+                  value={value}
+                  className="gap-2 font-heading text-app-sm font-medium"
+                >
+                  <Icon className="size-4 shrink-0" aria-hidden />
+                  {label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
 

@@ -139,3 +139,27 @@
     font-size: calc(15px * var(--app-type-scale));
   }
 }
+
+/**
+ * Dark mode — lesbar suksess-/aksenttekst i plattformadmin (hvit, ikke lys grønn).
+ * Solid success-CTAer med bg-success beholder hvit tekst via unntaket nedenfor.
+ */
+[data-theme="dark"] .platform-admin :where(.text-success):not(:where(.bg-success, .bg-success *)) {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .platform-admin .group:hover :where([class*="group-hover:text-success"]) {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .platform-admin :where(.text-primary):not(:where(.bg-primary, .bg-primary *)) {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .platform-admin .admin-ops-inline-link {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .platform-admin .admin-health-healthy {
+  color: #f8fafc !important;
+}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { RN_ADMIN_DETAIL_LINK } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 
 type AdminTableDetailLinkProps = {
@@ -27,7 +28,7 @@ export function AdminTableDetailLink({
       )}
     >
       <span className="min-w-0 flex-1">
-        <span className="font-heading font-semibold text-success underline-offset-4 group-hover:underline">
+        <span className={cn(RN_ADMIN_DETAIL_LINK, "underline-offset-4 group-hover:underline")}>
           {title}
         </span>
         {subtitle ? (
@@ -36,7 +37,7 @@ export function AdminTableDetailLink({
           </span>
         ) : null}
       </span>
-      <span className="flex shrink-0 items-center gap-1 text-app-xs font-semibold text-muted-foreground transition-colors group-hover:text-success">
+      <span className="flex shrink-0 items-center gap-1 text-app-xs font-semibold text-muted-foreground transition-colors group-hover:text-success dark:group-hover:!text-white">
         <span className="hidden sm:inline">Åpne</span>
         <ChevronRight className="size-4" aria-hidden />
       </span>

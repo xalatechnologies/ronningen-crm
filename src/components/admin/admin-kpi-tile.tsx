@@ -101,7 +101,10 @@ function KpiContent({
   valueClassName,
   active,
 }: Omit<AdminKpiTileProps, "href" | "onClick">) {
-  const valueCn = cn("dashboard-kpi-value", valueClassName ?? "text-success");
+  const valueCn = cn(
+    "dashboard-kpi-value",
+    valueClassName ?? "text-success dark:!text-white",
+  );
   const captionCn = "dashboard-kpi-caption mt-2 text-muted-foreground";
 
   if (variant === "support") {
@@ -116,7 +119,7 @@ function KpiContent({
         />
         <div className="flex min-w-0 flex-1 flex-col justify-center py-1">
           <div className="mb-2 flex items-center gap-2">
-            <Icon className="size-4 shrink-0 text-primary" aria-hidden />
+            <Icon className="size-4 shrink-0 text-primary dark:!text-white" aria-hidden />
             <span className="dashboard-kpi-label normal-case tracking-wide">
               {label}
             </span>
@@ -137,7 +140,7 @@ function KpiContent({
             iconClassName ?? "bg-accent",
           )}
         >
-          <Icon className="size-6 text-primary" aria-hidden />
+          <Icon className="size-6 text-primary dark:!text-white" aria-hidden />
         </div>
         <div className="flex min-w-0 flex-1 flex-col justify-center px-4 py-4 sm:px-5 sm:py-5">
           <span className="dashboard-kpi-label">{label}</span>
@@ -185,7 +188,7 @@ function KpiContent({
               iconClassName ?? "bg-accent",
             )}
           >
-            <Icon className="size-5 text-primary" aria-hidden />
+            <Icon className="size-5 text-primary dark:!text-white" aria-hidden />
           </div>
           <span className="dashboard-kpi-label">{label}</span>
         </div>
@@ -256,7 +259,7 @@ function KpiContent({
             iconClassName ?? "bg-muted/50",
           )}
         >
-          <Icon className="size-4 text-primary" aria-hidden />
+          <Icon className="size-4 text-primary dark:!text-white" aria-hidden />
         </div>
       </div>
     );
@@ -266,7 +269,7 @@ function KpiContent({
     return (
       <>
         <Icon
-          className="mb-3 size-5 text-primary/80"
+          className="mb-3 size-5 text-primary/80 dark:!text-white"
           aria-hidden
         />
         <span className="dashboard-kpi-label">{label}</span>
@@ -289,7 +292,7 @@ function KpiContent({
               iconClassName ?? "bg-accent",
             )}
           >
-            <Icon className="size-4 text-primary" aria-hidden />
+            <Icon className="size-4 text-primary dark:!text-white" aria-hidden />
           </div>
           <span className="dashboard-kpi-label">{label}</span>
         </div>
@@ -299,10 +302,10 @@ function KpiContent({
           <div
             className={cn(
               "rounded-full p-2 opacity-80",
-              iconClassName ?? "bg-accent/80",
+              iconClassName ?? "bg-accent/80 dark:bg-white/10",
             )}
           >
-            <Icon className="size-4 text-primary" aria-hidden />
+            <Icon className="size-4 text-primary dark:!text-white" aria-hidden />
           </div>
         </div>
       )}

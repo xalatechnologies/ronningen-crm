@@ -39,7 +39,7 @@ export function SettingsHub({ propertyCount, teamCount }: SettingsHubProps) {
               {currentOrganization.name}
             </span>
             {role ? (
-              <span className="rounded-md border-2 border-rn-accent-border/50 bg-rn-surface-gradient-from px-3 py-1 text-sm font-semibold text-success">
+              <span className="rounded-md border-2 border-rn-accent-border/50 bg-rn-surface-gradient-from px-3 py-1 text-sm font-semibold text-success dark:!text-white">
                 {ROLE_DISPLAY_LABELS[role]}
               </span>
             ) : null}
@@ -85,7 +85,7 @@ export function SettingsHub({ propertyCount, teamCount }: SettingsHubProps) {
               )}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-rn-surface-gradient-from text-success">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-rn-surface-gradient-from text-success dark:!text-white">
                   <Icon className="size-6" aria-hidden />
                 </div>
                 <ChevronRight

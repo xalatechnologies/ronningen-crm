@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { adminRoutes } from "@/config/admin-routes";
+import { RN_ADMIN_DETAIL_LINK } from "@/lib/rn-ui";
 import { formatAuditActionLabel } from "@/lib/admin/audit-labels";
 import {
   adminOrganizationsHref,
@@ -131,7 +132,7 @@ export default async function AdminOverviewPage() {
                 <TableCell>
                   <Link
                     href={adminRoutes.organizationDetail(org.id)}
-                    className="font-heading font-semibold text-success hover:underline"
+                    className={RN_ADMIN_DETAIL_LINK}
                   >
                     {org.name}
                   </Link>

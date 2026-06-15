@@ -20,6 +20,14 @@ export const RN_NAV_LINK_ACTIVE =
 export const RN_NAV_LINK_ACTIVE_ICON =
   "text-success opacity-100 dark:!text-white";
 
+/** Admin-tabell primærlenke — grønn i lys modus, hvit i mørk modus. */
+export const RN_ADMIN_DETAIL_LINK =
+  "font-heading font-semibold text-success hover:underline dark:!text-white";
+
+/** Admin segmentfilter — aktiv tilstand. */
+export const RN_ADMIN_SEGMENT_ACTIVE =
+  "border-2 border-rn-accent-border bg-rn-surface-gradient-from font-bold text-success shadow-sm dark:!text-white";
+
 /** Segment-/filterknapper — samme grunnstørrelse som hovedmeny. */
 export const RN_TEXT_SEGMENT =
   "app-main-nav-link font-heading font-semibold tracking-tight";

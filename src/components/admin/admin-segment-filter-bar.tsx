@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { RN_SEGMENT_CONTROL, RN_TEXT_SEGMENT } from "@/lib/rn-ui";
+import { RN_ADMIN_SEGMENT_ACTIVE, RN_SEGMENT_CONTROL, RN_TEXT_SEGMENT } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
@@ -112,7 +112,7 @@ export function adminSegmentFilterButtonClass(
     "min-h-11 flex-1 rounded-[length:calc(var(--app-radius)-2px)] px-3 py-2.5 transition-colors sm:flex-none",
     ADMIN_SEGMENT_BUTTON_MIN_WIDTH[minWidth],
     active
-      ? "border-2 border-rn-accent-border bg-rn-surface-gradient-from font-bold text-success shadow-sm"
+      ? RN_ADMIN_SEGMENT_ACTIVE
       : "border-2 border-transparent font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground",
   );
 }

@@ -28,7 +28,7 @@ import {
   AdminSegmentFilterControls,
   adminSegmentFilterButtonClass,
 } from "@/components/admin/admin-segment-filter-bar";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { RN_ADMIN_DETAIL_LINK, RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -228,7 +228,7 @@ export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
                   <TableCell>
                     <Link
                       href={adminRoutes.organizationDetail(row.id)}
-                      className="font-heading font-semibold text-success hover:underline"
+                      className={RN_ADMIN_DETAIL_LINK}
                     >
                       {row.name}
                     </Link>
@@ -278,7 +278,7 @@ export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
                     {row.isSuspended ? (
                       <Link
                         href={adminRoutes.organizationDetail(row.id)}
-                        className="text-app-sm font-semibold text-success hover:underline"
+                        className={RN_ADMIN_DETAIL_LINK}
                       >
                         Administrer tilgang
                       </Link>

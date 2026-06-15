@@ -21,11 +21,11 @@ export function AdminStatusBadge({
   const label = SUBSCRIPTION_STATUS_LABELS[status] ?? status;
   const tone =
     status === "active"
-      ? "border-success/40 bg-success/10 text-success"
+      ? "border-success/40 bg-success/10 text-success dark:!text-white"
       : status === "past_due"
         ? "border-destructive/40 bg-destructive/10 text-destructive"
         : status === "trialing"
-          ? "border-rn-accent-border/50 bg-rn-surface-gradient-from text-success"
+          ? "border-rn-accent-border/50 bg-rn-surface-gradient-from text-success dark:!text-white"
           : "border-rn-border-strong bg-muted/30 text-muted-foreground";
 
   return (
