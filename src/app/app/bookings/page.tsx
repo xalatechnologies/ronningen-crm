@@ -63,7 +63,7 @@ function avatarClassForId(id: string) {
   const classes = [
     "bg-accent text-primary",
     "bg-muted text-secondary-foreground",
-    "bg-[#e8f0ed] text-[#1a4331]",
+    "bg-rn-surface-gradient-from text-success",
   ] as const;
   let h = 0;
   for (let i = 0; i < id.length; i++) h += id.charCodeAt(i);

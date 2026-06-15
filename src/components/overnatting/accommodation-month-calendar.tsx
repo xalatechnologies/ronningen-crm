@@ -47,13 +47,13 @@ function dayCellFillClass(rows: AccommodationReservationRow[]): string {
 function resRowButtonClass(status: AccommodationReservationStatus) {
   switch (status) {
     case "confirmed":
-      return "text-emerald-950 hover:bg-white/55 focus-visible:ring-emerald-600/50 dark:text-emerald-100 dark:hover:bg-white/10";
+      return "text-emerald-950 hover:bg-card/60 focus-visible:ring-emerald-600/50 dark:text-emerald-100";
     case "tentative":
-      return "text-amber-950 hover:bg-white/55 focus-visible:ring-amber-600/50 dark:text-amber-100 dark:hover:bg-white/10";
+      return "text-amber-950 hover:bg-card/60 focus-visible:ring-amber-600/50 dark:text-amber-100";
     case "cancelled":
-      return "text-rose-900/90 line-through decoration-rose-700/70 hover:bg-white/40 focus-visible:ring-rose-500/40 dark:text-rose-200";
+      return "text-rose-900/90 line-through decoration-rose-700/70 hover:bg-card/50 focus-visible:ring-rose-500/40 dark:text-rose-200";
     default:
-      return "text-foreground hover:bg-white/50";
+      return "text-foreground hover:bg-card/50";
   }
 }
 
@@ -260,7 +260,7 @@ export function AccommodationMonthCalendar({
             isToday
               ? "bg-success !text-white shadow-sm [&_svg]:!text-white"
               : hasRows
-                ? "bg-white/55 text-rn-text-heading shadow-sm backdrop-blur-[2px] dark:bg-white/10"
+                ? "bg-card/80 text-rn-text-heading shadow-sm backdrop-blur-[2px]"
                 : "text-rn-text-heading",
           )}
         >

@@ -1,5 +1,6 @@
 "use client";
 
+import { AppearanceSettingsCard } from "@/components/settings/appearance-settings-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,6 +78,7 @@ export function AccountSettingsForm({
 
   return (
     <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+      <AppearanceSettingsCard />
       <form
         onSubmit={(e) => void onSave(e)}
         className={cn(RN_CARD_SHELL, "flex flex-col gap-6 p-5 md:p-6")}

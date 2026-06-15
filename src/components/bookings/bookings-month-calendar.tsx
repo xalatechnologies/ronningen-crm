@@ -293,24 +293,24 @@ function dayCellFillClass(bookings: BookingListRow[]): string {
   if (bookings.length === 0) return "";
   const active = bookings.filter((b) => b.status !== "cancelled");
   if (active.length === 0) {
-    return "bg-rose-100/85 ring-1 ring-inset ring-rose-300/40";
+    return "bg-rose-100/85 ring-1 ring-inset ring-rose-300/40 dark:bg-rose-950/30 dark:ring-rose-700/40";
   }
   if (active.some((b) => b.status === "pending")) {
-    return "bg-amber-100/85 ring-1 ring-inset ring-amber-400/35";
+    return "bg-amber-100/85 ring-1 ring-inset ring-amber-400/35 dark:bg-amber-950/30 dark:ring-amber-600/40";
   }
-  return "bg-emerald-100/85 ring-1 ring-inset ring-emerald-400/35";
+  return "bg-emerald-100/85 ring-1 ring-inset ring-emerald-400/35 dark:bg-emerald-950/25 dark:ring-emerald-700/35";
 }
 
 function bookingRowButtonClass(status: BookingStatus) {
   switch (status) {
     case "confirmed":
-      return "text-emerald-950 hover:bg-white/55 focus-visible:ring-emerald-600/50";
+      return "text-emerald-950 hover:bg-card/60 focus-visible:ring-emerald-600/50 dark:text-emerald-100";
     case "pending":
-      return "text-amber-950 hover:bg-white/55 focus-visible:ring-amber-600/50";
+      return "text-amber-950 hover:bg-card/60 focus-visible:ring-amber-600/50 dark:text-amber-100";
     case "cancelled":
-      return "text-rose-900/90 line-through decoration-rose-700/70 hover:bg-white/40 focus-visible:ring-rose-500/40";
+      return "text-rose-900/90 line-through decoration-rose-700/70 hover:bg-card/50 focus-visible:ring-rose-500/40 dark:text-rose-200";
     default:
-      return "text-foreground hover:bg-white/50";
+      return "text-foreground hover:bg-card/50";
   }
 }
 
@@ -554,7 +554,7 @@ function BookingsMonthCalendarView({
             isToday
               ? "bg-success !text-white shadow-sm [&_svg]:!text-white"
               : hasBookings
-                ? "bg-white/55 text-rn-text-heading shadow-sm backdrop-blur-[2px]"
+                ? "bg-card/80 text-rn-text-heading shadow-sm backdrop-blur-[2px]"
                 : "text-rn-text-heading",
           )}
         >

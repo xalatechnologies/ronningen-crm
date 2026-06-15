@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { PriceInput } from "@/components/ui/price-input";
 import { Label } from "@/components/ui/label";
 import {
   FormSelect,
@@ -389,14 +390,10 @@ function AssetFormFields({
                 Verdi{" "}
                 <span className="font-normal text-muted-foreground">(NOK)</span>
               </Label>
-              <Input
+              <PriceInput
                 id={idValue}
                 aria-invalid={!!formState.errors.value}
-                className="h-12 rounded-md border-2 border-rn-border-strong text-base tabular-nums focus-visible:border-success focus-visible:ring-success/25"
-                min={0}
-                step={100}
-                type="number"
-                inputMode="numeric"
+                className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
                 {...register("value", {
                   setValueAs: (v) => {
                     if (v === "" || v == null) return 0;

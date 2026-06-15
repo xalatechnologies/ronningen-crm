@@ -21,7 +21,7 @@ function segmentActiveClass(id: InvoiceRowFilter): string {
     case "unpaid":
       return "border-rn-border-strong bg-muted/40 text-foreground shadow-sm";
     case "upcoming":
-      return "border-slate-300 bg-slate-50 text-slate-900 shadow-sm";
+      return "border-border bg-muted text-foreground shadow-sm";
     case "inkasso":
       return "border-violet-300 bg-violet-50 text-violet-950 shadow-sm";
     default:

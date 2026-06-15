@@ -4,7 +4,7 @@ import { APP_NAME } from "@/config/app";
 import { mainNavigation } from "@/config/navigation";
 import { SIDEBAR_SEGMENT_ICONS } from "@/config/nav-icons";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
-import { RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
+import { RN_NAV_LINK_ACTIVE, RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -81,14 +81,14 @@ export function AppSidebar({ className }: { className?: string }) {
                 RN_TEXT_NAV_LINK,
                 "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 active
-                  ? "border-rn-accent-border bg-rn-surface-gradient-from font-semibold text-success shadow-sm"
+                  ? RN_NAV_LINK_ACTIVE
                   : "border-transparent font-medium text-rn-text-body hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover hover:text-rn-text-heading",
               )}
             >
               <Icon
                 className={cn(
                   "size-7 shrink-0 md:size-8",
-                  active ? "text-success opacity-100" : "opacity-85",
+                  active ? RN_NAV_LINK_ACTIVE_ICON : "opacity-85",
                 )}
                 aria-hidden
               />

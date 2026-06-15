@@ -2,10 +2,12 @@ import { DisplayDensitySync } from "@/components/providers/display-density-sync"
 import { Toaster } from "@/components/ui/sonner";
 import { APP_DESCRIPTION, APP_NAME } from "@/config/app";
 import { displayStorageKey } from "@/config/display";
+import { themeStorageKey } from "@/config/theme";
 import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/providers/auth-provider";
 import { QueryProvider } from "@/providers/query-provider";
 import { SupabaseProvider } from "@/providers/supabase-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Inter, Manrope } from "next/font/google";
@@ -38,7 +40,9 @@ export default function RootLayout({
     <html
       lang="en"
       data-density="spacious"
+      data-theme="light"
       data-display-storage-key={displayStorageKey}
+      data-theme-storage-key={themeStorageKey}
       className={cn(
         inter.variable,
         manrope.variable,
@@ -51,6 +55,11 @@ export default function RootLayout({
         )}
       >
         <Script
+          id="theme-init"
+          src="/theme-init.js"
+          strategy="beforeInteractive"
+        />
+        <Script
           id="display-density-init"
           src="/display-density-init.js"
           strategy="afterInteractive"
@@ -58,9 +67,11 @@ export default function RootLayout({
         <SupabaseProvider>
           <AuthProvider>
             <QueryProvider>
-              <DisplayDensitySync />
-              {children}
-              <Toaster />
+              <ThemeProvider>
+                <DisplayDensitySync />
+                {children}
+                <Toaster />
+              </ThemeProvider>
             </QueryProvider>
           </AuthProvider>
         </SupabaseProvider>

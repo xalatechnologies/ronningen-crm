@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { MobileNavLinks } from "@/components/layout/mobile-nav";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,7 +62,7 @@ function HeaderAvatarOrInitials({
   const [broken, setBroken] = useState(false);
   const fallback = (
     <span
-      className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-sm font-bold text-success"
+      className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-sm font-bold text-success dark:!text-white"
       aria-hidden
     >
       {loading ? "…" : initials}
@@ -138,8 +139,11 @@ export function AppHeader({ children }: { children?: ReactNode }) {
         </Sheet>
       </div>
 
-      <div className="flex min-w-0 items-center gap-3 md:gap-4">
-        {children}
+      <div className="flex min-w-0 items-center gap-2 md:gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {children}
+          <ThemeToggle variant="header" />
+        </div>
         <OrganizationSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -160,7 +164,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
               />
             ) : (
               <span
-                className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-sm font-bold text-success"
+                className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-sm font-bold text-success dark:!text-white"
                 aria-hidden
               >
                 {loading ? "…" : initials}
@@ -195,6 +199,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
                   Plattformadmin
                 </DropdownMenuItem>
               ) : null}
+              <DropdownMenuSeparator className="my-2 bg-border" />
               <DropdownMenuItem
                 className="px-3 py-2.5 font-heading text-app-md font-bold md:px-3.5 md:py-3"
                 onSelect={() => void signOut()}

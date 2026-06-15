@@ -17,7 +17,7 @@ import {
   type CustomerUpsertFormInput,
 } from "@/lib/validations";
 import { AppPageHeader } from "@/components/layout/app-page-header";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { RN_CARD_SHELL, RN_PAGE_SEARCH_FIELD_WRAP, RN_PAGE_SEARCH_INPUT, RN_PAGE_SEARCH_TOOLBAR } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
@@ -91,13 +91,14 @@ function CustomersToolbar({
           className="mb-0"
           surface="default"
           title="Kunder"
+          actionsClassName="w-full md:flex-1 md:min-w-0 md:flex-nowrap"
           actions={
           <div
-            className="flex w-full min-w-0 flex-col gap-3 md:min-w-0 md:flex-1 md:flex-row md:items-stretch md:justify-end md:gap-3 lg:gap-4"
+            className={RN_PAGE_SEARCH_TOOLBAR}
             role="search"
             aria-label="Kunder — søk og ny kunde"
           >
-            <div className="relative min-w-0 w-full md:flex-1 md:max-w-3xl">
+            <div className={RN_PAGE_SEARCH_FIELD_WRAP}>
               <Search
                 className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
                 aria-hidden
@@ -107,7 +108,7 @@ function CustomersToolbar({
                 value={query}
                 onChange={(e) => onQueryChange(e.target.value)}
                 placeholder="Søk på navn, e-post eller telefon…"
-                className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                className={RN_PAGE_SEARCH_INPUT}
                 aria-label="Søk kunder"
               />
             </div>

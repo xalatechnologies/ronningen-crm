@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { PriceInput } from "@/components/ui/price-input";
 import { Label } from "@/components/ui/label";
 import {
   Table,
@@ -259,11 +260,8 @@ function PricingCatalogFields({
         </div>
         <div className="space-y-2">
           <Label>Pris (NOK)</Label>
-          <Input
+          <PriceInput
             className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
-            type="number"
-            min={0}
-            step={100}
             {...register("price")}
           />
           {formState.errors.price ? (

@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
 import { AdminSearchShortcut } from "@/components/admin/admin-search-shortcut";
 import {
@@ -51,7 +52,7 @@ function HeaderAvatarOrInitials({
   const [broken, setBroken] = useState(false);
   const fallback = (
     <span
-      className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-xs font-bold text-success md:size-10 md:text-app-sm"
+      className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-xs font-bold text-success dark:!text-white md:size-10 md:text-app-sm"
       aria-hidden
     >
       {loading ? "…" : initials}
@@ -107,10 +108,12 @@ export function AdminHeader() {
         <AdminMobileNav />
       </div>
 
+      <div className="ml-auto flex shrink-0 items-center gap-2 md:gap-3">
+        <ThemeToggle variant="header" />
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            "ml-auto flex shrink-0 items-center gap-1.5 rounded-[length:var(--app-radius)] border-2 border-transparent py-1 pr-1 pl-1 outline-none transition-colors",
+            "flex shrink-0 items-center gap-1.5 rounded-[length:var(--app-radius)] border-2 border-transparent py-1 pr-1 pl-1 outline-none transition-colors",
             "hover:bg-muted/45 focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             "disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-muted/30",
           )}
@@ -126,7 +129,7 @@ export function AdminHeader() {
             />
           ) : (
             <span
-              className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-xs font-bold text-success md:size-10 md:text-app-sm"
+              className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-xs font-bold text-success dark:!text-white md:size-10 md:text-app-sm"
               aria-hidden
             >
               {loading ? "…" : initials}
@@ -167,6 +170,7 @@ export function AdminHeader() {
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
     </header>
   );
 }

@@ -75,7 +75,7 @@ function BreakdownRow({
           </span>
         </span>
       </div>
-      <div className="flex h-3 overflow-hidden rounded-full bg-slate-100 md:h-4">
+      <div className="flex h-3 overflow-hidden rounded-full bg-muted md:h-4">
         <div
           className={cn(
             "flex flex-col justify-center whitespace-nowrap text-center text-white shadow-none transition-[width]",

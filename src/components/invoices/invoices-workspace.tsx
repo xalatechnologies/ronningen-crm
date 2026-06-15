@@ -151,7 +151,7 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
       case "partial":
         return "rounded-md border border-amber-200 bg-amber-50 font-bold text-amber-950";
       case "waived":
-        return "rounded-md border border-slate-300 bg-slate-100 font-bold text-slate-800";
+        return "rounded-md border border-border bg-muted font-bold text-foreground";
       case "disputed":
         return "rounded-md border border-orange-300 bg-orange-50 font-bold text-orange-950";
       case "other":

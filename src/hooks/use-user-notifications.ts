@@ -5,10 +5,11 @@ import {
   filterNotificationsForOrg,
   type UserNotificationRow,
 } from "@/lib/notifications/user-notification-filters";
+import { isBenignSupabaseNetworkError } from "@/lib/supabase/network-errors";
 import { useAuthContext } from "@/providers/auth-provider";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const NOTIFICATION_SELECT =
   "id, title, body, category, priority, organization_id, action_url, action_label, read_at, acknowledged_at, created_at";
@@ -21,6 +22,8 @@ export function useUserNotifications() {
   const { currentOrganizationId } = useCurrentOrganization();
   const [notifications, setNotifications] = useState<UserNotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const refreshInFlightRef = useRef(false);
+  const refreshGenerationRef = useRef(0);
 
   const refresh = useCallback(async () => {
     if (!user) {
@@ -29,29 +32,55 @@ export function useUserNotifications() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("user_notifications")
-      .select(NOTIFICATION_SELECT)
-      .order("created_at", { ascending: false })
-      .limit(50);
+    if (refreshInFlightRef.current) return;
 
-    if (error) {
-      console.warn("[notifications] Kunne ikke hente varsler.", error.message);
-      setLoading(false);
-      return;
+    refreshInFlightRef.current = true;
+    const generation = ++refreshGenerationRef.current;
+
+    try {
+      const { data, error } = await supabase
+        .from("user_notifications")
+        .select(NOTIFICATION_SELECT)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (generation !== refreshGenerationRef.current) return;
+
+      if (error) {
+        if (!isBenignSupabaseNetworkError(error)) {
+          console.warn("[notifications] Kunne ikke hente varsler.", error.message);
+        }
+        return;
+      }
+
+      setNotifications((data ?? []) as UserNotificationRow[]);
+    } catch (error) {
+      if (
+        generation === refreshGenerationRef.current &&
+        !isBenignSupabaseNetworkError(error)
+      ) {
+        console.warn("[notifications] Kunne ikke hente varsler.", error);
+      }
+    } finally {
+      if (generation === refreshGenerationRef.current) {
+        setLoading(false);
+      }
+      refreshInFlightRef.current = false;
     }
-
-    setNotifications((data ?? []) as UserNotificationRow[]);
-    setLoading(false);
   }, [supabase, user]);
 
   useEffect(() => {
     if (authLoading) return;
-    void refresh();
-  }, [authLoading, refresh]);
 
-  useEffect(() => {
-    if (authLoading || !user) return;
+    if (!user) {
+      setNotifications([]);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    void refresh();
 
     const channel = supabase
       .channel(`user-notifications-hook:${user.id}`)
@@ -64,16 +93,20 @@ export function useUserNotifications() {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          void refresh();
+          if (!cancelled) void refresh();
         },
       )
       .subscribe();
 
     const pollId = window.setInterval(() => {
-      void refresh();
+      if (document.visibilityState === "visible" && !cancelled) {
+        void refresh();
+      }
     }, POLL_INTERVAL_MS);
 
     return () => {
+      cancelled = true;
+      refreshGenerationRef.current += 1;
       window.clearInterval(pollId);
       void supabase.removeChannel(channel);
     };

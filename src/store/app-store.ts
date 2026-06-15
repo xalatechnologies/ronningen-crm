@@ -6,6 +6,7 @@ import {
   displayStorageKey,
   type DisplayDensity,
 } from "@/config/display";
+import { defaultTheme, type ThemePreference } from "@/config/theme";
 import type { ActiveWorkspace } from "@/types/app.types";
 
 type AppState = {
@@ -15,6 +16,8 @@ type AppState = {
   setActiveWorkspace: (workspace: ActiveWorkspace) => void;
   displayDensity: DisplayDensity;
   setDisplayDensity: (density: DisplayDensity) => void;
+  theme: ThemePreference;
+  setTheme: (theme: ThemePreference) => void;
 };
 
 export const useAppStore = create<AppState>()(
@@ -26,10 +29,15 @@ export const useAppStore = create<AppState>()(
       setActiveWorkspace: (workspace) => set({ activeWorkspace: workspace }),
       displayDensity: defaultDisplayDensity,
       setDisplayDensity: (displayDensity) => set({ displayDensity }),
+      theme: defaultTheme,
+      setTheme: (theme) => set({ theme }),
     }),
     {
       name: displayStorageKey,
-      partialize: (state) => ({ displayDensity: state.displayDensity }),
+      partialize: (state) => ({
+        displayDensity: state.displayDensity,
+        theme: state.theme,
+      }),
     },
   ),
 );

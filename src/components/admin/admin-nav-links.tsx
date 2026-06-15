@@ -2,7 +2,7 @@
 
 import { ADMIN_NAV_ICONS } from "@/config/admin-nav-icons";
 import { adminNavigationGroups } from "@/config/admin-routes";
-import { RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
+import { RN_NAV_LINK_ACTIVE, RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -50,7 +50,7 @@ export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
                 className={cn(
                   navLinkClassName,
                   active
-                    ? "border-rn-accent-border bg-rn-surface-gradient-from font-semibold text-success"
+                    ? RN_NAV_LINK_ACTIVE
                     : "border-transparent font-medium text-rn-text-body hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover hover:text-rn-text-heading",
                 )}
                 aria-current={active ? "page" : undefined}
@@ -58,7 +58,7 @@ export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
                 <Icon
                   className={cn(
                     "size-5 shrink-0 md:size-[1.375rem]",
-                    active ? "text-success opacity-100" : "opacity-85",
+                    active ? RN_NAV_LINK_ACTIVE_ICON : "opacity-85",
                   )}
                   aria-hidden
                 />

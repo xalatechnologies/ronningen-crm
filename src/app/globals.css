@@ -4,7 +4,7 @@
 @import "../styles/tokens.css";
 @import "../styles/display-density.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is([data-theme="dark"] *, .dark *));
 
 @theme inline {
   --font-sans: var(--font-sans);
@@ -121,6 +121,10 @@
     font-size: 1rem;
     line-height: var(--line-height-base);
     @apply bg-background text-foreground antialiased;
+  }
+  /* Readable success text on dark surfaces; solid CTAs keep white via !text-white */
+  [data-theme="dark"] :where(.text-success):not(:where(.bg-success, .bg-success *)) {
+    color: var(--rn-primary-light);
   }
   /** Semantic headings — aligned with `.app-title` / `.app-section-title` / `.app-card-title`; classes override. */
   h1 {
@@ -358,6 +362,10 @@
     font-variant-numeric: tabular-nums;
   }
 
+  [data-theme="dark"] .dashboard-kpi-value.text-success {
+    color: #f8fafc;
+  }
+
   .dashboard-kpi-caption {
     font-size: calc(15px * var(--app-read-type-scale));
     line-height: 1.5;
@@ -409,6 +417,10 @@
   .bookings-list-workspace .bookings-list-row-meta {
     font-size: calc(14px * var(--app-read-type-scale));
     line-height: 1.45;
+  }
+
+  [data-theme="dark"] .bookings-list-workspace .bookings-list-row-meta .text-success {
+    color: #f8fafc;
   }
 
   .bookings-list-workspace .bookings-list-row-metric {
@@ -488,6 +500,11 @@
     .customers-page-workspace .customers-partners-category-pill {
       font-size: calc(16px * var(--app-read-type-scale));
     }
+  }
+
+  [data-theme="dark"] .customers-page-workspace .customers-booking-count-pill.text-success,
+  [data-theme="dark"] .customers-page-workspace .customers-row-metric.text-success {
+    color: #f8fafc;
   }
 
   .customers-page-workspace .customers-empty-hint {
@@ -612,6 +629,10 @@
     line-height: 1.15;
     letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
+  }
+
+  [data-theme="dark"] .finance-page-workspace .finance-kpi-value.text-success {
+    color: #f8fafc;
   }
 
   .finance-page-workspace .finance-kpi-caption {
@@ -752,6 +773,10 @@
   .invoices-page-workspace .invoices-payment-major {
     font-size: var(--font-size-base);
     font-variant-numeric: tabular-nums;
+  }
+
+  [data-theme="dark"] .invoices-page-workspace .invoices-payment-major.text-success {
+    color: #f8fafc;
   }
 
   .invoices-page-workspace .invoices-payment-slash {
@@ -976,6 +1001,10 @@
     font-variant-numeric: tabular-nums;
   }
 
+  [data-theme="dark"] .reports-page-workspace .reports-kpi-value.text-success {
+    color: #f8fafc;
+  }
+
   .reports-page-workspace .reports-kpi-caption {
     font-size: calc(15px * var(--app-read-type-scale));
     line-height: 1.5;
@@ -999,6 +1028,10 @@
     font-size: calc(14px * var(--app-type-scale));
     font-weight: 600;
     line-height: 1.45;
+  }
+
+  [data-theme="dark"] .reports-page-workspace .reports-inline-link.text-success {
+    color: #f8fafc;
   }
 
   .reports-page-workspace .reports-load-error {
@@ -1223,6 +1256,12 @@
     margin: 14mm;
   }
 
+  html,
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
   html.invoice-print-shell .flex.min-h-svh > aside {
     display: none !important;
   }
@@ -1232,10 +1271,12 @@
   html.invoice-print-shell main {
     padding: 0 !important;
     background: white !important;
+    color: black !important;
   }
 
   html.invoice-print-shell .invoice-print-surface {
     background: white !important;
+    color: black !important;
     padding: 0 !important;
   }
 
@@ -1245,6 +1286,8 @@
     margin: 0 !important;
     max-width: none !important;
     border: none !important;
+    background: white !important;
+    color: black !important;
     --tw-ring-shadow: 0 0 #0000 !important;
   }
 

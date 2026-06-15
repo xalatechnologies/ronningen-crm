@@ -326,7 +326,7 @@ export function OrganizationProfileForm({
           </div>
         </div>
 
-        <div className="rounded-md border-2 border-zinc-900 bg-white p-5 text-sm text-zinc-800 shadow-sm">
+        <div data-theme="light" className="rounded-md border-2 border-zinc-900 bg-white p-5 text-sm text-zinc-800 shadow-sm">
           <p className="font-heading text-xl font-bold text-zinc-950">
             {preview.name || "Visningsnavn"}
           </p>

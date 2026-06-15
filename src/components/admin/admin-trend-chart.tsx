@@ -1,6 +1,10 @@
 "use client";
 
 import { formatNok } from "@/lib/admin/revenue-metrics";
+import {
+  chartBarFillClass,
+  chartEmptyBarClass,
+} from "@/lib/charts/chart-theme";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
@@ -139,16 +143,14 @@ export function AdminTrendChart({
                     <div
                       className={cn(
                         "w-full min-h-[6px] rounded-t-md transition-colors",
-                        bar.highlight
-                          ? "bg-success shadow-md ring-2 ring-success/30 ring-offset-1 ring-offset-background"
-                          : "bg-emerald-500/80 hover:bg-emerald-600 dark:bg-emerald-500/60 dark:hover:bg-emerald-500",
+                        chartBarFillClass(bar.highlight),
                       )}
                       style={{ height: `${bar.heightPct}%` }}
                       title={`${bar.label}: ${formatTrendValue(bar.value, valueFormat)}`}
                     />
                   ) : (
                     <div
-                      className="h-1.5 w-full shrink-0 rounded-sm bg-muted-foreground/25"
+                      className={chartEmptyBarClass()}
                       title={`${bar.label}: ${formatTrendValue(bar.value, valueFormat)}`}
                       aria-hidden
                     />

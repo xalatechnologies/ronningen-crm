@@ -3,6 +3,11 @@
 import type { DashboardHomeData } from "@/components/dashboard/types";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import {
+  chartBarFillClass,
+  chartEmptyBarClass,
+} from "@/lib/charts/chart-theme";
+import { buttonVariants } from "@/components/ui/button";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -63,13 +68,13 @@ function formatNokChartAxis(n: number) {
 function dashboardEventPillClass(eventType: string) {
   const t = eventType.toLowerCase();
   if (t.includes("bryllup") || t.includes("wedding")) {
-    return "bg-emerald-50 text-emerald-900";
+    return "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200";
   }
   if (t.includes("bedrift") || t.includes("corporate")) {
-    return "bg-blue-50 text-blue-900";
+    return "bg-blue-50 text-blue-900 dark:bg-blue-950/40 dark:text-blue-200";
   }
   if (t.includes("privat") || t.includes("private")) {
-    return "bg-amber-50 text-amber-900";
+    return "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200";
   }
   return "bg-muted text-muted-foreground";
 }
@@ -83,20 +88,20 @@ function DashboardUpcomingStatusBadge({
     "inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase md:px-3 md:py-1.5 md:text-xs";
   if (status === "confirmed") {
     return (
-      <span className={cn(pill, "bg-emerald-50 text-emerald-900")}>
+      <span className={cn(pill, "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200")}>
         Bekreftet
       </span>
     );
   }
   if (status === "pending") {
     return (
-      <span className={cn(pill, "bg-amber-50 text-amber-900")}>
+      <span className={cn(pill, "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200")}>
         Avventer
       </span>
     );
   }
   return (
-    <span className={cn(pill, "bg-red-50 text-red-800")}>
+    <span className={cn(pill, "bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-200")}>
       Avbestilt
     </span>
   );
@@ -215,8 +220,8 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
                 <span className="dashboard-kpi-label">Totalt fakturert</span>
-                <div className="rounded-md bg-accent p-2">
-                  <LayoutDashboard className="size-6 text-primary" aria-hidden />
+                <div className="rounded-md bg-accent p-2 dark:bg-white/10">
+                  <LayoutDashboard className="size-6 text-primary dark:text-white" aria-hidden />
                 </div>
               </div>
               <div>
@@ -232,8 +237,8 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
                 <span className="dashboard-kpi-label">Betalt</span>
-                <div className="rounded-md bg-accent p-2">
-                  <CheckCircle2 className="size-6 text-primary" aria-hidden />
+                <div className="rounded-md bg-accent p-2 dark:bg-white/10">
+                  <CheckCircle2 className="size-6 text-primary dark:text-white" aria-hidden />
                 </div>
               </div>
               <div>
@@ -267,8 +272,8 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
                 <span className="dashboard-kpi-label">Bookinger</span>
-                <div className="rounded-md bg-accent p-2">
-                  <CalendarCheck className="size-6 text-primary" aria-hidden />
+                <div className="rounded-md bg-accent p-2 dark:bg-white/10">
+                  <CalendarCheck className="size-6 text-primary dark:text-white" aria-hidden />
                 </div>
               </div>
               <div>
@@ -360,16 +365,14 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                         <div
                           className={cn(
                             "w-full min-h-[6px] rounded-t-md transition-colors",
-                            bar.highlight
-                              ? "bg-success shadow-md ring-2 ring-success/30 ring-offset-1 ring-offset-background"
-                              : "bg-emerald-500/80 hover:bg-emerald-600 dark:bg-emerald-500/60 dark:hover:bg-emerald-500",
+                            chartBarFillClass(bar.highlight),
                           )}
                           style={{ height: `${bar.heightPct}%` }}
                           title={`${bar.label}: ${formatNok(bar.amount)}`}
                         />
                       ) : (
                         <div
-                          className="h-1.5 w-full shrink-0 rounded-sm bg-muted-foreground/25"
+                          className={chartEmptyBarClass()}
                           title={`${bar.label}: ${formatNok(bar.amount)}`}
                           aria-hidden
                         />
@@ -449,7 +452,10 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
           </div>
           <Link
             href="/app/invoices"
-            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md border-2 border-rn-accent-border bg-rn-danger-ink font-heading text-base font-bold text-primary-foreground shadow-md transition-colors hover:bg-rn-danger-ink/90"
+            className={cn(
+              buttonVariants({ variant: "success", size: "cta" }),
+              "mt-6 w-full",
+            )}
           >
             Gå til fakturaer
             <ExternalLink className="size-4" aria-hidden />
@@ -481,7 +487,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   Ingen kommende bookinger i vinduet.{" "}
                   <Link
                     href="/app/bookings"
-                    className="font-semibold text-success underline underline-offset-2"
+                    className="font-semibold text-success underline underline-offset-2 dark:!text-white"
                   >
                     Se alle bookinger
                   </Link>
@@ -506,7 +512,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   <TableCell className={cn(tableCellClass, "whitespace-normal")}>
                     <div className="flex items-center gap-4">
                       <div
-                        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-primary md:size-11 md:text-base"
+                        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-primary dark:bg-rn-surface-segment dark:!text-white md:size-11 md:text-base"
                         aria-hidden
                       >
                         {row.initials}
@@ -540,7 +546,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   <TableCell className={cn(tableCellClass, "text-right")}>
                     <Link
                       href="/app/bookings"
-                      className="inline-flex items-center gap-1 text-sm font-semibold text-success underline-offset-2 hover:underline md:text-base"
+                      className="inline-flex items-center gap-1 text-sm font-semibold text-success underline-offset-2 hover:underline dark:!text-white md:text-base"
                     >
                       Liste
                       <ExternalLink className="size-4 shrink-0 opacity-70" aria-hidden />

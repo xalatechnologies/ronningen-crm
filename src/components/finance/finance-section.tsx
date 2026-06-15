@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
+import { PriceInput } from "@/components/ui/price-input";
 import { Label } from "@/components/ui/label";
 import {
   FormSelect,
@@ -474,17 +475,14 @@ function TransactionFormInner({
                   className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground"
                   aria-hidden
                 />
-                <Input
+                <PriceInput
                   className={cn(
-                    "h-12 rounded-md border-2 bg-background pl-12 text-base font-semibold tabular-nums transition-colors focus-visible:ring-2 md:text-base",
+                    "h-12 rounded-md border-2 bg-background pl-12 text-base font-semibold transition-colors focus-visible:ring-2 md:text-base",
                     txType === "expense"
                       ? "border-destructive/50 focus-visible:border-destructive focus-visible:ring-destructive/20"
                       : "border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25",
                   )}
-                  type="number"
-                  min={0}
                   step={1}
-                  inputMode="numeric"
                   {...register("amount")}
                   id={`tx-amt-${categoryListId}`}
                 />
@@ -829,7 +827,7 @@ export function FinanceSection({
                   Inntekter
                 </span>
                 <TrendingUp
-                  className="size-9 rounded-md bg-success/15 p-2 text-success md:size-10"
+                  className="size-9 rounded-md bg-success/15 p-2 text-success dark:bg-white/10 dark:!text-white md:size-10"
                   aria-hidden
                 />
               </div>

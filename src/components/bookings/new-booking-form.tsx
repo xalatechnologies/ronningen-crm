@@ -3,6 +3,8 @@
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
+import { PriceInput } from "@/components/ui/price-input";
+import { TimePickerField } from "@/components/ui/time-picker-field";
 import { Label } from "@/components/ui/label";
 import { FormSelectField, toStringOptions } from "@/components/ui/form-select";
 import { Textarea } from "@/components/ui/textarea";
@@ -1030,10 +1032,8 @@ export function NewBookingForm({
                     (valgfri)
                   </span>
                 </Label>
-                <Input
+                <TimePickerField
                   id="new-booking-start-time"
-                  type="time"
-                  step={60}
                   className={cn(
                     fieldClass,
                     errors.eventStartTime && "border-destructive",
@@ -1054,10 +1054,8 @@ export function NewBookingForm({
                     (valgfri)
                   </span>
                 </Label>
-                <Input
+                <TimePickerField
                   id="new-booking-end-time"
-                  type="time"
-                  step={60}
                   className={cn(
                     fieldClass,
                     errors.eventEndTime && "border-destructive",
@@ -1261,16 +1259,13 @@ export function NewBookingForm({
                       <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-rn-text-slate md:left-4">
                         kr
                       </span>
-                      <Input
+                      <PriceInput
                         id="new-booking-custom-pkg-price"
                         className={cn(
                           fieldClass,
                           "pl-10 md:pl-11",
                           errors.customPackagePrice && "border-destructive",
                         )}
-                        type="number"
-                        min={0}
-                        step={100}
                         {...register("customPackagePrice")}
                         aria-invalid={!!errors.customPackagePrice}
                       />
@@ -1408,10 +1403,8 @@ export function NewBookingForm({
                           >
                             Pris (NOK)
                           </Label>
-                          <Input
+                          <PriceInput
                             id={`custom-addon-price-${field.id}`}
-                            type="number"
-                            min={0}
                             step={50}
                             className={cn(
                               fieldClass,
@@ -1460,11 +1453,8 @@ export function NewBookingForm({
                 <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-rn-text-slate md:left-4">
                   kr
                 </span>
-                <Input
+                <PriceInput
                   className={cn(fieldClass, "pl-10 md:pl-11")}
-                  type="number"
-                  min={0}
-                  step={100}
                   placeholder="0"
                   {...register("depositPaid")}
                   aria-invalid={!!errors.depositPaid}
@@ -1508,11 +1498,8 @@ export function NewBookingForm({
                   <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-rn-text-slate md:left-4">
                     kr
                   </span>
-                  <Input
+                  <PriceInput
                     className={cn(fieldClass, "pl-10 md:pl-11")}
-                    type="number"
-                    min={0}
-                    step={100}
                     {...register("agreedTotal")}
                     aria-invalid={!!errors.agreedTotal}
                   />

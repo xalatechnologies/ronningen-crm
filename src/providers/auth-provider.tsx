@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { useSupabase } from "@/providers/supabase-provider";
+import { isBenignSupabaseNetworkError } from "@/lib/supabase/network-errors";
 
 export type AuthProfile = {
   fullName: string | null;
@@ -26,15 +27,6 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-function isNetworkAuthError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  return (
-    error.message === "Failed to fetch" ||
-    error.name === "AuthRetryableFetchError" ||
-    error.name === "AbortError"
-  );
-}
 
 async function fetchProfileForDisplay(
   supabase: ReturnType<typeof useSupabase>,
@@ -77,38 +69,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const nextProfile = await fetchProfileForDisplay(supabase, nextUser.id);
         if (!cancelled) setProfile(nextProfile);
       } catch (error) {
-        if (!cancelled && !isNetworkAuthError(error)) {
+        if (!cancelled && !isBenignSupabaseNetworkError(error)) {
           console.warn("[auth] Kunne ikke laste profil.", error);
         }
         if (!cancelled) setProfile(null);
       }
     }
-
-    async function init() {
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-        if (error && !isNetworkAuthError(error)) {
-          console.warn("[auth] getSession feilet.", error.message);
-        }
-        if (cancelled) return;
-        await applyUser(session?.user ?? null);
-      } catch (error) {
-        if (!cancelled && !isNetworkAuthError(error)) {
-          console.warn("[auth] Kunne ikke hente sesjon.", error);
-        }
-        if (!cancelled) {
-          setUser(null);
-          setProfile(null);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    void init();
 
     const {
       data: { subscription },
@@ -117,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           await applyUser(session?.user ?? null);
         } catch (error) {
-          if (!cancelled && !isNetworkAuthError(error)) {
+          if (!cancelled && !isBenignSupabaseNetworkError(error)) {
             console.warn("[auth] onAuthStateChange feilet.", error);
           }
         } finally {

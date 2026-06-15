@@ -3,6 +3,7 @@
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { DateTimePickerField } from "@/components/ui/datetime-picker-field";
 import { Input } from "@/components/ui/input";
+import { PriceInput } from "@/components/ui/price-input";
 import { Label } from "@/components/ui/label";
 import {
   FormSelectField,
@@ -304,13 +305,11 @@ export function InquiryFormBody({
           <Label className={labelClass} htmlFor={`${rid}-est`}>
             Estimert budsjett (NOK, valgfritt)
           </Label>
-          <Input
+          <PriceInput
             id={`${rid}-est`}
-            type="number"
-            min={0}
             step={100}
             disabled={disabled}
-            className={cn(fieldClass, "tabular-nums")}
+            className={cn(fieldClass)}
             placeholder="0"
             {...register("estimatedTotal")}
           />

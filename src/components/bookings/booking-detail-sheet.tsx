@@ -26,7 +26,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { PriceInput } from "@/components/ui/price-input";
 import { Textarea } from "@/components/ui/textarea";
+import { TimePickerField } from "@/components/ui/time-picker-field";
 import {
   bookingDetailEditSchema,
   NEW_BOOKING_EVENT_TYPES,
@@ -574,10 +576,8 @@ export function BookingDetailSheet({
                       (valgfri)
                     </span>
                   </Label>
-                  <Input
+                  <TimePickerField
                     id="bde-start-time"
-                    type="time"
-                    step={60}
                     {...register("eventStartTime")}
                     className={cn(
                       fieldClass,
@@ -599,10 +599,8 @@ export function BookingDetailSheet({
                       (valgfri)
                     </span>
                   </Label>
-                  <Input
+                  <TimePickerField
                     id="bde-end-time"
-                    type="time"
-                    step={60}
                     {...register("eventEndTime")}
                     className={cn(
                       fieldClass,
@@ -676,13 +674,11 @@ export function BookingDetailSheet({
                   <Label htmlFor="bde-total" className={labelClass}>
                     Avtalt total
                   </Label>
-                  <Input
+                  <PriceInput
                     id="bde-total"
-                    type="number"
-                    min={0}
                     step={1}
                     {...register("totalNok")}
-                    className={cn(fieldClass, "mt-1.5 tabular-nums")}
+                    className={cn(fieldClass, "mt-1.5")}
                     aria-invalid={!!errors.totalNok}
                   />
                   {errors.totalNok ? (
@@ -695,13 +691,11 @@ export function BookingDetailSheet({
                   <Label htmlFor="bde-paid" className={labelClass}>
                     Innbetalt
                   </Label>
-                  <Input
+                  <PriceInput
                     id="bde-paid"
-                    type="number"
-                    min={0}
                     step={1}
                     {...register("paidNok")}
-                    className={cn(fieldClass, "mt-1.5 tabular-nums")}
+                    className={cn(fieldClass, "mt-1.5")}
                     aria-invalid={!!errors.paidNok}
                   />
                   {errors.paidNok ? (
@@ -784,7 +778,7 @@ export function BookingDetailSheet({
               </p>
               {bookingRow.collectionNoticeSentAt ? (
                 <div className="mt-4 space-y-3">
-                  <p className="rounded-md border border-violet-200 bg-white px-4 py-3 text-sm font-medium text-violet-950">
+                  <p className="rounded-md border border-violet-200 bg-card px-4 py-3 text-sm font-medium text-violet-950 dark:border-violet-800 dark:text-violet-200">
                     Innkassovarsel registrert{" "}
                     {formatInkassoRegistered(bookingRow.collectionNoticeSentAt)}
                   </p>

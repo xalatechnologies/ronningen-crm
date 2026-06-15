@@ -3,6 +3,7 @@
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
+import { PriceInput } from "@/components/ui/price-input";
 import { Label } from "@/components/ui/label";
 import {
   FormSelectField,
@@ -473,10 +474,8 @@ export function NewAccommodationReservationForm({
               <Label className={labelClass} htmlFor={`${rid}-price`}>
                 Totalpris (valgfritt)
               </Label>
-              <Input
+              <PriceInput
                 id={`${rid}-price`}
-                type="number"
-                min={0}
                 step="0.01"
                 className={fieldClass}
                 {...form.register("totalPrice")}

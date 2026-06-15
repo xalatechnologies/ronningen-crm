@@ -1,20 +1,25 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { processLock } from "@supabase/auth-js";
 
 import type { Database } from "@/types/database.types";
 import {
   getSupabasePublicEnvForClient,
   isSupabasePublicConfigured,
 } from "@/lib/supabase/public-env";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export { isSupabasePublicConfigured };
 
 let missingPublicEnvWarned = false;
+let browserClient: SupabaseClient<Database> | undefined;
 
 /**
- * Browser client. Uses non-empty placeholders when env is missing so local
- * builds and prerender can complete; configure real keys for runtime auth.
+ * Browser client singleton. Uses in-process auth locking instead of the browser
+ * Navigator LockManager to avoid steal/AbortError cascades in React Strict Mode.
  */
 export function createBrowserSupabaseClient() {
+  if (browserClient) return browserClient;
+
   const { url, key } = getSupabasePublicEnvForClient();
   if (!isSupabasePublicConfigured()) {
     if (!missingPublicEnvWarned) {
@@ -24,5 +29,10 @@ export function createBrowserSupabaseClient() {
       );
     }
   }
-  return createBrowserClient<Database>(url, key);
+  browserClient = createBrowserClient<Database>(url, key, {
+    auth: {
+      lock: processLock,
+    },
+  });
+  return browserClient;
 }

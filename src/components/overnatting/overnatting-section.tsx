@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { PriceInput } from "@/components/ui/price-input";
 import { Label } from "@/components/ui/label";
 import {
   FormSelect,
@@ -827,12 +828,12 @@ export function OvernattingSection({
                             active
                               ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
                               : tone === "emerald"
-                                ? "border-emerald-400/90 bg-white text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50"
+                                ? "border-emerald-400/90 bg-card text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50 dark:text-emerald-100 dark:hover:bg-emerald-950/40"
                                 : tone === "amber"
-                                  ? "border-amber-400/90 bg-white text-amber-950 hover:border-amber-500 hover:bg-amber-50"
+                                  ? "border-amber-400/90 bg-card text-amber-950 hover:border-amber-500 hover:bg-amber-50 dark:text-amber-100 dark:hover:bg-amber-950/40"
                                   : tone === "rose"
-                                    ? "border-red-400/90 bg-white text-red-950 hover:border-red-500 hover:bg-red-50"
-                                    : "border-rn-border-strong bg-white text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
+                                    ? "border-red-400/90 bg-card text-red-950 hover:border-red-500 hover:bg-red-50 dark:text-red-200 dark:hover:bg-red-950/40"
+                                    : "border-rn-border-strong bg-card text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
                           )}
                         >
                           <span
@@ -1278,10 +1279,8 @@ export function OvernattingSection({
                       (valgfritt)
                     </span>
                   </Label>
-                  <Input
+                  <PriceInput
                     id={`${rid}-rp`}
-                    type="number"
-                    min={0}
                     step="0.01"
                     className={fieldClass}
                     {...editResForm.register("totalPrice")}

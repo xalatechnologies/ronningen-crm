@@ -47,14 +47,14 @@ function dayCellFillClass(rows: InquiryListRow[]): string {
 function inquiryChipClass(status: BookingInquiryStatus) {
   switch (status) {
     case "converted":
-      return "text-emerald-950 hover:bg-white/55 focus-visible:ring-emerald-600/50 dark:text-emerald-100 dark:hover:bg-white/10";
+      return "text-emerald-950 hover:bg-card/60 focus-visible:ring-emerald-600/50 dark:text-emerald-100";
     case "lost":
-      return "text-muted-foreground line-through decoration-foreground/40 hover:bg-white/40 dark:hover:bg-white/10";
+      return "text-muted-foreground line-through decoration-foreground/40 hover:bg-card/50";
     case "awaiting_customer":
     case "quote_sent":
-      return "text-amber-950 hover:bg-white/55 focus-visible:ring-amber-600/50 dark:text-amber-100 dark:hover:bg-white/10";
+      return "text-amber-950 hover:bg-card/60 focus-visible:ring-amber-600/50 dark:text-amber-100";
     default:
-      return "text-rn-text-heading hover:bg-white/50 dark:hover:bg-white/10";
+      return "text-rn-text-heading hover:bg-card/50";
   }
 }
 
@@ -268,7 +268,7 @@ export function InquiriesFollowUpMonthCalendar({
             isToday
               ? "bg-success !text-white shadow-sm [&_svg]:!text-white"
               : hasRows
-                ? "bg-white/55 text-rn-text-heading shadow-sm backdrop-blur-[2px] dark:bg-white/10"
+                ? "bg-card/80 text-rn-text-heading shadow-sm backdrop-blur-[2px]"
                 : "text-rn-text-heading",
           )}
         >

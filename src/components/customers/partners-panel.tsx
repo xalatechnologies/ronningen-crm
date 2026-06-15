@@ -20,6 +20,11 @@ import {
   partnerFormSchema,
   type PartnerFormInput,
 } from "@/lib/validations";
+import {
+  RN_PAGE_SEARCH_FIELD_WRAP,
+  RN_PAGE_SEARCH_INPUT,
+  RN_PAGE_SEARCH_TOOLBAR,
+} from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
@@ -316,8 +321,8 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
             <h1 className="customers-partners-hero app-title">
               Partnere
             </h1>
-          <div className="flex w-full min-w-0 flex-col gap-3 md:min-w-0 md:flex-1 md:flex-row md:items-stretch md:justify-end md:gap-3 lg:gap-4">
-            <div className="relative min-w-0 w-full md:flex-1 md:max-w-3xl">
+          <div className={RN_PAGE_SEARCH_TOOLBAR}>
+            <div className={RN_PAGE_SEARCH_FIELD_WRAP}>
               <Search
                 className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
                 aria-hidden
@@ -330,7 +335,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
                   setPartnersPage(1);
                 }}
                 placeholder="Søk partner…"
-                className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                className={RN_PAGE_SEARCH_INPUT}
                 aria-label="Søk partnere"
               />
             </div>

@@ -290,12 +290,12 @@ function BookingsFiltersSection({
                       active
                         ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
                         : tone === "emerald"
-                          ? "border-emerald-400/90 bg-white text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50"
+                          ? "border-emerald-400/90 bg-card text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50 dark:text-emerald-100 dark:hover:bg-emerald-950/40"
                           : tone === "amber"
-                            ? "border-amber-400/90 bg-white text-amber-950 hover:border-amber-500 hover:bg-amber-50"
+                            ? "border-amber-400/90 bg-card text-amber-950 hover:border-amber-500 hover:bg-amber-50 dark:text-amber-100 dark:hover:bg-amber-950/40"
                             : tone === "rose"
-                              ? "border-red-400/90 bg-white text-red-950 hover:border-red-500 hover:bg-red-50"
-                              : "border-rn-border-strong bg-white text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
+                              ? "border-red-400/90 bg-card text-red-950 hover:border-red-500 hover:bg-red-50 dark:text-red-200 dark:hover:bg-red-950/40"
+                              : "border-rn-border-strong bg-card text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
                     )}
                   >
                     <span
@@ -476,7 +476,7 @@ function FindBookingsCardHeader({
                   "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
                   view === "list"
                     ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
-                    : "text-rn-text-body hover:border-rn-badge-border hover:bg-white",
+                    : "text-rn-text-body hover:border-rn-badge-border hover:bg-card",
                 )}
               >
                 <List className="size-5 shrink-0 opacity-90" aria-hidden />
@@ -492,7 +492,7 @@ function FindBookingsCardHeader({
                   "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
                   view === "calendar"
                     ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
-                    : "text-rn-text-body hover:border-rn-badge-border hover:bg-white",
+                    : "text-rn-text-body hover:border-rn-badge-border hover:bg-card",
                 )}
               >
                 <CalendarDays className="size-5 shrink-0 opacity-90" aria-hidden />
@@ -1021,10 +1021,10 @@ export function BookingsList({
             </div>
             <div className="flex w-full flex-col justify-between rounded-md border-2 border-success/50 bg-gradient-to-b from-rn-surface-gradient-from to-muted p-6 md:w-[38%] md:max-w-[340px] md:p-8">
               <div>
-                <p className="text-xs font-semibold tracking-wider text-success uppercase md:text-sm">
+                <p className="text-xs font-semibold tracking-wider text-success uppercase dark:!text-white md:text-sm">
                   Denne måneden
                 </p>
-                <p className="mt-3 font-heading text-4xl font-bold text-success md:text-5xl">
+                <p className="mt-3 font-heading text-4xl font-bold text-success dark:!text-white md:text-5xl">
                   {formatNok(quickStats.currentMonthRevenue)}
                 </p>
               </div>
@@ -1037,7 +1037,7 @@ export function BookingsList({
                     {formatNok(quickStats.prevMonthRevenue)}
                   </span>
                 </div>
-                <div className="h-2.5 overflow-hidden rounded-full border border-rn-border-strong/40 bg-white">
+                <div className="h-2.5 overflow-hidden rounded-full border border-rn-border-strong/40 bg-muted">
                   <div
                     className="h-full rounded-full bg-success transition-[width]"
                     style={{

@@ -12,9 +12,27 @@ export const RN_SEGMENT_CONTROL =
 export const RN_TEXT_NAV_LINK =
   "app-main-nav-link font-heading leading-snug";
 
+/** Aktiv hovedmeny-lenke — grønn tekst i lys modus, hvit i mørk modus. */
+export const RN_NAV_LINK_ACTIVE =
+  "border-rn-accent-border bg-rn-surface-gradient-from font-semibold text-success shadow-sm dark:!text-white";
+
+/** Aktiv hovedmeny-ikon — matcher RN_NAV_LINK_ACTIVE. */
+export const RN_NAV_LINK_ACTIVE_ICON =
+  "text-success opacity-100 dark:!text-white";
+
 /** Segment-/filterknapper — samme grunnstørrelse som hovedmeny. */
 export const RN_TEXT_SEGMENT =
   "app-main-nav-link font-heading font-semibold tracking-tight";
+
+/** Søkefelt-rad (kunder/partnere m.fl.) — samme layout og bredde. */
+export const RN_PAGE_SEARCH_TOOLBAR =
+  "flex w-full min-w-0 flex-col gap-3 md:min-w-0 md:flex-1 md:flex-row md:items-stretch md:justify-end md:gap-3 lg:gap-4";
+
+export const RN_PAGE_SEARCH_FIELD_WRAP =
+  "relative min-w-0 w-full md:flex-1 md:max-w-3xl";
+
+export const RN_PAGE_SEARCH_INPUT =
+  "h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm dark:bg-background dark:text-foreground md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
 /**
  * Native `<select>` — samme feltstil som øvrige skjema-/filterkontroller (border-2, success-fokus).
