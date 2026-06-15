@@ -1,4 +1,3 @@
-import { SettingsBreadcrumb } from "@/components/settings/settings-breadcrumb";
 import { SettingsNav } from "@/components/settings/settings-nav";
 import type { ReactNode } from "react";
 
@@ -9,10 +8,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
         <aside className="shrink-0 lg:w-56 xl:w-60">
           <SettingsNav />
         </aside>
-        <div className="min-w-0 flex-1">
-          <SettingsBreadcrumb />
-          {children}
-        </div>
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
     </div>
   );

@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { AppPageHeader } from "@/components/layout/app-page-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BILLING_PLANS, getBillingPlan } from "@/config/billing-plans";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { createCheckoutSession } from "@/lib/billing/actions/create-checkout-session";
 import { createPortalSession } from "@/lib/billing/actions/create-portal-session";
@@ -19,19 +20,13 @@ import {
   SAAS_MONTHLY_PRICE_NOK,
   SAAS_TRIAL_DAYS,
 } from "@/lib/billing/constants";
+import { SUBSCRIPTION_STATUS_LABELS } from "@/lib/admin/subscription-labels";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
-import { differenceInCalendarDays, format } from "date-fns";
+import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-
-const STATUS_LABELS: Record<string, string> = {
-  active: "Aktiv",
-  trialing: "Prøveperiode",
-  past_due: "Forfalt",
-  canceled: "Avsluttet",
-  incomplete: "Ufullstendig",
-};
+import { Check, FlaskConical } from "lucide-react";
 
 type SubscriptionRow = {
   status: string;
@@ -41,6 +36,137 @@ type SubscriptionRow = {
   provider: string | null;
   provider_customer_id: string | null;
   provider_subscription_id: string | null;
+};
+
+type AttentionMessage = {
+  tone: "destructive" | "warning" | "info";
+  title: string;
+  body: string;
+};
+
+function SubscriptionStatusBadge({
+  status,
+  className,
+}: {
+  status: string;
+  className?: string;
+}) {
+  const label = SUBSCRIPTION_STATUS_LABELS[status] ?? status;
+  const tone =
+    status === "active"
+      ? "border-success/40 bg-success/10 text-success"
+      : status === "past_due"
+        ? "border-destructive/40 bg-destructive/10 text-destructive"
+        : status === "trialing"
+          ? "border-rn-accent-border/50 bg-rn-surface-gradient-from text-success"
+          : status === "incomplete"
+            ? "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200"
+            : "border-rn-border-strong bg-muted/30 text-muted-foreground";
+
+  return (
+    <span
+      className={cn(
+        "inline-flex rounded-md border-2 px-2.5 py-0.5 text-app-xs font-semibold md:text-app-sm",
+        tone,
+        className,
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
+function BillingSettingsSkeleton() {
+  return (
+    <div className="flex flex-col gap-6" aria-busy="true" aria-label="Laster fakturering">
+      <div className={cn(RN_CARD_SHELL, "h-28 animate-pulse bg-muted/20")} />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,320px)]">
+        <div className={cn(RN_CARD_SHELL, "h-64 animate-pulse bg-muted/20")} />
+        <div className={cn(RN_CARD_SHELL, "h-64 animate-pulse bg-muted/20")} />
+      </div>
+    </div>
+  );
+}
+
+function resolveAttentionMessage(input: {
+  billingOn: boolean;
+  status: string;
+  trialExpired: boolean;
+  showCheckout: boolean;
+  hasStripeSubscription: boolean;
+  isOwner: boolean;
+}): AttentionMessage | null {
+  if (!input.billingOn) {
+    return {
+      tone: "info",
+      title: "Fakturering er ikke aktivert",
+      body: "Kontakt support for å endre eller aktivere abonnement i dette miljøet.",
+    };
+  }
+
+  if (input.trialExpired) {
+    return {
+      tone: "destructive",
+      title: "Prøveperioden er over",
+      body: input.isOwner
+        ? "Fullfør betaling for å gjenopprette tilgang til appen."
+        : "Organisasjonseieren må fullføre betaling for å gjenopprette tilgang.",
+    };
+  }
+
+  if (input.status === "past_due") {
+    return {
+      tone: "destructive",
+      title: "Betalingen mislyktes",
+      body: input.isOwner
+        ? "Oppdater betalingskortet i Stripe for å gjenopprette full tilgang."
+        : "Organisasjonseieren må oppdatere betalingskortet.",
+    };
+  }
+
+  if (input.status === "incomplete") {
+    return {
+      tone: "warning",
+      title: "Abonnementet er ikke aktivert",
+      body: input.isOwner
+        ? "Fullfør betaling for å aktivere abonnementet og få tilgang til appen."
+        : "Organisasjonseieren må fullføre betaling for å aktivere abonnementet.",
+    };
+  }
+
+  if (
+    input.showCheckout &&
+    (input.status === "trialing" || input.status === "active") &&
+    !input.hasStripeSubscription
+  ) {
+    return {
+      tone: "warning",
+      title: "Koble til Stripe",
+      body: input.isOwner
+        ? "Abonnementet må kobles til Stripe. Fullfør betaling for å starte 30 dagers prøveperiode."
+        : "Organisasjonseieren må fullføre betaling for å koble abonnementet til Stripe.",
+    };
+  }
+
+  if (input.status === "canceled") {
+    return {
+      tone: "info",
+      title: "Abonnementet er avsluttet",
+      body: input.isOwner
+        ? "Start et nytt abonnement for å få tilgang igjen."
+        : "Organisasjonseieren kan starte et nytt abonnement.",
+    };
+  }
+
+  return null;
+}
+
+const attentionToneClass: Record<AttentionMessage["tone"], string> = {
+  destructive:
+    "border-destructive/45 bg-destructive/8 text-destructive [&_strong]:text-destructive",
+  warning:
+    "border-amber-500/40 bg-amber-500/[0.06] text-foreground [&_strong]:text-foreground",
+  info: "border-rn-border-strong/70 bg-muted/25 text-muted-foreground [&_strong]:text-foreground",
 };
 
 export function BillingSettingsPanel({
@@ -180,21 +306,29 @@ export function BillingSettingsPanel({
   }
 
   if (subLoading || (loading && !currentOrganization)) {
-    return <p className="text-muted-foreground">Laster abonnement…</p>;
+    return <BillingSettingsSkeleton />;
   }
 
   if (!currentOrganization) {
     return (
-      <p className="text-muted-foreground">
-        Ingen aktiv organisasjon. Opprett en organisasjon først.
-      </p>
+      <div
+        className={cn(
+          RN_CARD_SHELL,
+          "px-6 py-8 text-center text-muted-foreground",
+        )}
+      >
+        <p className="font-medium text-foreground">Ingen aktiv organisasjon</p>
+        <p className="mt-2 text-app-sm">
+          Opprett en organisasjon før du kan administrere abonnement.
+        </p>
+      </div>
     );
   }
 
   const status =
     subscription?.status ?? currentOrganization.subscriptionStatus;
-  const plan = subscription?.plan ?? currentOrganization.subscriptionPlan;
-  const statusLabel = STATUS_LABELS[status] ?? status;
+  const planId = subscription?.plan ?? currentOrganization.subscriptionPlan;
+  const plan = getBillingPlan(planId) ?? BILLING_PLANS.standard;
   const billingOn = billingEnabled;
   const hasStripeSubscription = Boolean(subscription?.provider_subscription_id);
   const hasStripeCustomer = Boolean(subscription?.provider_customer_id);
@@ -203,10 +337,6 @@ export function BillingSettingsPanel({
   const periodEnd = subscription?.current_period_end
     ? new Date(subscription.current_period_end)
     : null;
-  const daysLeft =
-    periodEnd && status === "trialing"
-      ? differenceInCalendarDays(periodEnd, new Date())
-      : null;
 
   const trialExpired =
     status === "trialing" &&
@@ -227,111 +357,103 @@ export function BillingSettingsPanel({
     status,
   });
 
+  const attention = resolveAttentionMessage({
+    billingOn,
+    status,
+    trialExpired,
+    showCheckout,
+    hasStripeSubscription,
+    isOwner,
+  });
+
+  const primaryCtaLabel =
+    status === "incomplete" || trialExpired
+      ? "Fullfør betaling"
+      : "Start abonnement";
+
   return (
     <div className="flex flex-col gap-6">
-      {billingOn && isSandbox ? (
-        <p className="rounded-md border border-amber-500/35 bg-amber-500/[0.06] px-4 py-3 text-app-sm text-foreground">
-          <span className="font-semibold">Testmiljø</span> — Stripe sandbox er
-          aktiv. Ingen ekte betalinger blir belastet.
-        </p>
+      <AppPageHeader
+        surface="card"
+        compact
+        className="mb-0"
+        title="Fakturering"
+        description={
+          <>
+            Abonnement og betaling for{" "}
+            <span className="font-medium text-foreground">
+              {currentOrganization.name}
+            </span>
+            .
+          </>
+        }
+        actions={
+          billingOn && isSandbox ? (
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-500/35 bg-amber-500/[0.08] px-2.5 py-1 text-app-xs font-semibold text-amber-900 dark:text-amber-100">
+              <FlaskConical className="size-3.5" aria-hidden />
+              {billingModeLabel}
+            </span>
+          ) : billingOn ? (
+            <span className="rounded-md border border-rn-border-strong/60 bg-muted/30 px-2.5 py-1 text-app-xs font-semibold text-muted-foreground">
+              {billingModeLabel}
+            </span>
+          ) : null
+        }
+      />
+
+      {attention ? (
+        <div
+          role="alert"
+          className={cn(
+            "rounded-[length:var(--app-radius)] border-2 px-4 py-3.5 md:px-5 md:py-4",
+            attentionToneClass[attention.tone],
+          )}
+        >
+          <p className="text-app-sm font-semibold">{attention.title}</p>
+          <p className="mt-1 text-app-sm leading-relaxed">{attention.body}</p>
+        </div>
       ) : null}
 
-      <Card
-        className={cn(
-          RN_CARD_SHELL,
-          status === "past_due" && "border-destructive/50 bg-destructive/5",
-        )}
-      >
-        <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <CardTitle className="font-heading text-xl">Abonnement</CardTitle>
-            {billingOn ? (
-              <span className="rounded-md border border-rn-border-strong/60 bg-muted/40 px-2 py-0.5 text-app-xs font-semibold text-muted-foreground">
-                {billingModeLabel}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,320px)] lg:items-start">
+        <section className={cn(RN_CARD_SHELL, "flex flex-col gap-6 p-5 md:p-6")}>
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-rn-border-strong/50 pb-5">
+            <div>
+              <h2 className="font-heading text-lg font-semibold text-foreground md:text-xl">
+                Abonnement
+              </h2>
+              <p className="mt-1 text-app-sm text-muted-foreground">
+                Betaling og faktureringsperiode administreres via Stripe.
+              </p>
+            </div>
+            {billingOn && hasStripeSubscription ? (
+              <span className="text-app-xs font-medium text-muted-foreground">
+                Stripe-koblet
               </span>
             ) : null}
           </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4 text-app-base">
-          <div className="grid gap-4 sm:grid-cols-3">
+
+          <dl className="grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="text-app-sm text-muted-foreground">Organisasjon</p>
-              <p className="font-medium">{currentOrganization.name}</p>
+              <dt className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Nåværende status
+              </dt>
+              <dd className="mt-1.5">
+                <SubscriptionStatusBadge status={status} />
+              </dd>
             </div>
             <div>
-              <p className="text-app-sm text-muted-foreground">Plan</p>
-              <p className="font-medium">Standard</p>
+              <dt className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Faktureringsperiode
+              </dt>
+              <dd className="mt-1.5 text-app-sm font-medium text-foreground">
+                {periodEnd
+                  ? format(periodEnd, "d. MMMM yyyy", { locale: nb })
+                  : "—"}
+              </dd>
             </div>
-            <div>
-              <p className="text-app-sm text-muted-foreground">Status</p>
-              <p className="font-medium">{statusLabel}</p>
-            </div>
-          </div>
+          </dl>
 
-          <div className="rounded-md border border-rn-border-strong/60 bg-muted/30 px-4 py-3 text-sm">
-            <p className="font-semibold text-foreground">
-              {SAAS_MONTHLY_PRICE_NOK} kr/mnd
-            </p>
-            <p className="mt-1 text-muted-foreground">
-              {SAAS_TRIAL_DAYS} dagers gratis prøveperiode ved oppstart. Første
-              trekk skjer når prøven er over.
-            </p>
-          </div>
-
-          {periodEnd ? (
-            <p className="text-sm text-muted-foreground">
-              {status === "trialing"
-                ? "Prøveperiode til"
-                : "Neste faktureringsperiode til"}
-              :{" "}
-              <span className="font-medium text-foreground">
-                {format(periodEnd, "d. MMMM yyyy", { locale: nb })}
-              </span>
-              {daysLeft != null && daysLeft >= 0 && status === "trialing" ? (
-                <> ({daysLeft} {daysLeft === 1 ? "dag" : "dager"} igjen)</>
-              ) : null}
-            </p>
-          ) : null}
-
-          {trialExpired ? (
-            <p className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              Prøveperioden er over. Fullfør betaling for å få tilgang igjen.
-            </p>
-          ) : null}
-
-          {status === "past_due" ? (
-            <p className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              Betalingen mislyktes. Oppdater betalingskortet for å gjenopprette
-              full tilgang.
-            </p>
-          ) : null}
-
-          {status === "incomplete" ? (
-            <p className="rounded-md border border-rn-border-strong/60 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-              Fullfør betaling for å aktivere abonnementet og få tilgang til
-              appen.
-            </p>
-          ) : null}
-
-          {showCheckout &&
-          (status === "trialing" || status === "active") &&
-          !hasStripeSubscription ? (
-            <p className="rounded-md border border-amber-500/35 bg-amber-500/[0.06] px-4 py-3 text-sm text-foreground">
-              Abonnementet må kobles til Stripe for å fortsette.{" "}
-              {isOwner
-                ? "Fullfør betaling for å aktivere 30 dagers prøveperiode."
-                : "Organisasjonseieren må fullføre betaling."}
-            </p>
-          ) : null}
-
-          {status === "canceled" ? (
-            <p className="rounded-md border border-rn-border-strong/60 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-              Abonnementet er avsluttet. Start et nytt abonnement for å få
-              tilgang igjen.
-            </p>
-          ) : null}
-
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col gap-3 border-t border-rn-border-strong/50 pt-5">
             {billingOn && showCheckout && isOwner ? (
               <Button
                 type="button"
@@ -339,19 +461,8 @@ export function BillingSettingsPanel({
                 disabled={actionLoading}
                 onClick={() => void handleCheckout()}
               >
-                {actionLoading
-                  ? "Åpner betaling…"
-                  : status === "incomplete" || trialExpired
-                    ? "Fullfør betaling"
-                    : "Start abonnement"}
+                {actionLoading ? "Åpner betaling…" : primaryCtaLabel}
               </Button>
-            ) : null}
-
-            {billingOn && showCheckout && !isOwner ? (
-              <p className="rounded-md border border-rn-border-strong/60 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-                Kun organisasjonseieren kan starte eller fullføre betaling. Be
-                eieren om å logge inn og fullføre abonnementet her.
-              </p>
             ) : null}
 
             {billingOn && showPortal && isOwner ? (
@@ -361,40 +472,83 @@ export function BillingSettingsPanel({
                 disabled={actionLoading}
                 onClick={() => void handlePortal()}
               >
-                Administrer abonnement
+                Administrer i Stripe
               </Button>
             ) : null}
 
-            {billingOn && showPortal && !isOwner ? (
+            {billingOn && (showCheckout || showPortal) && !isOwner ? (
+              <p className="rounded-md border border-rn-border-strong/60 bg-muted/25 px-4 py-3 text-app-sm text-muted-foreground">
+                Kun organisasjonseieren kan starte, fullføre eller administrere
+                abonnementet.
+              </p>
+            ) : null}
+
+            {!billingOn ? (
               <p className="text-app-sm text-muted-foreground">
-                Kun organisasjonseieren kan administrere abonnementet i Stripe.
+                <Link
+                  href="/app/settings/support"
+                  className="font-semibold text-success hover:underline"
+                >
+                  Kontakt support
+                </Link>{" "}
+                for å endre abonnement.
+              </p>
+            ) : null}
+
+            {billingOn && !showCheckout && !showPortal && isOwner && !attention ? (
+              <p className="text-app-sm text-muted-foreground">
+                Abonnementet er aktivt. Bruk Stripe-portalen for å oppdatere
+                betalingskort eller se fakturaer.
               </p>
             ) : null}
           </div>
 
           {showDevIds && subscription?.provider_customer_id ? (
-            <div className="rounded-md border border-dashed border-rn-border-strong/60 bg-muted/20 px-3 py-2 font-mono text-app-xs text-muted-foreground">
+            <div className="rounded-md border border-dashed border-rn-border-strong/60 bg-muted/15 px-3 py-2 font-mono text-app-xs text-muted-foreground">
               <p>kunde: {subscription.provider_customer_id}</p>
               {subscription.provider_subscription_id ? (
                 <p>abonnement: {subscription.provider_subscription_id}</p>
               ) : null}
             </div>
           ) : null}
+        </section>
 
-          {!billingOn ? (
-            <p className="text-app-sm text-muted-foreground">
-              Fakturering er deaktivert i dette miljøet.{" "}
-              <Link
-                href="/app/settings/support"
-                className="font-semibold text-success hover:underline"
-              >
-                Kontakt support
-              </Link>{" "}
-              for å endre abonnement.
+        <aside className={cn(RN_CARD_SHELL, "flex flex-col gap-5 p-5 md:p-6")}>
+          <div>
+            <p className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Inkludert i planen
             </p>
-          ) : null}
-        </CardContent>
-      </Card>
+            <h2 className="mt-1 font-heading text-xl font-semibold text-foreground">
+              {plan.name}
+            </h2>
+            <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
+              {SAAS_MONTHLY_PRICE_NOK.toLocaleString("nb-NO")}{" "}
+              <span className="text-base font-medium text-muted-foreground">
+                kr/mnd
+              </span>
+            </p>
+            <p className="mt-2 text-app-sm leading-relaxed text-muted-foreground">
+              {SAAS_TRIAL_DAYS} dagers gratis prøveperiode ved oppstart. Første
+              trekk skjer når prøven er over.
+            </p>
+          </div>
+
+          <ul className="flex flex-col gap-2 border-t border-rn-border-strong/50 pt-5">
+            {plan.features.map((feature) => (
+              <li
+                key={feature}
+                className="flex items-start gap-2.5 text-app-sm text-foreground"
+              >
+                <Check
+                  className="mt-0.5 size-4 shrink-0 text-success"
+                  aria-hidden
+                />
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </aside>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminKpiTile } from "@/components/admin/admin-kpi-tile";
 import { AuditEntryDetailPanel } from "@/components/admin/audit-entry-detail-panel";
 import {
   AdminAuditFilterBar,
@@ -45,9 +46,6 @@ const tableHeadClass =
   "px-6 py-4 text-left text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
 
-const kpiTileClass =
-  "flex h-full w-full flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 text-left shadow-sm transition-colors hover:border-success/35 hover:bg-rn-surface-row-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 sm:p-6";
-
 function isoDateDaysAgo(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() - days);
@@ -60,73 +58,6 @@ function todayIso(): string {
 
 function isLast7DaysApplied(from: string, to: string): boolean {
   return from === isoDateDaysAgo(7) && to === todayIso();
-}
-
-function AuditKpiTile({
-  label,
-  value,
-  caption,
-  icon: Icon,
-  iconClassName,
-  valueClassName,
-  active,
-  href,
-  onClick,
-}: {
-  label: string;
-  value: string | number;
-  caption?: string;
-  icon: typeof ClipboardList;
-  iconClassName?: string;
-  valueClassName?: string;
-  active?: boolean;
-  href?: string;
-  onClick?: () => void;
-}) {
-  const body = (
-    <>
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="dashboard-kpi-label">{label}</span>
-        <div className={cn("rounded-md p-2", iconClassName ?? "bg-accent")}>
-          <Icon className="size-6 text-primary" aria-hidden />
-        </div>
-      </div>
-      <div>
-        <p className={cn("dashboard-kpi-value", valueClassName ?? "text-success")}>
-          {value}
-        </p>
-        {caption ? (
-          <p className="dashboard-kpi-caption mt-3 text-muted-foreground">{caption}</p>
-        ) : null}
-      </div>
-    </>
-  );
-
-  const className = cn(kpiTileClass, active && "border-success/50 bg-rn-surface-gradient-from/40");
-
-  if (href) {
-    return (
-      <Link href={href} className={className}>
-        {body}
-        <span className="sr-only">Gå til {label}</span>
-      </Link>
-    );
-  }
-
-  if (onClick) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className={className}
-        aria-pressed={active ? "true" : "false"}
-      >
-        {body}
-      </button>
-    );
-  }
-
-  return <div className={className}>{body}</div>;
 }
 
 type AdminAuditWorkspaceProps = {
@@ -306,7 +237,8 @@ export function AdminAuditWorkspace({
           aria-label="Nøkkeltall"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <AuditKpiTile
+            <AdminKpiTile
+              variant="audit"
               label="Totalt"
               value={stats.total}
               caption="Alle registrerte hendelser"
@@ -314,7 +246,8 @@ export function AdminAuditWorkspace({
               active={filtersReset}
               onClick={resetFilters}
             />
-            <AuditKpiTile
+            <AdminKpiTile
+              variant="audit"
               label="Siste 7 dager"
               value={stats.last7Days}
               caption="Hendelser siste uke"
@@ -322,13 +255,15 @@ export function AdminAuditWorkspace({
               active={last7DaysActive}
               href={adminAuditLast7DaysHref()}
             />
-            <AuditKpiTile
+            <AdminKpiTile
+              variant="audit"
               label="Unike administratorer (30 d.)"
               value={stats.uniqueActors30d}
               caption="Aktive plattformadministratorer"
               icon={Users}
             />
-            <AuditKpiTile
+            <AdminKpiTile
+              variant="audit"
               label="Vanligste handling"
               value={topAction?.count ?? "—"}
               caption={
@@ -380,14 +315,6 @@ export function AdminAuditWorkspace({
             onReset={resetFilters}
           />
         </section>
-
-        <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
-          <p className="app-text-secondary">
-            {total === 0
-              ? "Ingen hendelser i dette filteret"
-              : `Viser ${rangeStart}–${rangeEnd} av ${total} hendelser`}
-          </p>
-        </div>
 
         <div className="app-table overflow-x-auto border-t border-rn-border-strong/50">
           <table className="w-full min-w-[880px] text-left text-app-base">
@@ -492,9 +419,16 @@ export function AdminAuditWorkspace({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8">
-          <p className="app-text-muted">
-            Side {page} av {totalPages}
-          </p>
+          <div className="space-y-1">
+            <p className="app-text-secondary">
+              {total === 0
+                ? "Ingen hendelser i dette filteret"
+                : `Viser ${rangeStart}–${rangeEnd} av ${total} hendelser`}
+            </p>
+            <p className="app-text-muted">
+              Side {page} av {totalPages}
+            </p>
+          </div>
           <div className="flex gap-2">
             <AdminActionButton
               type="button"

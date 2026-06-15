@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminKpiTile } from "@/components/admin/admin-kpi-tile";
 import { AdminAccessBadge } from "@/components/admin/admin-access-badge";
 import { AdminPlanBadge } from "@/components/admin/admin-badges";
 import { AdminHealthBadge } from "@/components/admin/admin-health-badge";
@@ -59,54 +60,6 @@ type AdminOrganizationsWorkspaceProps = {
 const tableHeadClass =
   "px-6 py-4 text-left text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
-
-const kpiTileClass =
-  "flex w-full flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 text-left shadow-sm transition-colors hover:border-success/35 hover:bg-rn-surface-row-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 sm:p-6";
-
-function OrgKpiTile({
-  label,
-  value,
-  caption,
-  icon: Icon,
-  iconClassName,
-  valueClassName,
-  active,
-  onClick,
-}: {
-  label: string;
-  value: string | number;
-  caption: string;
-  icon: typeof Building2;
-  iconClassName?: string;
-  valueClassName?: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        kpiTileClass,
-        active && "border-success/50 bg-rn-surface-gradient-from/40",
-      )}
-      aria-pressed={active ? "true" : "false"}
-    >
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="dashboard-kpi-label">{label}</span>
-        <div className={cn("rounded-md p-2", iconClassName ?? "bg-accent")}>
-          <Icon className="size-6 text-primary" aria-hidden />
-        </div>
-      </div>
-      <div>
-        <p className={cn("dashboard-kpi-value", valueClassName ?? "text-success")}>
-          {value}
-        </p>
-        <p className="dashboard-kpi-caption mt-3 text-muted-foreground">{caption}</p>
-      </div>
-    </button>
-  );
-}
 
 export function AdminOrganizationsWorkspace({
   organizations,
@@ -299,7 +252,8 @@ export function AdminOrganizationsWorkspace({
           aria-label="Nøkkeltall"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <OrgKpiTile
+            <AdminKpiTile
+              variant="organizations"
               label="Totalt"
               value={overview.total}
               caption={venuesCaption}
@@ -310,7 +264,8 @@ export function AdminOrganizationsWorkspace({
                 updateStatus("all");
               }}
             />
-            <OrgKpiTile
+            <AdminKpiTile
+              variant="organizations"
               label="Aktive"
               value={overview.active}
               caption="Trialing og aktive abonnement"
@@ -318,7 +273,8 @@ export function AdminOrganizationsWorkspace({
               active={status === "active"}
               onClick={() => updateStatus("active")}
             />
-            <OrgKpiTile
+            <AdminKpiTile
+              variant="organizations"
               label="Trenger oppfølging"
               value={overview.needsFollowUp}
               caption={followUpCaption}
@@ -336,7 +292,8 @@ export function AdminOrganizationsWorkspace({
               }
               onClick={() => updateStatus("incomplete")}
             />
-            <OrgKpiTile
+            <AdminKpiTile
+              variant="organizations"
               label="Total inntekt"
               value={formatNok(overview.totalRevenue)}
               caption="Fakturert bookinginntekt"
@@ -357,16 +314,8 @@ export function AdminOrganizationsWorkspace({
           />
         </section>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
-          <p className="app-text-secondary">
-            Viser {filtered.length} av {organizations.length} organisasjoner
-            {selected.size > 0 ? (
-              <span className="ml-2 font-medium text-foreground">
-                · {selected.size} valgt
-              </span>
-            ) : null}
-          </p>
-          {selected.size > 0 ? (
+        {selected.size > 0 ? (
+          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
             <div className="flex flex-wrap gap-2">
               <AdminActionButton
                 type="button"
@@ -391,8 +340,8 @@ export function AdminOrganizationsWorkspace({
                 Utvid prøve
               </AdminActionButton>
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
         <div className="app-table overflow-x-auto border-t border-rn-border-strong/50">
           <table className="w-full min-w-[960px] text-left text-app-base">
@@ -495,6 +444,17 @@ export function AdminOrganizationsWorkspace({
               ) : null}
             </tbody>
           </table>
+        </div>
+
+        <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
+          <p className="app-text-secondary">
+            Viser {filtered.length} av {organizations.length} organisasjoner
+            {selected.size > 0 ? (
+              <span className="ml-2 font-medium text-foreground">
+                · {selected.size} valgt
+              </span>
+            ) : null}
+          </p>
         </div>
       </div>
 

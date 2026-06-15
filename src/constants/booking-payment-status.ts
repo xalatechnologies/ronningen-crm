@@ -78,14 +78,14 @@ type PaymentFormSnapshot = {
 };
 
 /**
- * Ved lagring: innbetalt og total styrer beløp. For unpaid/partial/paid utledes
- * `payment_status` fra beløp slik at fakturaer, kunder og rapporter får riktig state.
- * waived/disputed/other beholder semantikk unntatt beløp (waived: rest alltid 0).
+ * Ved lagring: eksplisitt valg av fullt/ikke betalt oppdaterer innbetalt og rest.
+ * Delvis betalt bruker registrerte beløp. waived/disputed/other beholder semantikk
+ * (waived: rest alltid 0).
  */
 export function resolveBookingPaymentForPersist(
   data: PaymentFormSnapshot,
 ): { paid: number; remaining: number; paymentStatus: BookingPaymentStatus } {
-  const total = data.totalNok;
+  const total = Math.max(0, data.totalNok);
   const inputPaid = Math.min(Math.max(0, data.paidNok), total);
   const ps = data.paymentStatus;
 
@@ -100,7 +100,30 @@ export function resolveBookingPaymentForPersist(
     return { paid, remaining, paymentStatus: ps };
   }
 
-  return resolveStandardBookingPaymentFromAmounts(data.totalNok, data.paidNok);
+  if (ps === "paid") {
+    return { paid: total, remaining: 0, paymentStatus: "paid" };
+  }
+
+  if (ps === "unpaid") {
+    return { paid: 0, remaining: total, paymentStatus: "unpaid" };
+  }
+
+  if (ps === "partial") {
+    const paid = inputPaid;
+    const remaining = Math.max(0, total - paid);
+    return { paid, remaining, paymentStatus: "partial" };
+  }
+
+  return resolveStandardBookingPaymentFromAmounts(total, inputPaid);
+}
+
+/** Forhåndsvis restbeløp etter lagring ut fra valgt status og beløp. */
+export function previewBookingRemainingAfterSave(
+  data: PaymentFormSnapshot,
+): number | null {
+  const total = data.totalNok;
+  if (!Number.isFinite(total)) return null;
+  return resolveBookingPaymentForPersist(data).remaining;
 }
 
 /** Skjul fra «utestående fakturaer» når sperret som betalt eller ettergitt. */

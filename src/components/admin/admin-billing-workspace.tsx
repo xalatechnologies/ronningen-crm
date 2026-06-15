@@ -189,12 +189,6 @@ export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
       </AdminSegmentFilterBar>
 
       <AdminDataPanel>
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <p className="app-text-secondary">
-            Viser {filtered.length} av {rows.length} organisasjoner
-          </p>
-        </div>
-
         <Table>
           <TableHeader>
             <TableRow>
@@ -318,6 +312,10 @@ export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
             ) : null}
           </TableBody>
         </Table>
+
+        <p className="mt-4 border-t border-border pt-4 app-text-secondary">
+          Viser {filtered.length} av {rows.length} organisasjoner
+        </p>
       </AdminDataPanel>
 
       <p className={cn("px-1 app-text-muted", RN_CARD_SHELL, "py-3 px-4")}>

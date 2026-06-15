@@ -12,6 +12,14 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
+function BillingSettingsFallback() {
+  return (
+    <p className="text-muted-foreground" aria-busy="true">
+      Laster abonnement…
+    </p>
+  );
+}
+
 export default async function BillingSettingsPage() {
   const supabase = await createServerSupabaseClient();
   const { isOwner } = await requireOrgBillingPageAccess(supabase);
@@ -19,13 +27,7 @@ export default async function BillingSettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <BillingAccessBanner />
-      <div>
-        <h1 className="app-title">Fakturering</h1>
-        <p className="mt-2 text-app-base text-muted-foreground">
-          Abonnement, plan og betalingsstatus for den aktive organisasjonen.
-        </p>
-      </div>
-      <Suspense fallback={<p className="text-muted-foreground">Laster abonnement…</p>}>
+      <Suspense fallback={<BillingSettingsFallback />}>
         <BillingSettingsPanel
           billingEnabled={isBillingEnabled()}
           isSandbox={isSandboxBilling()}

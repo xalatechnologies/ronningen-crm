@@ -1,4 +1,5 @@
 import { OrganizationProfileForm } from "@/components/settings/organization-profile-form";
+import { AppPageHeader } from "@/components/layout/app-page-header";
 import type { OrganizationProfileRow } from "@/lib/organizations/organization-profile";
 import { requireOrgAdminSettingsAccess } from "@/lib/settings/require-settings-access";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -20,15 +21,24 @@ export default async function OrganizationSettingsPage() {
 
   if (error || !data) notFound();
 
+  const organization = data as OrganizationProfileRow;
+
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="app-title">Organisasjon</h1>
-        <p className="mt-2 text-app-base text-muted-foreground">
-          Virksomhetsinfo som vises på fakturaer og i appen.
-        </p>
-      </div>
-      <OrganizationProfileForm organization={data as OrganizationProfileRow} />
+      <AppPageHeader
+        surface="card"
+        compact
+        className="mb-0"
+        title="Organisasjon"
+        description={
+          <>
+            Virksomhetsinfo for{" "}
+            <span className="font-medium text-foreground">{organization.name}</span>
+            {" "}— brukes på fakturaer og i appen.
+          </>
+        }
+      />
+      <OrganizationProfileForm organization={organization} />
     </div>
   );
 }

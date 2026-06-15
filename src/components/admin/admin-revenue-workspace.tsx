@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminKpiTile } from "@/components/admin/admin-kpi-tile";
 import { AdminLinkButton } from "@/components/admin/admin-action-button";
 import {
   AdminPlanBadge,
@@ -35,57 +36,6 @@ import Link from "next/link";
 const tableHeadClass =
   "px-6 py-4 text-left text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
-
-const kpiTileClass =
-  "flex h-full w-full flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 text-left shadow-sm transition-colors hover:border-success/35 hover:bg-rn-surface-row-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 sm:p-6";
-
-function RevenueKpiTile({
-  label,
-  value,
-  caption,
-  icon: Icon,
-  iconClassName,
-  valueClassName,
-  href,
-}: {
-  label: string;
-  value: string | number;
-  caption?: string;
-  icon: typeof TrendingUp;
-  iconClassName?: string;
-  valueClassName?: string;
-  href?: string;
-}) {
-  const body = (
-    <>
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="dashboard-kpi-label">{label}</span>
-        <div className={cn("rounded-md p-2", iconClassName ?? "bg-accent")}>
-          <Icon className="size-6 text-primary" aria-hidden />
-        </div>
-      </div>
-      <div>
-        <p className={cn("dashboard-kpi-value", valueClassName ?? "text-success")}>
-          {value}
-        </p>
-        {caption ? (
-          <p className="dashboard-kpi-caption mt-3 text-muted-foreground">{caption}</p>
-        ) : null}
-      </div>
-    </>
-  );
-
-  if (href) {
-    return (
-      <Link href={href} className={kpiTileClass}>
-        {body}
-        <span className="sr-only">Gå til {label}</span>
-      </Link>
-    );
-  }
-
-  return <div className={kpiTileClass}>{body}</div>;
-}
 
 function SectionIntro({
   title,
@@ -142,20 +92,23 @@ export function AdminRevenueWorkspace({
             description="Plattformabonnement og estimert MRR basert på aktive leietakere."
           />
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <RevenueKpiTile
+            <AdminKpiTile
+              variant="revenue"
               label="MRR (estimat)"
               value={formatNok(metrics.mrrNok)}
               caption={mrrCaption}
               icon={TrendingUp}
               href={adminSubscriptionsHref("active")}
             />
-            <RevenueKpiTile
+            <AdminKpiTile
+              variant="revenue"
               label="ARR (estimat)"
               value={formatNok(metrics.arrNok)}
               caption="MRR × 12"
               icon={CalendarDays}
             />
-            <RevenueKpiTile
+            <AdminKpiTile
+              variant="revenue"
               label="Churn (30 d.)"
               value={`${metrics.churnRate30d}%`}
               caption="Avsluttede abonnement siste 30 dager"
@@ -166,7 +119,8 @@ export function AdminRevenueWorkspace({
               }
               href={adminSubscriptionsHref("canceled")}
             />
-            <RevenueKpiTile
+            <AdminKpiTile
+              variant="revenue"
               label="Prøve → betalt (30 d.)"
               value={`${metrics.trialConversionRate30d}%`}
               caption="Konverterte prøveperioder"
@@ -205,19 +159,22 @@ export function AdminRevenueWorkspace({
             description="Omsetning registrert i bookinger på tvers av leietakere — ikke plattformfakturering."
           />
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <RevenueKpiTile
+            <AdminKpiTile
+              variant="revenue"
               label="Inntekt denne måneden"
               value={formatNok(data.revenueThisMonthNok)}
               caption="Basert på arrangementsdato"
               icon={Wallet}
             />
-            <RevenueKpiTile
+            <AdminKpiTile
+              variant="revenue"
               label="Inntekt forrige måned"
               value={formatNok(data.revenueLastMonthNok)}
               caption="Fullført forrige kalendermåned"
               icon={CreditCard}
             />
-            <RevenueKpiTile
+            <AdminKpiTile
+              variant="revenue"
               label="Utestående (bookinger)"
               value={formatNok(data.outstandingNok)}
               caption="Gjenstående beløp i aktive bookinger"
@@ -229,7 +186,8 @@ export function AdminRevenueWorkspace({
                   : "text-success"
               }
             />
-            <RevenueKpiTile
+            <AdminKpiTile
+              variant="revenue"
               label="Måned-over-måned"
               value={monthOverMonth}
               caption={momCaption}

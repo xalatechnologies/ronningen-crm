@@ -35,6 +35,7 @@ import {
 import {
   BOOKING_PAYMENT_STATUS_LABELS,
   BOOKING_PAYMENT_STATUS_VALUES,
+  previewBookingRemainingAfterSave,
   resolveBookingPaymentForPersist,
   resolveStandardBookingPaymentFromAmounts,
 } from "@/constants/booking-payment-status";
@@ -141,6 +142,7 @@ export function BookingDetailSheet({
     control,
     reset,
     setValue,
+    getValues,
     formState: { errors },
   } = form;
 
@@ -151,17 +153,22 @@ export function BookingDetailSheet({
     const t = Number(totalW);
     const p = Number(paidW);
     if (!Number.isFinite(t) || !Number.isFinite(p)) return null;
-    return Math.max(0, t - Math.min(p, t));
-  }, [totalW, paidW]);
+    return previewBookingRemainingAfterSave({
+      totalNok: t,
+      paidNok: p,
+      paymentStatus: paymentStatusW ?? "unpaid",
+    });
+  }, [totalW, paidW, paymentStatusW]);
 
   useLayoutEffect(() => {
     if (!row || !open) return;
     reset(bookingDetailDefaultsFromRow(row));
   }, [row, open, reset]);
 
+  // Sync standard status when beløp endres — ikke når bruker velger status manuelt.
   useEffect(() => {
     if (!row || !open) return;
-    const ps = paymentStatusW;
+    const ps = getValues("paymentStatus");
     if (ps === "waived" || ps === "disputed" || ps === "other") return;
     const t = Number(totalW);
     const p = Number(paidW);
@@ -170,7 +177,7 @@ export function BookingDetailSheet({
     if (next !== ps) {
       setValue("paymentStatus", next, { shouldValidate: true });
     }
-  }, [row, open, totalW, paidW, paymentStatusW, setValue]);
+  }, [row, open, totalW, paidW, setValue, getValues]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset dialog when sheet closes

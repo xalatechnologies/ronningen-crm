@@ -1,4 +1,5 @@
 import { AccountSettingsForm } from "@/components/settings/account-settings-form";
+import { AppPageHeader } from "@/components/layout/app-page-header";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -20,13 +21,17 @@ export default async function AccountSettingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="app-title">Min konto</h1>
-        <p className="mt-2 text-app-base text-muted-foreground">
-          Ditt navn og innloggingsinformasjon.
-        </p>
-      </div>
-      <AccountSettingsForm initialFullName={profile?.full_name ?? ""} />
+      <AppPageHeader
+        surface="card"
+        compact
+        className="mb-0"
+        title="Min konto"
+        description="Ditt navn og innloggingsinformasjon."
+      />
+      <AccountSettingsForm
+        initialFullName={profile?.full_name ?? ""}
+        email={user.email ?? ""}
+      />
     </div>
   );
 }

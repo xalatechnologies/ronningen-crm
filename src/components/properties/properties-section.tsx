@@ -27,14 +27,14 @@ import { cn } from "@/lib/utils";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Building2, MapPin, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm, type Resolver, type UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 
-const tableHeadClass =
-  "px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase text-xs md:px-8 md:py-5 md:text-sm";
+const labelClass =
+  "text-app-xs font-semibold uppercase tracking-wider text-muted-foreground";
 
 const fieldClass =
   "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
@@ -59,7 +59,9 @@ function PropertyFields({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-name`}>Navn</Label>
+        <Label htmlFor={`${idPrefix}-name`} className={labelClass}>
+          Navn
+        </Label>
         <Input
           id={`${idPrefix}-name`}
           {...register("name")}
@@ -71,7 +73,9 @@ function PropertyFields({
         ) : null}
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-type`}>Type</Label>
+        <Label htmlFor={`${idPrefix}-type`} className={labelClass}>
+          Type
+        </Label>
         <FormSelectField
           name="type"
           control={form.control}
@@ -82,7 +86,9 @@ function PropertyFields({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-address`}>Adresse</Label>
+        <Label htmlFor={`${idPrefix}-address`} className={labelClass}>
+          Adresse
+        </Label>
         <Input
           id={`${idPrefix}-address`}
           {...register("address")}
@@ -94,7 +100,9 @@ function PropertyFields({
         ) : null}
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-notes`}>Notat</Label>
+        <Label htmlFor={`${idPrefix}-notes`} className={labelClass}>
+          Notat
+        </Label>
         <Textarea
           id={`${idPrefix}-notes`}
           {...register("notes")}
@@ -130,6 +138,89 @@ function payloadFromForm(data: PropertyFormInput) {
     type: data.type || null,
     notes: data.notes?.trim() || null,
   };
+}
+
+function PropertyCard({
+  property,
+  canManage,
+  onEdit,
+  onDelete,
+}: {
+  property: PropertyListRow;
+  canManage: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const address = property.address?.trim();
+  const notes = property.notes?.trim();
+  const typeLabel = propertyTypeLabel(property.type);
+
+  return (
+    <article className={cn(RN_CARD_SHELL, "flex flex-col p-5 md:p-6")}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30 text-muted-foreground">
+            <Building2 className="size-5" aria-hidden />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-heading text-lg font-semibold text-foreground">
+              {property.name}
+            </h3>
+            {typeLabel !== "—" ? (
+              <span className="mt-2 inline-flex rounded-md border-2 border-rn-border-strong bg-muted/25 px-2 py-0.5 text-app-xs font-semibold text-muted-foreground">
+                {typeLabel}
+              </span>
+            ) : null}
+          </div>
+        </div>
+        {canManage ? (
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="size-10 text-muted-foreground hover:text-foreground"
+              aria-label={`Rediger ${property.name}`}
+              onClick={onEdit}
+            >
+              <Pencil className="size-5" aria-hidden />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="size-10 text-muted-foreground hover:text-destructive"
+              aria-label={`Slett ${property.name}`}
+              onClick={onDelete}
+            >
+              <Trash2 className="size-5" aria-hidden />
+            </Button>
+          </div>
+        ) : null}
+      </div>
+
+      <dl className="mt-5 flex flex-col gap-3 border-t border-rn-border-strong/50 pt-5">
+        <div>
+          <dt className={labelClass}>Adresse</dt>
+          <dd className="mt-1 flex items-start gap-2 text-app-sm text-foreground">
+            <MapPin
+              className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+              aria-hidden
+            />
+            <span>{address || "Ikke angitt"}</span>
+          </dd>
+        </div>
+        {notes ? (
+          <div>
+            <dt className={labelClass}>Notat</dt>
+            <dd className="mt-1 line-clamp-3 text-app-sm leading-relaxed text-muted-foreground">
+              {notes}
+            </dd>
+          </div>
+        ) : null}
+      </dl>
+    </article>
+  );
 }
 
 export type PropertiesSectionProps = {
@@ -257,140 +348,111 @@ export function PropertiesSection({
   const isEdit = dialog.row != null;
 
   return (
-    <div className="mx-auto flex w-full flex-col gap-6 pb-24 md:pb-8">
-      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div className="border-b-2 border-rn-border-strong bg-card/80 px-[length:var(--app-card-padding)] py-6 md:py-7">
-          <AppPageHeader
-            className="mb-0 gap-3 md:gap-4"
-            surface="default"
-            title="Lokaler"
-            actions={
-              canManage ? (
-                <Button
-                  type="button"
-                  onClick={openCreate}
-                  className={cn(buttonVariants({ variant: "success", size: "cta" }))}
-                >
-                  <Plus className="size-5" aria-hidden />
-                  Nytt lokale
-                </Button>
-              ) : null
-            }
-            toolbar={
-              <div className="relative min-w-0 w-full">
-                <Search
-                  className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-rn-text-slate"
-                  aria-hidden
-                />
-                <Input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Søk lokale …"
-                  className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base focus-visible:border-success focus-visible:ring-success/25 md:h-14"
-                  aria-label="Søk lokaler"
-                />
-              </div>
-            }
-            toolbarClassName="pt-4"
-          />
+    <div className="flex flex-col gap-6">
+      <AppPageHeader
+        surface="card"
+        compact
+        className="mb-0"
+        title="Lokaler"
+        description="Registrer og administrer lokaler som brukes i bookinger, inventar og finans."
+        actions={
+          canManage ? (
+            <Button
+              type="button"
+              onClick={openCreate}
+              className={cn(buttonVariants({ variant: "success", size: "cta" }))}
+            >
+              <Plus className="size-5" aria-hidden />
+              Nytt lokale
+            </Button>
+          ) : null
+        }
+      />
+
+      {!loadError && properties.length > 0 ? (
+        <div className={cn("min-w-0", RN_CARD_SHELL)}>
+          <div className="px-5 py-4 md:px-6">
+            <div className="relative min-w-0 w-full max-w-md">
+              <Search
+                className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Søk lokale …"
+                className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base focus-visible:border-success focus-visible:ring-success/25"
+                aria-label="Søk lokaler"
+              />
+            </div>
+          </div>
         </div>
+      ) : null}
 
-        {loadError ? (
-          <div className="border-t border-rn-border-strong/50 px-6 py-4 md:px-8" role="alert">
-            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              Kunne ikke laste lokaler: {loadError}
-            </div>
+      {loadError ? (
+        <div className={cn(RN_CARD_SHELL, "px-5 py-4 md:px-6")} role="alert">
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            Kunne ikke laste lokaler: {loadError}
           </div>
-        ) : null}
+        </div>
+      ) : null}
 
-        {!loadError && properties.length === 0 ? (
-          <div className="flex flex-col items-center gap-4 px-6 py-16 text-center md:px-8">
-            <div className="flex size-16 items-center justify-center rounded-md border-2 border-rn-border-strong bg-muted/40">
-              <Building2 className="size-8 text-muted-foreground" aria-hidden />
-            </div>
-            <p className="max-w-md text-muted-foreground">
-              Ingen lokaler registrert ennå.
+      {!loadError && properties.length === 0 ? (
+        <div
+          className={cn(
+            RN_CARD_SHELL,
+            "flex flex-col items-center gap-4 px-6 py-16 text-center md:px-8",
+          )}
+        >
+          <div className="flex size-14 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30">
+            <Building2 className="size-7 text-muted-foreground" aria-hidden />
+          </div>
+          <div>
+            <p className="font-medium text-foreground">Ingen lokaler registrert</p>
+            <p className="mt-2 max-w-md text-app-sm text-muted-foreground">
               {canManage
-                ? " Opprett ditt første lokale for å kunne knytte bookinger, inventar og transaksjoner."
-                : " Be eier eller administrator om å legge inn lokaler."}
+                ? "Opprett ditt første lokale for å knytte bookinger, inventar og transaksjoner."
+                : "Be eier eller administrator om å legge inn lokaler."}
             </p>
-            {canManage ? (
-              <Button type="button" variant="success" size="cta" onClick={openCreate}>
-                <Plus className="size-5" aria-hidden />
-                Nytt lokale
-              </Button>
-            ) : null}
           </div>
-        ) : null}
+          {canManage ? (
+            <Button type="button" variant="success" size="cta" onClick={openCreate}>
+              <Plus className="size-5" aria-hidden />
+              Nytt lokale
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
 
-        {!loadError && properties.length > 0 ? (
-          <div className="app-table overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-app-base">
-              <thead>
-                <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                  <th className={tableHeadClass}>Navn</th>
-                  <th className={tableHeadClass}>Type</th>
-                  <th className={tableHeadClass}>Adresse</th>
-                  {canManage ? (
-                    <th className={cn(tableHeadClass, "w-28 text-right")}>
-                      <span className="sr-only">Handlinger</span>
-                    </th>
-                  ) : null}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-rn-border-strong/50">
-                {filtered.map((p) => (
-                  <tr
-                    key={p.id}
-                    className="transition-colors hover:bg-rn-surface-row-hover"
-                  >
-                    <td className="px-6 py-5 font-heading font-semibold text-foreground md:px-8 md:py-6">
-                      {p.name}
-                    </td>
-                    <td className="px-6 py-5 md:px-8 md:py-6">
-                      {propertyTypeLabel(p.type)}
-                    </td>
-                    <td className="px-6 py-5 text-rn-text-body md:px-8 md:py-6">
-                      {p.address?.trim() || "—"}
-                    </td>
-                    {canManage ? (
-                      <td className="px-6 py-5 text-right md:px-8 md:py-6">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="size-10 text-muted-foreground hover:text-foreground"
-                            aria-label={`Rediger ${p.name}`}
-                            onClick={() => openEdit(p)}
-                          >
-                            <Pencil className="size-5" aria-hidden />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="size-10 text-muted-foreground hover:text-destructive"
-                            aria-label={`Slett ${p.name}`}
-                            onClick={() => setDeleteTarget(p)}
-                          >
-                            <Trash2 className="size-5" aria-hidden />
-                          </Button>
-                        </div>
-                      </td>
-                    ) : null}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {filtered.length === 0 ? (
-              <p className="px-6 py-10 text-center text-muted-foreground md:px-8">
-                Ingen treff på søket.
-              </p>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
+      {!loadError && properties.length > 0 ? (
+        <>
+          {filtered.length === 0 ? (
+            <p
+              className={cn(
+                RN_CARD_SHELL,
+                "px-6 py-10 text-center text-muted-foreground md:px-8",
+              )}
+            >
+              Ingen treff på søket.
+            </p>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((p) => (
+                <PropertyCard
+                  key={p.id}
+                  property={p}
+                  canManage={canManage}
+                  onEdit={() => openEdit(p)}
+                  onDelete={() => setDeleteTarget(p)}
+                />
+              ))}
+            </div>
+          )}
+          <p className="text-app-sm text-muted-foreground">
+            Viser {filtered.length} av {properties.length} lokaler
+          </p>
+        </>
+      ) : null}
 
       <Dialog open={dialog.open} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className="max-w-md border-2 border-rn-border-strong">

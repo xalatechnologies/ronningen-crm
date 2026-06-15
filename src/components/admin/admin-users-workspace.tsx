@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminKpiTile } from "@/components/admin/admin-kpi-tile";
 import {
   AdminUserFilterBar,
   computeAdminUserFilterCounts,
@@ -30,54 +31,6 @@ export type { AdminUserFilter } from "@/components/admin/admin-user-filters";
 const tableHeadClass =
   "px-6 py-4 text-left text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
-
-const kpiTileClass =
-  "flex w-full flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 text-left shadow-sm transition-colors hover:border-success/35 hover:bg-rn-surface-row-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 sm:p-6";
-
-function UserKpiTile({
-  label,
-  value,
-  caption,
-  icon: Icon,
-  iconClassName,
-  valueClassName,
-  active,
-  onClick,
-}: {
-  label: string;
-  value: string | number;
-  caption: string;
-  icon: typeof Users;
-  iconClassName?: string;
-  valueClassName?: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        kpiTileClass,
-        active && "border-success/50 bg-rn-surface-gradient-from/40",
-      )}
-      aria-pressed={active ? "true" : "false"}
-    >
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="dashboard-kpi-label">{label}</span>
-        <div className={cn("rounded-md p-2", iconClassName ?? "bg-accent")}>
-          <Icon className="size-6 text-primary" aria-hidden />
-        </div>
-      </div>
-      <div>
-        <p className={cn("dashboard-kpi-value", valueClassName ?? "text-success")}>
-          {value}
-        </p>
-        <p className="dashboard-kpi-caption mt-3 text-muted-foreground">{caption}</p>
-      </div>
-    </button>
-  );
-}
 
 function userStatus(user: AdminUserRow): {
   label: string;
@@ -174,7 +127,8 @@ export function AdminUsersWorkspace({
           aria-label="Nøkkeltall"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <UserKpiTile
+            <AdminKpiTile
+              variant="users"
               label="Totalt"
               value={overview.total}
               caption={`${overview.withOrganization} med organisasjon`}
@@ -185,7 +139,8 @@ export function AdminUsersWorkspace({
                 updateFilter("all");
               }}
             />
-            <UserKpiTile
+            <AdminKpiTile
+              variant="users"
               label="Plattformadmin"
               value={overview.platformAdmins}
               caption="Super-administratorer"
@@ -193,7 +148,8 @@ export function AdminUsersWorkspace({
               active={filter === "platform_admin"}
               onClick={() => updateFilter("platform_admin")}
             />
-            <UserKpiTile
+            <AdminKpiTile
+              variant="users"
               label="Uten org"
               value={noOrgCount}
               caption={
@@ -205,7 +161,8 @@ export function AdminUsersWorkspace({
               active={filter === "no_org"}
               onClick={() => updateFilter("no_org")}
             />
-            <UserKpiTile
+            <AdminKpiTile
+              variant="users"
               label="Inaktive"
               value={overview.inactive}
               caption="90+ dager uten innlogging"
@@ -232,12 +189,6 @@ export function AdminUsersWorkspace({
             counts={counts}
           />
         </section>
-
-        <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
-          <p className="app-text-secondary">
-            Viser {filtered.length} av {users.length} brukere
-          </p>
-        </div>
 
         <div className="app-table overflow-x-auto border-t border-rn-border-strong/50">
           <table className="w-full min-w-[960px] text-left text-app-base">
@@ -322,6 +273,12 @@ export function AdminUsersWorkspace({
               ) : null}
             </tbody>
           </table>
+        </div>
+
+        <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
+          <p className="app-text-secondary">
+            Viser {filtered.length} av {users.length} brukere
+          </p>
         </div>
 
         <p className="border-t border-rn-border-strong/50 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">

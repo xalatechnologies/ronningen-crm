@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminKpiTile } from "@/components/admin/admin-kpi-tile";
 import { AdminLinkButton } from "@/components/admin/admin-action-button";
 import {
   AdminHealthStatusBadge,
@@ -35,9 +36,6 @@ const tableHeadClass =
   "px-6 py-4 text-left text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
 
-const kpiTileClass =
-  "flex h-full w-full flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 text-left shadow-sm transition-colors hover:border-success/35 hover:bg-rn-surface-row-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 sm:p-6";
-
 function formatWebhookKpi(hours: number | null): string {
   if (hours == null) return "—";
   if (hours < 1) return "< 1 t";
@@ -49,54 +47,6 @@ function overallStatusValueClass(status: HealthStatus): string {
   if (status === "warning") return "text-amber-800 dark:text-amber-300";
   if (status === "info") return "text-muted-foreground";
   return "text-success";
-}
-
-function HealthKpiTile({
-  label,
-  value,
-  caption,
-  icon: Icon,
-  iconClassName,
-  valueClassName,
-  href,
-}: {
-  label: string;
-  value: string | number;
-  caption?: string;
-  icon: typeof Activity;
-  iconClassName?: string;
-  valueClassName?: string;
-  href?: string;
-}) {
-  const body = (
-    <>
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="dashboard-kpi-label">{label}</span>
-        <div className={cn("rounded-md p-2", iconClassName ?? "bg-accent")}>
-          <Icon className="size-6 text-primary" aria-hidden />
-        </div>
-      </div>
-      <div>
-        <p className={cn("dashboard-kpi-value", valueClassName ?? "text-success")}>
-          {value}
-        </p>
-        {caption ? (
-          <p className="dashboard-kpi-caption mt-3 text-muted-foreground">{caption}</p>
-        ) : null}
-      </div>
-    </>
-  );
-
-  if (href) {
-    return (
-      <Link href={href} className={kpiTileClass}>
-        {body}
-        <span className="sr-only">Gå til {label}</span>
-      </Link>
-    );
-  }
-
-  return <div className={kpiTileClass}>{body}</div>;
 }
 
 function SectionIntro({
@@ -188,7 +138,8 @@ export function AdminSystemHealthWorkspace({
           aria-label="Nøkkeltall"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <HealthKpiTile
+            <AdminKpiTile
+              variant="health"
               label="Samlet status"
               value={overallStatusLabel(data.overallStatus)}
               caption={`${data.summary.total} overvåkede komponenter`}
@@ -202,7 +153,8 @@ export function AdminSystemHealthWorkspace({
               }
               valueClassName={overallStatusValueClass(data.overallStatus)}
             />
-            <HealthKpiTile
+            <AdminKpiTile
+              variant="health"
               label="Komponenter OK"
               value={`${data.summary.healthy}/${data.summary.total}`}
               caption={componentHint}
@@ -213,7 +165,8 @@ export function AdminSystemHealthWorkspace({
                   : "text-success"
               }
             />
-            <HealthKpiTile
+            <AdminKpiTile
+              variant="health"
               label="Åpne support-saker"
               value={data.openSupportCount}
               caption={supportCaption}
@@ -224,7 +177,8 @@ export function AdminSystemHealthWorkspace({
               }
               href={adminSupportHref("open")}
             />
-            <HealthKpiTile
+            <AdminKpiTile
+              variant="health"
               label="Siste Stripe-webhook"
               value={formatWebhookKpi(data.lastWebhookHoursAgo)}
               caption={webhookCaption}

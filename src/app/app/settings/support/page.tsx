@@ -1,4 +1,5 @@
 import { OrgSupportPanel } from "@/components/support/org-support-panel";
+import { AppPageHeader } from "@/components/layout/app-page-header";
 import { fetchOrgSupportOverview } from "@/lib/support/queries";
 import { requireOrgMember } from "@/lib/support/require-org-member";
 
@@ -10,12 +11,13 @@ export default async function SupportSettingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="app-title">Support</h1>
-        <p className="mt-2 text-app-base text-muted-foreground">
-          Send meldinger til plattformsupport og følg opp sakene dine.
-        </p>
-      </div>
+      <AppPageHeader
+        surface="card"
+        compact
+        className="mb-0"
+        title="Support"
+        description="Send meldinger til plattformsupport og følg opp sakene dine."
+      />
       <OrgSupportPanel data={data} />
     </div>
   );

@@ -20,14 +20,49 @@ import { cn } from "@/lib/utils";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Building2, CreditCard, FileText, MapPin, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-const labelClass = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
+const labelClass =
+  "text-app-xs font-semibold uppercase tracking-wider text-muted-foreground";
 const fieldClass =
-  "h-12 min-h-12 rounded-md border-2 border-rn-border-strong bg-background px-4 text-base focus-visible:border-success focus-visible:ring-success/25 md:h-14";
+  "h-12 rounded-md border-2 border-rn-border-strong bg-background px-4 text-base focus-visible:border-success focus-visible:ring-success/25";
+
+function FormSection({
+  icon: Icon,
+  title,
+  description,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-5 border-b border-rn-border-strong/50 pb-6 last:border-b-0 last:pb-0">
+      <div className="flex items-start gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30 text-muted-foreground">
+          <Icon className="size-4" aria-hidden />
+        </div>
+        <div>
+          <h2 className="font-heading text-base font-semibold text-foreground md:text-lg">
+            {title}
+          </h2>
+          {description ? (
+            <p className="mt-0.5 text-app-sm text-muted-foreground">
+              {description}
+            </p>
+          ) : null}
+        </div>
+      </div>
+      <div className="flex flex-col gap-4">{children}</div>
+    </section>
+  );
+}
 
 export function OrganizationProfileForm({
   organization,
@@ -98,45 +133,56 @@ export function OrganizationProfileForm({
   } = form;
 
   return (
-    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,320px)] lg:items-start">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           void handleSubmit(onSubmit)();
         }}
-        className={cn("flex flex-col gap-6 p-6 md:p-8", RN_CARD_SHELL)}
+        className={cn(RN_CARD_SHELL, "flex flex-col gap-6 p-5 md:p-6")}
       >
-        <div className="space-y-2">
-          <Label className={labelClass} htmlFor="org-name">
-            Visningsnavn
-          </Label>
-          <Input id="org-name" className={fieldClass} {...register("name")} />
-          {errors.name ? (
-            <p className="text-sm text-destructive">{errors.name.message}</p>
-          ) : null}
-        </div>
-
-        <div className="space-y-2">
-          <Label className={labelClass} htmlFor="org-legal">
-            Juridisk navn (valgfritt)
-          </Label>
-          <Input id="org-legal" className={fieldClass} {...register("legalName")} />
-        </div>
-
-        <div className="space-y-2">
-          <Label className={labelClass} htmlFor="org-tagline">
-            Slagord / undertittel
-          </Label>
-          <Input id="org-tagline" className={fieldClass} {...register("tagline")} />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
+        <FormSection
+          icon={Building2}
+          title="Identitet"
+          description="Navn og logo som vises utad."
+        >
           <div className="space-y-2">
-            <Label className={labelClass} htmlFor="org-no">
-              Org.nr.
+            <Label className={labelClass} htmlFor="org-name">
+              Visningsnavn
             </Label>
-            <Input id="org-no" className={fieldClass} {...register("orgNumber")} />
+            <Input id="org-name" className={fieldClass} {...register("name")} />
+            {errors.name ? (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
+            ) : null}
           </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className={labelClass} htmlFor="org-legal">
+                Juridisk navn
+              </Label>
+              <Input
+                id="org-legal"
+                className={fieldClass}
+                placeholder="Valgfritt"
+                {...register("legalName")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className={labelClass} htmlFor="org-no">
+                Org.nr.
+              </Label>
+              <Input id="org-no" className={fieldClass} {...register("orgNumber")} />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className={labelClass} htmlFor="org-tagline">
+              Slagord / undertittel
+            </Label>
+            <Input id="org-tagline" className={fieldClass} {...register("tagline")} />
+          </div>
+
           <div className="space-y-2">
             <Label className={labelClass} htmlFor="org-logo">
               Logo-URL
@@ -146,113 +192,166 @@ export function OrganizationProfileForm({
               <p className="text-sm text-destructive">{errors.logoUrl.message}</p>
             ) : null}
           </div>
-        </div>
+        </FormSection>
 
-        <div className="space-y-2">
-          <Label className={labelClass} htmlFor="org-addr1">
-            Adresse
-          </Label>
-          <Input id="org-addr1" className={fieldClass} {...register("addressLine1")} />
-        </div>
-        <div className="space-y-2">
-          <Label className={labelClass} htmlFor="org-addr2">
-            Adresselinje 2
-          </Label>
-          <Input id="org-addr2" className={fieldClass} {...register("addressLine2")} />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <FormSection
+          icon={MapPin}
+          title="Adresse"
+          description="Postadresse på fakturaer og dokumenter."
+        >
           <div className="space-y-2">
-            <Label className={labelClass} htmlFor="org-postal">
-              Postnummer
+            <Label className={labelClass} htmlFor="org-addr1">
+              Adresse
             </Label>
-            <Input id="org-postal" className={fieldClass} {...register("postalCode")} />
+            <Input id="org-addr1" className={fieldClass} {...register("addressLine1")} />
           </div>
           <div className="space-y-2">
-            <Label className={labelClass} htmlFor="org-city">
-              Poststed
-            </Label>
-            <Input id="org-city" className={fieldClass} {...register("city")} />
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label className={labelClass} htmlFor="org-email">
-              Kontakt e-post
+            <Label className={labelClass} htmlFor="org-addr2">
+              Adresselinje 2
             </Label>
             <Input
-              id="org-email"
-              type="email"
+              id="org-addr2"
               className={fieldClass}
-              {...register("contactEmail")}
+              placeholder="Valgfritt"
+              {...register("addressLine2")}
             />
-            {errors.contactEmail ? (
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className={labelClass} htmlFor="org-postal">
+                Postnummer
+              </Label>
+              <Input id="org-postal" className={fieldClass} {...register("postalCode")} />
+            </div>
+            <div className="space-y-2">
+              <Label className={labelClass} htmlFor="org-city">
+                Poststed
+              </Label>
+              <Input id="org-city" className={fieldClass} {...register("city")} />
+            </div>
+          </div>
+        </FormSection>
+
+        <FormSection
+          icon={Phone}
+          title="Kontakt"
+          description="Hvordan kunder kan nå dere."
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className={labelClass} htmlFor="org-email">
+                E-post
+              </Label>
+              <Input
+                id="org-email"
+                type="email"
+                className={fieldClass}
+                {...register("contactEmail")}
+              />
+              {errors.contactEmail ? (
+                <p className="text-sm text-destructive">
+                  {errors.contactEmail.message}
+                </p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label className={labelClass} htmlFor="org-phone">
+                Telefon
+              </Label>
+              <Input id="org-phone" className={fieldClass} {...register("contactPhone")} />
+            </div>
+          </div>
+        </FormSection>
+
+        <FormSection
+          icon={CreditCard}
+          title="Betaling"
+          description="Kontonummer og betalingsinstruksjoner på faktura."
+        >
+          <div className="space-y-2">
+            <Label className={labelClass} htmlFor="org-bank">
+              Kontonummer
+            </Label>
+            <Input id="org-bank" className={fieldClass} {...register("bankAccount")} />
+          </div>
+          <div className="space-y-2">
+            <Label className={labelClass} htmlFor="org-pay">
+              Betalingsinstruksjoner
+            </Label>
+            <Textarea
+              id="org-pay"
+              rows={4}
+              placeholder="KID, forfallsinfo m.m."
+              className="rounded-md border-2 border-rn-border-strong bg-background p-3 text-base focus-visible:border-success focus-visible:ring-success/25"
+              {...register("paymentInstructions")}
+            />
+            {errors.paymentInstructions ? (
               <p className="text-sm text-destructive">
-                {errors.contactEmail.message}
+                {errors.paymentInstructions.message}
               </p>
             ) : null}
           </div>
-          <div className="space-y-2">
-            <Label className={labelClass} htmlFor="org-phone">
-              Kontakt telefon
-            </Label>
-            <Input id="org-phone" className={fieldClass} {...register("contactPhone")} />
-          </div>
-        </div>
+        </FormSection>
 
-        <div className="space-y-2">
-          <Label className={labelClass} htmlFor="org-bank">
-            Kontonummer
-          </Label>
-          <Input id="org-bank" className={fieldClass} {...register("bankAccount")} />
-        </div>
-
-        <div className="space-y-2">
-          <Label className={labelClass} htmlFor="org-pay">
-            Betalingsinstruksjoner (KID m.m.)
-          </Label>
-          <Textarea
-            id="org-pay"
-            rows={4}
-            className="rounded-md border-2 border-rn-border-strong bg-background p-3 text-base focus-visible:border-success focus-visible:ring-success/25"
-            {...register("paymentInstructions")}
-          />
-          {errors.paymentInstructions ? (
-            <p className="text-sm text-destructive">
-              {errors.paymentInstructions.message}
-            </p>
-          ) : null}
-        </div>
-
-        <div className="flex justify-end border-t border-rn-border-strong/50 pt-4">
-          <Button type="submit" variant="success" size="cta" disabled={isSubmitting}>
+        <div className="flex justify-end border-t border-rn-border-strong/50 pt-5">
+          <Button
+            type="submit"
+            variant="success"
+            size="cta"
+            disabled={isSubmitting}
+            className="w-full sm:w-auto"
+          >
             {isSubmitting ? "Lagrer…" : "Lagre organisasjon"}
           </Button>
         </div>
       </form>
 
-      <aside className={cn("p-6 md:p-8", RN_CARD_SHELL)}>
-        <h2 className="font-heading text-lg font-bold text-rn-text-heading">
-          Forhåndsvisning på faktura
-        </h2>
-        <div className="mt-4 rounded-md border-2 border-zinc-900 bg-white p-5 text-sm text-zinc-800">
+      <aside
+        className={cn(
+          RN_CARD_SHELL,
+          "flex flex-col gap-5 p-5 md:p-6 lg:sticky lg:top-6",
+        )}
+      >
+        <div className="flex items-start gap-3 border-b border-rn-border-strong/50 pb-5">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30 text-muted-foreground">
+            <FileText className="size-4" aria-hidden />
+          </div>
+          <div>
+            <h2 className="font-heading text-base font-semibold text-foreground md:text-lg">
+              Forhåndsvisning
+            </h2>
+            <p className="mt-0.5 text-app-sm text-muted-foreground">
+              Slik vises utsteder på faktura.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-md border-2 border-zinc-900 bg-white p-5 text-sm text-zinc-800 shadow-sm">
           <p className="font-heading text-xl font-bold text-zinc-950">
-            {preview.name}
+            {preview.name || "Visningsnavn"}
           </p>
-          <p className="mt-1 font-medium text-emerald-800">{preview.tagline}</p>
+          {preview.tagline ? (
+            <p className="mt-1 font-medium text-emerald-800">{preview.tagline}</p>
+          ) : null}
           {preview.subtitle ? (
             <p className="mt-2 text-zinc-600">{preview.subtitle}</p>
           ) : null}
-          {preview.orgNo ? (
-            <p className="mt-2">Org.nr {preview.orgNo}</p>
+          {preview.orgNo ? <p className="mt-2">Org.nr {preview.orgNo}</p> : null}
+          {preview.addressLines.length > 0 ? (
+            <div className="mt-2">
+              {preview.addressLines.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-zinc-400">Adresse ikke fylt ut</p>
+          )}
+          {preview.contactEmail ? (
+            <p className="mt-2">E-post: {preview.contactEmail}</p>
           ) : null}
-          {preview.addressLines.map((line) => (
-            <p key={line}>{line}</p>
-          ))}
-          {preview.contactEmail ? <p className="mt-2">E-post: {preview.contactEmail}</p> : null}
           {preview.contactPhone ? <p>Tlf. {preview.contactPhone}</p> : null}
           <p className="mt-4 whitespace-pre-line border-t border-zinc-200 pt-3 text-zinc-700">
-            {preview.bankInfo}
+            {preview.bankInfo || "Kontoinfo vises her"}
           </p>
         </div>
       </aside>
