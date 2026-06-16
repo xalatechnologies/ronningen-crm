@@ -22,11 +22,11 @@ export function HowItWorksSection() {
           </p>
           <h2
             id="landing-how-title"
-            className="landing-headline tracking-tight text-white"
+            className="landing-headline tracking-tight !text-white"
           >
             {SECTION_TITLES.howItWorks}
           </h2>
-          <p className="landing-body leading-relaxed text-white/80">
+          <p className="landing-body leading-relaxed !text-white/90">
             Fire enkle steg fra første forespørsel til ferdig rapport.
           </p>
         </div>

@@ -9,6 +9,7 @@ import {
 } from "@/components/landing/landing-layout";
 import { APP_NAME } from "@/config/app";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import Link from "next/link";
 
 const footerLinkClass =
@@ -32,10 +33,16 @@ export function LandingFooter() {
               className="inline-flex items-center gap-3 font-heading text-lg font-bold tracking-tight text-rn-text-heading"
             >
               <span
-                className="flex size-10 shrink-0 items-center justify-center rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-success text-sm font-bold text-white"
+                className="relative flex size-10 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-black shadow-sm"
                 aria-hidden
               >
-                R
+                <Image
+                  src="/event-manager-logo.png"
+                  alt=""
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
               </span>
               {APP_NAME}
             </Link>
@@ -84,7 +91,18 @@ export function LandingFooter() {
           <p>
             © {year} {APP_NAME}. Alle rettigheter reservert.
           </p>
-          <p className="text-rn-text-slate">Norsk SaaS for lokaler og utleie.</p>
+          <p className="text-rn-text-slate">
+            Norsk SaaS for lokaler og utleie. Utviklet av{" "}
+            <a
+              href="https://xala.no"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-rn-text-slate underline-offset-4 transition-colors hover:text-success hover:underline"
+            >
+              xala.no
+            </a>{" "}
+            — Xala Technologies AS.
+          </p>
         </div>
       </div>
     </footer>

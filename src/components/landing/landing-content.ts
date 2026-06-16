@@ -171,6 +171,9 @@ export const PRICING_PLANS = [
   },
 ] as const;
 
+export const PRICING_SECTION_DESCRIPTION =
+  "Én plan med alt du trenger — ingen skjulte nivåer eller tillegg.";
+
 export const FAQ_ITEMS = [
   {
     question: "Hvem er dette for?",

@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthBrandMark } from "@/components/auth/auth-brand-mark";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -56,12 +57,7 @@ export default function ForgotPasswordPage() {
         >
           <CardHeader className="space-y-5 border-b-2 border-rn-border-strong/50 px-6 py-7 md:px-10 md:py-9">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              <div
-                className="flex size-14 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-success font-heading text-app-lg font-bold text-primary-light shadow-sm md:size-16 md:text-app-xl"
-                aria-hidden
-              >
-                R
-              </div>
+              <AuthBrandMark />
               <div className="min-w-0 flex-1 space-y-2">
                 <CardTitle className="app-title md:text-app-3xl">
                   Glemt passord?
