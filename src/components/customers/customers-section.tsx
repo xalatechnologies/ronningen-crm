@@ -24,7 +24,7 @@ import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
@@ -139,7 +139,7 @@ export function CustomersSection({
 }: CustomersSectionProps) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
-  const router = useRouter();
+  const { invalidateCustomers } = useTenantDataInvalidation();
   const [query, setQuery] = useState("");
   const [customersPage, setCustomersPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -230,7 +230,7 @@ export function CustomersSection({
     addForm.reset();
     setAddOpen(false);
     setSelectedId(row.id);
-    router.refresh();
+    invalidateCustomers();
   }
 
   async function performCustomerDelete(id: string) {
@@ -243,7 +243,7 @@ export function CustomersSection({
       }
       toast.success("Kunde slettet");
       if (selectedId === id) setSelectedId(null);
-      router.refresh();
+      invalidateCustomers();
     } finally {
       setDeleteBusyId(null);
     }

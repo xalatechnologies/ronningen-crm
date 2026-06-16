@@ -11,6 +11,8 @@ import {
 } from "react";
 
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { invalidateTenantQueries } from "@/lib/queries/invalidate-tenant-queries";
+import { getQueryClient } from "@/lib/queries/get-query-client";
 import {
   fetchActiveOrganizationId,
   fetchUserOrganizations,
@@ -119,9 +121,11 @@ export function OrganizationProvider({
     async (organizationId: string) => {
       if (!user) return;
       await setActiveOrganizationId(supabase, user.id, organizationId);
+      invalidateTenantQueries(getQueryClient(), currentOrganizationId);
       await refreshOrganizations();
+      invalidateTenantQueries(getQueryClient(), organizationId);
     },
-    [refreshOrganizations, supabase, user],
+    [currentOrganizationId, refreshOrganizations, supabase, user],
   );
 
   const value = useMemo<OrganizationContextValue>(

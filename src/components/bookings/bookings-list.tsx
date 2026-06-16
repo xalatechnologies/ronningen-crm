@@ -42,8 +42,8 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -527,7 +527,7 @@ export function BookingsList({
   canDeleteBookings = false,
 }: BookingsListProps) {
   const supabase = useSupabase();
-  const router = useRouter();
+  const { invalidateBookings } = useTenantDataInvalidation();
   const [view, setView] = useState<"list" | "calendar">("list");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<BookingStatusFilter>("all");
@@ -586,7 +586,7 @@ export function BookingsList({
             ? "Booking avbestilt"
             : "Booking satt til avventer",
       );
-      router.refresh();
+      invalidateBookings();
     } finally {
       setUpdatingId(null);
     }

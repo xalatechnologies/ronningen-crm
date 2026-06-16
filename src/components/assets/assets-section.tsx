@@ -58,7 +58,7 @@ import {
   Wrench,
   Wind,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import {
   useCallback,
   useId,
@@ -199,7 +199,7 @@ function AssetFormFields({
 }) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
-  const router = useRouter();
+  const { invalidateAssets } = useTenantDataInvalidation();
   const isEdit = row != null;
 
   const defaultProperty =
@@ -296,7 +296,7 @@ function AssetFormFields({
       toast.success("Inventarpost opprettet");
     }
     onClose();
-    router.refresh();
+    invalidateAssets();
   }
 
   const title = isEdit ? "Rediger inventarpost" : "Ny inventarpost";
@@ -483,7 +483,7 @@ export function AssetsSection({
   canManageAssets: canEdit,
 }: AssetsSectionProps) {
   const supabase = useSupabase();
-  const router = useRouter();
+  const { invalidateAssets } = useTenantDataInvalidation();
 
   const [query, setQuery] = useState("");
   const [propertyId, setPropertyId] = useState("");
@@ -594,7 +594,7 @@ export function AssetsSection({
       }
       toast.success("Inventarpost slettet");
       setDeleteTarget(null);
-      router.refresh();
+      invalidateAssets();
     } finally {
       setDeleteBusy(false);
     }

@@ -4,17 +4,53 @@ import { APP_NAME } from "@/config/app";
 import { mainNavigation } from "@/config/navigation";
 import { SIDEBAR_SEGMENT_ICONS } from "@/config/nav-icons";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
+import { prefetchTenantRoute } from "@/lib/queries/prefetch-route";
+import { getQueryClient } from "@/lib/queries/get-query-client";
 import { RN_NAV_LINK_ACTIVE, RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
+import { useSupabase } from "@/providers/supabase-provider";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
 export function AppSidebar({ className }: { className?: string }) {
   const pathname = usePathname();
-  const { currentOrganization } = useCurrentOrganization();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const { currentOrganization, currentOrganizationId, currentRole } =
+    useCurrentOrganization();
+  const supabase = useSupabase();
   const displayName = currentOrganization?.name ?? APP_NAME;
   const logoUrl = currentOrganization?.logoUrl;
+
+  useEffect(() => {
+    if (!isPending) {
+      setPendingHref(null);
+    }
+  }, [pathname, isPending]);
+
+  const prefetchRoute = useCallback(
+    (href: string) => {
+      if (!currentOrganizationId || !supabase) return;
+      prefetchTenantRoute(
+        getQueryClient(),
+        supabase,
+        currentOrganizationId,
+        currentRole,
+        href,
+      );
+    },
+    [currentOrganizationId, currentRole, supabase],
+  );
+
+  function handleNavClick(href: string) {
+    setPendingHref(href);
+    startTransition(() => {
+      router.push(href);
+    });
+  }
 
   return (
     <aside
@@ -31,6 +67,7 @@ export function AppSidebar({ className }: { className?: string }) {
               "relative flex size-14 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-black shadow-sm md:size-16",
             )}
             aria-label={`${APP_NAME} — gå til oversikt`}
+            onMouseEnter={() => prefetchRoute("/app/dashboard")}
           >
             {logoUrl ? (
               <Image
@@ -69,6 +106,9 @@ export function AppSidebar({ className }: { className?: string }) {
         {mainNavigation.map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const pending =
+            pendingHref === item.href ||
+            (isPending && pendingHref === item.href);
           const Icon =
             SIDEBAR_SEGMENT_ICONS[item.segment] ??
             SIDEBAR_SEGMENT_ICONS.dashboard;
@@ -76,6 +116,25 @@ export function AppSidebar({ className }: { className?: string }) {
             <Link
               key={item.href}
               href={item.href}
+              prefetch
+              onMouseEnter={() => prefetchRoute(item.href)}
+              onClick={(event) => {
+                if (
+                  event.metaKey ||
+                  event.ctrlKey ||
+                  event.shiftKey ||
+                  event.altKey ||
+                  event.button !== 0
+                ) {
+                  return;
+                }
+                if (pathname === item.href) {
+                  event.preventDefault();
+                  return;
+                }
+                event.preventDefault();
+                handleNavClick(item.href);
+              }}
               className={cn(
                 "flex min-h-[max(2.75rem,var(--app-tap-target-min))] items-center gap-[length:var(--spacing-app-gap)] rounded-[length:var(--app-radius)] border-l-[3px] py-[length:calc(var(--app-card-padding)*0.55)] pl-3 pr-[length:calc(var(--app-card-padding)*0.55)] transition-all outline-none select-none md:gap-[length:var(--spacing-app-gap)] md:py-[length:calc(var(--app-card-padding)*0.65)] md:pl-[length:calc(var(--app-card-padding)*0.45)] md:pr-[length:calc(var(--app-card-padding)*0.65)]",
                 RN_TEXT_NAV_LINK,
@@ -83,12 +142,15 @@ export function AppSidebar({ className }: { className?: string }) {
                 active
                   ? RN_NAV_LINK_ACTIVE
                   : "border-transparent font-medium text-rn-text-body hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover hover:text-rn-text-heading",
+                pending && !active && "bg-rn-surface-row-hover/80 opacity-80",
               )}
+              aria-current={active ? "page" : undefined}
             >
               <Icon
                 className={cn(
                   "size-7 shrink-0 md:size-8",
                   active ? RN_NAV_LINK_ACTIVE_ICON : "opacity-85",
+                  pending && !active && "animate-pulse",
                 )}
                 aria-hidden
               />

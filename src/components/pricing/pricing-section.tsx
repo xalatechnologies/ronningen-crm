@@ -43,7 +43,7 @@ import {
   Sparkles,
   UtensilsCrossed,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
@@ -141,7 +141,7 @@ function PricingCatalogFields({
 }) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
-  const router = useRouter();
+  const { invalidatePricing } = useTenantDataInvalidation();
   const isEdit = row != null;
 
   const form = useForm<PricingPackageFormInput>({
@@ -203,7 +203,7 @@ function PricingCatalogFields({
     }
 
     onClose();
-    router.refresh();
+    invalidatePricing();
   }
 
   const title =

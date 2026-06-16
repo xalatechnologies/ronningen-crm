@@ -1,0 +1,36 @@
+import type { TenantSupabaseClient } from "@/lib/queries/types";
+import type { Database } from "@/types/database.types";
+
+type PackageRow = Database["public"]["Tables"]["packages"]["Row"];
+type ServiceRow = Database["public"]["Tables"]["services"]["Row"];
+
+export type PricingPageData = {
+  packages: PackageRow[];
+  services: ServiceRow[];
+  loadError: string | null;
+};
+
+export async function fetchPricingPageData(
+  supabase: TenantSupabaseClient,
+  orgId: string,
+): Promise<PricingPageData> {
+  const { data: packages, error: pErr } = await supabase
+    .from("packages")
+    .select("*")
+    .eq("organization_id", orgId)
+    .order("price", { ascending: true });
+
+  const { data: services, error: sErr } = await supabase
+    .from("services")
+    .select("*")
+    .eq("organization_id", orgId)
+    .order("name", { ascending: true });
+
+  const loadError = pErr?.message ?? sErr?.message ?? null;
+
+  return {
+    packages: packages ?? [],
+    services: services ?? [],
+    loadError,
+  };
+}

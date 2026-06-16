@@ -10,6 +10,7 @@ import {
 import { isBillingEnabled } from "@/lib/billing/constants";
 import { getImpersonationContext } from "@/lib/admin/impersonation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 
 export type TenantAppAccessContext = {
@@ -26,6 +27,12 @@ const EXEMPT_PATH_PREFIXES = [
 
 export async function getTenantAppAccess(
   pathname: string,
+): Promise<TenantAppAccessContext | null> {
+  return getTenantAppAccessCached(pathname);
+}
+
+const getTenantAppAccessCached = cache(async function getTenantAppAccessCached(
+  _pathname: string,
 ): Promise<TenantAppAccessContext | null> {
   const supabase = await createServerSupabaseClient();
   const {
@@ -92,7 +99,7 @@ export async function getTenantAppAccess(
     accessLevel,
     suspendedReason: org.suspended_reason,
   };
-}
+});
 
 async function requireAuthenticatedUser(): Promise<{ userId: string }> {
   const supabase = await createServerSupabaseClient();
@@ -115,7 +122,7 @@ export async function requireTenantAppAccess(pathname: string): Promise<TenantAp
     };
   }
 
-  const ctx = await getTenantAppAccess(pathname);
+  const ctx = await getTenantAppAccessCached(pathname);
   if (!ctx) redirect("/auth/login");
 
   if (!ctx.organizationId && pathname !== TENANT_ONBOARDING_PATH) {

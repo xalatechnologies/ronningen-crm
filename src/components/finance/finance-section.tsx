@@ -57,7 +57,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useCallback, useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
@@ -271,7 +271,7 @@ function TransactionFormInner({
 }) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
-  const router = useRouter();
+  const { invalidateFinance } = useTenantDataInvalidation();
   const isEdit = existing != null;
   const categoryListId = isEdit
     ? `finance-categories-${existing.id}`
@@ -339,7 +339,7 @@ function TransactionFormInner({
       transactionDate: data.transactionDate,
       propertyId: data.propertyId,
     });
-    await router.refresh();
+    invalidateFinance();
     onClose();
   }
 
@@ -577,7 +577,7 @@ export function FinanceSection({
   canManageTransactions,
 }: FinanceSectionProps) {
   const supabase = useSupabase();
-  const router = useRouter();
+  const { invalidateFinance } = useTenantDataInvalidation();
   const [range, setRange] = useState(defaultMonthRange);
   const [propertyId, setPropertyId] = useState("");
   const [page, setPage] = useState(1);
@@ -681,7 +681,7 @@ export function FinanceSection({
       toast.success("Transaksjon slettet");
       setDeleteTarget(null);
       setEditRow((cur) => (cur?.id === row.id ? null : cur));
-      await router.refresh();
+      invalidateFinance();
     } finally {
       setDeleteBusy(false);
     }

@@ -1,10 +1,7 @@
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-
-import { resolveServerOrganizationContext } from "./organization-context";
+import { getCachedServerOrganizationContext } from "./cached-organization-context";
 
 export async function requireServerOrganizationId(): Promise<string> {
-  const supabase = await createServerSupabaseClient();
-  const context = await resolveServerOrganizationContext(supabase);
+  const context = await getCachedServerOrganizationContext();
   if (!context.organizationId) {
     throw new Error("Ingen aktiv organisasjon.");
   }

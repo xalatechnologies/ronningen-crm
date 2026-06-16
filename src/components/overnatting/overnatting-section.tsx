@@ -61,8 +61,8 @@ import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { BedDouble, Building2, Calendar, Plus, RotateCcw, Search, Users } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Controller, useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -174,6 +174,8 @@ export type OvernattingSectionProps = {
   properties: { id: string; name: string }[];
   canManage: boolean;
   loadError: string | null;
+  /** When true, skip client refetch on mount if month matches initialYm (server/React Query already loaded). */
+  skipInitialReservationFetch?: boolean;
 };
 
 export function OvernattingSection({
@@ -183,15 +185,17 @@ export function OvernattingSection({
   properties,
   canManage,
   loadError,
+  skipInitialReservationFetch = false,
 }: OvernattingSectionProps) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
-  const router = useRouter();
+  const { invalidateOvernatting } = useTenantDataInvalidation();
   const rid = useId().replace(/:/g, "");
   const [units, setUnits] = useState(initialUnits);
   const [monthYm, setMonthYm] = useState(initialYm || ymNow());
   const [reservations, setReservations] = useState(initialReservations);
   const [loadingRes, setLoadingRes] = useState(false);
+  const skippedInitialReservationFetch = useRef(false);
   const [unitDialogOpen, setUnitDialogOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<AccommodationUnitRow | null>(
     null,
@@ -276,9 +280,22 @@ export function OvernattingSection({
   }, [supabase, monthYm, currentOrganizationId]);
 
   useEffect(() => {
+    if (
+      skipInitialReservationFetch &&
+      !skippedInitialReservationFetch.current &&
+      monthYm === initialYm
+    ) {
+      skippedInitialReservationFetch.current = true;
+      return;
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch reservations when month/org changes
     void fetchReservations();
-  }, [fetchReservations]);
+  }, [fetchReservations, initialYm, monthYm, skipInitialReservationFetch]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync server-provided reservations
+    setReservations(initialReservations);
+  }, [initialReservations]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- sync server-provided units into editable local state
@@ -371,7 +388,7 @@ export function OvernattingSection({
       toast.success("Enhet opprettet");
     }
     setUnitDialogOpen(false);
-    router.refresh();
+    invalidateOvernatting();
   }
 
   async function confirmDeleteUnit() {
@@ -388,7 +405,7 @@ export function OvernattingSection({
       }
       toast.success("Enhet slettet");
       setDeleteUnitTarget(null);
-      router.refresh();
+      invalidateOvernatting();
     } finally {
       setDeleteBusy(false);
     }
@@ -436,7 +453,7 @@ export function OvernattingSection({
     toast.success("Reservasjon oppdatert");
     setEditResOpen(false);
     void fetchReservations();
-    router.refresh();
+    invalidateOvernatting();
   }
 
   async function confirmDeleteReservation() {
@@ -456,7 +473,7 @@ export function OvernattingSection({
       setEditResOpen(false);
       setEditingRes(null);
       void fetchReservations();
-      router.refresh();
+      invalidateOvernatting();
     } finally {
       setDeleteBusy(false);
     }
