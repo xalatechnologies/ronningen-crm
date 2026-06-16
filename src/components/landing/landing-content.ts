@@ -16,6 +16,7 @@ import { APP_NAME } from "@/config/app";
 export const LANDING_ROUTES = {
   login: "/auth/login",
   register: "/auth/register",
+  app: "/app",
 } as const;
 
 export const LANDING_NAV = [

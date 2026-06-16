@@ -14,11 +14,16 @@ import {
   LANDING_CONTAINER,
   LANDING_SECTION_X,
 } from "@/components/landing/landing-layout";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import { cn } from "@/lib/utils";
+import { useSupabase } from "@/providers/supabase-provider";
+import type { User } from "@supabase/supabase-js";
 import { MenuIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import type { AuthProfile } from "@/providers/auth-provider";
 
 const loginButtonClass = cn(
   buttonVariants({ variant: "outline" }),
@@ -30,8 +35,30 @@ const registerButtonClass = cn(
   "h-11 px-5 font-heading text-sm font-bold",
 );
 
+function getDisplayName(user: User | null, profile: AuthProfile | null) {
+  if (profile?.fullName?.trim()) return profile.fullName.trim();
+  const metaName = user?.user_metadata?.full_name;
+  if (typeof metaName === "string" && metaName.trim()) return metaName.trim();
+  if (user?.email) return user.email;
+  return "bruker";
+}
+
 export function LandingHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, profile, loading, isAuthenticated } = useAuthUser();
+  const supabase = useSupabase();
+  const router = useRouter();
+
+  const displayName = useMemo(
+    () => getDisplayName(user, profile),
+    [user, profile],
+  );
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    setMobileOpen(false);
+    router.refresh();
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b-2 border-rn-border-strong/60 bg-card/95 backdrop-blur-sm">
@@ -75,12 +102,28 @@ export function LandingHeader() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link href={LANDING_ROUTES.login} className={loginButtonClass}>
-            Logg inn
-          </Link>
-          <Link href={LANDING_ROUTES.register} className={registerButtonClass}>
-            Start gratis
-          </Link>
+          {!loading && isAuthenticated ? (
+            <>
+              <p className="hidden max-w-[12rem] truncate text-right text-sm text-rn-text-slate md:block lg:max-w-[16rem]">
+                Innlogget som{" "}
+                <span className="font-semibold text-rn-text-heading">
+                  {displayName}
+                </span>
+              </p>
+              <Link href={LANDING_ROUTES.app} className={registerButtonClass}>
+                Gå til appen
+              </Link>
+            </>
+          ) : !loading ? (
+            <>
+              <Link href={LANDING_ROUTES.login} className={loginButtonClass}>
+                Logg inn
+              </Link>
+              <Link href={LANDING_ROUTES.register} className={registerButtonClass}>
+                Start gratis
+              </Link>
+            </>
+          ) : null}
 
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger
@@ -120,26 +163,57 @@ export function LandingHeader() {
                   </a>
                 ))}
                 <div className="mt-4 flex flex-col gap-2 border-t border-rn-border-strong pt-4">
-                  <Link
-                    href={LANDING_ROUTES.login}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      buttonVariants({ variant: "outline" }),
-                      "h-12 w-full justify-center border-2 border-rn-border-strong font-heading font-semibold",
-                    )}
-                  >
-                    Logg inn
-                  </Link>
-                  <Link
-                    href={LANDING_ROUTES.register}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      buttonVariants({ variant: "success", size: "cta" }),
-                      "w-full justify-center",
-                    )}
-                  >
-                    Start gratis prøveperiode
-                  </Link>
+                  {!loading && isAuthenticated ? (
+                    <>
+                      <p className="px-3 py-1 text-sm text-rn-text-slate">
+                        Innlogget som{" "}
+                        <span className="font-semibold text-rn-text-heading">
+                          {displayName}
+                        </span>
+                      </p>
+                      <Link
+                        href={LANDING_ROUTES.app}
+                        onClick={() => setMobileOpen(false)}
+                        className={cn(
+                          buttonVariants({ variant: "success", size: "cta" }),
+                          "w-full justify-center",
+                        )}
+                      >
+                        Gå til appen
+                      </Link>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 w-full justify-center border-2 border-rn-border-strong font-heading font-semibold"
+                        onClick={() => void signOut()}
+                      >
+                        Logg ut
+                      </Button>
+                    </>
+                  ) : !loading ? (
+                    <>
+                      <Link
+                        href={LANDING_ROUTES.login}
+                        onClick={() => setMobileOpen(false)}
+                        className={cn(
+                          buttonVariants({ variant: "outline" }),
+                          "h-12 w-full justify-center border-2 border-rn-border-strong font-heading font-semibold",
+                        )}
+                      >
+                        Logg inn
+                      </Link>
+                      <Link
+                        href={LANDING_ROUTES.register}
+                        onClick={() => setMobileOpen(false)}
+                        className={cn(
+                          buttonVariants({ variant: "success", size: "cta" }),
+                          "w-full justify-center",
+                        )}
+                      >
+                        Start gratis prøveperiode
+                      </Link>
+                    </>
+                  ) : null}
                 </div>
               </nav>
             </SheetContent>
