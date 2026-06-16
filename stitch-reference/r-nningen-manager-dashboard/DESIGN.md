@@ -50,13 +50,13 @@ colors:
   surface-variant: '#e2e3df'
 typography:
   h1:
-    fontFamily: Manrope
+    fontFamily: Inter
     fontSize: 32px
     fontWeight: '700'
     lineHeight: '1.2'
     letterSpacing: -0.02em
   h2:
-    fontFamily: Manrope
+    fontFamily: Inter
     fontSize: 24px
     fontWeight: '600'
     lineHeight: '1.3'
@@ -111,7 +111,7 @@ This design system utilizes a high-contrast but naturalistic palette.
 - **Text:** High-contrast charcoal (#111827) for headings and mid-tone slate (#4B5563) for body text.
 
 ## Typography
-The system uses a dual-font approach. **Manrope** is used for headlines to provide a modern, slightly geometric warmth that differentiates the dashboard from standard utility apps. **Inter** is used for all functional UI elements, body text, and data points due to its exceptional legibility and neutral character.
+The production app uses **Inter** for all UI — headings, body, labels, and technical IDs (with tabular numerals). Hierarchy comes from size and weight tokens (`text-app-*`, `.app-title`, `.app-section-title`), not a second typeface.
 
 Maintain generous line heights to prevent data-heavy screens from feeling cramped. Labels use a slight tracking (letter-spacing) increase to maintain readability at small sizes.
 

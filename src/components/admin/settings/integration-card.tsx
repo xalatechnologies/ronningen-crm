@@ -36,12 +36,12 @@ export function IntegrationCard({
           {integration.href ? (
             <Link
               href={integration.href}
-              className="font-heading text-base font-semibold text-success hover:underline sm:text-lg"
+              className="font-semibold text-app-base text-success hover:underline sm:text-app-lg"
             >
               {integration.label}
             </Link>
           ) : (
-            <h3 className="font-heading text-base font-semibold sm:text-lg">
+            <h3 className="app-card-title sm:text-app-lg">
               {integration.label}
             </h3>
           )}

@@ -6,7 +6,7 @@ export default function AuthLayout({
   return (
     <div className="flex min-h-svh flex-col bg-background text-foreground">
       <noscript>
-        <div className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-3 text-center text-sm">
+        <div className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-3 text-center text-app-sm">
           JavaScript må være aktivert for å logge inn.
         </div>
       </noscript>

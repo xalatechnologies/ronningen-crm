@@ -17,16 +17,16 @@ export function HowItWorksSection() {
     >
       <div className={cn(LANDING_CONTAINER, "flex flex-col gap-10 md:gap-14")}>
         <div className="mx-auto flex max-w-3xl flex-col gap-3 text-center">
-          <p className="font-heading text-sm font-semibold tracking-wide text-primary-light uppercase">
+          <p className="text-app-sm font-semibold tracking-wide text-primary-light uppercase">
             Slik fungerer det
           </p>
           <h2
             id="landing-how-title"
-            className="font-heading text-2xl font-bold tracking-tight text-white md:text-3xl lg:text-4xl"
+            className="landing-headline tracking-tight text-white"
           >
             {SECTION_TITLES.howItWorks}
           </h2>
-          <p className="text-base leading-relaxed text-white/80 md:text-lg">
+          <p className="landing-body leading-relaxed text-white/80">
             Fire enkle steg fra første forespørsel til ferdig rapport.
           </p>
         </div>
@@ -49,17 +49,17 @@ export function HowItWorksSection() {
                 ) : null}
 
                 <span
-                  className="relative z-10 flex size-12 shrink-0 items-center justify-center rounded-full border-2 border-rn-accent-border bg-white font-heading text-lg font-bold text-success shadow-rn-hero-success ring-4 ring-success/30"
+                  className="relative z-10 flex size-12 shrink-0 items-center justify-center rounded-full border-2 border-rn-accent-border bg-white text-app-lg font-bold text-success shadow-rn-hero-success ring-4 ring-success/30"
                   aria-hidden
                 >
                   {item.step}
                 </span>
 
                 <article className="flex w-full flex-1 flex-col gap-3 rounded-[length:var(--app-radius)] border-2 border-rn-accent-border/40 bg-card p-5 text-center shadow-rn-hero-success md:p-6 lg:text-left">
-                  <h3 className="font-heading text-lg font-semibold text-rn-text-heading md:text-xl">
+                  <h3 className="app-card-title md:text-app-xl">
                     {item.title}
                   </h3>
-                  <p className="text-sm leading-relaxed text-rn-text-slate md:text-base">
+                  <p className="landing-body leading-relaxed">
                     {item.text}
                   </p>
                 </article>

@@ -22,12 +22,12 @@ const WEEKDAYS_NB = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"] as const
 const CALENDAR_MIN_YEAR = 2020;
 
 const calendarSelectTriggerClass = cn(
-  "h-11 min-h-11 w-fit min-w-0 shrink-0 rounded-md border-2 border-rn-border-strong bg-background px-3 font-heading text-sm font-semibold shadow-none sm:h-12 sm:min-h-12 sm:text-base",
+  "h-11 min-h-11 w-fit min-w-0 shrink-0 rounded-md border-2 border-rn-border-strong bg-background px-3 font-heading text-app-sm font-semibold shadow-none sm:h-12 sm:min-h-12 sm:text-app-base",
   "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 data-popup-open:border-rn-accent-border",
 );
 
 const calendarNavButtonClass =
-  "h-11 rounded-md border-2 border-rn-border-strong px-4 text-sm font-semibold sm:h-12 sm:text-base";
+  "h-11 rounded-md border-2 border-rn-border-strong px-4 text-app-sm font-semibold sm:h-12 sm:text-app-base";
 
 const calendarNavIconButtonClass =
   "size-11 rounded-md border-2 border-rn-border-strong bg-background sm:size-12";
@@ -324,17 +324,17 @@ function BookingCalendarHoverPreview({
   return (
     <div className="space-y-2 text-left">
       <div>
-        <p className="font-heading text-sm font-bold text-rn-text-heading md:text-base">
+        <p className="font-heading text-app-sm font-bold text-rn-text-heading md:text-app-base">
           {row.customer}
         </p>
-        <p className="mt-0.5 text-xs text-muted-foreground tabular-nums md:text-sm">
+        <p className="mt-0.5 text-app-xs text-muted-foreground tabular-nums md:text-app-sm">
           {row.date}
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <BookingStatusBadge status={row.status} />
       </div>
-      <div className="space-y-1 border-t border-border pt-2 text-xs md:text-sm">
+      <div className="space-y-1 border-t border-border pt-2 text-app-xs md:text-app-sm">
         <p>
           <span className="font-semibold text-rn-text-body">Arrangement:</span>{" "}
           <span className="text-foreground">{row.eventType}</span>
@@ -366,7 +366,7 @@ function BookingCalendarHoverPreview({
         </p>
       </div>
       {hideFooter ? null : (
-        <p className="text-[10px] leading-snug text-muted-foreground md:text-xs">
+        <p className="text-[10px] leading-snug text-muted-foreground md:text-app-xs">
           Klikk for full detalj
         </p>
       )}
@@ -381,7 +381,7 @@ function DayBookingsHoverPopupContent({ bookings }: { bookings: BookingListRow[]
   }
   return (
     <div className="max-h-[min(70vh,22rem)] space-y-0 overflow-y-auto text-left">
-      <p className="mb-2 text-xs font-semibold text-muted-foreground">
+      <p className="mb-2 text-app-xs font-semibold text-muted-foreground">
         {bookings.length} bookinger denne dagen
       </p>
       {bookings.map((row, i) => (
@@ -392,7 +392,7 @@ function DayBookingsHoverPopupContent({ bookings }: { bookings: BookingListRow[]
           <BookingCalendarHoverPreview row={row} hideFooter />
         </div>
       ))}
-      <p className="mt-3 text-[10px] leading-snug text-muted-foreground md:text-xs">
+      <p className="mt-3 text-[10px] leading-snug text-muted-foreground md:text-app-xs">
         Klikk på en booking for full detalj
       </p>
     </div>
@@ -515,7 +515,7 @@ function BookingsMonthCalendarView({
   const headerCells = WEEKDAYS_NB.map((wd) => (
     <div
       key={wd}
-      className="bg-rn-surface-table-head px-1 py-2 text-center text-[10px] font-bold tracking-wider text-rn-text-column uppercase sm:px-2 md:text-xs"
+      className="bg-rn-surface-table-head px-1 py-2 text-center text-[10px] font-bold tracking-wider text-rn-text-column uppercase sm:px-2 md:text-app-xs"
     >
       {wd}
     </div>
@@ -550,7 +550,7 @@ function BookingsMonthCalendarView({
       <>
         <div
           className={cn(
-            "flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold sm:size-7 sm:text-sm md:size-8 md:text-base",
+            "flex size-6 shrink-0 items-center justify-center rounded-md text-app-xs font-bold sm:size-7 sm:text-app-sm md:size-8 md:text-app-base",
             isToday
               ? "bg-success !text-white shadow-sm [&_svg]:!text-white"
               : hasBookings
@@ -571,7 +571,7 @@ function BookingsMonthCalendarView({
               key={b.id}
               type="button"
               className={cn(
-                "w-full rounded-md px-1 py-0.5 text-left text-[10px] font-semibold leading-tight transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-0 sm:text-[11px] md:px-1.5 md:py-1 md:text-xs",
+                "w-full rounded-md px-1 py-0.5 text-left text-[10px] font-semibold leading-tight transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-0 sm:text-[11px] md:px-1.5 md:py-1 md:text-app-xs",
                 bookingRowButtonClass(b.status),
                 b.dimmed && "opacity-60",
               )}
@@ -674,7 +674,7 @@ function BookingsMonthCalendarView({
       </div>
 
       {emptyMonthMessage ? (
-        <p className="mt-5 text-center text-base text-muted-foreground">
+        <p className="mt-5 text-center text-app-base text-muted-foreground">
           {emptyMonthMessage}
         </p>
       ) : null}

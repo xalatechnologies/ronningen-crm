@@ -8,8 +8,8 @@
 
 @theme inline {
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-heading);
+  --font-mono: var(--font-sans);
+  --font-heading: var(--font-sans);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary-light: var(--rn-primary-light);
@@ -138,7 +138,7 @@
   }
   h2 {
     font-family:
-      var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+      var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(21px * var(--app-type-scale));
     font-weight: 600;
     line-height: var(--line-height-heading);
@@ -146,7 +146,7 @@
   }
   h3 {
     font-family:
-      var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+      var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(17px * var(--app-type-scale));
     font-weight: 600;
     line-height: var(--line-height-heading);
@@ -154,7 +154,7 @@
   }
   h4 {
     font-family:
-      var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+      var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: var(--font-size-base);
     font-weight: 600;
     line-height: var(--line-height-heading);
@@ -162,7 +162,7 @@
   }
   h5 {
     font-family:
-      var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+      var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(14px * var(--app-type-scale));
     font-weight: 600;
     line-height: var(--line-height-heading);
@@ -170,7 +170,7 @@
   }
   h6 {
     font-family:
-      var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+      var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: var(--text-app-sm);
     font-weight: 600;
     line-height: var(--line-height-heading);
@@ -204,9 +204,18 @@
    * meta (`.app-meta`, `.app-label`, uses `--app-type-scale`) →
    * controls (`text-app-control`, form primitives).
    */
+  /**
+   * Role utility — legacy alias; same family as `font-sans` (Inter).
+   * Prefer `.app-title`, `.app-section-title`, or `text-app-*` for new code.
+   */
   .font-heading {
     font-family:
-      var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+      var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /** Former mono role — Inter with tabular figures for IDs and numeric codes. */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
   }
 
   .app-page {
@@ -270,7 +279,7 @@
   }
 
   .app-section-title {
-    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(21px * var(--app-type-scale));
     font-weight: 600;
     line-height: 1.3;
@@ -278,7 +287,7 @@
   }
 
   .app-card-title {
-    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(17px * var(--app-type-scale));
     font-weight: 600;
     line-height: 1.3;
@@ -327,13 +336,80 @@
   }
 
   .app-kpi {
-    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(28px * var(--app-type-scale));
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: -0.02em;
     color: var(--foreground);
     font-variant-numeric: tabular-nums;
+  }
+
+  /** Landing marketing scale — density-aware; separate from tenant `text-app-*`. */
+  .landing-hero-headline {
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(30px * var(--app-type-scale));
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--rn-text-heading);
+  }
+
+  @media (min-width: 768px) {
+    .landing-hero-headline {
+      font-size: calc(36px * var(--app-type-scale));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .landing-hero-headline {
+      font-size: calc(48px * var(--app-type-scale));
+    }
+  }
+
+  .landing-headline {
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: calc(24px * var(--app-type-scale));
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--rn-text-heading);
+  }
+
+  @media (min-width: 768px) {
+    .landing-headline {
+      font-size: calc(30px * var(--app-type-scale));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .landing-headline {
+      font-size: calc(36px * var(--app-type-scale));
+    }
+  }
+
+  .landing-subhead {
+    font-size: calc(16px * var(--app-type-scale));
+    line-height: 1.6;
+    color: var(--rn-text-slate);
+  }
+
+  @media (min-width: 768px) {
+    .landing-subhead {
+      font-size: calc(18px * var(--app-type-scale));
+    }
+  }
+
+  .landing-body {
+    font-size: calc(16px * var(--app-type-scale));
+    line-height: 1.6;
+    color: var(--rn-text-slate);
+  }
+
+  @media (min-width: 768px) {
+    .landing-body {
+      font-size: calc(18px * var(--app-type-scale));
+    }
   }
 
   /**
@@ -354,7 +430,7 @@
   }
 
   .dashboard-kpi-value {
-    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(32px * var(--app-type-scale));
     font-weight: 700;
     line-height: 1.15;
@@ -538,7 +614,7 @@
   }
 
   .pricing-page-workspace .pricing-package-price {
-    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(32px * var(--app-type-scale));
     font-weight: 700;
     line-height: 1.15;
@@ -623,7 +699,7 @@
   }
 
   .finance-page-workspace .finance-kpi-value {
-    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(32px * var(--app-type-scale));
     font-weight: 700;
     line-height: 1.15;
@@ -749,7 +825,7 @@
   }
 
   .invoices-page-workspace .invoices-rest-amount-mobile {
-    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(17px * var(--app-type-scale));
     font-weight: 700;
     line-height: 1.2;
@@ -757,7 +833,7 @@
   }
 
   .invoices-page-workspace .invoices-rest-amount {
-    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(24px * var(--app-type-scale));
     line-height: 1.15;
     letter-spacing: -0.02em;
@@ -840,7 +916,7 @@
   }
 
   .assets-page-workspace .assets-kpi-value {
-    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(32px * var(--app-type-scale));
     font-weight: 800;
     line-height: 1.15;
@@ -866,7 +942,7 @@
   }
 
   .assets-page-workspace .assets-stat-value {
-    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(24px * var(--app-type-scale));
     font-weight: 700;
     line-height: 1.15;
@@ -993,7 +1069,7 @@
   }
 
   .reports-page-workspace .reports-kpi-value {
-    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(32px * var(--app-type-scale));
     font-weight: 700;
     line-height: 1.15;
@@ -1168,7 +1244,7 @@
 
   /** @deprecated bruk `.app-section-title` */
   .app-subtitle {
-    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(24px * var(--app-type-scale));
     font-weight: 600;
     line-height: 1.3;

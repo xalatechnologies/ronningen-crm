@@ -126,7 +126,7 @@ export function OrganizationAccessPanel({
         )}
 
         {error ? (
-          <p className="text-sm font-medium text-destructive">{error}</p>
+          <p className="text-app-sm font-medium text-destructive">{error}</p>
         ) : null}
       </section>
 

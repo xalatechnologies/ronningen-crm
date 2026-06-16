@@ -10,19 +10,13 @@ import { SupabaseProvider } from "@/providers/supabase-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Inter, Manrope } from "next/font/google";
+import { Inter } from "next/font/google";
 
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
-  display: "swap",
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-heading",
   display: "swap",
 });
 
@@ -43,11 +37,7 @@ export default function RootLayout({
       data-theme="light"
       data-display-storage-key={displayStorageKey}
       data-theme-storage-key={themeStorageKey}
-      className={cn(
-        inter.variable,
-        manrope.variable,
-        "h-full scroll-smooth antialiased",
-      )}
+      className={cn(inter.variable, "h-full scroll-smooth antialiased")}
     >
       <body
         className={cn(

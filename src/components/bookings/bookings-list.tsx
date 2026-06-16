@@ -105,7 +105,7 @@ function formatNokCompact(n: number) {
   return (
     <>
       <span className="tracking-tight">{formatted}</span>{" "}
-      <span className="text-lg font-medium tracking-normal opacity-70 md:text-2xl">NOK</span>
+      <span className="text-app-lg font-medium tracking-normal opacity-70 md:text-app-2xl">NOK</span>
     </>
   );
 }
@@ -339,7 +339,7 @@ function BookingsFiltersSection({
               onChange={setDateFrom}
               maxYmd={dateTo || undefined}
               variant="toolbar"
-              className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+              className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
             />
           </div>
           <div className="w-full shrink-0 sm:w-44 md:w-48">
@@ -352,7 +352,7 @@ function BookingsFiltersSection({
               onChange={setDateTo}
               minYmd={dateFrom || undefined}
               variant="toolbar"
-              className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+              className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
             />
           </div>
           <div className="w-full shrink-0 sm:w-52 md:w-56">
@@ -364,7 +364,7 @@ function BookingsFiltersSection({
               value={paymentFilter}
               onValueChange={(v) => setPaymentFilter(v as BookingPaymentFilter)}
               aria-label="Filtrer etter betaling"
-              className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+              className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
               placeholder="Alle betalinger"
               options={[
                 { value: "unpaid", label: BOOKING_PAYMENT_STATUS_LABELS.unpaid },
@@ -382,7 +382,7 @@ function BookingsFiltersSection({
               value={audienceFilter}
               onValueChange={(v) => setAudienceFilter(v as BookingAudienceFilter)}
               aria-label="Filtrer etter arrangementstype"
-              className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+              className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
               placeholder="Alle typer"
               options={[
                 { value: "Privat", label: "Privat" },
@@ -395,7 +395,7 @@ function BookingsFiltersSection({
               type="button"
               variant="outline"
               disabled={!hasActiveFilters}
-              className="h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-sm font-semibold sm:h-12 sm:w-auto sm:px-5 sm:text-base"
+              className="h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold sm:h-12 sm:w-auto sm:px-5 sm:text-app-base"
               onClick={onResetFilters}
             >
               <RotateCcw className="size-4 shrink-0" aria-hidden />
@@ -660,7 +660,7 @@ export function BookingsList({
     <div className="flex w-full flex-col gap-8 pb-24 md:pb-10">
       {loadError ? (
         <div
-          className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-app-sm text-destructive md:text-app-base"
           role="alert"
         >
           Kunne ikke laste bookinger: {loadError}
@@ -785,7 +785,7 @@ export function BookingsList({
                     <div className="col-span-12 flex items-center gap-4 sm:col-span-4">
                       <div
                         className={cn(
-                          "flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full font-heading text-base font-semibold md:size-12 md:text-app-lg",
+                          "flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full font-heading text-app-base font-semibold md:size-12 md:text-app-lg",
                           row.avatarClass,
                         )}
                       >
@@ -796,7 +796,7 @@ export function BookingsList({
                           {row.customer}
                         </h4>
                         {row.customerPhone?.trim() ? (
-                          <p className="bookings-list-row-meta mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <p className="bookings-list-row-meta mt-0.5 flex items-center gap-1.5 text-app-sm text-muted-foreground">
                             <Phone
                               className="size-3.5 shrink-0 text-rn-text-slate"
                               aria-hidden
@@ -940,10 +940,10 @@ export function BookingsList({
               <div className="mb-5 flex size-12 items-center justify-center rounded-md border border-white/20 bg-white/12 md:size-14">
                 <TrendingUp className="size-6 md:size-7" aria-hidden />
               </div>
-              <h2 className="font-heading text-xl font-bold leading-snug text-white md:text-2xl">
+              <h2 className="font-heading text-app-xl font-bold leading-snug text-white md:text-app-2xl">
                 Månedlig omsetning
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-white/90 md:text-base">
+              <p className="mt-3 text-app-sm leading-relaxed text-white/90 md:text-app-base">
                 Fakturert på bookinger i{" "}
                 <span className="font-semibold text-white">
                   {quickStats.monthLabel}
@@ -952,13 +952,13 @@ export function BookingsList({
               </p>
             </div>
             <div className="mt-10 min-w-0">
-              <div className="break-words text-4xl font-black leading-none tracking-tight md:text-5xl [&_span:last-child]:text-lg [&_span:last-child]:font-semibold [&_span:last-child]:opacity-85 md:[&_span:last-child]:text-2xl">
+              <div className="break-words text-app-3xl font-black leading-none tracking-tight md:text-app-3xl [&_span:last-child]:text-app-lg [&_span:last-child]:font-semibold [&_span:last-child]:opacity-85 md:[&_span:last-child]:text-app-2xl">
                 {formatNokCompact(quickStats.currentMonthRevenue)}
               </div>
               {quickStats.monthOverMonthPct != null ? (
                 <div
                   className={cn(
-                    "mt-4 flex items-center gap-2 text-sm font-bold md:text-base",
+                    "mt-4 flex items-center gap-2 text-app-sm font-bold md:text-app-base",
                     trendPositive ? "text-emerald-200" : "text-rose-200",
                   )}
                 >
@@ -976,11 +976,11 @@ export function BookingsList({
                   </span>
                 </div>
               ) : (
-                <p className="mt-4 text-sm font-medium text-white/75 md:text-base">
+                <p className="mt-4 text-app-sm font-medium text-white/75 md:text-app-base">
                   Ingen sammenligning mot forrige måned (manglende grunnlag).
                 </p>
               )}
-              <p className="mt-3 text-sm text-white/70">
+              <p className="mt-3 text-app-sm text-white/70">
                 Forrige måned: {formatNok(quickStats.prevMonthRevenue)}
               </p>
             </div>
@@ -996,24 +996,24 @@ export function BookingsList({
             <div className="min-w-0 flex-1">
               <div className="grid grid-cols-1 gap-4">
                 <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
-                  <p className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-sm">
+                  <p className="mb-3 text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-app-sm">
                     Kalenderdekning
                   </p>
-                  <p className="font-heading text-3xl font-extrabold text-rn-text-heading tabular-nums md:text-4xl">
+                  <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
                     {quickStats.calendarFillPct}%
                   </p>
-                  <p className="mt-3 text-base leading-snug text-muted-foreground md:text-lg">
+                  <p className="mt-3 text-app-base leading-snug text-muted-foreground md:text-app-lg">
                     Av dager i måneden med minst ett arrangement.
                   </p>
                 </div>
                 <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
-                  <p className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-sm">
+                  <p className="mb-3 text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-app-sm">
                     Snitt gjester
                   </p>
-                  <p className="font-heading text-3xl font-extrabold text-rn-text-heading tabular-nums md:text-4xl">
+                  <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
                     {quickStats.avgGuestsActive ?? "—"}
                   </p>
-                  <p className="mt-3 text-base text-muted-foreground md:text-lg">
+                  <p className="mt-3 text-app-base text-muted-foreground md:text-app-lg">
                     Per booking.
                   </p>
                 </div>
@@ -1021,15 +1021,15 @@ export function BookingsList({
             </div>
             <div className="flex w-full flex-col justify-between rounded-md border-2 border-success/50 bg-gradient-to-b from-rn-surface-gradient-from to-muted p-6 md:w-[38%] md:max-w-[340px] md:p-8">
               <div>
-                <p className="text-xs font-semibold tracking-wider text-success uppercase dark:!text-white md:text-sm">
+                <p className="text-app-xs font-semibold tracking-wider text-success uppercase dark:!text-white md:text-app-sm">
                   Denne måneden
                 </p>
-                <p className="mt-3 font-heading text-4xl font-bold text-success dark:!text-white md:text-5xl">
+                <p className="mt-3 dashboard-kpi-value text-success dark:!text-white md:text-app-3xl">
                   {formatNok(quickStats.currentMonthRevenue)}
                 </p>
               </div>
               <div className="mt-8 space-y-3 border-t-2 border-success/20 pt-5">
-                <div className="flex justify-between text-base md:text-lg">
+                <div className="flex justify-between text-app-base md:text-app-lg">
                   <span className="font-medium text-rn-text-body">
                     Forrige måned
                   </span>
@@ -1069,10 +1069,10 @@ export function BookingsList({
           {pendingStatusConfirm ? (
             <>
               <DialogHeader className="text-left">
-                <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading">
+                <DialogTitle className="app-section-title">
                   {statusConfirmTitle(pendingStatusConfirm.next)}
                 </DialogTitle>
-                <DialogDescription className="text-base leading-relaxed text-muted-foreground">
+                <DialogDescription className="text-app-base leading-relaxed text-muted-foreground">
                   {pendingStatusConfirm.message}
                 </DialogDescription>
               </DialogHeader>

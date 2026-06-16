@@ -85,7 +85,7 @@ function DashboardUpcomingStatusBadge({
   status: "confirmed" | "pending" | "cancelled";
 }) {
   const pill =
-    "inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase md:px-3 md:py-1.5 md:text-xs";
+    "inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase md:px-3 md:py-1.5 md:text-app-xs";
   if (status === "confirmed") {
     return (
       <span className={cn(pill, "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200")}>
@@ -108,7 +108,7 @@ function DashboardUpcomingStatusBadge({
 }
 
 const tableHeadClass =
-  "px-6 py-4 text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+  "px-6 py-4 text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const tableCellClass = "px-6 py-5 md:px-8 md:py-6";
 
 const NB_MONTH_SHORT = [
@@ -207,7 +207,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
             className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
             role="alert"
           >
-            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base">
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-app-sm text-destructive md:text-app-base">
               Noe gikk galt ved lasting: {data.loadError}
             </div>
           </div>
@@ -307,7 +307,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               <SelectTrigger
                 aria-label="Velg år for diagrammet"
                 className={cn(
-                  "h-12 min-w-[8.5rem] rounded-md border-2 border-rn-border-strong bg-rn-surface-segment px-4 font-heading text-base font-semibold shadow-rn-segment-inset",
+                  "h-12 min-w-[8.5rem] rounded-md border-2 border-rn-border-strong bg-rn-surface-segment px-4 font-heading text-app-base font-semibold shadow-rn-segment-inset",
                   "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 data-popup-open:border-rn-accent-border",
                 )}
               >
@@ -318,7 +318,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   <SelectItem
                     key={y}
                     value={String(y)}
-                    className="py-2.5 font-heading text-base font-semibold tabular-nums"
+                    className="py-2.5 font-heading text-app-base font-semibold tabular-nums"
                   >
                     {y}
                   </SelectItem>
@@ -331,10 +331,10 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between"
               aria-hidden
             >
-              <span className="text-xs font-semibold text-foreground md:text-sm">
+              <span className="text-app-xs font-semibold text-foreground md:text-app-sm">
                 Fakturert per måned · {chartYear}
               </span>
-              <span className="text-[11px] tabular-nums text-muted-foreground md:text-xs">
+              <span className="text-[11px] tabular-nums text-muted-foreground md:text-app-xs">
                 Høyeste: {formatNok(Math.max(...chartMonthAmounts, 0))}
               </span>
             </div>
@@ -417,7 +417,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
           </div>
           <div className="flex flex-1 flex-col gap-4 md:gap-5">
             {data.paymentAlerts.length === 0 ? (
-              <p className="text-sm text-muted-foreground md:text-base">
+              <p className="text-app-sm text-muted-foreground md:text-app-base">
                 Ingen bookinger med restbeløp der arrangementsdato er passert eller i dag.
               </p>
             ) : (
@@ -427,21 +427,21 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   className="flex flex-col gap-3 rounded-md border-2 border-rn-border-strong/60 bg-card/90 p-4 shadow-sm md:p-5"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <span className="min-w-0 text-base font-semibold text-foreground">
+                    <span className="min-w-0 text-app-base font-semibold text-foreground">
                       {a.title}
                     </span>
-                    <span className="shrink-0 text-base font-bold tabular-nums text-destructive">
+                    <span className="shrink-0 text-app-base font-bold tabular-nums text-destructive">
                       {formatNok(a.amountNok)}
                     </span>
                   </div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground md:text-base">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-app-sm text-muted-foreground md:text-app-base">
                     <span>Arrangement: {a.dueLabel}</span>
                     {a.status === "overdue" ? (
-                      <span className="inline-flex rounded-full bg-rn-danger-surface px-2.5 py-1 text-[11px] font-bold tracking-wide text-destructive uppercase md:px-3 md:py-1.5 md:text-xs">
+                      <span className="inline-flex rounded-full bg-rn-danger-surface px-2.5 py-1 text-[11px] font-bold tracking-wide text-destructive uppercase md:px-3 md:py-1.5 md:text-app-xs">
                         Forfalt
                       </span>
                     ) : (
-                      <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold tracking-wide text-amber-900 uppercase dark:bg-amber-950/40 dark:text-amber-100 md:px-3 md:py-1.5 md:text-xs">
+                      <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold tracking-wide text-amber-900 uppercase dark:bg-amber-950/40 dark:text-amber-100 md:px-3 md:py-1.5 md:text-app-xs">
                         I dag
                       </span>
                     )}
@@ -482,7 +482,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="px-6 py-12 text-center text-base md:py-16"
+                  className="px-6 py-12 text-center text-app-base md:py-16"
                 >
                   Ingen kommende bookinger i vinduet.{" "}
                   <Link
@@ -501,10 +501,10 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                 >
                   <TableCell className={cn(tableCellClass, "whitespace-normal")}>
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-base font-semibold text-foreground">
+                      <span className="text-app-base font-semibold text-foreground">
                         {row.dateLabel}
                       </span>
-                      <span className="text-sm md:text-base">
+                      <span className="text-app-sm md:text-app-base">
                         {row.timeLabel}
                       </span>
                     </div>
@@ -512,12 +512,12 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   <TableCell className={cn(tableCellClass, "whitespace-normal")}>
                     <div className="flex items-center gap-4">
                       <div
-                        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-primary dark:bg-rn-surface-segment dark:!text-white md:size-11 md:text-base"
+                        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-app-sm font-semibold text-primary dark:bg-rn-surface-segment dark:!text-white md:size-11 md:text-app-base"
                         aria-hidden
                       >
                         {row.initials}
                       </div>
-                      <span className="text-base font-semibold text-foreground">
+                      <span className="text-app-base font-semibold text-foreground">
                         {row.customer}
                       </span>
                     </div>
@@ -525,7 +525,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   <TableCell className={tableCellClass}>
                     <span
                       className={cn(
-                        "inline-flex rounded-md px-2.5 py-1 text-xs font-bold md:px-3 md:text-sm",
+                        "inline-flex rounded-md px-2.5 py-1 text-app-xs font-bold md:px-3 md:text-app-sm",
                         dashboardEventPillClass(row.type),
                       )}
                     >
@@ -535,7 +535,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   <TableCell
                     className={cn(
                       tableCellClass,
-                      "whitespace-normal text-base",
+                      "whitespace-normal text-app-base",
                     )}
                   >
                     {row.venue}
@@ -546,7 +546,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   <TableCell className={cn(tableCellClass, "text-right")}>
                     <Link
                       href="/app/bookings"
-                      className="inline-flex items-center gap-1 text-sm font-semibold text-success underline-offset-2 hover:underline dark:!text-white md:text-base"
+                      className="inline-flex items-center gap-1 text-app-sm font-semibold text-success underline-offset-2 hover:underline dark:!text-white md:text-app-base"
                     >
                       Liste
                       <ExternalLink className="size-4 shrink-0 opacity-70" aria-hidden />

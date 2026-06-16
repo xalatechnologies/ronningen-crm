@@ -17,13 +17,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 export function LoginForm({ redirect = "/app" }: { redirect?: string }) {
   const [formError, setFormError] = useState<string | null>(null);
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
-  const loginDefaults = getDevLoginDefaultValues();
+  const loginDefaults = useMemo(() => getDevLoginDefaultValues(), []);
+  const showDevLogin = Boolean(loginDefaults.email);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -64,7 +65,7 @@ export function LoginForm({ redirect = "/app" }: { redirect?: string }) {
           aria-live="polite"
         >
           <div className="size-10 animate-spin rounded-full border-4 border-muted border-t-success" />
-          <p className="text-base font-medium text-muted-foreground">
+          <p className="text-app-base font-medium text-muted-foreground">
             Logger inn …
           </p>
         </div>
@@ -72,7 +73,7 @@ export function LoginForm({ redirect = "/app" }: { redirect?: string }) {
       <div className="flex w-full max-w-xl flex-col items-stretch gap-8">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 self-start font-heading text-sm font-semibold text-rn-text-slate transition-colors hover:text-success md:text-base"
+          className="inline-flex items-center gap-2 self-start font-heading text-app-sm font-semibold text-rn-text-slate transition-colors hover:text-success md:text-app-base"
         >
           <ArrowLeft className="size-4 shrink-0" aria-hidden />
           Tilbake til forsiden
@@ -80,7 +81,7 @@ export function LoginForm({ redirect = "/app" }: { redirect?: string }) {
 
         <Card
           className={cn(
-            "w-full gap-0 py-0 text-base ring-0",
+            "w-full gap-0 py-0 text-app-base ring-0",
             RN_CARD_SHELL,
             "shadow-rn-card",
           )}
@@ -88,58 +89,53 @@ export function LoginForm({ redirect = "/app" }: { redirect?: string }) {
           <CardHeader className="space-y-5 border-b-2 border-rn-border-strong/50 px-6 py-7 md:px-10 md:py-9">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
               <div
-                className="flex size-14 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-success font-heading text-lg font-bold text-primary-light shadow-sm md:size-16 md:text-xl"
+                className="flex size-14 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-success font-heading text-app-lg font-bold text-primary-light shadow-sm md:size-16 md:text-app-xl"
                 aria-hidden
               >
                 R
               </div>
               <div className="min-w-0 flex-1 space-y-2">
-                <CardTitle className="font-heading text-2xl font-bold tracking-tight text-rn-text-heading md:text-3xl lg:text-4xl">
+                <CardTitle className="app-title md:text-app-3xl">
                   Logg inn
                 </CardTitle>
-                <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
+                <p className="text-app-sm leading-relaxed text-muted-foreground md:text-app-base">
                   {APP_NAME} — administrasjon av lokaler, bookinger og økonomi.
                 </p>
               </div>
             </div>
 
-            {loginDefaults.email ? (
-              <div className="rounded-md border-2 border-rn-border-strong/60 bg-muted/35 px-4 py-3 text-sm md:px-5 md:py-4 md:text-base">
+            {showDevLogin ? (
+              <div className="rounded-md border-2 border-rn-border-strong/60 bg-muted/35 px-4 py-3 text-app-sm md:px-5 md:py-4 md:text-app-base">
                 <p className="font-semibold text-rn-text-heading">
-                  Lokal testbruker
+                  Plattformadmin (lokal utvikling)
                 </p>
                 <p className="mt-2 text-muted-foreground">
-                  <span className="font-mono text-sm text-foreground md:text-base">
+                  Feltene under er fylt ut med{" "}
+                  <span className="font-mono text-app-sm text-foreground md:text-app-base">
                     {loginDefaults.email}
                   </span>
-                  <span className="mx-1.5 text-muted-foreground">/</span>
-                  <span className="font-mono text-sm text-foreground md:text-base">
-                    {loginDefaults.password}
-                  </span>
-                </p>
-                <p className="mt-2 text-xs text-muted-foreground md:text-sm">
-                  Legg til brukeren i Supabase Auth hvis innlogging feiler.
+                  .
                 </p>
               </div>
             ) : null}
 
             {!isSupabasePublicConfigured() ? (
-              <p className="rounded-md border-2 border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-100">
+              <p className="rounded-md border-2 border-amber-500/40 bg-amber-500/10 px-4 py-3 text-app-sm text-amber-950 md:text-app-base dark:text-amber-100">
                 <strong className="font-semibold">Supabase er ikke konfigurert.</strong>{" "}
                 Opprett{" "}
-                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-xs md:text-sm">
+                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-app-xs md:text-app-sm">
                   .env.local
                 </code>{" "}
                 i prosjektmappen med{" "}
-                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-xs md:text-sm">
+                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-app-xs md:text-app-sm">
                   NEXT_PUBLIC_SUPABASE_URL
                 </code>{" "}
                 og{" "}
-                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-xs md:text-sm">
+                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-app-xs md:text-app-sm">
                   NEXT_PUBLIC_SUPABASE_ANON_KEY
                 </code>{" "}
                 (eldre JWT) eller{" "}
-                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-xs md:text-sm">
+                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-app-xs md:text-app-sm">
                   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
                 </code>{" "}
                 (ny «Publishable»-nøkkel fra Supabase), hentet under Settings → API. Deretter{" "}
@@ -155,23 +151,46 @@ export function LoginForm({ redirect = "/app" }: { redirect?: string }) {
               onSubmit={form.handleSubmit(onSubmit)}
               noValidate
             >
+              {showDevLogin ? (
+                <div
+                  className="rounded-md border-2 border-success/30 bg-success/8 px-4 py-3 text-app-sm md:text-app-base"
+                  aria-live="polite"
+                >
+                  <p className="font-semibold text-foreground">
+                    Plattformadmin
+                  </p>
+                  <p className="mt-1.5 font-mono text-app-sm text-foreground md:text-app-base">
+                    {loginDefaults.email}
+                    <span className="mx-1.5 text-muted-foreground">/</span>
+                    {loginDefaults.password}
+                  </p>
+                </div>
+              ) : null}
+
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
-                  className="text-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]"
+                  className="text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]"
                 >
                   E-post
                 </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="deg@eksempel.no"
-                  className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
-                  {...form.register("email")}
+                <Controller
+                  name="email"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder={loginDefaults.email || "deg@eksempel.no"}
+                      className="h-12 rounded-md border-2 border-rn-border-strong text-app-base focus-visible:border-success focus-visible:ring-success/25"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  )}
                 />
                 {form.formState.errors.email ? (
-                  <p className="text-sm text-destructive">
+                  <p className="text-app-sm text-destructive">
                     {form.formState.errors.email.message}
                   </p>
                 ) : null}
@@ -179,25 +198,32 @@ export function LoginForm({ redirect = "/app" }: { redirect?: string }) {
               <div className="space-y-2">
                 <Label
                   htmlFor="password"
-                  className="text-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]"
+                  className="text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]"
                 >
                   Passord
                 </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
-                  {...form.register("password")}
+                <Controller
+                  name="password"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input
+                      id="password"
+                      type="password"
+                      autoComplete="current-password"
+                      className="h-12 rounded-md border-2 border-rn-border-strong text-app-base focus-visible:border-success focus-visible:ring-success/25"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  )}
                 />
                 {form.formState.errors.password ? (
-                  <p className="text-sm text-destructive">
+                  <p className="text-app-sm text-destructive">
                     {form.formState.errors.password.message}
                   </p>
                 ) : null}
               </div>
               {formError ? (
-                <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive md:text-base">
+                <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-app-sm text-destructive md:text-app-base">
                   {formError}
                 </p>
               ) : null}
@@ -212,7 +238,7 @@ export function LoginForm({ redirect = "/app" }: { redirect?: string }) {
               </Button>
             </form>
 
-            <div className="flex flex-col gap-4 border-t-2 border-rn-border-strong/50 pt-6 text-base sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-6">
+            <div className="flex flex-col gap-4 border-t-2 border-rn-border-strong/50 pt-6 text-app-base sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-6">
               <Link
                 href="/auth/forgot-password"
                 className="font-semibold text-success underline decoration-success/40 underline-offset-4 transition-colors hover:text-success/90"

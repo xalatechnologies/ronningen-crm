@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { Check, FlaskConical } from "lucide-react";
+import { Check, ExternalLink, FlaskConical } from "lucide-react";
 
 type SubscriptionRow = {
   status: string;
@@ -468,11 +468,18 @@ export function BillingSettingsPanel({
             {billingOn && showPortal && isOwner ? (
               <Button
                 type="button"
-                variant="outline"
+                variant={showCheckout ? "outline" : "success"}
+                size="cta"
+                className={cn(
+                  "w-full",
+                  showCheckout &&
+                    "border-2 border-success/55 bg-success/10 font-semibold text-success shadow-sm hover:bg-success/20 dark:!text-white [&_svg]:text-success dark:[&_svg]:!text-white",
+                )}
                 disabled={actionLoading}
                 onClick={() => void handlePortal()}
               >
                 Administrer i Stripe
+                <ExternalLink data-icon="inline-end" aria-hidden />
               </Button>
             ) : null}
 

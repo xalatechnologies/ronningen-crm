@@ -51,7 +51,7 @@ import { useForm, useWatch, Controller, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
 const fieldClass =
-  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-app-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-app-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
 const labelClass =
   "text-[12px] font-semibold uppercase tracking-wider text-rn-text-slate";
@@ -341,7 +341,7 @@ export function BookingDetailSheet({
         )}
       >
         <SheetHeader className="flex flex-row items-center justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head px-6 py-5 sm:px-8 sm:py-6">
-          <SheetTitle className="font-heading min-w-0 flex-1 text-left text-xl font-bold tracking-tight text-rn-text-heading">
+          <SheetTitle className="app-section-title min-w-0 flex-1 text-left tracking-tight">
             Rediger booking
           </SheetTitle>
           <SheetDescription className="sr-only">
@@ -380,7 +380,7 @@ export function BookingDetailSheet({
                 placeholder="Egen ID / saksnummer"
               />
               {errors.bookingReference ? (
-                <p className="mt-1 text-xs text-destructive">
+                <p className="mt-1 text-app-xs text-destructive">
                   {errors.bookingReference.message}
                 </p>
               ) : null}
@@ -402,7 +402,7 @@ export function BookingDetailSheet({
                     aria-invalid={!!errors.customerName}
                   />
                   {errors.customerName ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.customerName.message}
                     </p>
                   ) : null}
@@ -419,7 +419,7 @@ export function BookingDetailSheet({
                     inputMode="tel"
                   />
                   {errors.phone ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.phone.message}
                     </p>
                   ) : null}
@@ -436,7 +436,7 @@ export function BookingDetailSheet({
                     aria-invalid={!!errors.email}
                   />
                   {errors.email ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.email.message}
                     </p>
                   ) : null}
@@ -452,7 +452,7 @@ export function BookingDetailSheet({
                     aria-invalid={!!errors.address}
                   />
                   {errors.address ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.address.message}
                     </p>
                   ) : null}
@@ -476,7 +476,7 @@ export function BookingDetailSheet({
                     aria-invalid={!!errors.festType}
                   />
                   {errors.festType ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.festType.message}
                     </p>
                   ) : null}
@@ -494,14 +494,14 @@ export function BookingDetailSheet({
                     options={toStringOptions(NEW_BOOKING_EVENT_TYPES)}
                   />
                   {errors.eventType ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.eventType.message}
                     </p>
                   ) : null}
                 </div>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div className="md:col-span-2">
-                  <p className="text-xs leading-relaxed text-muted-foreground">
+                  <p className="text-app-xs leading-relaxed text-muted-foreground">
                     La «Til dato» stå tom for ett døgn. Tid er valgfritt (24t).
                   </p>
                 </div>
@@ -530,7 +530,7 @@ export function BookingDetailSheet({
                     )}
                   />
                   {errors.eventDate ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.eventDate.message}
                     </p>
                   ) : null}
@@ -564,7 +564,7 @@ export function BookingDetailSheet({
                     )}
                   />
                   {errors.eventEndDate ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.eventEndDate.message}
                     </p>
                   ) : null}
@@ -587,7 +587,7 @@ export function BookingDetailSheet({
                     aria-invalid={!!errors.eventStartTime}
                   />
                   {errors.eventStartTime ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.eventStartTime.message}
                     </p>
                   ) : null}
@@ -610,7 +610,7 @@ export function BookingDetailSheet({
                     aria-invalid={!!errors.eventEndTime}
                   />
                   {errors.eventEndTime ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.eventEndTime.message}
                     </p>
                   ) : null}
@@ -628,7 +628,7 @@ export function BookingDetailSheet({
                     aria-invalid={!!errors.guestCount}
                   />
                   {errors.guestCount ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.guestCount.message}
                     </p>
                   ) : null}
@@ -657,11 +657,11 @@ export function BookingDetailSheet({
                   }))}
                 />
                 {errors.paymentStatus ? (
-                  <p className="mt-1 text-xs text-destructive">
+                  <p className="mt-1 text-app-xs text-destructive">
                     {errors.paymentStatus.message}
                   </p>
                 ) : null}
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-2 text-app-xs leading-relaxed text-muted-foreground">
                   <strong className="font-medium text-foreground">Fullt betalt</strong> og{" "}
                   <strong className="font-medium text-foreground">Ikke betalt</strong>{" "}
                   oppdaterer innbetaling og rest automatisk ved lagring.{" "}
@@ -682,7 +682,7 @@ export function BookingDetailSheet({
                     aria-invalid={!!errors.totalNok}
                   />
                   {errors.totalNok ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.totalNok.message}
                     </p>
                   ) : null}
@@ -699,14 +699,14 @@ export function BookingDetailSheet({
                     aria-invalid={!!errors.paidNok}
                   />
                   {errors.paidNok ? (
-                    <p className="mt-1 text-xs text-destructive">
+                    <p className="mt-1 text-app-xs text-destructive">
                       {errors.paidNok.message}
                     </p>
                   ) : null}
                 </div>
               </div>
               {remainingPreview != null ? (
-                <p className="mt-2 text-sm font-medium text-rn-text-body">
+                <p className="mt-2 text-app-sm font-medium text-rn-text-body">
                   Restbeløp etter lagring:{" "}
                   <span className="tabular-nums text-rn-text-heading">
                     {formatNok(remainingPreview)}
@@ -740,7 +740,7 @@ export function BookingDetailSheet({
                         <Button
                           type="button"
                           variant="ghost"
-                          className="mt-2 h-9 px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                          className="mt-2 h-9 px-2 text-app-xs font-semibold text-muted-foreground hover:text-foreground"
                           onClick={() => {
                             field.onChange("");
                             void field.onBlur();
@@ -753,11 +753,11 @@ export function BookingDetailSheet({
                   )}
                 />
                 {errors.paymentDueDate ? (
-                  <p className="mt-1 text-xs text-destructive">
+                  <p className="mt-1 text-app-xs text-destructive">
                     {errors.paymentDueDate.message}
                   </p>
                 ) : null}
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-2 text-app-xs leading-relaxed text-muted-foreground">
                   La feltet stå tomt dersom du vil at{" "}
                   <strong className="font-medium text-foreground">Fakturaer</strong>{" "}
                   skal bruke arrangementsdato som forfallsreferanse.
@@ -772,13 +772,13 @@ export function BookingDetailSheet({
               <h3 id="booking-inkasso" className={cn(labelClass, "mb-2")}>
                 Oppfølging og inkasso
               </h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">
+              <p className="text-app-sm leading-relaxed text-muted-foreground">
                 Registrer når innkassovarsel er sendt, slik at fakturalisten og
                 teamet ser det tydelig. Dette erstatter ikke juridisk dokumentasjon.
               </p>
               {bookingRow.collectionNoticeSentAt ? (
                 <div className="mt-4 space-y-3">
-                  <p className="rounded-md border border-violet-200 bg-card px-4 py-3 text-sm font-medium text-violet-950 dark:border-violet-800 dark:text-violet-200">
+                  <p className="rounded-md border border-violet-200 bg-card px-4 py-3 text-app-sm font-medium text-violet-950 dark:border-violet-800 dark:text-violet-200">
                     Innkassovarsel registrert{" "}
                     {formatInkassoRegistered(bookingRow.collectionNoticeSentAt)}
                   </p>
@@ -810,7 +810,7 @@ export function BookingDetailSheet({
               </h3>
               <p
                 id="booking-edit-notes-hint"
-                className="mb-3 text-sm leading-relaxed text-muted-foreground"
+                className="mb-3 text-app-sm leading-relaxed text-muted-foreground"
               >
                 Teksten er hentet fra bookingens lagrede notatfelt i databasen
                 (inkl. tekst som ble lagret ved ny bestilling). Du kan redigere
@@ -821,14 +821,14 @@ export function BookingDetailSheet({
                 rows={6}
                 className={cn(
                   fieldClass,
-                  "min-h-32 py-3 text-sm md:text-base",
+                  "min-h-32 py-3 text-app-sm md:text-app-base",
                 )}
                 aria-invalid={!!errors.notes}
                 aria-describedby="booking-edit-notes-hint"
                 placeholder="Ingen notater lagret. Skriv her hvis du vil legge til mer."
               />
               {errors.notes ? (
-                <p className="mt-1 text-xs text-destructive">
+                <p className="mt-1 text-app-xs text-destructive">
                   {errors.notes.message}
                 </p>
               ) : null}
@@ -924,10 +924,10 @@ export function BookingDetailSheet({
           className="z-[100] max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-6 shadow-xl sm:max-w-md"
         >
           <DialogHeader className="text-left">
-            <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading">
+            <DialogTitle className="app-section-title">
               Slette booking?
             </DialogTitle>
-            <DialogDescription className="text-base leading-relaxed text-muted-foreground">
+            <DialogDescription className="text-app-base leading-relaxed text-muted-foreground">
               «{bookingRow.customer}», {bookingRow.date}. Dette kan ikke angres.
               Kunden beholdes i Kunder.
             </DialogDescription>

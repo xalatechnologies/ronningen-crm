@@ -1,7 +1,7 @@
 /* Platform admin ops console — neutral, data-dense */
 
 .admin-nav-section-label {
-  font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.07em;
@@ -21,8 +21,9 @@
 
 .admin-ops-mono,
 .admin-ops-id {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .admin-ops-table th {

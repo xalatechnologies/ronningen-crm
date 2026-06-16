@@ -42,10 +42,10 @@ export function ConfirmDeleteDialog({
         className="max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-6 shadow-xl sm:max-w-md"
       >
         <DialogHeader className="text-left">
-          <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading">
+          <DialogTitle className="app-section-title">
             {title}
           </DialogTitle>
-          <DialogDescription className="text-base leading-relaxed text-muted-foreground">
+          <DialogDescription className="text-app-base leading-relaxed text-muted-foreground">
             {description}
           </DialogDescription>
         </DialogHeader>

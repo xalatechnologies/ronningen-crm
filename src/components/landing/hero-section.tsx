@@ -15,7 +15,7 @@ const primaryCtaClass = cn(
 
 const secondaryCtaClass = cn(
   buttonVariants({ variant: "outline", size: "cta" }),
-  "w-full border-2 border-rn-border-strong bg-background font-heading font-semibold shadow-sm hover:bg-muted sm:w-auto",
+  "w-full border-2 border-rn-border-strong bg-background font-semibold shadow-sm hover:bg-muted sm:w-auto",
 );
 
 export function HeroSection() {
@@ -37,11 +37,11 @@ export function HeroSection() {
           <div className="flex flex-col gap-4">
             <h1
               id="landing-hero-title"
-              className="font-heading text-3xl font-bold leading-tight tracking-tight text-rn-text-heading md:text-4xl lg:text-5xl"
+              className="landing-hero-headline leading-tight tracking-tight"
             >
               {HERO.headline}
             </h1>
-            <p className="max-w-2xl text-base leading-relaxed text-rn-text-slate md:text-lg">
+            <p className="landing-subhead max-w-2xl leading-relaxed">
               {HERO.subheadline}
             </p>
           </div>
@@ -55,7 +55,7 @@ export function HeroSection() {
             </a>
           </div>
 
-          <p className="text-sm text-muted-foreground">{HERO.trust}</p>
+          <p className="text-app-sm text-muted-foreground">{HERO.trust}</p>
         </div>
 
         <HeroDashboardPreview />

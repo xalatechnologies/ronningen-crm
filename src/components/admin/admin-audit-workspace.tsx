@@ -43,7 +43,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 const tableHeadClass =
-  "px-6 py-4 text-left text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+  "px-6 py-4 text-left text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
 
 function isoDateDaysAgo(days: number): string {
@@ -236,7 +236,7 @@ export function AdminAuditWorkspace({
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
           aria-label="Nøkkeltall"
         >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+          <div className="admin-kpi-grid grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <AdminKpiTile
               variant="audit"
               label="Totalt"

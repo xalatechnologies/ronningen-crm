@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
       <div className="flex w-full max-w-xl flex-col items-stretch gap-8">
         <Card
           className={cn(
-            "w-full gap-0 py-0 text-base ring-0",
+            "w-full gap-0 py-0 text-app-base ring-0",
             RN_CARD_SHELL,
             "shadow-rn-card",
           )}
@@ -57,16 +57,16 @@ export default function ForgotPasswordPage() {
           <CardHeader className="space-y-5 border-b-2 border-rn-border-strong/50 px-6 py-7 md:px-10 md:py-9">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
               <div
-                className="flex size-14 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-success font-heading text-lg font-bold text-primary-light shadow-sm md:size-16 md:text-xl"
+                className="flex size-14 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-success font-heading text-app-lg font-bold text-primary-light shadow-sm md:size-16 md:text-app-xl"
                 aria-hidden
               >
                 R
               </div>
               <div className="min-w-0 flex-1 space-y-2">
-                <CardTitle className="font-heading text-2xl font-bold tracking-tight text-rn-text-heading md:text-3xl lg:text-4xl">
+                <CardTitle className="app-title md:text-app-3xl">
                   Glemt passord?
                 </CardTitle>
-                <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
+                <p className="text-app-sm leading-relaxed text-muted-foreground md:text-app-base">
                   {APP_NAME} — skriv inn e-posten din. Du får en lenke til å velge nytt
                   passord hvis kontoen finnes.
                 </p>
@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
-                  className="text-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]"
+                  className="text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]"
                 >
                   E-post
                 </Label>
@@ -92,22 +92,22 @@ export default function ForgotPasswordPage() {
                   type="email"
                   autoComplete="email"
                   placeholder="deg@eksempel.no"
-                  className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
+                  className="h-12 rounded-md border-2 border-rn-border-strong text-app-base focus-visible:border-success focus-visible:ring-success/25"
                   {...form.register("email")}
                 />
                 {form.formState.errors.email ? (
-                  <p className="text-sm text-destructive">
+                  <p className="text-app-sm text-destructive">
                     {form.formState.errors.email.message}
                   </p>
                 ) : null}
               </div>
               {formError ? (
-                <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive md:text-base">
+                <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-app-sm text-destructive md:text-app-base">
                   {formError}
                 </p>
               ) : null}
               {info ? (
-                <p className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success md:text-base">
+                <p className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-app-sm text-success md:text-app-base">
                   {info}
                 </p>
               ) : null}
@@ -127,7 +127,7 @@ export default function ForgotPasswordPage() {
             <div className="border-t-2 border-rn-border-strong/50 pt-6">
               <Link
                 href="/auth/login"
-                className="text-base font-semibold text-success underline decoration-success/40 underline-offset-4 transition-colors hover:text-success/90"
+                className="text-app-base font-semibold text-success underline decoration-success/40 underline-offset-4 transition-colors hover:text-success/90"
               >
                 Tilbake til innlogging
               </Link>

@@ -39,12 +39,12 @@ export function LandingSectionShell({
         <div className="mx-auto flex max-w-5xl flex-col gap-3 text-center">
           <h2
             id={titleId}
-            className="font-heading text-2xl font-bold tracking-tight text-rn-text-heading md:text-3xl lg:text-4xl"
+            className="landing-headline tracking-tight"
           >
             {title}
           </h2>
           {description ? (
-            <p className="text-base leading-relaxed text-rn-text-slate md:text-lg">
+            <p className="landing-body leading-relaxed">
               {description}
             </p>
           ) : null}

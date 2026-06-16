@@ -67,10 +67,10 @@ import { Controller, useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
 const fieldClass =
-  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-app-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-app-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
 const labelClass =
-  "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs";
+  "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-app-xs";
 
 const filterEyebrowClass =
   "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
@@ -595,27 +595,27 @@ export function OvernattingSection({
                   Tilgjengelighet
                 </span>
                 {loadingRes ? (
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-app-xs font-medium text-muted-foreground">
                     Oppdaterer …
                   </span>
                 ) : null}
               </div>
               <div className="flex min-w-0 max-sm:basis-full flex-wrap items-center justify-end gap-2 sm:shrink-0">
-                <span className="inline-flex items-center gap-2 rounded-full border border-rn-border-strong/50 bg-card px-3 py-1.5 text-xs font-medium text-rn-text-body shadow-sm">
+                <span className="inline-flex items-center gap-2 rounded-full border border-rn-border-strong/50 bg-card px-3 py-1.5 text-app-xs font-medium text-rn-text-body shadow-sm">
                   <span
                     className="size-2.5 shrink-0 rounded-full bg-emerald-500/90 ring-2 ring-emerald-500/25 shadow-sm dark:bg-emerald-400"
                     aria-hidden
                   />
                   Bekreftet
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-rn-border-strong/50 bg-card px-3 py-1.5 text-xs font-medium text-rn-text-body shadow-sm">
+                <span className="inline-flex items-center gap-2 rounded-full border border-rn-border-strong/50 bg-card px-3 py-1.5 text-app-xs font-medium text-rn-text-body shadow-sm">
                   <span
                     className="size-2.5 shrink-0 rounded-full bg-amber-500/90 ring-2 ring-amber-500/25 shadow-sm dark:bg-amber-400"
                     aria-hidden
                   />
                   Tentativ
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-rn-border-strong/50 bg-card px-3 py-1.5 text-xs font-medium text-rn-text-body shadow-sm">
+                <span className="inline-flex items-center gap-2 rounded-full border border-rn-border-strong/50 bg-card px-3 py-1.5 text-app-xs font-medium text-rn-text-body shadow-sm">
                   <span
                     className="size-2.5 shrink-0 rounded-full bg-rose-500/90 ring-2 ring-rose-500/25 shadow-sm dark:bg-rose-400"
                     aria-hidden
@@ -642,10 +642,10 @@ export function OvernattingSection({
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   Overnatting
                 </p>
-                <h3 className="mt-1 font-heading text-lg font-bold tracking-tight text-rn-text-heading md:text-xl">
+                <h3 className="mt-1 font-heading text-app-lg font-bold tracking-tight text-rn-text-heading md:text-app-xl">
                   Enheter
                 </h3>
-                <p className="mt-1 max-w-xl text-sm leading-snug text-muted-foreground">
+                <p className="mt-1 max-w-xl text-app-sm leading-snug text-muted-foreground">
                   {sortedUnits.length}{" "}
                   {sortedUnits.length === 1 ? "enhet" : "enheter"} tilgjengelig
                   for reservasjon.
@@ -682,7 +682,7 @@ export function OvernattingSection({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2 gap-y-1">
-                          <span className="font-heading text-base font-bold leading-tight text-rn-text-heading">
+                          <span className="font-heading text-app-base font-bold leading-tight text-rn-text-heading">
                             {u.name}
                           </span>
                           <span
@@ -696,7 +696,7 @@ export function OvernattingSection({
                             {u.active ? "Aktiv" : "Inaktiv"}
                           </span>
                         </div>
-                        <div className="mt-2.5 flex flex-col gap-1.5 text-xs text-muted-foreground">
+                        <div className="mt-2.5 flex flex-col gap-1.5 text-app-xs text-muted-foreground">
                           <span className="inline-flex items-center gap-1.5">
                             <Users
                               className="size-3.5 shrink-0 text-rn-text-body/80"
@@ -757,7 +757,7 @@ export function OvernattingSection({
 
         {!loadError ? (
           <div className="border-t-2 border-rn-border-strong px-4 py-6 sm:px-5 lg:px-6">
-            <h2 className="font-heading text-lg font-bold capitalize text-rn-text-heading md:text-xl">
+            <h2 className="font-heading text-app-lg font-bold capitalize text-rn-text-heading md:text-app-xl">
               Reservasjoner · {monthLabel}
             </h2>
 
@@ -871,7 +871,7 @@ export function OvernattingSection({
                     value={unitFilter}
                     onValueChange={setUnitFilter}
                     aria-label="Filtrer etter enhet"
-                    className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+                    className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
                     placeholder="Alle enheter"
                     options={toIdNameOptions(sortedUnits)}
                   />
@@ -886,7 +886,7 @@ export function OvernattingSection({
                     onChange={setDateFrom}
                     maxYmd={dateTo || undefined}
                     variant="toolbar"
-                    className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+                    className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
                   />
                 </div>
                 <div className="w-full shrink-0 sm:w-44 md:w-48">
@@ -899,7 +899,7 @@ export function OvernattingSection({
                     onChange={setDateTo}
                     minYmd={dateFrom || undefined}
                     variant="toolbar"
-                    className="h-11 min-h-11 text-sm sm:h-12 sm:min-h-12 sm:text-base"
+                    className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
                   />
                 </div>
                 <div className="flex w-full shrink-0 sm:w-auto sm:self-end">
@@ -907,7 +907,7 @@ export function OvernattingSection({
                     type="button"
                     variant="outline"
                     disabled={!hasActiveFilters}
-                    className="h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-sm font-semibold sm:h-12 sm:w-auto sm:px-5 sm:text-base"
+                    className="h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold sm:h-12 sm:w-auto sm:px-5 sm:text-app-base"
                     onClick={resetFilters}
                   >
                     <RotateCcw className="size-4 shrink-0" aria-hidden />
@@ -1005,7 +1005,7 @@ export function OvernattingSection({
                 {...unitForm.register("name")}
               />
               {unitForm.formState.errors.name ? (
-                <p className="text-sm text-destructive">
+                <p className="text-app-sm text-destructive">
                   {unitForm.formState.errors.name.message}
                 </p>
               ) : null}
@@ -1036,7 +1036,7 @@ export function OvernattingSection({
                   {...unitForm.register("maxGuests")}
                 />
                 {unitForm.formState.errors.maxGuests ? (
-                  <p className="text-sm text-destructive">
+                  <p className="text-app-sm text-destructive">
                     {unitForm.formState.errors.maxGuests.message}
                   </p>
                 ) : null}
@@ -1065,7 +1065,7 @@ export function OvernattingSection({
                 {...unitForm.register("notes")}
               />
             </div>
-            <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+            <label className="flex cursor-pointer items-center gap-2 text-app-sm font-medium">
               <input
                 type="checkbox"
                 className="size-4 rounded border-2 border-rn-border-strong"
@@ -1095,7 +1095,7 @@ export function OvernattingSection({
           showCloseButton
         >
           <DialogHeader className="border-b border-rn-border-strong/50 px-6 pb-4 pt-6 sm:px-8">
-            <DialogTitle className="font-heading text-lg md:text-xl">
+            <DialogTitle className="font-heading text-app-lg md:text-app-xl">
               Rediger reservasjon
             </DialogTitle>
           </DialogHeader>
@@ -1110,7 +1110,7 @@ export function OvernattingSection({
               <div className="space-y-5 px-6 py-5 sm:px-8">
                 <div className="rounded-md border border-rn-border-strong/45 bg-muted/25 px-3.5 py-3">
                   <p className={dialogSectionTitleClass}>Kunde</p>
-                  <p className="mt-1 font-heading text-base font-semibold text-rn-text-heading">
+                  <p className="mt-1 font-heading text-app-base font-semibold text-rn-text-heading">
                     {editingRes.customerName}
                   </p>
                 </div>
@@ -1130,7 +1130,7 @@ export function OvernattingSection({
                     }))}
                   />
                   {editResForm.formState.errors.unitId ? (
-                    <p className="text-sm text-destructive">
+                    <p className="text-app-sm text-destructive">
                       {editResForm.formState.errors.unitId.message}
                     </p>
                   ) : null}
@@ -1139,7 +1139,7 @@ export function OvernattingSection({
                 <div className="space-y-3 rounded-md border-2 border-rn-border-strong/40 bg-rn-surface-wash/25 p-4 sm:p-5">
                   <div className="space-y-1">
                     <p className={dialogSectionTitleClass}>Tidspunkt</p>
-                    <p className="text-xs leading-snug text-muted-foreground">
+                    <p className="text-app-xs leading-snug text-muted-foreground">
                       Datoer styrer netter i kalenderen. Klokkeslett er valgfritt og vises i
                       listen.
                     </p>
@@ -1163,7 +1163,7 @@ export function OvernattingSection({
                         )}
                       />
                       {editResForm.formState.errors.checkInDate ? (
-                        <p className="text-sm text-destructive">
+                        <p className="text-app-sm text-destructive">
                           {editResForm.formState.errors.checkInDate.message}
                         </p>
                       ) : null}
@@ -1186,7 +1186,7 @@ export function OvernattingSection({
                         )}
                       />
                       {editResForm.formState.errors.checkOutDate ? (
-                        <p className="text-sm text-destructive">
+                        <p className="text-app-sm text-destructive">
                           {editResForm.formState.errors.checkOutDate.message}
                         </p>
                       ) : null}
@@ -1206,7 +1206,7 @@ export function OvernattingSection({
                         {...editResForm.register("checkInTime")}
                       />
                       {editResForm.formState.errors.checkInTime ? (
-                        <p className="text-sm text-destructive">
+                        <p className="text-app-sm text-destructive">
                           {editResForm.formState.errors.checkInTime.message}
                         </p>
                       ) : null}
@@ -1226,7 +1226,7 @@ export function OvernattingSection({
                         {...editResForm.register("checkOutTime")}
                       />
                       {editResForm.formState.errors.checkOutTime ? (
-                        <p className="text-sm text-destructive">
+                        <p className="text-app-sm text-destructive">
                           {editResForm.formState.errors.checkOutTime.message}
                         </p>
                       ) : null}
@@ -1247,7 +1247,7 @@ export function OvernattingSection({
                       {...editResForm.register("guestCount")}
                     />
                     {editResForm.formState.errors.guestCount ? (
-                      <p className="text-sm text-destructive">
+                      <p className="text-app-sm text-destructive">
                         {editResForm.formState.errors.guestCount.message}
                       </p>
                     ) : null}
@@ -1286,7 +1286,7 @@ export function OvernattingSection({
                     {...editResForm.register("totalPrice")}
                   />
                   {editResForm.formState.errors.totalPrice ? (
-                    <p className="text-sm text-destructive">
+                    <p className="text-app-sm text-destructive">
                       {editResForm.formState.errors.totalPrice.message}
                     </p>
                   ) : null}
@@ -1299,7 +1299,7 @@ export function OvernattingSection({
                   <Textarea
                     id={`${rid}-rn`}
                     rows={3}
-                    className="rounded-md border-2 border-rn-border-strong bg-background p-3 text-sm focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25 md:text-base"
+                    className="rounded-md border-2 border-rn-border-strong bg-background p-3 text-app-sm focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25 md:text-app-base"
                     {...editResForm.register("notes")}
                   />
                 </div>

@@ -65,7 +65,7 @@ export type FormSelectProps = {
 };
 
 const itemClassName =
-  "w-full truncate py-2.5 pl-2 pr-8 text-base font-medium data-highlighted:bg-rn-surface-row-hover";
+  "w-full truncate py-2.5 pl-2 pr-8 text-app-control font-medium data-highlighted:bg-rn-surface-row-hover";
 
 export function FormSelect({
   id,

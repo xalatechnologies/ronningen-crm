@@ -68,7 +68,7 @@ export function OrganizationDeletePanel({
           Slett organisasjon
         </AdminActionButton>
         {error && !open ? (
-          <p className="mt-3 text-sm font-medium text-destructive">{error}</p>
+          <p className="mt-3 text-app-sm font-medium text-destructive">{error}</p>
         ) : null}
       </section>
 
@@ -79,7 +79,7 @@ export function OrganizationDeletePanel({
         description={
           <div className="space-y-3">
             <p>Dette kan ikke angres. Skriv inn slug for å bekrefte:</p>
-            <code className="block rounded-md bg-muted px-2 py-1 text-sm">
+            <code className="block rounded-md bg-muted px-2 py-1 text-app-sm">
               {organizationSlug}
             </code>
             <div className="space-y-2">
@@ -92,7 +92,7 @@ export function OrganizationDeletePanel({
               />
             </div>
             {error ? (
-              <p className="text-sm font-medium text-destructive">{error}</p>
+              <p className="text-app-sm font-medium text-destructive">{error}</p>
             ) : null}
           </div>
         }

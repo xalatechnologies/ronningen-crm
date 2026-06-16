@@ -36,10 +36,10 @@ import {
 import { toast } from "sonner";
 
 const fieldClass =
-  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-app-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-app-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
 const labelClass =
-  "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs";
+  "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-app-xs";
 
 export type NewAccommodationReservationFormProps = {
   units: { id: string; name: string; maxGuests: number; active: boolean }[];
@@ -200,10 +200,10 @@ export function NewAccommodationReservationForm({
           <ArrowLeft className="size-5 text-success" aria-hidden />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading sm:text-2xl md:text-3xl">
+          <h1 className="app-title sm:text-app-2xl md:text-app-3xl">
             Ny reservasjon
           </h1>
-          <p className="mt-0.5 text-xs leading-snug text-muted-foreground sm:text-sm md:text-base md:leading-relaxed">
+          <p className="mt-0.5 text-app-xs leading-snug text-muted-foreground sm:text-app-sm md:text-app-base md:leading-relaxed">
             Kobler kunde til enhet og oppholdsperiode under «Tidspunkt» lenger ned.
           </p>
         </div>
@@ -251,7 +251,7 @@ export function NewAccommodationReservationForm({
                 }
               />
               {form.formState.errors.unitId ? (
-                <p className="text-sm text-destructive">
+                <p className="text-app-sm text-destructive">
                   {form.formState.errors.unitId.message}
                 </p>
               ) : null}
@@ -270,7 +270,7 @@ export function NewAccommodationReservationForm({
                 options={toIdNameOptions(customers)}
               />
               {form.formState.errors.customerId ? (
-                <p className="text-sm text-destructive">
+                <p className="text-app-sm text-destructive">
                   {form.formState.errors.customerId.message}
                 </p>
               ) : null}
@@ -288,7 +288,7 @@ export function NewAccommodationReservationForm({
                     {...form.register("newCustomerName")}
                   />
                   {form.formState.errors.newCustomerName ? (
-                    <p className="text-sm text-destructive">
+                    <p className="text-app-sm text-destructive">
                       {form.formState.errors.newCustomerName.message}
                     </p>
                   ) : null}
@@ -303,7 +303,7 @@ export function NewAccommodationReservationForm({
                     {...form.register("newCustomerPhone")}
                   />
                   {form.formState.errors.newCustomerPhone ? (
-                    <p className="text-sm text-destructive">
+                    <p className="text-app-sm text-destructive">
                       {form.formState.errors.newCustomerPhone.message}
                     </p>
                   ) : null}
@@ -319,7 +319,7 @@ export function NewAccommodationReservationForm({
                     {...form.register("newCustomerEmail")}
                   />
                   {form.formState.errors.newCustomerEmail ? (
-                    <p className="text-sm text-destructive">
+                    <p className="text-app-sm text-destructive">
                       {form.formState.errors.newCustomerEmail.message}
                     </p>
                   ) : null}
@@ -340,7 +340,7 @@ export function NewAccommodationReservationForm({
             <div className="space-y-4 rounded-md border-2 border-rn-border-strong/45 bg-rn-surface-wash/25 p-4 sm:p-5">
               <div className="space-y-1.5">
                 <p className={labelClass}>Tidspunkt</p>
-                <p className="text-sm leading-snug text-muted-foreground">
+                <p className="text-app-sm leading-snug text-muted-foreground">
                   Velg ankomst- og avreisedato. Du kan valgfritt legge inn klokkeslett for
                   innsjekk og utsjekk (vises i lister). Netter følger fortsatt datoene;
                   avreisedato er siste dag.
@@ -366,7 +366,7 @@ export function NewAccommodationReservationForm({
                     )}
                   />
                   {form.formState.errors.checkInDate ? (
-                    <p className="text-sm text-destructive">
+                    <p className="text-app-sm text-destructive">
                       {form.formState.errors.checkInDate.message}
                     </p>
                   ) : null}
@@ -390,7 +390,7 @@ export function NewAccommodationReservationForm({
                     )}
                   />
                   {form.formState.errors.checkOutDate ? (
-                    <p className="text-sm text-destructive">
+                    <p className="text-app-sm text-destructive">
                       {form.formState.errors.checkOutDate.message}
                     </p>
                   ) : null}
@@ -407,7 +407,7 @@ export function NewAccommodationReservationForm({
                     {...form.register("checkInTime")}
                   />
                   {form.formState.errors.checkInTime ? (
-                    <p className="text-sm text-destructive">
+                    <p className="text-app-sm text-destructive">
                       {form.formState.errors.checkInTime.message}
                     </p>
                   ) : null}
@@ -424,7 +424,7 @@ export function NewAccommodationReservationForm({
                     {...form.register("checkOutTime")}
                   />
                   {form.formState.errors.checkOutTime ? (
-                    <p className="text-sm text-destructive">
+                    <p className="text-app-sm text-destructive">
                       {form.formState.errors.checkOutTime.message}
                     </p>
                   ) : null}
@@ -445,7 +445,7 @@ export function NewAccommodationReservationForm({
                   {...form.register("guestCount")}
                 />
                 {form.formState.errors.guestCount ? (
-                  <p className="text-sm text-destructive">
+                  <p className="text-app-sm text-destructive">
                     {form.formState.errors.guestCount.message}
                   </p>
                 ) : null}
@@ -481,7 +481,7 @@ export function NewAccommodationReservationForm({
                 {...form.register("totalPrice")}
               />
               {form.formState.errors.totalPrice ? (
-                <p className="text-sm text-destructive">
+                <p className="text-app-sm text-destructive">
                   {form.formState.errors.totalPrice.message}
                 </p>
               ) : null}

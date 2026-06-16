@@ -9,8 +9,7 @@ export const RN_SEGMENT_CONTROL =
   "inline-flex rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment p-1.5 shadow-rn-segment-inset";
 
 /** Hovedmeny (sidebar + mobil) — skaleres via `.app-main-nav-link` i globals. */
-export const RN_TEXT_NAV_LINK =
-  "app-main-nav-link font-heading leading-snug";
+export const RN_TEXT_NAV_LINK = "app-main-nav-link leading-snug";
 
 /** Aktiv hovedmeny-lenke — grønn tekst i lys modus, hvit i mørk modus. */
 export const RN_NAV_LINK_ACTIVE =
@@ -22,7 +21,7 @@ export const RN_NAV_LINK_ACTIVE_ICON =
 
 /** Admin-tabell primærlenke — grønn i lys modus, hvit i mørk modus. */
 export const RN_ADMIN_DETAIL_LINK =
-  "font-heading font-semibold text-success hover:underline dark:!text-white";
+  "font-semibold text-success hover:underline dark:!text-white";
 
 /** Admin segmentfilter — aktiv tilstand. */
 export const RN_ADMIN_SEGMENT_ACTIVE =
@@ -30,7 +29,7 @@ export const RN_ADMIN_SEGMENT_ACTIVE =
 
 /** Segment-/filterknapper — samme grunnstørrelse som hovedmeny. */
 export const RN_TEXT_SEGMENT =
-  "app-main-nav-link font-heading font-semibold tracking-tight";
+  "app-main-nav-link font-semibold tracking-tight";
 
 /** Søkefelt-rad (kunder/partnere m.fl.) — samme layout og bredde. */
 export const RN_PAGE_SEARCH_TOOLBAR =
@@ -47,7 +46,7 @@ export const RN_PAGE_SEARCH_INPUT =
  * Brukes med `NativeSelect` (chevron + `pr-11`); legg f.eks. til `pl-11`/`pl-12` ved ledende ikon.
  */
 export const RN_NATIVE_SELECT_CLASS =
-  "box-border flex h-12 min-h-12 w-full min-w-0 cursor-pointer appearance-none rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-4 pr-11 text-base font-medium text-foreground shadow-sm outline-none transition-[color,box-shadow] focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive";
+  "box-border flex h-12 min-h-12 w-full min-w-0 cursor-pointer appearance-none rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-4 pr-11 text-app-control font-medium text-foreground shadow-sm outline-none transition-[color,box-shadow] focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive";
 
 /** Chevron for `NativeSelect` — absolutt posisjon inne i `relative`-wrapper. */
 export const RN_NATIVE_SELECT_CHEVRON_CLASS =

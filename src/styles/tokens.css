@@ -87,11 +87,6 @@
 
   /* Layout */
   --sidebar-width: 240px;
-
-  /* Monospace fallback (no Geist dependency in app shell) */
-  --font-geist-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
 }
 
 [data-theme="dark"] {

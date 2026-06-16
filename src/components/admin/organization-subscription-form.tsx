@@ -108,10 +108,10 @@ export function OrganizationSubscriptionForm({
       </div>
 
       {error ? (
-        <p className="text-sm font-medium text-destructive">{error}</p>
+        <p className="text-app-sm font-medium text-destructive">{error}</p>
       ) : null}
       {saved ? (
-        <p className="text-sm font-medium text-success">Lagret.</p>
+        <p className="text-app-sm font-medium text-success">Lagret.</p>
       ) : null}
 
       <div>

@@ -57,7 +57,7 @@ import {
 import { toast } from "sonner";
 
 const fieldClass =
-  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-app-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-app-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
 const sectionIconWrap = "text-rn-text-slate";
 
@@ -647,10 +647,10 @@ export function NewBookingForm({
           <ArrowLeft className="size-5 text-success" aria-hidden />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading sm:text-2xl md:text-3xl">
+          <h1 className="app-title sm:text-app-2xl md:text-app-3xl">
             Ny reservasjon
           </h1>
-          <p className="mt-0.5 text-xs leading-snug text-muted-foreground sm:text-sm md:text-base md:leading-relaxed">
+          <p className="mt-0.5 text-app-xs leading-snug text-muted-foreground sm:text-app-sm md:text-app-base md:leading-relaxed">
             Registrer arrangement, kunde og økonomi — felles mønster som øvrige
             sider.
           </p>
@@ -669,7 +669,7 @@ export function NewBookingForm({
 
       {existingCustomer ? (
         <div
-          className="rounded-md border-2 border-success/35 bg-success/5 px-4 py-3 text-sm text-rn-text-body"
+          className="rounded-md border-2 border-success/35 bg-success/5 px-4 py-3 text-app-sm text-rn-text-body"
           role="status"
         >
           Ny reservasjon for eksisterende kunde — navn, telefon og e-post kan ikke
@@ -690,11 +690,11 @@ export function NewBookingForm({
         >
         {savedBookingId ? (
           <div
-            className="border-b-2 border-success/40 bg-success/10 px-6 py-3 text-sm md:px-8"
+            className="border-b-2 border-success/40 bg-success/10 px-6 py-3 text-app-sm md:px-8"
             role="status"
           >
             <p className="font-semibold text-success">Booking lagret</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-app-xs text-muted-foreground">
               Du sendes til bookinger automatisk. Bruk «Gå til bookinger» for å
               gå med én gang.
             </p>
@@ -715,7 +715,7 @@ export function NewBookingForm({
               <Label className={labelClass}>Referansenummer</Label>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
                 <Input
-                  className={cn(fieldClass, "font-mono text-sm sm:flex-1")}
+                  className={cn(fieldClass, "font-mono text-app-sm sm:flex-1")}
                   placeholder="RN-2026-013 eller eget saksnummer"
                   disabled={!!savedBookingId}
                   {...register("bookingReference")}
@@ -725,7 +725,7 @@ export function NewBookingForm({
                   type="button"
                   variant="outline"
                   disabled={!!savedBookingId || isGeneratingReference}
-                  className="h-11 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-sm font-semibold md:h-12"
+                  className="h-11 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold md:h-12"
                   onClick={() => void generateBookingReference({ force: true })}
                 >
                   <RefreshCw
@@ -739,11 +739,11 @@ export function NewBookingForm({
                 </Button>
               </div>
               {errors.bookingReference ? (
-                <p className="text-xs text-destructive">
+                <p className="text-app-xs text-destructive">
                   {errors.bookingReference.message}
                 </p>
               ) : (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-app-xs text-muted-foreground">
                   Fylles ut automatisk som RN-{referenceYear}-xxx, eller skriv inn
                   eget saksnummer. System-ID (UUID) vises under etter lagring.
                 </p>
@@ -756,7 +756,7 @@ export function NewBookingForm({
                   <div
                     className={cn(
                       fieldClass,
-                      "flex min-h-11 items-center bg-rn-surface-segment break-all font-mono text-sm text-rn-text-heading md:min-h-12",
+                      "flex min-h-11 items-center bg-rn-surface-segment break-all font-mono text-app-sm text-rn-text-heading md:min-h-12",
                     )}
                     aria-live="polite"
                   >
@@ -779,7 +779,7 @@ export function NewBookingForm({
         <div className="border-b-2 border-rn-border-strong bg-card p-6 md:p-8">
           <div className="mb-6 flex items-center gap-2">
             <User className={cn("size-5", sectionIconWrap)} aria-hidden />
-            <h3 className="font-heading text-lg font-semibold text-rn-text-heading md:text-xl">
+            <h3 className="app-card-title md:text-app-xl">
               Kundeinformasjon
             </h3>
           </div>
@@ -800,7 +800,7 @@ export function NewBookingForm({
                 aria-invalid={!!errors.customerName}
               />
               {errors.customerName ? (
-                <p className="text-xs text-destructive">
+                <p className="text-app-xs text-destructive">
                   {errors.customerName.message}
                 </p>
               ) : null}
@@ -822,7 +822,7 @@ export function NewBookingForm({
                 aria-invalid={!!errors.phone}
               />
               {errors.phone ? (
-                <p className="text-xs text-destructive">{errors.phone.message}</p>
+                <p className="text-app-xs text-destructive">{errors.phone.message}</p>
               ) : null}
             </div>
             <div className="space-y-2 md:col-span-2">
@@ -841,7 +841,7 @@ export function NewBookingForm({
                 aria-invalid={!!errors.email}
               />
               {errors.email ? (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
+                <p className="text-app-xs text-destructive">{errors.email.message}</p>
               ) : null}
             </div>
             <div className="space-y-2 md:col-span-2">
@@ -865,7 +865,7 @@ export function NewBookingForm({
                 aria-invalid={!!errors.address}
               />
               {errors.address ? (
-                <p className="text-xs text-destructive">{errors.address.message}</p>
+                <p className="text-app-xs text-destructive">{errors.address.message}</p>
               ) : null}
             </div>
           </div>
@@ -874,7 +874,7 @@ export function NewBookingForm({
         <div className="border-b-2 border-rn-border-strong bg-rn-surface-wash p-6 md:p-8">
           <div className="mb-6 flex items-center gap-2">
             <Calendar className={cn("size-5", sectionIconWrap)} aria-hidden />
-            <h3 className="font-heading text-lg font-semibold text-rn-text-heading md:text-xl">
+            <h3 className="app-card-title md:text-app-xl">
               Arrangement
             </h3>
           </div>
@@ -913,14 +913,14 @@ export function NewBookingForm({
                       {...register("festTypeCustom")}
                     />
                     {errors.festTypeCustom ? (
-                      <p className="text-xs text-destructive">
+                      <p className="text-app-xs text-destructive">
                         {errors.festTypeCustom.message}
                       </p>
                     ) : null}
                   </div>
                 ) : null}
                 {errors.festType ? (
-                  <p className="text-xs text-destructive">
+                  <p className="text-app-xs text-destructive">
                     {errors.festType.message}
                   </p>
                 ) : null}
@@ -941,7 +941,7 @@ export function NewBookingForm({
                   ]}
                 />
                 {errors.eventType ? (
-                  <p className="text-xs text-destructive">
+                  <p className="text-app-xs text-destructive">
                     {errors.eventType.message}
                   </p>
                 ) : null}
@@ -949,7 +949,7 @@ export function NewBookingForm({
             </div>
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
               <div className="space-y-2 md:col-span-2">
-                <p className="text-xs leading-relaxed text-muted-foreground md:text-sm">
+                <p className="text-app-xs leading-relaxed text-muted-foreground md:text-app-sm">
                   <span className="font-medium text-foreground">Periode:</span>{" "}
                   du kan legge inn siste arrangementsdag og valgfri start-/slutttid
                   (f.eks.{" "}
@@ -978,7 +978,7 @@ export function NewBookingForm({
                       minYmd={todayLocalYmd()}
                       variant="toolbar"
                       className={cn(
-                        "bg-background px-3.5 shadow-sm md:h-12 md:px-4 md:text-base",
+                        "bg-background px-3.5 shadow-sm md:h-12 md:px-4 md:text-app-base",
                         errors.eventDate && "border-destructive",
                       )}
                       aria-invalid={!!errors.eventDate}
@@ -986,7 +986,7 @@ export function NewBookingForm({
                   )}
                 />
                 {errors.eventDate ? (
-                  <p className="text-xs text-destructive">
+                  <p className="text-app-xs text-destructive">
                     {errors.eventDate.message}
                   </p>
                 ) : null}
@@ -1012,7 +1012,7 @@ export function NewBookingForm({
                       minYmd={todayLocalYmd()}
                       variant="toolbar"
                       className={cn(
-                        "bg-background px-3.5 shadow-sm md:h-12 md:px-4 md:text-base",
+                        "bg-background px-3.5 shadow-sm md:h-12 md:px-4 md:text-app-base",
                         errors.eventEndDate && "border-destructive",
                       )}
                       aria-invalid={!!errors.eventEndDate}
@@ -1020,7 +1020,7 @@ export function NewBookingForm({
                   )}
                 />
                 {errors.eventEndDate ? (
-                  <p className="text-xs text-destructive">
+                  <p className="text-app-xs text-destructive">
                     {errors.eventEndDate.message}
                   </p>
                 ) : null}
@@ -1042,7 +1042,7 @@ export function NewBookingForm({
                   aria-invalid={!!errors.eventStartTime}
                 />
                 {errors.eventStartTime ? (
-                  <p className="text-xs text-destructive">
+                  <p className="text-app-xs text-destructive">
                     {errors.eventStartTime.message}
                   </p>
                 ) : null}
@@ -1064,7 +1064,7 @@ export function NewBookingForm({
                   aria-invalid={!!errors.eventEndTime}
                 />
                 {errors.eventEndTime ? (
-                  <p className="text-xs text-destructive">
+                  <p className="text-app-xs text-destructive">
                     {errors.eventEndTime.message}
                   </p>
                 ) : null}
@@ -1082,7 +1082,7 @@ export function NewBookingForm({
                   aria-invalid={!!errors.guestCount}
                 />
                 {errors.guestCount ? (
-                  <p className="text-xs text-destructive">
+                  <p className="text-app-xs text-destructive">
                     {errors.guestCount.message}
                   </p>
                 ) : null}
@@ -1094,7 +1094,7 @@ export function NewBookingForm({
         <div className="border-b-2 border-rn-border-strong p-6 md:p-8">
           <div className="mb-6 flex items-center gap-2">
             <Package className={cn("size-5", sectionIconWrap)} aria-hidden />
-            <h3 className="font-heading text-lg font-semibold text-rn-text-heading md:text-xl">
+            <h3 className="app-card-title md:text-app-xl">
               Pakke og tillegg
             </h3>
           </div>
@@ -1116,7 +1116,7 @@ export function NewBookingForm({
                     >
                       <label
                         className={cn(
-                          "flex cursor-pointer items-center gap-2 rounded-md border-2 px-3 py-2 text-sm font-medium transition-colors",
+                          "flex cursor-pointer items-center gap-2 rounded-md border-2 px-3 py-2 text-app-sm font-medium transition-colors",
                           field.value === "catalog"
                             ? "border-success bg-success/5 text-rn-text-heading"
                             : "border-rn-border-strong hover:bg-rn-surface-row-hover",
@@ -1144,7 +1144,7 @@ export function NewBookingForm({
                       </label>
                       <label
                         className={cn(
-                          "flex cursor-pointer items-center gap-2 rounded-md border-2 px-3 py-2 text-sm font-medium transition-colors",
+                          "flex cursor-pointer items-center gap-2 rounded-md border-2 px-3 py-2 text-app-sm font-medium transition-colors",
                           field.value === "custom"
                             ? "border-success bg-success/5 text-rn-text-heading"
                             : "border-rn-border-strong hover:bg-rn-surface-row-hover",
@@ -1171,7 +1171,7 @@ export function NewBookingForm({
                   )}
                 />
               ) : (
-                <p className="text-xs text-rn-text-body">
+                <p className="text-app-xs text-rn-text-body">
                   Ingen aktive pakker i{" "}
                   <Link
                     href="/app/pricing"
@@ -1184,7 +1184,7 @@ export function NewBookingForm({
                 </p>
               )}
               {errors.packageSource ? (
-                <p className="text-xs text-destructive">
+                <p className="text-app-xs text-destructive">
                   {errors.packageSource.message}
                 </p>
               ) : null}
@@ -1213,11 +1213,11 @@ export function NewBookingForm({
                             {pkg.name}
                           </span>
                           {blurb ? (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-app-xs text-muted-foreground">
                               {blurb}
                             </span>
                           ) : null}
-                          <span className="mt-0.5 block text-xs font-semibold tabular-nums text-rn-text-slate">
+                          <span className="mt-0.5 block text-app-xs font-semibold tabular-nums text-rn-text-slate">
                             {Number(pkg.price) <= 0
                               ? "Pris etter avtale"
                               : formatNok(Number(pkg.price))}
@@ -1246,7 +1246,7 @@ export function NewBookingForm({
                       aria-invalid={!!errors.customPackageName}
                     />
                     {errors.customPackageName ? (
-                      <p className="text-xs text-destructive">
+                      <p className="text-app-xs text-destructive">
                         {errors.customPackageName.message}
                       </p>
                     ) : null}
@@ -1256,7 +1256,7 @@ export function NewBookingForm({
                       Pakkepris (NOK)
                     </Label>
                     <div className="relative">
-                      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-rn-text-slate md:left-4">
+                      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-app-sm font-semibold text-rn-text-slate md:left-4">
                         kr
                       </span>
                       <PriceInput
@@ -1270,11 +1270,11 @@ export function NewBookingForm({
                         aria-invalid={!!errors.customPackagePrice}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-app-xs text-muted-foreground">
                       Bruk 0 om pris avtales separat — juster «Avtalt total» under.
                     </p>
                     {errors.customPackagePrice ? (
-                      <p className="text-xs text-destructive">
+                      <p className="text-app-xs text-destructive">
                         {errors.customPackagePrice.message}
                       </p>
                     ) : null}
@@ -1282,19 +1282,19 @@ export function NewBookingForm({
                 </div>
               ) : null}
               {errors.selectedPackageId ? (
-                <p className="text-xs text-destructive">
+                <p className="text-app-xs text-destructive">
                   {errors.selectedPackageId.message}
                 </p>
               ) : null}
             </div>
             <div className="space-y-4">
               <Label className={labelClass}>Tillegg</Label>
-              <p className="text-xs text-rn-text-body">
+              <p className="text-app-xs text-rn-text-body">
                 Velg fra katalog (synkronisert med Priser) og/eller legg inn egne
                 tillegg med navn og pris — uten å opprette dem i Priser først.
               </p>
               {bookingAddons.length === 0 ? (
-                <p className="rounded-md border border-dashed border-rn-border-strong bg-rn-surface-wash/30 px-3 py-2 text-xs text-rn-text-body">
+                <p className="rounded-md border border-dashed border-rn-border-strong bg-rn-surface-wash/30 px-3 py-2 text-app-xs text-rn-text-body">
                   Ingen aktive katalog-tillegg. Bruk seksjonen «Egne tillegg»
                   under, eller opprett tjenester under{" "}
                   <Link
@@ -1329,10 +1329,10 @@ export function NewBookingForm({
                           }}
                         />
                         <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-medium leading-snug text-rn-text-heading">
+                          <span className="block text-app-sm font-medium leading-snug text-rn-text-heading">
                             {addon.name}
                           </span>
-                          <span className="mt-0.5 block text-xs tabular-nums text-rn-text-slate">
+                          <span className="mt-0.5 block text-app-xs tabular-nums text-rn-text-slate">
                             +{formatNok(addon.price)}
                           </span>
                         </span>
@@ -1342,7 +1342,7 @@ export function NewBookingForm({
                 </div>
               )}
               {errors.selectedAddonIds ? (
-                <p className="text-xs text-destructive">
+                <p className="text-app-xs text-destructive">
                   {errors.selectedAddonIds.message}
                 </p>
               ) : null}
@@ -1362,7 +1362,7 @@ export function NewBookingForm({
                   </Button>
                 </div>
                 {customAddonFields.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-app-xs text-muted-foreground">
                     Ingen egne tillegg — valgfritt.
                   </p>
                 ) : (
@@ -1391,7 +1391,7 @@ export function NewBookingForm({
                             aria-invalid={!!errors.customAddonLines?.[index]?.name}
                           />
                           {errors.customAddonLines?.[index]?.name ? (
-                            <p className="text-xs text-destructive">
+                            <p className="text-app-xs text-destructive">
                               {errors.customAddonLines[index]?.name?.message}
                             </p>
                           ) : null}
@@ -1419,7 +1419,7 @@ export function NewBookingForm({
                             }
                           />
                           {errors.customAddonLines?.[index]?.priceNok ? (
-                            <p className="text-xs text-destructive">
+                            <p className="text-app-xs text-destructive">
                               {errors.customAddonLines[index]?.priceNok?.message}
                             </p>
                           ) : null}
@@ -1450,7 +1450,7 @@ export function NewBookingForm({
                 Betalt depositum (NOK)
               </Label>
               <div className="relative">
-                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-rn-text-slate md:left-4">
+                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-app-sm font-semibold text-rn-text-slate md:left-4">
                   kr
                 </span>
                 <PriceInput
@@ -1461,7 +1461,7 @@ export function NewBookingForm({
                 />
               </div>
               {errors.depositPaid ? (
-                <p className="text-xs text-destructive">
+                <p className="text-app-xs text-destructive">
                   {errors.depositPaid.message}
                 </p>
               ) : null}
@@ -1471,14 +1471,14 @@ export function NewBookingForm({
                 <Label className={labelClass}>
                   Estimert totalpris
                 </Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-app-xs text-muted-foreground">
                   Beregnet fra pakke (katalog eller egen), valgte katalogtillegg og
                   egne tilleggslinjer (referanse).
                 </p>
                 <div
                   className={cn(
                     fieldClass,
-                    "flex items-center bg-rn-surface-segment px-4 font-heading text-lg font-bold tabular-nums text-rn-text-heading md:text-xl",
+                    "flex items-center bg-rn-surface-segment px-4 font-heading text-app-lg font-bold tabular-nums text-rn-text-heading md:text-app-xl",
                   )}
                   aria-live="polite"
                 >
@@ -1490,12 +1490,12 @@ export function NewBookingForm({
                   Avtalt totalpris (kunde)
                   <RequiredMark />
                 </Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-app-xs text-muted-foreground">
                   Sett egen pris ved behov; synkes med estimat til du endrer den
                   selv.
                 </p>
                 <div className="relative">
-                  <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-rn-text-slate md:left-4">
+                  <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-app-sm font-semibold text-rn-text-slate md:left-4">
                     kr
                   </span>
                   <PriceInput
@@ -1505,13 +1505,13 @@ export function NewBookingForm({
                   />
                 </div>
                 {errors.agreedTotal ? (
-                  <p className="text-xs text-destructive">
+                  <p className="text-app-xs text-destructive">
                     {errors.agreedTotal.message}
                   </p>
                 ) : null}
                 {customerDiscountNok > 0 ? (
                   <p
-                    className="text-sm font-semibold text-success"
+                    className="text-app-sm font-semibold text-success"
                     aria-live="polite"
                   >
                     Rabatt for kunden: {formatNok(customerDiscountNok)}
@@ -1521,7 +1521,7 @@ export function NewBookingForm({
                   </p>
                 ) : null}
                 {aboveEstimateNok > 0 ? (
-                  <p className="text-sm text-muted-foreground" aria-live="polite">
+                  <p className="text-app-sm text-muted-foreground" aria-live="polite">
                     {formatNok(aboveEstimateNok)} over estimat.
                   </p>
                 ) : null}
@@ -1544,7 +1544,7 @@ export function NewBookingForm({
               aria-invalid={!!errors.notes}
             />
             {errors.notes ? (
-              <p className="text-xs text-destructive">{errors.notes.message}</p>
+              <p className="text-app-xs text-destructive">{errors.notes.message}</p>
             ) : null}
           </div>
         </div>

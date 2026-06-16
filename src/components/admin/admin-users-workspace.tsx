@@ -29,7 +29,7 @@ import { useMemo, useState } from "react";
 export type { AdminUserFilter } from "@/components/admin/admin-user-filters";
 
 const tableHeadClass =
-  "px-6 py-4 text-left text-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+  "px-6 py-4 text-left text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
 
 function userStatus(user: AdminUserRow): {

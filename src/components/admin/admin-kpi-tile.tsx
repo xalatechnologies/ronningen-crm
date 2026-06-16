@@ -56,8 +56,8 @@ const variantShell: Record<AdminKpiVariant, string> = {
     "hover:border-amber-500/25 hover:bg-amber-500/[0.03]",
   ),
   audit: cn(
-    "rounded-md border-b-2 border-dashed border-rn-border-strong/55 bg-transparent py-4 sm:py-5",
-    "hover:border-success/40 hover:bg-muted/15",
+    "relative overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-muted/10 py-4 sm:py-5",
+    "hover:border-rn-accent-border/50 hover:bg-muted/20",
   ),
   "feature-flags": cn(
     "flex min-h-full overflow-hidden rounded-lg border border-rn-border-strong/40 bg-background shadow-sm",
@@ -84,7 +84,7 @@ const variantActive: Record<AdminKpiVariant, string> = {
   users: "from-success/10 to-success/[0.03] ring-1 ring-success/25",
   revenue: "border-emerald-500/40 bg-emerald-500/[0.1] ring-1 ring-success/20",
   support: "border-amber-500/35 bg-amber-500/[0.05]",
-  audit: "border-b-solid border-success/50 bg-muted/25",
+  audit: "border-rn-accent-border bg-rn-surface-gradient-from/30 shadow-sm",
   "feature-flags": "border-success/40 ring-1 ring-success/25",
   notifications: "ring-2 ring-success/30 bg-rn-surface-gradient-from/20",
   health: "border-success/35 bg-success/[0.05]",
@@ -165,9 +165,9 @@ function KpiContent({
           <p className={cn(valueCn, "text-[calc(28px*var(--app-type-scale))]")}>
             {value}
           </p>
-          <p className="mt-2 text-sm font-semibold text-foreground">{label}</p>
+          <p className="mt-2 text-app-sm font-semibold text-foreground">{label}</p>
           {caption ? (
-            <p className="mt-1 text-sm text-muted-foreground">{caption}</p>
+            <p className="mt-1 text-app-sm text-muted-foreground">{caption}</p>
           ) : null}
         </div>
       </>
@@ -245,12 +245,12 @@ function KpiContent({
     return (
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <span className="text-sm font-semibold text-muted-foreground">
+          <span className="text-app-sm font-semibold text-muted-foreground">
             {label}
           </span>
           <p className={cn(valueCn, "mt-1 text-2xl")}>{value}</p>
           {caption ? (
-            <p className="mt-1 text-sm text-muted-foreground">{caption}</p>
+            <p className="mt-1 text-app-sm text-muted-foreground">{caption}</p>
           ) : null}
         </div>
         <div

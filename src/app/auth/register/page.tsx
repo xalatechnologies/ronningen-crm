@@ -54,16 +54,16 @@ export default function RegisterPage() {
   }
 
   const fieldClass =
-    "h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25";
+    "h-12 rounded-md border-2 border-rn-border-strong text-app-base focus-visible:border-success focus-visible:ring-success/25";
   const labelClass =
-    "text-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]";
+    "text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]";
 
   return (
     <main className="flex min-h-[min(100dvh,100svh)] flex-1 flex-col items-center justify-center px-4 py-16 md:px-8 md:py-24">
       <div className="flex w-full max-w-xl flex-col items-stretch gap-8">
         <Card
           className={cn(
-            "w-full gap-0 py-0 text-base ring-0",
+            "w-full gap-0 py-0 text-app-base ring-0",
             RN_CARD_SHELL,
             "shadow-rn-card",
           )}
@@ -71,16 +71,16 @@ export default function RegisterPage() {
           <CardHeader className="space-y-5 border-b-2 border-rn-border-strong/50 px-6 py-7 md:px-10 md:py-9">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
               <div
-                className="flex size-14 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-success font-heading text-lg font-bold text-primary-light shadow-sm md:size-16 md:text-xl"
+                className="flex size-14 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-success font-heading text-app-lg font-bold text-primary-light shadow-sm md:size-16 md:text-app-xl"
                 aria-hidden
               >
                 R
               </div>
               <div className="min-w-0 flex-1 space-y-2">
-                <CardTitle className="font-heading text-2xl font-bold tracking-tight text-rn-text-heading md:text-3xl lg:text-4xl">
+                <CardTitle className="app-title md:text-app-3xl">
                   Opprett konto
                 </CardTitle>
-                <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
+                <p className="text-app-sm leading-relaxed text-muted-foreground md:text-app-base">
                   Registrer deg for å bruke {APP_NAME}.
                 </p>
               </div>
@@ -105,7 +105,7 @@ export default function RegisterPage() {
                   {...form.register("fullName")}
                 />
                 {form.formState.errors.fullName ? (
-                  <p className="text-sm text-destructive">
+                  <p className="text-app-sm text-destructive">
                     {form.formState.errors.fullName.message}
                   </p>
                 ) : null}
@@ -123,7 +123,7 @@ export default function RegisterPage() {
                   {...form.register("email")}
                 />
                 {form.formState.errors.email ? (
-                  <p className="text-sm text-destructive">
+                  <p className="text-app-sm text-destructive">
                     {form.formState.errors.email.message}
                   </p>
                 ) : null}
@@ -140,7 +140,7 @@ export default function RegisterPage() {
                   {...form.register("password")}
                 />
                 {form.formState.errors.password ? (
-                  <p className="text-sm text-destructive">
+                  <p className="text-app-sm text-destructive">
                     {form.formState.errors.password.message}
                   </p>
                 ) : null}
@@ -157,18 +157,18 @@ export default function RegisterPage() {
                   {...form.register("confirmPassword")}
                 />
                 {form.formState.errors.confirmPassword ? (
-                  <p className="text-sm text-destructive">
+                  <p className="text-app-sm text-destructive">
                     {form.formState.errors.confirmPassword.message}
                   </p>
                 ) : null}
               </div>
               {formError ? (
-                <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive md:text-base">
+                <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-app-sm text-destructive md:text-app-base">
                   {formError}
                 </p>
               ) : null}
               {info ? (
-                <p className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success md:text-base">
+                <p className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-app-sm text-success md:text-app-base">
                   {info}
                 </p>
               ) : null}
@@ -184,7 +184,7 @@ export default function RegisterPage() {
             </form>
 
             <div className="border-t-2 border-rn-border-strong/50 pt-6">
-              <p className="text-base text-muted-foreground">
+              <p className="text-app-base text-muted-foreground">
                 Har du allerede en konto?{" "}
                 <Link
                   href="/auth/login"

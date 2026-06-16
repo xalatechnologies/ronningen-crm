@@ -108,10 +108,10 @@ export function AdminTrendChart({
           className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between"
           aria-hidden
         >
-          <span className="text-xs font-semibold text-muted-foreground md:text-sm">
+          <span className="text-app-xs font-semibold text-muted-foreground md:text-app-sm">
             {periodHint}
           </span>
-          <span className="text-[11px] tabular-nums text-muted-foreground md:text-xs">
+          <span className="text-[11px] tabular-nums text-muted-foreground md:text-app-xs">
             Høyeste: {formatTrendValue(peakValue, valueFormat)}
           </span>
         </div>

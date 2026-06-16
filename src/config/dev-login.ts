@@ -1,11 +1,12 @@
 import type { LoginInput } from "@/lib/validations";
+import { PLATFORM_ADMIN_EMAIL } from "@/config/admin-routes";
 
 /**
- * Default local test account (sign-in form prefill in development only).
- * Create this user in Supabase: Authentication → Users → Add user → email + password.
+ * Default local dev prefill (sign-in form in development only).
+ * Matches `npm run admin:seed` — see PLATFORM_ADMIN_PASSWORD in `.env.local`.
  */
-export const DEV_TEST_EMAIL = "admin@ronningen.no";
-export const DEV_TEST_PASSWORD = "Admin1234@";
+export const DEV_TEST_EMAIL = PLATFORM_ADMIN_EMAIL;
+export const DEV_TEST_PASSWORD = "Admin@eventmanager";
 
 /** Prefill for the login form; production always returns empty fields. */
 export function getDevLoginDefaultValues(): LoginInput {

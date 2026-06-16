@@ -30,7 +30,7 @@ const buttonVariants = cva(
         sm: "h-7 min-h-0 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-app-sm in-data-[slot=button-group]:rounded-md has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "min-h-[max(var(--app-button-min-height),var(--app-tap-target-min))] gap-1.5 px-3 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         /** Hoved-CTA: litt høyere enn tidligere h-12 (48px) — 56px med større padding og ikon. */
-        cta: "min-h-[calc(var(--app-control-height)+1.25rem)] gap-2.5 rounded-[length:var(--app-radius)] px-8 font-heading text-app-md font-bold has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 md:gap-3 md:px-9 md:text-app-lg [&_svg:not([class*='size-'])]:size-5 md:[&_svg:not([class*='size-'])]:size-[1.375rem]",
+        cta: "min-h-[calc(var(--app-control-height)+1.25rem)] gap-2.5 rounded-[length:var(--app-radius)] px-8 text-app-md font-bold has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 md:gap-3 md:px-9 md:text-app-lg [&_svg:not([class*='size-'])]:size-5 md:[&_svg:not([class*='size-'])]:size-[1.375rem]",
         icon: "size-8",
         "icon-xs":
           "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-md [&_svg:not([class*='size-'])]:size-3",

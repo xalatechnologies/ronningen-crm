@@ -70,10 +70,10 @@ export function OrganizationAdminNotesPanel({
       </div>
 
       {error ? (
-        <p className="text-sm font-medium text-destructive">{error}</p>
+        <p className="text-app-sm font-medium text-destructive">{error}</p>
       ) : null}
       {saved ? (
-        <p className="text-sm font-medium text-success">Lagret.</p>
+        <p className="text-app-sm font-medium text-success">Lagret.</p>
       ) : null}
 
       <AdminActionButton type="submit" variant="default" disabled={busy}>

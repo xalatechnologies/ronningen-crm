@@ -32,7 +32,12 @@ export function useUserNotifications() {
       return;
     }
 
-    if (refreshInFlightRef.current) return;
+    if (refreshInFlightRef.current) {
+      window.setTimeout(() => {
+        if (!refreshInFlightRef.current) void refresh();
+      }, 0);
+      return;
+    }
 
     refreshInFlightRef.current = true;
     const generation = ++refreshGenerationRef.current;
@@ -96,7 +101,15 @@ export function useUserNotifications() {
           if (!cancelled) void refresh();
         },
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (
+          err &&
+          status !== "CLOSED" &&
+          !isBenignSupabaseNetworkError(err)
+        ) {
+          console.warn("[notifications] Realtime-kanal feilet.", err);
+        }
+      });
 
     const pollId = window.setInterval(() => {
       if (document.visibilityState === "visible" && !cancelled) {
@@ -107,6 +120,7 @@ export function useUserNotifications() {
     return () => {
       cancelled = true;
       refreshGenerationRef.current += 1;
+      refreshInFlightRef.current = false;
       window.clearInterval(pollId);
       void supabase.removeChannel(channel);
     };

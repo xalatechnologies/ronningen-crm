@@ -264,7 +264,7 @@ export function DateTimePickerField({
                   value={datePart ? timePart : ""}
                   onChange={(e) => setTimePart(e.target.value)}
                   className={cn(
-                    "h-11 rounded-md border-2 border-rn-border-strong bg-background px-3 text-sm shadow-sm md:h-12 md:text-base",
+                    "h-11 rounded-md border-2 border-rn-border-strong bg-background px-3 text-app-control shadow-sm md:h-12",
                     "focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25",
                     !datePart && "opacity-50",
                   )}
@@ -273,7 +273,7 @@ export function DateTimePickerField({
                   type="button"
                   variant="outline"
                   disabled={!datePart}
-                  className="h-11 shrink-0 rounded-md border-2 border-rn-border-strong px-4 font-heading text-sm font-semibold md:h-12"
+                  className="h-11 shrink-0 rounded-md border-2 border-rn-border-strong px-4 text-app-control font-semibold md:h-12"
                   onClick={() => setOpen(false)}
                 >
                   Ferdig

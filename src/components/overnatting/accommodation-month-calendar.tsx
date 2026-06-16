@@ -67,18 +67,18 @@ function StayHoverPreview({
   return (
     <div className="space-y-2 text-left">
       <div>
-        <p className="font-heading text-sm font-bold text-rn-text-heading md:text-base">
+        <p className="font-heading text-app-sm font-bold text-rn-text-heading md:text-app-base">
           {row.customerName}
         </p>
-        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground md:text-sm">
+        <p className="mt-0.5 flex items-center gap-1.5 text-app-xs text-muted-foreground md:text-app-sm">
           <BedDouble className="size-3.5 shrink-0" aria-hidden />
           <span>{row.unitName}</span>
         </p>
       </div>
-      <p className="text-xs font-medium text-foreground md:text-sm">
+      <p className="text-app-xs font-medium text-foreground md:text-app-sm">
         {ACCOMMODATION_RESERVATION_LABELS[row.status]}
       </p>
-      <div className="space-y-1 border-t border-border pt-2 text-xs md:text-sm">
+      <div className="space-y-1 border-t border-border pt-2 text-app-xs md:text-app-sm">
         <p className="tabular-nums">
           <span className="font-semibold text-rn-text-body">Periode:</span>{" "}
           {formatAppDateFromParts(row.checkInDate, row.checkInTime)} →{" "}
@@ -90,7 +90,7 @@ function StayHoverPreview({
         </p>
       </div>
       {hideFooter ? null : (
-        <p className="text-[10px] leading-snug text-muted-foreground md:text-xs">
+        <p className="text-[10px] leading-snug text-muted-foreground md:text-app-xs">
           Klikk for å redigere
         </p>
       )}
@@ -109,7 +109,7 @@ function DayStaysHoverContent({
   }
   return (
     <div className="max-h-[min(70vh,22rem)] space-y-0 overflow-y-auto text-left">
-      <p className="mb-2 text-xs font-semibold text-muted-foreground">
+      <p className="mb-2 text-app-xs font-semibold text-muted-foreground">
         {rows.length} reservasjoner denne dagen
       </p>
       {rows.map((row, i) => (
@@ -120,7 +120,7 @@ function DayStaysHoverContent({
           <StayHoverPreview row={row} hideFooter />
         </div>
       ))}
-      <p className="mt-3 text-[10px] leading-snug text-muted-foreground md:text-xs">
+      <p className="mt-3 text-[10px] leading-snug text-muted-foreground md:text-app-xs">
         Klikk på en rad for å redigere
       </p>
     </div>
@@ -222,7 +222,7 @@ export function AccommodationMonthCalendar({
   const headerCells = WEEKDAYS_NB.map((wd) => (
     <div
       key={wd}
-      className="bg-rn-surface-table-head px-1 py-2 text-center text-[10px] font-bold tracking-wider text-rn-text-column uppercase sm:px-2 md:text-xs"
+      className="bg-rn-surface-table-head px-1 py-2 text-center text-[10px] font-bold tracking-wider text-rn-text-column uppercase sm:px-2 md:text-app-xs"
     >
       {wd}
     </div>
@@ -256,7 +256,7 @@ export function AccommodationMonthCalendar({
       <>
         <div
           className={cn(
-            "flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold sm:size-7 sm:text-sm md:size-8 md:text-base",
+            "flex size-6 shrink-0 items-center justify-center rounded-md text-app-xs font-bold sm:size-7 sm:text-app-sm md:size-8 md:text-app-base",
             isToday
               ? "bg-success !text-white shadow-sm [&_svg]:!text-white"
               : hasRows
@@ -278,7 +278,7 @@ export function AccommodationMonthCalendar({
               type="button"
               disabled={!canManage}
               className={cn(
-                "w-full rounded-md px-1 py-0.5 text-left text-[10px] font-semibold leading-tight transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-0 sm:text-[11px] md:px-1.5 md:py-1 md:text-xs",
+                "w-full rounded-md px-1 py-0.5 text-left text-[10px] font-semibold leading-tight transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-0 sm:text-[11px] md:px-1.5 md:py-1 md:text-app-xs",
                 resRowButtonClass(b.status),
                 b.status === "cancelled" && "opacity-70",
                 !canManage && "cursor-default opacity-90",
@@ -369,10 +369,10 @@ export function AccommodationMonthCalendar({
     <div className="border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-          <h2 className="font-heading text-xl font-bold capitalize tracking-tight text-rn-text-heading md:text-2xl">
+          <h2 className="font-heading text-app-xl font-bold capitalize tracking-tight text-rn-text-heading md:text-app-2xl">
             {monthName}
           </h2>
-          <span className="font-heading text-xl font-bold tabular-nums tracking-tight text-muted-foreground md:text-2xl">
+          <span className="font-heading text-app-xl font-bold tabular-nums tracking-tight text-muted-foreground md:text-app-2xl">
             {year}
           </span>
         </div>
@@ -380,7 +380,7 @@ export function AccommodationMonthCalendar({
           <Button
             type="button"
             variant="outline"
-            className="h-10 rounded-md border-2 border-rn-border-strong px-4 text-sm font-semibold"
+            className="h-10 rounded-md border-2 border-rn-border-strong px-4 text-app-sm font-semibold"
             onClick={() => {
               const d = new Date();
               onMonthChange(
@@ -448,7 +448,7 @@ export function AccommodationMonthCalendar({
       </div>
 
       {emptyMonthMessage ? (
-        <p className="mt-5 text-center text-base text-muted-foreground">
+        <p className="mt-5 text-center text-app-base text-muted-foreground">
           {emptyMonthMessage}
         </p>
       ) : null}

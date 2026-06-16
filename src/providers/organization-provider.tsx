@@ -21,6 +21,7 @@ import {
   ACTIVE_ORGANIZATION_STORAGE_KEY,
   type OrganizationContextValue,
 } from "@/lib/organizations/types";
+import { isBenignSupabaseNetworkError } from "@/lib/supabase/network-errors";
 import { useSupabase } from "@/providers/supabase-provider";
 
 const OrganizationContext = createContext<OrganizationContextValue | null>(
@@ -98,9 +99,11 @@ export function OrganizationProvider({
         );
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Kunne ikke laste organisasjoner",
-      );
+      if (!isBenignSupabaseNetworkError(err)) {
+        setError(
+          err instanceof Error ? err.message : "Kunne ikke laste organisasjoner",
+        );
+      }
     } finally {
       setLoading(false);
     }

@@ -76,6 +76,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    void (async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+        if (error && !isBenignSupabaseNetworkError(error)) {
+          console.warn("[auth] Kunne ikke lese sesjon.", error.message);
+        }
+        await applyUser(session?.user ?? null);
+      } catch (error) {
+        if (!cancelled && !isBenignSupabaseNetworkError(error)) {
+          console.warn("[auth] Kunne ikke lese sesjon.", error);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -86,8 +105,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!cancelled && !isBenignSupabaseNetworkError(error)) {
             console.warn("[auth] onAuthStateChange feilet.", error);
           }
-        } finally {
-          if (!cancelled) setLoading(false);
         }
       })();
     });
