@@ -164,7 +164,7 @@ export default function RegisterPage() {
                 </p>
               ) : null}
               {info ? (
-                <p className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-app-sm text-success md:text-app-base">
+                <p className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-app-sm text-foreground md:text-app-base">
                   {info}
                 </p>
               ) : null}
