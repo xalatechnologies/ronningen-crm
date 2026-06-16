@@ -34,6 +34,17 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: displayStorageKey,
+      version: 1,
+      migrate: (persistedState) => {
+        const state = persistedState as {
+          theme?: ThemePreference;
+          displayDensity?: DisplayDensity;
+        };
+        if (state.theme === "system") {
+          return { ...state, theme: "light" as const };
+        }
+        return state;
+      },
       partialize: (state) => ({
         displayDensity: state.displayDensity,
         theme: state.theme,

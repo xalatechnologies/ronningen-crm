@@ -6,7 +6,7 @@ export type ThemePreference = "light" | "dark" | "system";
 
 export type ResolvedTheme = "light" | "dark";
 
-export const defaultTheme: ThemePreference = "system";
+export const defaultTheme: ThemePreference = "light";
 
 export function isThemePreference(value: unknown): value is ThemePreference {
   return value === "light" || value === "dark" || value === "system";

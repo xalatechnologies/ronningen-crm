@@ -3,21 +3,18 @@
     var key =
       document.documentElement.getAttribute("data-theme-storage-key") ||
       "ronningen-crm";
-    var theme = "system";
+    var theme = "light";
     var raw = localStorage.getItem(key);
     if (raw) {
       var parsed = JSON.parse(raw);
       var stored = parsed && parsed.state && parsed.state.theme;
-      if (stored === "light" || stored === "dark" || stored === "system") {
+      if (stored === "light" || stored === "dark") {
         theme = stored;
+      } else if (stored === "system") {
+        theme = "light";
       }
     }
     var resolved = theme;
-    if (theme === "system") {
-      resolved = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-    }
     document.documentElement.setAttribute("data-theme", resolved);
     if (resolved === "dark") {
       document.documentElement.classList.add("dark");

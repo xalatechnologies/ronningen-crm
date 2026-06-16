@@ -38,7 +38,7 @@ export function ThemeToggle({
 
   if (variant === "header") {
     const current =
-      options.find((option) => option.value === theme) ?? options[2];
+      options.find((option) => option.value === theme) ?? options[0];
     const CurrentIcon = current.icon;
 
     return (
