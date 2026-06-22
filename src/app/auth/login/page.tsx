@@ -1,14 +1,23 @@
-import { safeInternalRedirect } from "@/lib/security/safe-redirect";
+import { Suspense } from "react";
 
 import { LoginForm } from "./login-form";
 
-type LoginPageProps = {
-  searchParams: Promise<{ redirect?: string; error?: string }>;
-};
+function LoginFormFallback() {
+  return (
+    <main className="flex min-h-[min(100dvh,100svh)] flex-1 flex-col items-center justify-center px-4 py-16 md:px-8 md:py-24">
+      <div
+        className="size-10 animate-spin rounded-full border-4 border-muted border-t-success"
+        role="status"
+        aria-label="Laster innlogging …"
+      />
+    </main>
+  );
+}
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { redirect, error } = await searchParams;
-  const safeRedirect = safeInternalRedirect(redirect);
-
-  return <LoginForm redirect={safeRedirect} initialError={error ?? null} />;
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFormFallback />}>
+      <LoginForm />
+    </Suspense>
+  );
 }

@@ -2,6 +2,7 @@ import { NewInquiryForm } from "@/components/inquiries/new-inquiry-form";
 import { canManageBookings } from "@/lib/role-access";
 import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
+import { usePageSearchParams } from "@/lib/next/dynamic-page-props";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
@@ -16,7 +17,7 @@ export default async function NewInquiryPage({
   const orgId = await requireServerOrganizationId();
   const { role } = await resolveServerOrganizationContext(supabase);
   const canEdit = canManageBookings(role);
-  const sp = await searchParams;
+  const sp = usePageSearchParams(searchParams);
 
   const { data: properties } = await supabase
     .from("properties")

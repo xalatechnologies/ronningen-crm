@@ -2,6 +2,10 @@ import { AdminUserDetailWorkspace } from "@/components/admin/admin-user-detail-w
 import { parseUserDetailTab } from "@/components/admin/user-detail/tabs";
 import { requirePlatformAdmin } from "@/lib/admin/require-platform-admin";
 import { fetchAdminUserDetail } from "@/lib/admin/queries/users-billing-audit";
+import {
+  usePageParams,
+  usePageSearchParams,
+} from "@/lib/next/dynamic-page-props";
 import { notFound } from "next/navigation";
 
 type PageProps = {
@@ -13,8 +17,8 @@ export default async function AdminUserDetailPage({
   params,
   searchParams,
 }: PageProps) {
-  const { id } = await params;
-  const { tab: tabParam } = await searchParams;
+  const { id } = usePageParams(params);
+  const { tab: tabParam } = usePageSearchParams(searchParams);
   const initialTab = parseUserDetailTab(tabParam);
 
   const admin = await requirePlatformAdmin();

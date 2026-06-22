@@ -2,6 +2,7 @@ import { AdminSubscriptionsWorkspace } from "@/components/admin/admin-subscripti
 import type { AdminSubscriptionFilter } from "@/components/admin/admin-subscription-filters";
 import { fetchAdminBillingOverview } from "@/lib/admin/queries/users-billing-audit";
 import { isBillingEnabled } from "@/lib/billing/constants";
+import { usePageSearchParams } from "@/lib/next/dynamic-page-props";
 
 type PageProps = {
   searchParams: Promise<{ filter?: string; q?: string }>;
@@ -24,7 +25,7 @@ function parseFilter(value: string | undefined): AdminSubscriptionFilter {
 export default async function AdminSubscriptionsPage({
   searchParams,
 }: PageProps) {
-  const params = await searchParams;
+  const params = usePageSearchParams(searchParams);
   const rows = await fetchAdminBillingOverview();
 
   return (

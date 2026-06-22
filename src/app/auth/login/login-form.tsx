@@ -18,17 +18,21 @@ import { loginSchema, type LoginInput } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
-export function LoginForm({
-  redirect = "/app",
-  initialError = null,
-}: {
-  redirect?: string;
-  initialError?: string | null;
-}) {
-  const [formError, setFormError] = useState<string | null>(initialError);
+import { safeInternalRedirect } from "@/lib/security/safe-redirect";
+
+export function LoginForm() {
+  const searchParams = useSearchParams();
+  const redirect = useMemo(
+    () => safeInternalRedirect(searchParams.get("redirect") ?? undefined),
+    [searchParams],
+  );
+  const urlError = searchParams.get("error");
+  const [formError, setFormError] = useState<string | null>(null);
+  const displayedError = formError ?? urlError;
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   const loginDefaults = useMemo(() => getDevLoginDefaultValues(), []);
@@ -225,9 +229,9 @@ export function LoginForm({
                   </p>
                 ) : null}
               </div>
-              {formError ? (
+              {displayedError ? (
                 <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-app-sm text-destructive md:text-app-base">
-                  {formError}
+                  {displayedError}
                 </p>
               ) : null}
               <Button

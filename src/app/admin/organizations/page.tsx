@@ -2,6 +2,7 @@ import { AdminOrganizationsWorkspace } from "@/components/admin/admin-organizati
 import { fetchAdminOrganizations } from "@/lib/admin/queries/organizations";
 import type { AdminOrgFilterStatus } from "@/components/admin/admin-org-filters";
 import { isBillingEnabled } from "@/lib/billing/constants";
+import { usePageSearchParams } from "@/lib/next/dynamic-page-props";
 
 type PageProps = {
   searchParams: Promise<{ status?: string; q?: string }>;
@@ -22,7 +23,7 @@ function parseStatus(value: string | undefined): AdminOrgFilterStatus {
 }
 
 export default async function AdminOrganizationsPage({ searchParams }: PageProps) {
-  const params = await searchParams;
+  const params = usePageSearchParams(searchParams);
   const organizations = await fetchAdminOrganizations();
 
   return (

@@ -3,6 +3,7 @@ import {
   type AdminUserFilter,
 } from "@/components/admin/admin-users-workspace";
 import { fetchAdminUsers } from "@/lib/admin/queries/users-billing-audit";
+import { usePageSearchParams } from "@/lib/next/dynamic-page-props";
 
 type PageProps = {
   searchParams: Promise<{ filter?: string; q?: string }>;
@@ -20,7 +21,7 @@ function parseFilter(value: string | undefined): AdminUserFilter {
 }
 
 export default async function AdminUsersPage({ searchParams }: PageProps) {
-  const params = await searchParams;
+  const params = usePageSearchParams(searchParams);
   const users = await fetchAdminUsers();
 
   return (

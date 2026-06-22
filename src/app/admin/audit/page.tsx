@@ -1,6 +1,7 @@
 import { AdminAuditWorkspace } from "@/components/admin/admin-audit-workspace";
 import type { AdminAuditCategory } from "@/lib/admin/audit-categories";
 import { fetchAdminAuditPageData } from "@/lib/admin/queries/users-billing-audit";
+import { usePageSearchParams } from "@/lib/next/dynamic-page-props";
 
 type PageProps = {
   searchParams: Promise<{
@@ -32,7 +33,7 @@ function parseCategory(value: string | undefined): AdminAuditCategory {
 }
 
 export default async function AdminAuditPage({ searchParams }: PageProps) {
-  const params = await searchParams;
+  const params = usePageSearchParams(searchParams);
   const page = Math.max(1, Number(params.page ?? "1") || 1);
   const category = parseCategory(params.category);
   const selectedAction = params.action ?? "";

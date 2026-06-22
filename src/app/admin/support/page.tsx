@@ -1,6 +1,7 @@
 import { AdminSupportWorkspace } from "@/components/admin/admin-support-workspace";
 import type { AdminSupportFilter } from "@/lib/admin/dashboard-links";
 import { fetchAdminSupportOverview } from "@/lib/admin/queries/support";
+import { usePageSearchParams } from "@/lib/next/dynamic-page-props";
 
 type PageProps = {
   searchParams: Promise<{ filter?: string; q?: string }>;
@@ -14,7 +15,7 @@ function parseFilter(value: string | undefined): AdminSupportFilter {
 }
 
 export default async function AdminSupportPage({ searchParams }: PageProps) {
-  const params = await searchParams;
+  const params = usePageSearchParams(searchParams);
   const data = await fetchAdminSupportOverview();
 
   return (

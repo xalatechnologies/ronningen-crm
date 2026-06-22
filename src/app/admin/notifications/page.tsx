@@ -2,6 +2,7 @@ import { AdminNotificationsWorkspace } from "@/components/admin/admin-notificati
 import type { AdminNotificationView } from "@/lib/admin/notification-filters";
 import { isEmailConfigured } from "@/lib/notifications/email-client";
 import { fetchAdminNotificationsPageData } from "@/lib/admin/queries/notifications";
+import { usePageSearchParams } from "@/lib/next/dynamic-page-props";
 
 type PageProps = {
   searchParams: Promise<{
@@ -27,7 +28,7 @@ function parseView(value: string | undefined): AdminNotificationView {
 export default async function AdminNotificationsPage({
   searchParams,
 }: PageProps) {
-  const params = await searchParams;
+  const params = usePageSearchParams(searchParams);
   const view = parseView(params.view);
   const filter = params.filter ?? "all";
   const search = params.q ?? "";

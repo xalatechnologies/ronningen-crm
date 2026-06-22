@@ -2,6 +2,10 @@ import { OrganizationDetailWorkspace } from "@/components/admin/organization-det
 import { parseOrganizationDetailTab } from "@/components/admin/organization-detail/tabs";
 import { fetchAdminOrganizationDetail } from "@/lib/admin/queries/organizations";
 import { isBillingEnabled } from "@/lib/billing/constants";
+import {
+  usePageParams,
+  usePageSearchParams,
+} from "@/lib/next/dynamic-page-props";
 import { fetchAdminOrgSupportTickets } from "@/lib/support/queries";
 import { notFound } from "next/navigation";
 
@@ -14,8 +18,8 @@ export default async function AdminOrganizationDetailPage({
   params,
   searchParams,
 }: PageProps) {
-  const { id } = await params;
-  const { tab: tabParam } = await searchParams;
+  const { id } = usePageParams(params);
+  const { tab: tabParam } = usePageSearchParams(searchParams);
   const initialTab = parseOrganizationDetailTab(tabParam);
 
   const [org, supportTickets] = await Promise.all([
