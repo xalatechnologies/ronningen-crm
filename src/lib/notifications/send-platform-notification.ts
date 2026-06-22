@@ -233,6 +233,8 @@ export async function sendWelcomeNotification(input: {
     variables: { organization: input.organizationName },
     contextKey: "welcome",
     eventKey: "platform.welcome",
+    actionUrl: buildBillingActionUrl(),
+    actionLabel: "Fullfør betaling",
   });
 }
 

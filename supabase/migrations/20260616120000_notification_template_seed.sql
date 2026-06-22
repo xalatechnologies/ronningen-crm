@@ -5,7 +5,7 @@ values
   (
     'welcome',
     'Velkommen til Rønningen Manager',
-    '<p>Hei {{name}},</p><p>Velkommen til Rønningen Manager. Logg inn for å komme i gang.</p>'
+    '<p>Hei {{name}},</p><p>Velkommen til Rønningen Manager. Fullfør Stripe-betalingen for å komme i gang.</p>'
   ),
   (
     'trial_reminder',
