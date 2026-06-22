@@ -82,6 +82,11 @@ export function LandingFooter() {
                     Registrer
                   </Link>
                 </li>
+                <li>
+                  <Link href="/it" className={footerLinkClass}>
+                    For IT-avdelinger
+                  </Link>
+                </li>
               </ul>
             </nav>
           </div>

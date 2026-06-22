@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { isAdminPath, isAuthPath, isProtectedPath } from "@/config/routes";
+import { safeInternalRedirect } from "@/lib/security/safe-redirect";
 import {
   getSupabasePublicEnvForClient,
   isSupabasePublicConfigured,
@@ -74,11 +75,9 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthPath(pathname)) {
     const redirectUrl = request.nextUrl.clone();
-    const target = request.nextUrl.searchParams.get("redirect");
-    redirectUrl.pathname =
-      target && target.startsWith("/") && !target.startsWith("//")
-        ? target
-        : "/app";
+    redirectUrl.pathname = safeInternalRedirect(
+      request.nextUrl.searchParams.get("redirect"),
+    );
     redirectUrl.search = "";
     return NextResponse.redirect(redirectUrl);
   }

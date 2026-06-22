@@ -1,0 +1,6 @@
+Contact: mailto:security@eventmanager.no
+Contact: mailto:admin@eventmanager.no
+Expires: 2027-06-16T23:59:59.000Z
+Preferred-Languages: nb, en
+Canonical: https://eventmanager.no/.well-known/security.txt
+Policy: https://eventmanager.no/it#sikkerhet
