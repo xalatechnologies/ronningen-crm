@@ -4,8 +4,12 @@ import {
   aggregateAccommodation,
   aggregateBookingMoney,
   aggregateInquiries,
+  aggregateInquiryPipeline,
+  aggregateOutstandingBookings,
+  aggregateTransactions,
   bookingOverlapsPeriod,
   buildMonthlyInvoicedSeries,
+  countCustomersCreatedInPeriod,
   dateRangeOverlapsPeriod,
   inquiryInPeriod,
 } from "@/lib/reports/tenant-report-metrics";
@@ -196,5 +200,106 @@ describe("bookingOverlapsPeriod", () => {
         { startYmd: "2026-04-03", endYmd: "2026-04-30" },
       ),
     ).toBe(true);
+  });
+});
+
+describe("aggregateTransactions", () => {
+  const period = { startYmd: "2026-06-01", endYmd: "2026-06-30" };
+
+  it("sums income and expense in period", () => {
+    const result = aggregateTransactions(
+      [
+        { type: "income", amount: 10_000, transaction_date: "2026-06-10" },
+        { type: "inntekt", amount: 5_000, transaction_date: "2026-06-12" },
+        { type: "expense", amount: 3_000, transaction_date: "2026-06-15" },
+        { type: "income", amount: 1_000, transaction_date: "2026-05-01" },
+      ],
+      period,
+    );
+
+    expect(result.incomeNok).toBe(15_000);
+    expect(result.expenseNok).toBe(3_000);
+    expect(result.netNok).toBe(12_000);
+  });
+});
+
+describe("aggregateInquiryPipeline", () => {
+  const period = { startYmd: "2026-03-01", endYmd: "2026-03-31" };
+
+  it("counts open, converted, lost and conversion rate", () => {
+    const result = aggregateInquiryPipeline(
+      [
+        {
+          status: "new",
+          estimated_total: 20_000,
+          preferred_event_date: "2026-03-20",
+          created_at: "2026-02-01T00:00:00Z",
+          converted_booking_id: null,
+        },
+        {
+          status: "converted",
+          estimated_total: 50_000,
+          preferred_event_date: "2026-04-01",
+          created_at: "2026-01-01T00:00:00Z",
+          converted_booking_id: "b1",
+          converted_at: "2026-03-10T12:00:00Z",
+        },
+        {
+          status: "lost",
+          estimated_total: 10_000,
+          preferred_event_date: null,
+          created_at: "2026-01-15T00:00:00Z",
+          converted_booking_id: null,
+          updated_at: "2026-03-18T00:00:00Z",
+        },
+      ],
+      period,
+    );
+
+    expect(result.openCount).toBe(1);
+    expect(result.estimatedNok).toBe(20_000);
+    expect(result.convertedCount).toBe(1);
+    expect(result.lostCount).toBe(1);
+    expect(result.conversionRatePct).toBe(50);
+  });
+});
+
+describe("countCustomersCreatedInPeriod", () => {
+  it("counts customers created within period", () => {
+    const count = countCustomersCreatedInPeriod(
+      [
+        { created_at: "2026-05-10T00:00:00Z" },
+        { created_at: "2026-05-28T00:00:00Z" },
+        { created_at: "2026-04-01T00:00:00Z" },
+      ],
+      { startYmd: "2026-05-01", endYmd: "2026-05-31" },
+    );
+
+    expect(count).toBe(2);
+  });
+});
+
+describe("aggregateOutstandingBookings", () => {
+  it("sums outstanding and counts overdue unpaid", () => {
+    const result = aggregateOutstandingBookings([
+      {
+        remaining_amount: 25_000,
+        status: "confirmed",
+        event_date: "2025-12-01",
+      },
+      {
+        remaining_amount: 10_000,
+        status: "confirmed",
+        event_date: "2026-12-01",
+      },
+      {
+        remaining_amount: 5_000,
+        status: "avbestilt",
+        event_date: "2025-11-01",
+      },
+    ]);
+
+    expect(result.outstandingNok).toBe(35_000);
+    expect(result.overdueUnpaidCount).toBe(1);
   });
 });

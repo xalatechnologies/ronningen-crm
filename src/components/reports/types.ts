@@ -16,22 +16,60 @@ export type FestTypeBreakdown = {
   pct: number;
 };
 
-export type ReportsKpis = {
+export type ReportsRevenueKpis = {
   /** Fakturert omsetning (reservasjoner + overnatting) i valgt periode. */
-  revenueYtd: number;
+  fakturertNok: number;
   revenueTrendPct: number | null;
-  totalBooked: number;
+  bookingFakturertNok: number;
+  accommodationFakturertNok: number;
   totalPaid: number;
   totalUnpaid: number;
+  paidShare: number;
+  unpaidShareOfBooked: number;
+};
+
+export type ReportsBookingsKpis = {
   bookingCount: number;
   confirmedBookingCount: number;
   pendingBookingCount: number;
-  inquiryCount: number;
-  inquiryEstimatedTotal: number;
-  accommodationCount: number;
-  accommodationBookedNok: number;
-  paidShare: number;
-  unpaidShareOfBooked: number;
+};
+
+export type ReportsInquiryPipelineKpis = {
+  openCount: number;
+  estimatedNok: number;
+  convertedCount: number;
+  lostCount: number;
+  conversionRatePct: number | null;
+};
+
+export type ReportsAccommodationKpis = {
+  reservationCount: number;
+  fakturertNok: number;
+};
+
+export type ReportsFinanceKpis = {
+  incomeNok: number;
+  expenseNok: number;
+  netNok: number;
+  incomeTrendPct: number | null;
+  expenseTrendPct: number | null;
+};
+
+export type ReportsInvoiceKpis = {
+  outstandingNok: number;
+  overdueUnpaidCount: number;
+};
+
+export type ReportsPartnersKpis = {
+  customerCount: number;
+  newCustomersInPeriod: number;
+  partnerCount: number;
+  propertyCount: number;
+};
+
+export type ReportsPricingKpis = {
+  packageCount: number;
+  serviceCount: number;
 };
 
 /** Inventar: tilstand og forsikring — samme logikk som Inventar-siden. */
@@ -45,12 +83,22 @@ export type ReportsFacilityStats = {
   assetUninsuredValueNok: number;
 };
 
+export type ReportsModuleKpis = {
+  revenue: ReportsRevenueKpis;
+  bookings: ReportsBookingsKpis;
+  inquiries: ReportsInquiryPipelineKpis;
+  accommodation: ReportsAccommodationKpis;
+  finance: ReportsFinanceKpis;
+  invoices: ReportsInvoiceKpis;
+  partners: ReportsPartnersKpis;
+  pricing: ReportsPricingKpis;
+};
+
 export type ReportsSectionProps = {
-  kpis: ReportsKpis;
+  kpis: ReportsModuleKpis;
   monthlyRevenue: MonthlyRevenuePoint[];
   eventBreakdown: EventTypeBreakdown[];
   festTypeBreakdown: FestTypeBreakdown[];
-  /** Inventar (tilstand / forsikring) — samme logikk som Inventar-siden. */
   facility: ReportsFacilityStats;
   reportYear: number;
   /** Gjeldende kalenderår (øvre grense for årvelger). */

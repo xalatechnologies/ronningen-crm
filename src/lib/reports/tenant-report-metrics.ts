@@ -3,7 +3,10 @@ import { normalizeBookingAudience } from "@/lib/booking-audience";
 import {
   isCancelledBookingStatus,
   pctDelta,
+  startOfToday,
+  ymd,
 } from "@/lib/dashboard-metrics";
+import { isIncomeTransactionType } from "@/lib/transaction-income";
 
 export type ReportPeriod = {
   startYmd: string;
@@ -27,6 +30,24 @@ export type ReportInquiryRow = {
   preferred_event_date: string | null;
   created_at: string;
   converted_booking_id: string | null;
+  converted_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type ReportTransactionRow = {
+  type: string;
+  amount: number;
+  transaction_date: string;
+};
+
+export type ReportCustomerRow = {
+  created_at: string;
+};
+
+export type ReportOutstandingBookingRow = {
+  remaining_amount: number;
+  status: string;
+  event_date: string;
 };
 
 export type ReportAccommodationRow = {
@@ -53,6 +74,25 @@ export type InquiryAggregate = {
 export type AccommodationAggregate = {
   reservationCount: number;
   totalBookedNok: number;
+};
+
+export type TransactionAggregate = {
+  incomeNok: number;
+  expenseNok: number;
+  netNok: number;
+};
+
+export type InquiryPipelineAggregate = {
+  openCount: number;
+  estimatedNok: number;
+  convertedCount: number;
+  lostCount: number;
+  conversionRatePct: number | null;
+};
+
+export type OutstandingBookingsAggregate = {
+  outstandingNok: number;
+  overdueUnpaidCount: number;
 };
 
 export type FestTypeBreakdownRow = {
@@ -192,6 +232,123 @@ export function aggregateInquiries(
   }
 
   return { activeCount, estimatedTotalNok };
+}
+
+function transactionInPeriod(
+  row: ReportTransactionRow,
+  period: ReportPeriod,
+): boolean {
+  const d = toComparableYmd(row.transaction_date);
+  if (!d) return false;
+  return d >= period.startYmd && d <= period.endYmd;
+}
+
+export function aggregateTransactions(
+  rows: ReportTransactionRow[],
+  period: ReportPeriod,
+): TransactionAggregate {
+  let incomeNok = 0;
+  let expenseNok = 0;
+
+  for (const row of rows) {
+    if (!transactionInPeriod(row, period)) continue;
+    const amount = Number(row.amount);
+    if (isIncomeTransactionType(row.type)) {
+      incomeNok += amount;
+    } else {
+      expenseNok += amount;
+    }
+  }
+
+  return {
+    incomeNok,
+    expenseNok,
+    netNok: incomeNok - expenseNok,
+  };
+}
+
+function inquiryEventInPeriod(
+  row: Pick<ReportInquiryRow, "converted_at" | "updated_at" | "created_at">,
+  period: ReportPeriod,
+): boolean {
+  const eventYmd =
+    toComparableYmd(row.converted_at) ??
+    toComparableYmd(row.updated_at) ??
+    toComparableYmd(row.created_at);
+  if (!eventYmd) return false;
+  return eventYmd >= period.startYmd && eventYmd <= period.endYmd;
+}
+
+export function aggregateInquiryPipeline(
+  rows: ReportInquiryRow[],
+  period: ReportPeriod,
+): InquiryPipelineAggregate {
+  const open = aggregateInquiries(rows, period);
+  let convertedCount = 0;
+  let lostCount = 0;
+
+  for (const row of rows) {
+    if (!inquiryEventInPeriod(row, period)) continue;
+    const isConverted =
+      row.status === "converted" || Boolean(row.converted_booking_id);
+    if (isConverted) {
+      convertedCount += 1;
+      continue;
+    }
+    if (row.status === "lost") {
+      lostCount += 1;
+    }
+  }
+
+  const closedCount = convertedCount + lostCount;
+  const conversionRatePct =
+    closedCount > 0 ? (convertedCount / closedCount) * 100 : null;
+
+  return {
+    openCount: open.activeCount,
+    estimatedNok: open.estimatedTotalNok,
+    convertedCount,
+    lostCount,
+    conversionRatePct,
+  };
+}
+
+export function countCustomersCreatedInPeriod(
+  rows: ReportCustomerRow[],
+  period: ReportPeriod,
+): number {
+  let count = 0;
+  for (const row of rows) {
+    const created = toComparableYmd(row.created_at);
+    if (!created) continue;
+    if (created >= period.startYmd && created <= period.endYmd) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+export function aggregateOutstandingBookings(
+  rows: ReportOutstandingBookingRow[],
+): OutstandingBookingsAggregate {
+  let outstandingNok = 0;
+  const todayYmd = ymd(startOfToday());
+  let overdueUnpaidCount = 0;
+
+  for (const row of rows) {
+    if (isCancelledBookingStatus(row.status)) continue;
+    const remaining = Number(row.remaining_amount);
+    if (remaining <= 0) continue;
+    outstandingNok += remaining;
+    if (row.event_date < todayYmd) {
+      overdueUnpaidCount += 1;
+    }
+  }
+
+  return {
+    outstandingNok,
+    overdueUnpaidCount,
+  };
 }
 
 export function aggregateAccommodation(

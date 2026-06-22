@@ -63,6 +63,7 @@ export function invalidateCustomersQueries(
   void queryClient.invalidateQueries({
     queryKey: tenantQueryKeys.customers(orgId),
   });
+  invalidateReportsQueries(queryClient, orgId);
 }
 
 export function invalidateFinanceQueries(
@@ -82,6 +83,7 @@ export function invalidatePricingQueries(
   void queryClient.invalidateQueries({
     queryKey: tenantQueryKeys.pricing(orgId),
   });
+  invalidateReportsQueries(queryClient, orgId);
 }
 
 export function invalidateAssetsQueries(

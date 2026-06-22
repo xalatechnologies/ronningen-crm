@@ -4,25 +4,31 @@ import {
   type FestTypeBreakdown,
   type MonthlyRevenuePoint,
   type ReportsFacilityStats,
-  type ReportsKpis,
+  type ReportsModuleKpis,
 } from "@/components/reports/types";
 import {
   assetRowInsuranceIsCovered,
   assetStatusBucket,
 } from "@/lib/asset-status-bucket";
+import { pctDelta } from "@/lib/dashboard-metrics";
 import {
   aggregateAccommodation,
   aggregateBookingMoney,
-  aggregateInquiries,
+  aggregateInquiryPipeline,
+  aggregateOutstandingBookings,
+  aggregateTransactions,
   buildEventAudienceBreakdown,
   buildFestTypeBreakdown,
   buildMonthlyInvoicedSeries,
   computeFakturertTrendPct,
+  countCustomersCreatedInPeriod,
   lastDayOfMonthYmd,
   sameDayPreviousYearYmd,
   type ReportAccommodationRow,
   type ReportBookingRow,
+  type ReportCustomerRow,
   type ReportInquiryRow,
+  type ReportTransactionRow,
 } from "@/lib/reports/tenant-report-metrics";
 import type { TenantSupabaseClient } from "@/lib/queries/types";
 
@@ -33,7 +39,7 @@ type RawAssetAgg = {
 };
 
 export type ReportsPageData = {
-  kpis: ReportsKpis;
+  kpis: ReportsModuleKpis;
   monthlyRevenue: MonthlyRevenuePoint[];
   eventBreakdown: EventTypeBreakdown[];
   festTypeBreakdown: FestTypeBreakdown[];
@@ -108,37 +114,66 @@ export async function fetchReportsPageData(
         }).format(new Date(reportYear, focusMonth - 1, 1))
       : String(reportYear);
 
-  const [bookingsRes, inquiriesRes, accommodationsRes, assetsRes] =
-    await Promise.all([
-      supabase
-        .from("bookings")
-        .select(
-          "id, event_type, fest_type, event_date, event_end_date, total_price, paid_amount, remaining_amount, status",
-        )
-        .eq("organization_id", orgId)
-        .order("event_date", { ascending: false }),
-      supabase
-        .from("booking_inquiries")
-        .select(
-          "status, estimated_total, preferred_event_date, created_at, converted_booking_id",
-        )
-        .eq("organization_id", orgId),
-      supabase
-        .from("accommodation_reservations")
-        .select("status, total_price, check_in_date, check_out_date")
-        .eq("organization_id", orgId),
-      supabase
-        .from("assets")
-        .select("value, condition, insurance_status")
-        .eq("organization_id", orgId)
-        .limit(10_000),
-    ]);
+  const [
+    bookingsRes,
+    inquiriesRes,
+    accommodationsRes,
+    assetsRes,
+    transactionsRes,
+    customersRes,
+    partnersRes,
+    propertiesRes,
+    packagesRes,
+    servicesRes,
+  ] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select(
+        "id, event_type, fest_type, event_date, event_end_date, total_price, paid_amount, remaining_amount, status",
+      )
+      .eq("organization_id", orgId)
+      .order("event_date", { ascending: false }),
+    supabase
+      .from("booking_inquiries")
+      .select(
+        "status, estimated_total, preferred_event_date, created_at, converted_booking_id, converted_at, updated_at",
+      )
+      .eq("organization_id", orgId),
+    supabase
+      .from("accommodation_reservations")
+      .select("status, total_price, check_in_date, check_out_date")
+      .eq("organization_id", orgId),
+    supabase
+      .from("assets")
+      .select("value, condition, insurance_status")
+      .eq("organization_id", orgId)
+      .limit(10_000),
+    supabase
+      .from("transactions")
+      .select("type, amount, transaction_date")
+      .eq("organization_id", orgId)
+      .limit(10_000),
+    supabase
+      .from("customers")
+      .select("created_at")
+      .eq("organization_id", orgId),
+    supabase.from("partners").select("id").eq("organization_id", orgId),
+    supabase.from("properties").select("id").eq("organization_id", orgId),
+    supabase.from("packages").select("id").eq("organization_id", orgId),
+    supabase.from("services").select("id").eq("organization_id", orgId),
+  ]);
 
   const loadError =
     bookingsRes.error?.message ??
     inquiriesRes.error?.message ??
     accommodationsRes.error?.message ??
     assetsRes.error?.message ??
+    transactionsRes.error?.message ??
+    customersRes.error?.message ??
+    partnersRes.error?.message ??
+    propertiesRes.error?.message ??
+    packagesRes.error?.message ??
+    servicesRes.error?.message ??
     null;
 
   const rawBookings = (bookingsRes.data ?? []) as unknown as ReportBookingRow[];
@@ -146,6 +181,9 @@ export async function fetchReportsPageData(
   const rawAccommodations = (accommodationsRes.data ??
     []) as unknown as ReportAccommodationRow[];
   const rawAssets = (assetsRes.data ?? []) as unknown as RawAssetAgg[];
+  const rawTransactions = (transactionsRes.data ??
+    []) as unknown as ReportTransactionRow[];
+  const rawCustomers = (customersRes.data ?? []) as unknown as ReportCustomerRow[];
 
   let assetOperationalCount = 0;
   let assetMaintenanceCount = 0;
@@ -186,33 +224,91 @@ export async function fetchReportsPageData(
     rawAccommodations,
     prevPeriod,
   );
-  const inquiryAgg = aggregateInquiries(rawInquiries, period);
+  const inquiryPipeline = aggregateInquiryPipeline(rawInquiries, period);
+  const financeAgg = aggregateTransactions(rawTransactions, period);
+  const prevFinanceAgg = aggregateTransactions(rawTransactions, prevPeriod);
+  const outstandingAgg = aggregateOutstandingBookings(rawBookings);
 
-  const totalBooked =
+  const fakturertNok =
     bookingAgg.totalBooked + accommodationAgg.totalBookedNok;
-  const prevTotalBooked =
+  const prevFakturertNok =
     prevBookingAgg.totalBooked + prevAccommodationAgg.totalBookedNok;
 
+  const bookingFakturertTotal =
+    bookingAgg.totalBooked + accommodationAgg.totalBookedNok;
   const paidShare =
-    totalBooked > 0 ? bookingAgg.totalPaid / totalBooked : 0;
+    bookingFakturertTotal > 0
+      ? bookingAgg.totalPaid / bookingFakturertTotal
+      : 0;
   const unpaidShareOfBooked =
-    totalBooked > 0 ? bookingAgg.totalUnpaid / totalBooked : 0;
+    bookingFakturertTotal > 0
+      ? bookingAgg.totalUnpaid / bookingFakturertTotal
+      : 0;
 
-  const kpis: ReportsKpis = {
-    revenueYtd: totalBooked,
-    revenueTrendPct: computeFakturertTrendPct(totalBooked, prevTotalBooked),
-    totalBooked,
-    totalPaid: bookingAgg.totalPaid,
-    totalUnpaid: bookingAgg.totalUnpaid,
-    bookingCount: bookingAgg.bookingCount,
-    confirmedBookingCount: bookingAgg.confirmedBookingCount,
-    pendingBookingCount: bookingAgg.pendingBookingCount,
-    inquiryCount: inquiryAgg.activeCount,
-    inquiryEstimatedTotal: inquiryAgg.estimatedTotalNok,
-    accommodationCount: accommodationAgg.reservationCount,
-    accommodationBookedNok: accommodationAgg.totalBookedNok,
-    paidShare,
-    unpaidShareOfBooked,
+  const customerCount = rawCustomers.length;
+  const newCustomersInPeriod = countCustomersCreatedInPeriod(
+    rawCustomers,
+    period,
+  );
+  const partnerCount = partnersRes.data?.length ?? 0;
+  const propertyCount = propertiesRes.data?.length ?? 0;
+  const packageCount = packagesRes.data?.length ?? 0;
+  const serviceCount = servicesRes.data?.length ?? 0;
+
+  const kpis: ReportsModuleKpis = {
+    revenue: {
+      fakturertNok,
+      revenueTrendPct: computeFakturertTrendPct(
+        fakturertNok,
+        prevFakturertNok,
+      ),
+      bookingFakturertNok: bookingAgg.totalBooked,
+      accommodationFakturertNok: accommodationAgg.totalBookedNok,
+      totalPaid: bookingAgg.totalPaid,
+      totalUnpaid: bookingAgg.totalUnpaid,
+      paidShare,
+      unpaidShareOfBooked,
+    },
+    bookings: {
+      bookingCount: bookingAgg.bookingCount,
+      confirmedBookingCount: bookingAgg.confirmedBookingCount,
+      pendingBookingCount: bookingAgg.pendingBookingCount,
+    },
+    inquiries: {
+      openCount: inquiryPipeline.openCount,
+      estimatedNok: inquiryPipeline.estimatedNok,
+      convertedCount: inquiryPipeline.convertedCount,
+      lostCount: inquiryPipeline.lostCount,
+      conversionRatePct: inquiryPipeline.conversionRatePct,
+    },
+    accommodation: {
+      reservationCount: accommodationAgg.reservationCount,
+      fakturertNok: accommodationAgg.totalBookedNok,
+    },
+    finance: {
+      incomeNok: financeAgg.incomeNok,
+      expenseNok: financeAgg.expenseNok,
+      netNok: financeAgg.netNok,
+      incomeTrendPct: pctDelta(prevFinanceAgg.incomeNok, financeAgg.incomeNok),
+      expenseTrendPct: pctDelta(
+        prevFinanceAgg.expenseNok,
+        financeAgg.expenseNok,
+      ),
+    },
+    invoices: {
+      outstandingNok: outstandingAgg.outstandingNok,
+      overdueUnpaidCount: outstandingAgg.overdueUnpaidCount,
+    },
+    partners: {
+      customerCount,
+      newCustomersInPeriod,
+      partnerCount,
+      propertyCount,
+    },
+    pricing: {
+      packageCount,
+      serviceCount,
+    },
   };
 
   const monthAmounts = buildMonthlyInvoicedSeries({
@@ -243,7 +339,13 @@ export async function fetchReportsPageData(
     rawBookings.length > 0 ||
     rawInquiries.some((i) => i.status !== "converted") ||
     rawAccommodations.length > 0 ||
-    rawAssets.length > 0;
+    rawAssets.length > 0 ||
+    rawTransactions.length > 0 ||
+    customerCount > 0 ||
+    partnerCount > 0 ||
+    propertyCount > 0 ||
+    packageCount > 0 ||
+    serviceCount > 0;
 
   return {
     kpis,

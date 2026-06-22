@@ -1,6 +1,6 @@
 "use client";
 
-import type { PartnerRow } from "@/components/customers/types";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -139,6 +139,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const router = useRouter();
+  const { invalidateCustomers } = useTenantDataInvalidation();
   const [query, setQuery] = useState("");
   const [partnersPage, setPartnersPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -253,6 +254,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
     toast.success("Partner registrert");
     addForm.reset({ category: "catering", name: "", phone: "", email: "", notes: "" });
     setAddOpen(false);
+    invalidateCustomers();
     router.refresh();
   }
 
@@ -275,6 +277,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
     }
 
     toast.success("Lagret");
+    invalidateCustomers();
     router.refresh();
   }
 
@@ -288,6 +291,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
       }
       toast.success("Partner slettet");
       if (selectedId === id) setSelectedId(null);
+      invalidateCustomers();
       router.refresh();
     } finally {
       setDeleteBusyId(null);
