@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { APP_NAME } from "@/config/app";
 import { getDevLoginDefaultValues } from "@/config/dev-login";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { mapAuthErrorToNorwegian } from "@/lib/auth/auth-error-messages";
 import {
   createBrowserSupabaseClient,
   isSupabasePublicConfigured,
@@ -20,8 +21,14 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
-export function LoginForm({ redirect = "/app" }: { redirect?: string }) {
-  const [formError, setFormError] = useState<string | null>(null);
+export function LoginForm({
+  redirect = "/app",
+  initialError = null,
+}: {
+  redirect?: string;
+  initialError?: string | null;
+}) {
+  const [formError, setFormError] = useState<string | null>(initialError);
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   const loginDefaults = useMemo(() => getDevLoginDefaultValues(), []);
@@ -48,7 +55,7 @@ export function LoginForm({ redirect = "/app" }: { redirect?: string }) {
       const message =
         error.message === "Failed to fetch" || error.name === "AuthRetryableFetchError"
           ? "Får ikke kontakt med Supabase. Sjekk NEXT_PUBLIC_SUPABASE_URL i .env.local, nettverk/VPN og at prosjektet ikke er pauset."
-          : error.message;
+          : mapAuthErrorToNorwegian(error);
       setFormError(message);
       return;
     }

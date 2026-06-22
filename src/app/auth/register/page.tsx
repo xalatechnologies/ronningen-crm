@@ -7,20 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { APP_NAME } from "@/config/app";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { registerSchema, type RegisterInput } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
-  const supabase = createBrowserSupabaseClient();
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -34,24 +29,24 @@ export default function RegisterPage() {
 
   async function onSubmit(values: RegisterInput) {
     setFormError(null);
-    setInfo(null);
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const { error } = await supabase.auth.signUp({
-      email: values.email,
-      password: values.password,
-      options: {
-        emailRedirectTo: origin ? `${origin}/auth/login` : undefined,
-        data: { full_name: values.fullName },
-      },
+
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(values),
     });
-    if (error) {
-      setFormError(error.message);
+
+    const payload = (await response.json().catch(() => null)) as {
+      error?: string;
+      redirectTo?: string;
+    } | null;
+
+    if (!response.ok) {
+      setFormError(payload?.error ?? "Registrering feilet. Prøv igjen.");
       return;
     }
-    setInfo(
-      "Sjekk innboksen din for å bekrefte kontoen. Deretter kan du logge inn.",
-    );
-    router.refresh();
+
+    window.location.assign(payload?.redirectTo ?? "/app/onboarding");
   }
 
   const fieldClass =
@@ -161,11 +156,6 @@ export default function RegisterPage() {
               {formError ? (
                 <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-app-sm text-destructive md:text-app-base">
                   {formError}
-                </p>
-              ) : null}
-              {info ? (
-                <p className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-app-sm text-foreground md:text-app-base">
-                  {info}
                 </p>
               ) : null}
                 <Button

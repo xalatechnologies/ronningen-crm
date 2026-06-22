@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { APP_NAME } from "@/config/app";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { mapAuthErrorToNorwegian } from "@/lib/auth/auth-error-messages";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { loginSchema } from "@/lib/validations";
@@ -34,10 +35,12 @@ export default function ForgotPasswordPage() {
     setInfo(null);
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-      redirectTo: origin ? `${origin}/auth/login` : undefined,
+      redirectTo: origin
+        ? `${origin}/auth/confirm?next=/auth/login`
+        : undefined,
     });
     if (error) {
-      setFormError(error.message);
+      setFormError(mapAuthErrorToNorwegian(error));
       return;
     }
     setInfo(

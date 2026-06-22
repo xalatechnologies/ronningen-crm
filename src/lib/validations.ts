@@ -4,6 +4,7 @@ import {
   BOOKING_PAYMENT_STATUS_VALUES,
 } from "@/constants/booking-payment-status";
 import { USER_ROLES } from "@/constants/roles";
+import { normalizeEmail } from "@/lib/auth/normalize-email";
 
 const userRoleSchema = z.enum(USER_ROLES);
 
@@ -11,8 +12,14 @@ export function isUserRole(value: unknown): value is z.infer<typeof userRoleSche
   return userRoleSchema.safeParse(value).success;
 }
 
+const emailField = z
+  .string()
+  .min(1, "E-post er påkrevd")
+  .transform((value) => normalizeEmail(value))
+  .pipe(z.string().email("Ugyldig e-postadresse"));
+
 export const loginSchema = z.object({
-  email: z.string().email("Ugyldig e-postadresse"),
+  email: emailField,
   password: z.string().min(8, "Passordet må være minst 8 tegn"),
 });
 
@@ -21,7 +28,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export const registerSchema = z
   .object({
     fullName: z.string().min(1, "Navn er påkrevd"),
-    email: z.string().email("Ugyldig e-postadresse"),
+    email: emailField,
     password: z.string().min(8, "Passordet må være minst 8 tegn"),
     confirmPassword: z.string(),
   })
