@@ -31,6 +31,7 @@ import {
 import { notifyBookingCreated } from "@/lib/notifications/actions/org-events";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -158,6 +159,7 @@ export function NewBookingForm({
 }: NewBookingFormProps) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
+  const { invalidateBookings, invalidateInquiries } = useTenantDataInvalidation();
   const router = useRouter();
   const [savedBookingId, setSavedBookingId] = useState<string | null>(null);
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -578,6 +580,11 @@ export function NewBookingForm({
 
     setSavedBookingId(bookingRow.id);
     toast.success("Booking opprettet", { description: bookingRow.id });
+
+    invalidateBookings();
+    if (inquiryPrefill?.inquiryId) {
+      invalidateInquiries();
+    }
 
     void notifyBookingCreated({
       organizationId: orgId,

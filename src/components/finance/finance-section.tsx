@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { AutocompleteFieldController } from "@/components/ui/autocomplete-field";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
 import { PriceInput } from "@/components/ui/price-input";
@@ -273,9 +274,7 @@ function TransactionFormInner({
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateFinance } = useTenantDataInvalidation();
   const isEdit = existing != null;
-  const categoryListId = isEdit
-    ? `finance-categories-${existing.id}`
-    : "finance-categories-new";
+  const formFieldId = isEdit ? `tx-form-${existing.id}` : "tx-form-new";
 
   const form = useForm<TransactionFormInput>({
     resolver: zodResolver(
@@ -364,7 +363,7 @@ function TransactionFormInner({
       >
         <div className="space-y-6 px-5 py-6 sm:space-y-7 sm:px-8 sm:py-7">
           <div className="space-y-2">
-            <Label className={txDialogFieldLabel} htmlFor={`tx-property-${categoryListId}`}>
+            <Label className={txDialogFieldLabel} htmlFor={`tx-property-${formFieldId}`}>
               Lokale
             </Label>
             <div className="relative">
@@ -375,7 +374,7 @@ function TransactionFormInner({
               <FormSelectField
                 name="propertyId"
                 control={control}
-                id={`tx-property-${categoryListId}`}
+                id={`tx-property-${formFieldId}`}
                 className="bg-background py-0 pl-12"
                 aria-label="Lokale for transaksjonen"
                 options={toIdNameOptions(properties)}
@@ -399,11 +398,11 @@ function TransactionFormInner({
                 type="radio"
                 value="income"
                 {...register("type")}
-                id={`tx-type-income-${categoryListId}`}
+                id={`tx-type-income-${formFieldId}`}
                 className="sr-only"
               />
               <label
-                htmlFor={`tx-type-income-${categoryListId}`}
+                htmlFor={`tx-type-income-${formFieldId}`}
                 className={cn(
                   "flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border-2 px-4 py-3 font-heading text-base font-semibold transition-all outline-none sm:min-h-11",
                   txType === "income"
@@ -418,11 +417,11 @@ function TransactionFormInner({
                 type="radio"
                 value="expense"
                 {...register("type")}
-                id={`tx-type-expense-${categoryListId}`}
+                id={`tx-type-expense-${formFieldId}`}
                 className="sr-only"
               />
               <label
-                htmlFor={`tx-type-expense-${categoryListId}`}
+                htmlFor={`tx-type-expense-${formFieldId}`}
                 className={cn(
                   "flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border-2 px-4 py-3 font-heading text-base font-semibold transition-all outline-none sm:min-h-11",
                   txType === "expense"
@@ -438,7 +437,7 @@ function TransactionFormInner({
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-5">
             <div className="space-y-2 sm:col-span-1">
-              <Label className={txDialogFieldLabel} htmlFor={`tx-cat-${categoryListId}`}>
+              <Label className={txDialogFieldLabel} htmlFor={`tx-cat-${formFieldId}`}>
                 Kategori
               </Label>
               <div className="relative">
@@ -446,18 +445,16 @@ function TransactionFormInner({
                   className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground"
                   aria-hidden
                 />
-                <Input
-                  className="h-12 rounded-md border-2 border-rn-border-strong pl-12 text-base md:text-base focus-visible:border-success focus-visible:ring-success/25"
-                  list={categoryListId}
+                <AutocompleteFieldController
+                  name="category"
+                  control={control}
+                  id={`tx-cat-${formFieldId}`}
+                  suggestions={CATEGORY_SUGGESTIONS}
                   placeholder="Velg eller skriv inn"
-                  {...register("category")}
-                  id={`tx-cat-${categoryListId}`}
+                  aria-label="Kategori for transaksjonen"
+                  className="w-full"
+                  inputClassName="h-12 rounded-md border-2 border-rn-border-strong pl-12 text-base md:text-base focus-visible:border-success focus-visible:ring-success/25"
                 />
-                <datalist id={categoryListId}>
-                  {CATEGORY_SUGGESTIONS.map((c) => (
-                    <option key={c} value={c} />
-                  ))}
-                </datalist>
               </div>
               {formState.errors.category ? (
                 <p className="text-sm text-destructive">
@@ -467,7 +464,7 @@ function TransactionFormInner({
             </div>
 
             <div className="space-y-2 sm:col-span-1">
-              <Label className={txDialogFieldLabel} htmlFor={`tx-amt-${categoryListId}`}>
+              <Label className={txDialogFieldLabel} htmlFor={`tx-amt-${formFieldId}`}>
                 Beløp (NOK)
               </Label>
               <div className="relative">
@@ -484,7 +481,7 @@ function TransactionFormInner({
                   )}
                   step={1}
                   {...register("amount")}
-                  id={`tx-amt-${categoryListId}`}
+                  id={`tx-amt-${formFieldId}`}
                 />
               </div>
               {formState.errors.amount ? (
@@ -504,7 +501,7 @@ function TransactionFormInner({
           <div className="space-y-2">
             <Label
               className={txDialogFieldLabel}
-              htmlFor={`tx-desc-${categoryListId}`}
+              htmlFor={`tx-desc-${formFieldId}`}
             >
               Beskrivelse <span className="font-normal normal-case">(valgfritt)</span>
             </Label>
@@ -512,16 +509,16 @@ function TransactionFormInner({
               className="h-12 rounded-md border-2 border-rn-border-strong text-base md:text-base focus-visible:border-success focus-visible:ring-success/25"
               placeholder="F.eks. Leie mai, reparasjon kjøkken"
               {...register("description")}
-              id={`tx-desc-${categoryListId}`}
+              id={`tx-desc-${formFieldId}`}
             />
           </div>
 
           <div className="space-y-2">
-            <Label className={txDialogFieldLabel} htmlFor={`tx-date-${categoryListId}`}>
+            <Label className={txDialogFieldLabel} htmlFor={`tx-date-${formFieldId}`}>
               Transaksjonsdato
             </Label>
             <DatePickerField
-              id={`tx-date-${categoryListId}`}
+              id={`tx-date-${formFieldId}`}
               value={transactionDate}
               onChange={(ymd) =>
                 setValue("transactionDate", ymd, {
@@ -536,7 +533,7 @@ function TransactionFormInner({
             <input
               type="hidden"
               {...hiddenTransactionDateRegister}
-              id={`tx-transactionDate-hidden-${categoryListId}`}
+              id={`tx-transactionDate-hidden-${formFieldId}`}
             />
             {formState.errors.transactionDate ? (
               <p className="text-sm text-destructive">

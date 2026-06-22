@@ -13,7 +13,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { ReportsYearMonthCalendar } from "./reports-year-month-calendar";
-import type { EventTypeBreakdown, ReportsSectionProps } from "./types";
+import type { EventTypeBreakdown, FestTypeBreakdown, ReportsSectionProps } from "./types";
 
 function formatNok(n: number) {
   return new Intl.NumberFormat("nb-NO", {
@@ -47,6 +47,50 @@ const BAR_BG = [
 
 function eventBarClass(i: number) {
   return BAR_BG[i % BAR_BG.length]!;
+}
+
+function FestTypeBreakdownRow({
+  row,
+  index,
+}: {
+  row: FestTypeBreakdown;
+  index: number;
+}) {
+  return (
+    <div className="relative pt-2">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <span
+          className={cn(
+            "reports-breakdown-pill inline-flex w-fit rounded-full px-3 py-1.5 font-bold tracking-wide md:px-4 md:py-2",
+            eventPillClass(row.festType),
+          )}
+        >
+          {row.festType}
+        </span>
+        <span className="reports-breakdown-stats text-left sm:text-right">
+          <span className="text-foreground">{row.count}</span>
+          <span className="reports-breakdown-stats-meta text-muted-foreground">
+            {" "}
+            {row.count === 1 ? "booking" : "bookinger"} · {row.pct.toFixed(0)}%
+          </span>
+        </span>
+      </div>
+      <div className="flex h-3 overflow-hidden rounded-full bg-muted md:h-4">
+        <div
+          className={cn(
+            "flex flex-col justify-center whitespace-nowrap text-center text-white shadow-none transition-[width]",
+            eventBarClass(index),
+          )}
+          style={{
+            width:
+              row.count === 0
+                ? "0%"
+                : `${Math.min(100, Math.max(row.pct, 6))}%`,
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
 function BreakdownRow({
@@ -97,12 +141,14 @@ export function ReportsSection({
   kpis,
   monthlyRevenue,
   eventBreakdown,
+  festTypeBreakdown,
   facility,
   reportYear,
   calendarYearMax,
   focusMonth,
   reportsPeriodLabel,
   loadError,
+  hasRegisteredActivity,
 }: ReportsSectionProps) {
   const paddedCard = (extra?: string) =>
     cn("p-6", RN_CARD_SHELL, extra);
@@ -155,14 +201,45 @@ export function ReportsSection({
           </div>
         ) : null}
 
+        {!loadError && !hasRegisteredActivity ? (
+          <div className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6">
+            <div className="rounded-md border border-rn-border-strong/60 bg-muted/20 px-4 py-4 text-app-sm text-muted-foreground">
+              <p className="font-medium text-foreground">
+                Ingen registrert aktivitet i perioden ennå.
+              </p>
+              <p className="mt-2">
+                Tall oppdateres automatisk når du registrerer{" "}
+                <Link href="/app/bookings/new" className="font-semibold text-success underline-offset-2 hover:underline">
+                  reservasjoner
+                </Link>
+                ,{" "}
+                <Link href="/app/inquiries/new" className="font-semibold text-success underline-offset-2 hover:underline">
+                  forespørsler
+                </Link>{" "}
+                eller{" "}
+                <Link href="/app/overnatting/new" className="font-semibold text-success underline-offset-2 hover:underline">
+                  overnatting
+                </Link>
+                . Finansinntekter vises separat under Finans.
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         <section
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
           aria-label="Omsetning og bookinger"
         >
-          <h2 className="app-section-title">Omsetning og bookinger</h2>
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-4">
+          <div className="space-y-1">
+            <h2 className="app-section-title">Omsetning og bookinger</h2>
+            <p className="text-app-sm text-muted-foreground">
+              Fakturert beløp fra registrerte reservasjoner og overnatting i valgt
+              periode. Innbetalt og ubetalt gjelder reservasjoner.
+            </p>
+          </div>
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-6">
             <div className={kpiTileClass}>
-              <p className="reports-kpi-label mb-3">Omsetning</p>
+              <p className="reports-kpi-label mb-3">Fakturert</p>
               <p className="reports-kpi-value text-success">{formatNok(kpis.revenueYtd)}</p>
               {kpis.revenueTrendPct != null ? (
                 <div
@@ -229,6 +306,28 @@ export function ReportsSection({
                 {" · "}
                 <span className="text-amber-700 dark:text-amber-400">
                   {kpis.pendingBookingCount} venter
+                </span>
+              </p>
+            </div>
+
+            <div className={kpiTileClass}>
+              <p className="reports-kpi-label mb-3">Forespørsler</p>
+              <p className="reports-kpi-value text-foreground">{kpis.inquiryCount}</p>
+              <p className="reports-kpi-caption mt-3">
+                Estimert{" "}
+                <span className="font-semibold tabular-nums text-foreground">
+                  {formatNok(kpis.inquiryEstimatedTotal)}
+                </span>
+              </p>
+            </div>
+
+            <div className={kpiTileClass}>
+              <p className="reports-kpi-label mb-3">Overnatting</p>
+              <p className="reports-kpi-value text-foreground">{kpis.accommodationCount}</p>
+              <p className="reports-kpi-caption mt-3">
+                Fakturert{" "}
+                <span className="font-semibold tabular-nums text-foreground">
+                  {formatNok(kpis.accommodationBookedNok)}
                 </span>
               </p>
             </div>
@@ -392,6 +491,18 @@ export function ReportsSection({
               {eventBreakdown.map((row, i) => (
                 <BreakdownRow key={row.eventType} row={row} index={i} />
               ))}
+              {festTypeBreakdown.length > 0 ? (
+                <div className="border-t border-rn-border-strong/40 pt-8">
+                  <h3 className="mb-6 text-app-base font-bold tracking-tight text-foreground">
+                    Arrangementstyper
+                  </h3>
+                  <div className="flex flex-col gap-8">
+                    {festTypeBreakdown.map((row, i) => (
+                      <FestTypeBreakdownRow key={row.festType} row={row} index={i} />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           )}
         </section>

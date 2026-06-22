@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { notifyInquiryCreated } from "@/lib/notifications/actions/org-events";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, X } from "lucide-react";
@@ -61,6 +62,7 @@ export function NewInquiryForm({
 }: NewInquiryFormProps) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
+  const { invalidateInquiries } = useTenantDataInvalidation();
   const router = useRouter();
 
   const form = useForm<BookingInquiryFormInput>({
@@ -156,6 +158,7 @@ export function NewInquiryForm({
       inquiryId: inquiryRow.id,
     });
 
+    invalidateInquiries();
     toast.success("Forespørsel registrert");
     router.push("/app/inquiries");
     router.refresh();

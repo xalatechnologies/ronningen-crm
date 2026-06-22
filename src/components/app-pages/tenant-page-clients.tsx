@@ -195,12 +195,14 @@ export function ReportsPageClient() {
       kpis={data.kpis}
       monthlyRevenue={data.monthlyRevenue}
       eventBreakdown={data.eventBreakdown}
+      festTypeBreakdown={data.festTypeBreakdown}
       facility={data.facility}
       reportYear={data.reportYear}
       calendarYearMax={data.calendarYearMax}
       focusMonth={data.focusMonth}
       reportsPeriodLabel={data.reportsPeriodLabel}
       loadError={data.loadError}
+      hasRegisteredActivity={data.hasRegisteredActivity}
     />
   );
 }

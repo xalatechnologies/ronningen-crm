@@ -17,6 +17,19 @@ export function invalidateTenantQueries(
   });
 }
 
+export function invalidateReportsQueries(
+  queryClient: QueryClient,
+  orgId: string,
+) {
+  void queryClient.invalidateQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey[0] === "tenant" &&
+      query.queryKey[1] === "reports" &&
+      query.queryKey[2] === orgId,
+  });
+}
+
 export function invalidateBookingsQueries(
   queryClient: QueryClient,
   orgId: string,
@@ -30,6 +43,7 @@ export function invalidateBookingsQueries(
   void queryClient.invalidateQueries({
     queryKey: tenantQueryKeys.invoices(orgId),
   });
+  invalidateReportsQueries(queryClient, orgId);
 }
 
 export function invalidateInquiriesQueries(
@@ -39,6 +53,7 @@ export function invalidateInquiriesQueries(
   void queryClient.invalidateQueries({
     queryKey: tenantQueryKeys.inquiries(orgId),
   });
+  invalidateReportsQueries(queryClient, orgId);
 }
 
 export function invalidateCustomersQueries(
@@ -57,9 +72,7 @@ export function invalidateFinanceQueries(
   void queryClient.invalidateQueries({
     queryKey: tenantQueryKeys.finance(orgId),
   });
-  void queryClient.invalidateQueries({
-    queryKey: tenantQueryKeys.reports(orgId, new Date().getFullYear(), null),
-  });
+  invalidateReportsQueries(queryClient, orgId);
 }
 
 export function invalidatePricingQueries(
@@ -78,6 +91,7 @@ export function invalidateAssetsQueries(
   void queryClient.invalidateQueries({
     queryKey: tenantQueryKeys.assets(orgId),
   });
+  invalidateReportsQueries(queryClient, orgId);
 }
 
 export function invalidateOvernattingQueries(
@@ -87,4 +101,5 @@ export function invalidateOvernattingQueries(
   void queryClient.invalidateQueries({
     queryKey: ["tenant", "overnatting", orgId],
   });
+  invalidateReportsQueries(queryClient, orgId);
 }

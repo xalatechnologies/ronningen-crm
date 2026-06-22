@@ -240,12 +240,12 @@ function BookingsFiltersSection({
 
   return (
     <section
-      className="bookings-list-filters border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6"
+      className="bookings-list-filters border-t border-rn-border-strong/35 px-4 py-5 sm:px-6 md:px-8 md:py-6"
       aria-label="Søk og filtrer reservasjoner"
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:gap-4">
-          <div className="relative min-w-0 flex-1">
+      <div className="flex min-w-0 flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-end xl:gap-5">
+          <div className="relative min-w-0 w-full xl:max-w-md 2xl:max-w-xl">
             <Label htmlFor="bookings-search" className={filterEyebrowClass}>
               Søk
             </Label>
@@ -264,10 +264,10 @@ function BookingsFiltersSection({
             />
           </div>
 
-          <div className="flex min-w-0 flex-col lg:flex-1 lg:items-end">
-            <p className={cn(filterEyebrowClass, "w-full lg:text-right")}>Status</p>
+          <div className="min-w-0 w-full flex-1">
+            <p className={filterEyebrowClass}>Status</p>
             <div
-              className="grid min-w-0 w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:flex lg:flex-row lg:flex-wrap lg:items-stretch lg:justify-end lg:gap-2.5 xl:w-auto xl:flex-nowrap"
+              className="grid min-w-0 w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3"
               role="group"
               aria-label="Filtrer etter status"
             >
@@ -286,7 +286,7 @@ function BookingsFiltersSection({
                     type="button"
                     onClick={() => setFilter(key)}
                     className={cn(
-                      "flex min-h-12 w-full items-center justify-between gap-2 rounded-md border-2 px-3 py-3 text-left transition-all sm:gap-3 sm:px-4 md:min-h-[3.25rem] md:rounded-md md:px-5 md:py-3.5 lg:min-h-14 lg:w-auto lg:min-w-[7rem] lg:flex-1 lg:max-w-[10.5rem] xl:min-w-[7.5rem]",
+                      "flex min-h-12 w-full min-w-0 items-center justify-between gap-2 rounded-md border-2 px-3 py-3 text-left transition-all sm:gap-3 sm:px-4 md:min-h-[3.25rem] md:rounded-md md:px-4 md:py-3.5",
                       active
                         ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
                         : tone === "emerald"
@@ -300,7 +300,7 @@ function BookingsFiltersSection({
                   >
                     <span
                       className={cn(
-                        "font-heading text-app-base font-semibold",
+                        "truncate font-heading text-app-sm font-semibold sm:text-app-base",
                         active ? "!text-white" : undefined,
                       )}
                     >
@@ -308,7 +308,7 @@ function BookingsFiltersSection({
                     </span>
                     <span
                       className={cn(
-                        "bookings-list-filter-count inline-flex min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-app-sm font-bold tabular-nums md:text-app-base",
+                        "bookings-list-filter-count inline-flex shrink-0 min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-app-sm font-bold tabular-nums",
                         active
                           ? "border-white/30 bg-white/20 !text-white"
                           : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
@@ -323,13 +323,8 @@ function BookingsFiltersSection({
           </div>
         </div>
 
-        <div
-          className={cn(
-            "flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4",
-            secondaryRowEnd && "xl:flex-nowrap xl:gap-3",
-          )}
-        >
-          <div className="w-full shrink-0 sm:w-44 md:w-48">
+        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 2xl:items-end">
+          <div className="min-w-0">
             <Label htmlFor="bookings-date-from" className={filterEyebrowClass}>
               Fra dato
             </Label>
@@ -339,10 +334,10 @@ function BookingsFiltersSection({
               onChange={setDateFrom}
               maxYmd={dateTo || undefined}
               variant="toolbar"
-              className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+              className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
             />
           </div>
-          <div className="w-full shrink-0 sm:w-44 md:w-48">
+          <div className="min-w-0">
             <Label htmlFor="bookings-date-to" className={filterEyebrowClass}>
               Til dato
             </Label>
@@ -352,10 +347,10 @@ function BookingsFiltersSection({
               onChange={setDateTo}
               minYmd={dateFrom || undefined}
               variant="toolbar"
-              className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+              className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
             />
           </div>
-          <div className="w-full shrink-0 sm:w-52 md:w-56">
+          <div className="min-w-0">
             <Label htmlFor="bookings-payment-filter" className={filterEyebrowClass}>
               Betaling
             </Label>
@@ -364,7 +359,7 @@ function BookingsFiltersSection({
               value={paymentFilter}
               onValueChange={(v) => setPaymentFilter(v as BookingPaymentFilter)}
               aria-label="Filtrer etter betaling"
-              className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+              className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
               placeholder="Alle betalinger"
               options={[
                 { value: "unpaid", label: BOOKING_PAYMENT_STATUS_LABELS.unpaid },
@@ -373,7 +368,7 @@ function BookingsFiltersSection({
               ]}
             />
           </div>
-          <div className="w-full shrink-0 sm:w-52 md:w-56">
+          <div className="min-w-0">
             <Label htmlFor="bookings-audience-filter" className={filterEyebrowClass}>
               Arrangementstype
             </Label>
@@ -382,7 +377,7 @@ function BookingsFiltersSection({
               value={audienceFilter}
               onValueChange={(v) => setAudienceFilter(v as BookingAudienceFilter)}
               aria-label="Filtrer etter arrangementstype"
-              className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+              className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
               placeholder="Alle typer"
               options={[
                 { value: "Privat", label: "Privat" },
@@ -390,24 +385,25 @@ function BookingsFiltersSection({
               ]}
             />
           </div>
-          <div className="flex w-full shrink-0 sm:w-auto sm:self-end">
+          <div className="flex min-w-0 sm:col-span-2 lg:col-span-1 2xl:col-span-1">
             <Button
               type="button"
               variant="outline"
               disabled={!hasActiveFilters}
-              className="h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold sm:h-12 sm:w-auto sm:px-5 sm:text-app-base"
+              className="h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold sm:h-12 sm:text-app-base"
               onClick={onResetFilters}
             >
               <RotateCcw className="size-4 shrink-0" aria-hidden />
               Nullstill filter
             </Button>
           </div>
-          {secondaryRowEnd ? (
-            <div className="flex w-full shrink-0 flex-wrap items-end justify-end gap-2 border-t border-rn-border-strong/35 pt-3 xl:ml-auto xl:w-auto xl:border-t-0 xl:border-l xl:pl-4 xl:pt-0">
-              {secondaryRowEnd}
-            </div>
-          ) : null}
         </div>
+
+        {secondaryRowEnd ? (
+          <div className="flex min-w-0 flex-wrap items-end justify-end gap-2 border-t border-rn-border-strong/35 pt-3">
+            {secondaryRowEnd}
+          </div>
+        ) : null}
       </div>
     </section>
   );
