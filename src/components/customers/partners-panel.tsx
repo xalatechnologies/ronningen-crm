@@ -1,5 +1,6 @@
 "use client";
 
+import type { PartnerRow } from "@/components/customers/types";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
