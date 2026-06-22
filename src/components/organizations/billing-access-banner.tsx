@@ -1,12 +1,28 @@
+"use client";
+
 import Link from "next/link";
 
-import { getTenantAppAccess } from "@/lib/organizations/require-tenant-app-access";
-import { TENANT_BILLING_PATH } from "@/lib/subscriptions/subscription-utils";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
+import { isBillingEnabled } from "@/lib/billing/constants";
+import {
+  isBillingOnlyAccess,
+  TENANT_BILLING_PATH,
+  toTenantAccessInput,
+} from "@/lib/subscriptions/subscription-utils";
 
-export async function BillingAccessBanner() {
-  const ctx = await getTenantAppAccess(TENANT_BILLING_PATH);
+export function BillingAccessBanner() {
+  const { currentOrganization, loading } = useCurrentOrganization();
 
-  if (!ctx || ctx.accessLevel !== "billing_only") {
+  if (loading || !currentOrganization) {
+    return null;
+  }
+
+  const billingBlocked = isBillingOnlyAccess(
+    toTenantAccessInput(currentOrganization),
+    { billingEnabled: isBillingEnabled() },
+  );
+
+  if (!billingBlocked) {
     return null;
   }
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 
 import { AppPageHeader } from "@/components/layout/app-page-header";
@@ -190,10 +190,26 @@ export function BillingSettingsPanel({
   );
   const [subLoading, setSubLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [checkoutSyncing, setCheckoutSyncing] = useState(false);
   const checkoutHandledRef = useRef(false);
+
+  const reloadSubscription = useCallback(
+    async (organizationId: string) => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select(
+          "status, plan, current_period_start, current_period_end, provider, provider_customer_id, provider_subscription_id",
+        )
+        .eq("organization_id", organizationId)
+        .maybeSingle();
+      if (data) setSubscription(data);
+    },
+    [supabase],
+  );
 
   useEffect(() => {
     const checkout = searchParams.get("checkout");
+    const sessionId = searchParams.get("session_id");
 
     if (checkout === "canceled") {
       if (!checkoutHandledRef.current) {
@@ -208,36 +224,43 @@ export function BillingSettingsPanel({
     if (checkoutHandledRef.current) return;
 
     checkoutHandledRef.current = true;
-    router.replace("/app/settings/billing", { scroll: false });
-
     let cancelled = false;
+    setCheckoutSyncing(true);
 
     void (async () => {
-      const result = await syncSubscriptionAfterCheckout(currentOrganizationId);
+      const result = await syncSubscriptionAfterCheckout(
+        currentOrganizationId,
+        sessionId,
+      );
+
       if (cancelled) return;
 
       if (result.ok) {
         toast.success("Abonnement aktivert. Velkommen!");
         await refreshOrganizations();
-        const { data } = await supabase
-          .from("subscriptions")
-          .select(
-            "status, plan, current_period_start, current_period_end, provider, provider_customer_id, provider_subscription_id",
-          )
-          .eq("organization_id", currentOrganizationId)
-          .maybeSingle();
-        if (data) setSubscription(data);
+        await reloadSubscription(currentOrganizationId);
+        router.refresh();
+        router.replace("/app/settings/billing", { scroll: false });
       } else {
-        toast.success(
-          "Betaling mottatt. Abonnementet oppdateres om et øyeblikk.",
+        toast.error(
+          "Betalingen er registrert, men vi kunne ikke oppdatere abonnementet ennå. Prøv «Oppdater status» eller vent et øyeblikk.",
         );
+        checkoutHandledRef.current = false;
       }
+
+      if (!cancelled) setCheckoutSyncing(false);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [searchParams, currentOrganizationId, supabase, refreshOrganizations, router]);
+  }, [
+    searchParams,
+    currentOrganizationId,
+    refreshOrganizations,
+    reloadSubscription,
+    router,
+  ]);
 
   useEffect(() => {
     if (!supabase || !currentOrganizationId) {
@@ -277,6 +300,27 @@ export function BillingSettingsPanel({
     };
   }, [supabase, currentOrganizationId]);
 
+  async function handleRefreshStatus() {
+    if (!currentOrganizationId) return;
+    setActionLoading(true);
+    const sessionId = searchParams.get("session_id");
+    const result = await syncSubscriptionAfterCheckout(
+      currentOrganizationId,
+      sessionId,
+    );
+    setActionLoading(false);
+
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success("Abonnement oppdatert.");
+    await refreshOrganizations();
+    await reloadSubscription(currentOrganizationId);
+    router.refresh();
+  }
+
   async function handleCheckout() {
     if (!currentOrganizationId) return;
     setActionLoading(true);
@@ -305,7 +349,7 @@ export function BillingSettingsPanel({
     window.location.href = result.url;
   }
 
-  if (subLoading || (loading && !currentOrganization)) {
+  if (subLoading || checkoutSyncing || (loading && !currentOrganization)) {
     return <BillingSettingsSkeleton />;
   }
 
@@ -458,10 +502,25 @@ export function BillingSettingsPanel({
               <Button
                 type="button"
                 size="cta"
-                disabled={actionLoading}
+                disabled={actionLoading || checkoutSyncing}
                 onClick={() => void handleCheckout()}
               >
                 {actionLoading ? "Åpner betaling…" : primaryCtaLabel}
+              </Button>
+            ) : null}
+
+            {billingOn && isOwner && (showCheckout || !hasStripeSubscription) ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="cta"
+                className="w-full"
+                disabled={actionLoading || checkoutSyncing}
+                onClick={() => void handleRefreshStatus()}
+              >
+                {checkoutSyncing || actionLoading
+                  ? "Oppdaterer status…"
+                  : "Oppdater status"}
               </Button>
             ) : null}
 

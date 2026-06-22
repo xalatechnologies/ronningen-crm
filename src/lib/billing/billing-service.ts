@@ -166,7 +166,7 @@ export async function createCheckoutSessionForOrganization(input: {
       plan_id: planId,
       billing_mode: billingMode,
     },
-    success_url: `${origin}/app/settings/billing?checkout=success`,
+    success_url: `${origin}/app/settings/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/app/settings/billing?checkout=canceled`,
     allow_promotion_codes: false,
   });
