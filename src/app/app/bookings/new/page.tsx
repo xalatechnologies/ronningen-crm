@@ -5,7 +5,6 @@ import {
   type ExistingCustomer,
   type InquiryPrefill,
 } from "@/components/bookings/new-booking-form";
-import { usePageSearchParams } from "@/lib/next/dynamic-page-props";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { sortBookingPackagesByCatalogOrder } from "@/lib/validations";
@@ -18,7 +17,7 @@ export default async function NewBookingPage({
 }) {
   const supabase = await createServerSupabaseClient();
   const orgId = await requireServerOrganizationId();
-  const sp = usePageSearchParams(searchParams);
+  const sp = await searchParams;
 
   let inquiryPrefill: InquiryPrefill | null = null;
   let existingCustomer: ExistingCustomer | null = null;

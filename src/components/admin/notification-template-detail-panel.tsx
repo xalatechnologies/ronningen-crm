@@ -5,12 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { upsertEmailTemplate } from "@/lib/admin/actions/notifications";
 import type { AdminEmailTemplate } from "@/lib/admin/queries/notifications";
+import { formatEmailTemplateLabel } from "@/lib/notifications/default-email-templates";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 type NotificationTemplateDetailPanelProps = {
   template: AdminEmailTemplate;
   onUpdated: () => void;
+};
+
+const TEMPLATE_VARIABLE_HINTS: Record<string, string> = {
+  welcome: "{{name}}",
+  trial_reminder: "{{name}}, {{organization}}, {{trial_end_date}}",
+  payment_failed: "{{name}}, {{organization}}",
 };
 
 export function NotificationTemplateDetailPanel({
@@ -52,6 +59,20 @@ export function NotificationTemplateDetailPanel({
 
   return (
     <div className="space-y-4 p-1">
+      <p className="text-app-sm text-muted-foreground">
+        <span className="font-medium text-foreground">
+          {formatEmailTemplateLabel(template.key)}
+        </span>
+        {TEMPLATE_VARIABLE_HINTS[template.key] ? (
+          <>
+            {" "}
+            · Tilgjengelige variabler:{" "}
+            <span className="font-mono text-app-xs">
+              {TEMPLATE_VARIABLE_HINTS[template.key]}
+            </span>
+          </>
+        ) : null}
+      </p>
       <div className="space-y-2">
         <Label htmlFor={`subject-${template.key}`}>Emne</Label>
         <Input

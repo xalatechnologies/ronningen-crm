@@ -37,6 +37,7 @@ import {
   formatDeliveryStatusLabel,
   type CampaignStatus,
 } from "@/lib/admin/notification-labels";
+import { formatEmailTemplateLabel } from "@/lib/notifications/default-email-templates";
 import type {
   AdminEmailTemplate,
   AdminNotificationCampaign,
@@ -232,7 +233,7 @@ function CreateTemplateForm({ onCreated }: { onCreated: () => void }) {
             id="new-template-key"
             value={key}
             onChange={(event) => setKey(event.target.value)}
-            placeholder="welcome"
+            placeholder="trial_reminder"
             className="border-2 border-rn-border-strong font-mono"
             required
           />
@@ -606,7 +607,7 @@ export function AdminNotificationsWorkspace({
               <thead>
                 <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
                   <th className={cn(tableHeadClass, "w-10")} />
-                  <th className={tableHeadClass}>Nøkkel</th>
+                  <th className={tableHeadClass}>Mal</th>
                   <th className={tableHeadClass}>Emne</th>
                   <th className={tableHeadClass}>Sist endret</th>
                 </tr>
@@ -636,8 +637,13 @@ export function AdminNotificationsWorkspace({
                             )}
                           </button>
                         </td>
-                        <td className={cn(tableCellClass, "admin-ops-mono font-medium")}>
-                          {template.key}
+                        <td className={cn(tableCellClass, "min-w-[12rem]")}>
+                          <p className="font-medium text-foreground">
+                            {formatEmailTemplateLabel(template.key)}
+                          </p>
+                          <p className="mt-0.5 font-mono text-app-xs text-muted-foreground">
+                            {template.key}
+                          </p>
                         </td>
                         <td className={tableCellClass}>{template.subject}</td>
                         <td className={cn(tableCellClass, "text-muted-foreground")}>

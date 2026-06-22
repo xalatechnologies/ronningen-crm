@@ -5,7 +5,6 @@ import {
   type OrganizationProfileRow,
 } from "@/lib/organizations/organization-profile";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
-import { usePageParams } from "@/lib/next/dynamic-page-props";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -42,7 +41,7 @@ function filenameSafeTitle(invoiceNo: string) {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const { bookingId } = usePageParams(params);
+  const { bookingId } = await params;
   const supabase = await createServerSupabaseClient();
   const orgId = await requireServerOrganizationId();
   const { data } = await supabase
@@ -66,7 +65,7 @@ export async function generateMetadata({
 }
 
 export default async function InvoicePrintPage({ params }: PageProps) {
-  const { bookingId } = usePageParams(params);
+  const { bookingId } = await params;
 
   const supabase = await createServerSupabaseClient();
   const orgId = await requireServerOrganizationId();
