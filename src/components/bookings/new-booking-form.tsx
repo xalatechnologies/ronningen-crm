@@ -29,6 +29,9 @@ import {
   suggestNextBookingReference,
 } from "@/lib/bookings/booking-reference";
 import { notifyBookingCreated } from "@/lib/notifications/actions/org-events";
+import { resolveNewBookingPaymentAmounts } from "@/constants/booking-payment-status";
+import { parseNokFormValue } from "@/lib/bookings/parse-nok-form-value";
+import { redirectAfterCreate } from "@/lib/navigation/redirect-after-create";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
@@ -37,7 +40,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
   Calendar,
-  Copy,
   Package,
   Plus,
   RefreshCw,
@@ -161,14 +163,6 @@ export function NewBookingForm({
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateBookings, invalidateInquiries } = useTenantDataInvalidation();
   const router = useRouter();
-  const [savedBookingId, setSavedBookingId] = useState<string | null>(null);
-  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
-    };
-  }, []);
 
   const sortedPackages = useMemo(
     () => sortBookingPackagesByCatalogOrder(bookingPackages),
@@ -250,14 +244,19 @@ export function NewBookingForm({
   const packageSource = useWatch({ control, name: "packageSource" });
   const festType = useWatch({ control, name: "festType" });
   const eventDate = useWatch({ control, name: "eventDate" });
-  const watched = useWatch({ control });
+  const selectedAddonIds =
+    useWatch({ control, name: "selectedAddonIds" }) ?? [];
+  const customPackagePrice = useWatch({ control, name: "customPackagePrice" });
+  const customAddonLines =
+    useWatch({ control, name: "customAddonLines" }) ?? [];
+  const agreedTotalRaw = useWatch({ control, name: "agreedTotal" });
+  const depositPaidRaw = useWatch({ control, name: "depositPaid" });
   const referenceYear = useMemo(
     () => referenceYearFromEventDate(eventDate),
     [eventDate],
   );
   const [isGeneratingReference, setIsGeneratingReference] = useState(false);
   const didAutoGenerateRef = useRef(false);
-  const selectedAddonIds = watched?.selectedAddonIds ?? [];
 
   useEffect(() => {
     if (sortedPackages.length === 0) {
@@ -306,59 +305,53 @@ export function NewBookingForm({
   }, [inquiryPrefill, setValue]);
 
   const estimatedTotal = useMemo(() => {
-    if (!watched) return 0;
     const src =
-      (watched.packageSource as "catalog" | "custom") ?? defaultPackageSource;
-    const pkgId = String(watched.selectedPackageId ?? "");
-    const ids = Array.isArray(watched.selectedAddonIds)
-      ? watched.selectedAddonIds
-      : [];
-    const customPriceRaw = watched.customPackagePrice;
-    const customPrice =
-      typeof customPriceRaw === "number"
-        ? customPriceRaw
-        : Number.parseFloat(String(customPriceRaw ?? 0));
-    const linesRaw = watched.customAddonLines;
-    const lines = Array.isArray(linesRaw)
-      ? linesRaw.map((row) => {
+      (packageSource as "catalog" | "custom" | "") || defaultPackageSource;
+    const pkgId = String(selectedPackageId ?? "");
+    const ids = Array.isArray(selectedAddonIds) ? selectedAddonIds : [];
+    const customPrice = parseNokFormValue(customPackagePrice);
+    const lines = Array.isArray(customAddonLines)
+      ? customAddonLines.map((row) => {
           const r = row as { name?: string; priceNok?: unknown };
-          const p =
-            typeof r?.priceNok === "number"
-              ? r.priceNok
-              : Number.parseFloat(String(r?.priceNok ?? 0));
+          const p = parseNokFormValue(r?.priceNok);
           return {
             name: String(r?.name ?? ""),
-            priceNok: Number.isFinite(p) ? p : 0,
+            priceNok: p,
           };
         })
       : [];
     return estimateNewBookingTotalNok(
       {
-        packageSource: src,
+        packageSource: src as "catalog" | "custom",
         selectedPackageId: pkgId,
         selectedAddonIds: ids,
-        customPackagePrice: Number.isFinite(customPrice) ? customPrice : 0,
+        customPackagePrice: customPrice,
         customAddonLines: lines,
       },
       packageCatalog,
       addonCatalog,
     );
-  }, [watched, packageCatalog, addonCatalog, defaultPackageSource]);
+  }, [
+    packageSource,
+    selectedPackageId,
+    selectedAddonIds,
+    customPackagePrice,
+    customAddonLines,
+    packageCatalog,
+    addonCatalog,
+    defaultPackageSource,
+  ]);
 
-  const agreedTotalWatchedRaw = Number(watched?.agreedTotal);
-  const agreedTotalWatched = Number.isFinite(agreedTotalWatchedRaw)
-    ? agreedTotalWatchedRaw
+  const agreedTotalParsed = parseNokFormValue(agreedTotalRaw);
+  const agreedTotalWatched = Number.isFinite(agreedTotalParsed)
+    ? agreedTotalParsed
     : estimatedTotal;
 
   const prevEstimatedRef = useRef(estimatedTotal);
   useEffect(() => {
-    const raw = getValues("agreedTotal");
-    const agreedNum =
-      typeof raw === "number" ? raw : Number.parseFloat(String(raw));
-    const agreedNorm = Number.isFinite(agreedNum)
-      ? agreedNum
-      : prevEstimatedRef.current;
-    if (agreedNorm === prevEstimatedRef.current) {
+    const agreedNorm = parseNokFormValue(getValues("agreedTotal"));
+    const agreedForSync = Number.isFinite(agreedNorm) ? agreedNorm : prevEstimatedRef.current;
+    if (agreedForSync === prevEstimatedRef.current) {
       setValue("agreedTotal", estimatedTotal, { shouldValidate: true });
     }
     prevEstimatedRef.current = estimatedTotal;
@@ -370,6 +363,15 @@ export function NewBookingForm({
     estimatedTotal > 0 && customerDiscountNok > 0
       ? Math.round((customerDiscountNok / estimatedTotal) * 100)
       : 0;
+
+  const remainingAfterDeposit = useMemo(
+    () =>
+      resolveNewBookingPaymentAmounts(
+        agreedTotalWatched,
+        parseNokFormValue(depositPaidRaw),
+      ).remaining,
+    [agreedTotalWatched, depositPaidRaw],
+  );
 
   const generateBookingReference = useCallback(
     async (options?: { force?: boolean }) => {
@@ -404,21 +406,14 @@ export function NewBookingForm({
   );
 
   useEffect(() => {
-    if (didAutoGenerateRef.current || savedBookingId) return;
+    if (didAutoGenerateRef.current) return;
     if (!currentOrganizationId) return;
     if (getValues("bookingReference").trim()) return;
     didAutoGenerateRef.current = true;
     void generateBookingReference();
-  }, [
-    currentOrganizationId,
-    generateBookingReference,
-    getValues,
-    savedBookingId,
-  ]);
+  }, [currentOrganizationId, generateBookingReference, getValues]);
 
   async function submitBooking(data: NewBookingFormInput) {
-    if (savedBookingId) return;
-
     let orgId: string;
     try {
       orgId = requireOrganizationId(currentOrganizationId);
@@ -459,6 +454,11 @@ export function NewBookingForm({
     );
     const total = data.agreedTotal;
     const discountNok = Math.max(0, estimated - total);
+    const {
+      paid,
+      remaining,
+      paymentStatus: payment_status,
+    } = resolveNewBookingPaymentAmounts(total, data.depositPaid);
     const nameById = new Map(bookingAddons.map((a) => [a.id, a.name]));
     const catalogAddOnLabels = data.selectedAddonIds
       .map((id) => nameById.get(id))
@@ -541,10 +541,6 @@ export function NewBookingForm({
       customerId = customerRow.id;
     }
 
-    const paid = Math.min(data.depositPaid, total);
-    const remaining = Math.max(0, total - paid);
-    const payment_status =
-      paid <= 0 ? "unpaid" : paid >= total ? "paid" : "partial";
     const festTypeStored = resolveNewBookingFestTypeStored(data);
 
     const { data: bookingRow, error: bookingError } = await supabase
@@ -578,7 +574,6 @@ export function NewBookingForm({
       return;
     }
 
-    setSavedBookingId(bookingRow.id);
     toast.success("Booking opprettet", { description: bookingRow.id });
 
     invalidateBookings();
@@ -611,30 +606,7 @@ export function NewBookingForm({
       }
     }
 
-    if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
-    redirectTimerRef.current = setTimeout(() => {
-      router.push("/app/bookings");
-      router.refresh();
-    }, 2200);
-  }
-
-  async function copyBookingId() {
-    if (!savedBookingId) return;
-    try {
-      await navigator.clipboard.writeText(savedBookingId);
-      toast.message("Booking-ID kopiert");
-    } catch {
-      toast.error("Kunne ikke kopiere");
-    }
-  }
-
-  function goToBookingsNow() {
-    if (redirectTimerRef.current) {
-      clearTimeout(redirectTimerRef.current);
-      redirectTimerRef.current = null;
-    }
-    router.push("/app/bookings");
-    router.refresh();
+    redirectAfterCreate(router, "/app/bookings");
   }
 
   const catalogPackageBlocked =
@@ -695,27 +667,6 @@ export function NewBookingForm({
           )}
           className="flex flex-col"
         >
-        {savedBookingId ? (
-          <div
-            className="border-b-2 border-success/40 bg-success/10 px-6 py-3 text-app-sm md:px-8"
-            role="status"
-          >
-            <p className="font-semibold text-success">Booking lagret</p>
-            <p className="text-app-xs text-muted-foreground">
-              Du sendes til bookinger automatisk. Bruk «Gå til bookinger» for å
-              gå med én gang.
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-2 rounded-md border-success/40 text-success hover:bg-success/10"
-              onClick={goToBookingsNow}
-            >
-              Gå til bookinger
-            </Button>
-          </div>
-        ) : null}
         <div className="border-b-2 border-rn-border-strong bg-rn-surface-wash px-6 py-4 md:px-8">
           <div className="flex flex-col gap-4">
             <div className="min-w-0 flex-1 space-y-2">
@@ -724,14 +675,13 @@ export function NewBookingForm({
                 <Input
                   className={cn(fieldClass, "font-mono text-app-sm sm:flex-1")}
                   placeholder="RN-2026-013 eller eget saksnummer"
-                  disabled={!!savedBookingId}
                   {...register("bookingReference")}
                   aria-invalid={!!errors.bookingReference}
                 />
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={!!savedBookingId || isGeneratingReference}
+                  disabled={isGeneratingReference}
                   className="h-11 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold md:h-12"
                   onClick={() => void generateBookingReference({ force: true })}
                 >
@@ -752,35 +702,10 @@ export function NewBookingForm({
               ) : (
                 <p className="text-app-xs text-muted-foreground">
                   Fylles ut automatisk som RN-{referenceYear}-xxx, eller skriv inn
-                  eget saksnummer. System-ID (UUID) vises under etter lagring.
+                  eget saksnummer.
                 </p>
               )}
             </div>
-            {savedBookingId ? (
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
-                <div className="min-w-0 flex-1 space-y-2">
-                  <Label className={labelClass}>System-ID (database)</Label>
-                  <div
-                    className={cn(
-                      fieldClass,
-                      "flex min-h-11 items-center bg-rn-surface-segment break-all font-mono text-app-sm text-rn-text-heading md:min-h-12",
-                    )}
-                    aria-live="polite"
-                  >
-                    {savedBookingId}
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="h-11 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong md:h-12"
-                  onClick={copyBookingId}
-                >
-                  <Copy className="size-4" aria-hidden />
-                  Kopier system-ID
-                </Button>
-              </div>
-            ) : null}
           </div>
         </div>
         <div className="border-b-2 border-rn-border-strong bg-card p-6 md:p-8">
@@ -1451,11 +1376,12 @@ export function NewBookingForm({
         </div>
 
         <div className="p-6 md:p-8">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 md:items-start">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-x-6 md:gap-y-5">
             <div className="space-y-2">
-              <Label className={labelClass}>
-                Betalt depositum (NOK)
-              </Label>
+              <Label className={labelClass}>Betalt depositum (NOK)</Label>
+              <p className="min-h-10 text-app-xs leading-snug text-muted-foreground md:min-h-11">
+                Valgfritt. Trekkes fra avtalt total ved lagring.
+              </p>
               <div className="relative">
                 <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-app-sm font-semibold text-rn-text-slate md:left-4">
                   kr
@@ -1473,66 +1399,80 @@ export function NewBookingForm({
                 </p>
               ) : null}
             </div>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className={labelClass}>
-                  Estimert totalpris
-                </Label>
-                <p className="text-app-xs text-muted-foreground">
-                  Beregnet fra pakke (katalog eller egen), valgte katalogtillegg og
-                  egne tilleggslinjer (referanse).
+
+            <div className="space-y-2">
+              <Label className={labelClass}>Estimert totalpris</Label>
+              <p className="min-h-10 text-app-xs leading-snug text-muted-foreground md:min-h-11">
+                Beregnet fra pakke (katalog eller egen), valgte katalogtillegg og
+                egne tilleggslinjer (referanse).
+              </p>
+              <div
+                className={cn(
+                  fieldClass,
+                  "flex items-center bg-rn-surface-segment px-4 font-heading text-app-lg font-bold tabular-nums text-rn-text-heading md:text-app-xl",
+                )}
+                aria-live="polite"
+              >
+                {formatNok(estimatedTotal)}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className={labelClass}>Gjenstående beløp</Label>
+              <p className="min-h-10 text-app-xs leading-snug text-muted-foreground md:min-h-11">
+                Avtalt totalpris minus betalt depositum.
+              </p>
+              <div
+                className={cn(
+                  fieldClass,
+                  "flex items-center bg-rn-surface-segment px-4 font-heading text-app-lg font-bold tabular-nums text-rn-text-heading md:text-app-xl",
+                )}
+                aria-live="polite"
+              >
+                {formatNok(remainingAfterDeposit)}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className={labelClass}>
+                Avtalt totalpris (kunde)
+                <RequiredMark />
+              </Label>
+              <p className="min-h-10 text-app-xs leading-snug text-muted-foreground md:min-h-11">
+                Sett egen pris ved behov; synkes med estimat til du endrer den
+                selv.
+              </p>
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-app-sm font-semibold text-rn-text-slate md:left-4">
+                  kr
+                </span>
+                <PriceInput
+                  className={cn(fieldClass, "pl-10 md:pl-11")}
+                  {...register("agreedTotal")}
+                  aria-invalid={!!errors.agreedTotal}
+                />
+              </div>
+              {errors.agreedTotal ? (
+                <p className="text-app-xs text-destructive">
+                  {errors.agreedTotal.message}
                 </p>
-                <div
-                  className={cn(
-                    fieldClass,
-                    "flex items-center bg-rn-surface-segment px-4 font-heading text-app-lg font-bold tabular-nums text-rn-text-heading md:text-app-xl",
-                  )}
+              ) : null}
+              {customerDiscountNok > 0 ? (
+                <p
+                  className="text-app-sm font-semibold text-success"
                   aria-live="polite"
                 >
-                  {formatNok(estimatedTotal)}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className={labelClass}>
-                  Avtalt totalpris (kunde)
-                  <RequiredMark />
-                </Label>
-                <p className="text-app-xs text-muted-foreground">
-                  Sett egen pris ved behov; synkes med estimat til du endrer den
-                  selv.
+                  Rabatt for kunden: {formatNok(customerDiscountNok)}
+                  {discountPercent > 0
+                    ? ` (${discountPercent} % under estimat)`
+                    : null}
                 </p>
-                <div className="relative">
-                  <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-app-sm font-semibold text-rn-text-slate md:left-4">
-                    kr
-                  </span>
-                  <PriceInput
-                    className={cn(fieldClass, "pl-10 md:pl-11")}
-                    {...register("agreedTotal")}
-                    aria-invalid={!!errors.agreedTotal}
-                  />
-                </div>
-                {errors.agreedTotal ? (
-                  <p className="text-app-xs text-destructive">
-                    {errors.agreedTotal.message}
-                  </p>
-                ) : null}
-                {customerDiscountNok > 0 ? (
-                  <p
-                    className="text-app-sm font-semibold text-success"
-                    aria-live="polite"
-                  >
-                    Rabatt for kunden: {formatNok(customerDiscountNok)}
-                    {discountPercent > 0
-                      ? ` (${discountPercent} % under estimat)`
-                      : null}
-                  </p>
-                ) : null}
-                {aboveEstimateNok > 0 ? (
-                  <p className="text-app-sm text-muted-foreground" aria-live="polite">
-                    {formatNok(aboveEstimateNok)} over estimat.
-                  </p>
-                ) : null}
-              </div>
+              ) : null}
+              {aboveEstimateNok > 0 ? (
+                <p className="text-app-sm text-muted-foreground" aria-live="polite">
+                  {formatNok(aboveEstimateNok)} over estimat.
+                </p>
+              ) : null}
             </div>
           </div>
           <div className="mt-8 space-y-2 md:mt-10">
@@ -1570,9 +1510,7 @@ export function NewBookingForm({
             type="submit"
             variant="success"
             size="cta"
-            disabled={
-              isSubmitting || catalogPackageBlocked || !!savedBookingId
-            }
+            disabled={isSubmitting || catalogPackageBlocked}
           >
             {isSubmitting ? "Lagrer…" : "Lagre booking"}
           </Button>

@@ -228,26 +228,32 @@ export function estimateNewBookingTotalNok(
   packageCatalog: BookingPackageCatalogEntry[],
   addonCatalog: BookingAddonCatalogEntry[],
 ): number {
+  let total = 0;
+
   if (data.packageSource === "custom") {
-    let total = Number.isFinite(data.customPackagePrice)
+    total = Number.isFinite(data.customPackagePrice)
       ? Number(data.customPackagePrice)
       : 0;
-    for (const line of data.customAddonLines ?? []) {
-      if (line.name?.trim()) {
-        const p = Number(line.priceNok);
-        total += Number.isFinite(p) ? p : 0;
-      }
-    }
-    return total;
+  } else {
+    const pkgById = new Map(
+      packageCatalog.map((p) => [p.id, Number(p.price)]),
+    );
+    total = pkgById.get(data.selectedPackageId) ?? 0;
   }
-  const pkgById = new Map(
-    packageCatalog.map((p) => [p.id, Number(p.price)]),
-  );
-  let total = pkgById.get(data.selectedPackageId) ?? 0;
+
   const priceById = new Map(addonCatalog.map((a) => [a.id, Number(a.price)]));
-  for (const id of data.selectedAddonIds) {
+  for (const id of new Set(data.selectedAddonIds)) {
     total += priceById.get(id) ?? 0;
   }
+
+  for (const line of data.customAddonLines ?? []) {
+    const p = Number(line.priceNok);
+    const price = Number.isFinite(p) ? p : 0;
+    const hasName = Boolean(line.name?.trim());
+    if (!hasName && price <= 0) continue;
+    total += price;
+  }
+
   return total;
 }
 

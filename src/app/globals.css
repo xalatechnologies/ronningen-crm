@@ -507,6 +507,24 @@
     font-size: calc(15px * var(--app-read-type-scale));
   }
 
+  /**
+   * Forespørsler (liste) — samme radstørrelse og typografi som Reservasjoner.
+   */
+  .inquiries-page-workspace .inquiries-list-row-title {
+    font-size: calc(21px * var(--app-type-scale));
+    line-height: 1.25;
+  }
+
+  .inquiries-page-workspace .inquiries-list-row-cell {
+    font-size: calc(15px * var(--app-read-type-scale));
+    line-height: 1.45;
+  }
+
+  .inquiries-page-workspace .inquiries-list-row-meta {
+    font-size: calc(14px * var(--app-read-type-scale));
+    line-height: 1.45;
+  }
+
   .bookings-list-workspace .bookings-list-footer-caption {
     font-size: calc(15px * var(--app-read-type-scale));
   }

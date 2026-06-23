@@ -251,6 +251,7 @@ export function BookingDetailSheet({
       }
 
       toast.success("Endringer lagret");
+      onOpenChange(false);
       await router.refresh();
     } finally {
       setDetailSaving(false);

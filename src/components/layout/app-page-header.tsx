@@ -8,6 +8,7 @@ export function AppPageHeader({
   description,
   actions,
   actionsClassName,
+  titleClassName,
   className,
   backLink,
   /** Kort med kant — felles «navbar» øverst på app-sider (Rapporter / Finans-stil). */
@@ -23,6 +24,8 @@ export function AppPageHeader({
   actions?: ReactNode;
   /** Ekstra klasser for actions-kolonnen (f.eks. full bredde + overflow på mobil). */
   actionsClassName?: string;
+  /** Ekstra klasser på sidetittel (f.eks. customers-partners-hero). */
+  titleClassName?: string;
   className?: string;
   /** Tilbake-lenke øverst inne i header-kortet (admin-detaljsider). */
   backLink?: { href: string; label: string };
@@ -46,7 +49,7 @@ export function AppPageHeader({
 
   const titleBlock = (
     <>
-      <h1 className="app-title">{title}</h1>
+      <h1 className={cn("app-title", titleClassName)}>{title}</h1>
       {description ? (
         <div
           className={cn(

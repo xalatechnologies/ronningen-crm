@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   previewBookingRemainingAfterSave,
   resolveBookingPaymentForPersist,
+  resolveNewBookingPaymentAmounts,
   resolveStandardBookingPaymentFromAmounts,
 } from "./booking-payment-status";
 
@@ -55,6 +56,32 @@ describe("resolveBookingPaymentForPersist", () => {
       paid: 4_000,
       remaining: 6_000,
       paymentStatus: "partial",
+    });
+  });
+});
+
+describe("resolveNewBookingPaymentAmounts", () => {
+  it("subtracts deposit from agreed total", () => {
+    expect(resolveNewBookingPaymentAmounts(180_000, 50_000)).toEqual({
+      paid: 50_000,
+      remaining: 130_000,
+      paymentStatus: "partial",
+    });
+  });
+
+  it("caps deposit at agreed total", () => {
+    expect(resolveNewBookingPaymentAmounts(90_000, 120_000)).toEqual({
+      paid: 90_000,
+      remaining: 0,
+      paymentStatus: "paid",
+    });
+  });
+
+  it("treats zero deposit as unpaid full balance", () => {
+    expect(resolveNewBookingPaymentAmounts(90_000, 0)).toEqual({
+      paid: 0,
+      remaining: 90_000,
+      paymentStatus: "unpaid",
     });
   });
 });

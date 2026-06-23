@@ -9,7 +9,8 @@ import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatAppDateTime } from "@/lib/format-datetime";
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import type { PopoverRoot } from "@base-ui/react/popover";
 
 const WEEKDAYS_NB = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"] as const;
 
@@ -61,11 +62,13 @@ function inquiryChipClass(status: BookingInquiryStatus) {
 function InquiryHoverPreview({
   row,
   hideFooter,
+  onOpen,
 }: {
   row: InquiryListRow;
   hideFooter?: boolean;
+  onOpen?: (row: InquiryListRow) => void;
 }) {
-  return (
+  const inner = (
     <div className="space-y-2 text-left">
       <div>
         <p className="font-heading text-sm font-bold text-rn-text-heading md:text-base">
@@ -98,12 +101,31 @@ function InquiryHoverPreview({
       )}
     </div>
   );
+
+  if (!onOpen) return inner;
+
+  return (
+    <button
+      type="button"
+      className="w-full cursor-pointer rounded-md text-left outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-success/40"
+      onClick={() => onOpen(row)}
+      aria-label={`Åpne forespørsel for ${row.customerName}`}
+    >
+      {inner}
+    </button>
+  );
 }
 
-function DayInquiriesHoverContent({ rows }: { rows: InquiryListRow[] }) {
+function DayInquiriesHoverContent({
+  rows,
+  onSelectInquiry,
+}: {
+  rows: InquiryListRow[];
+  onSelectInquiry: (row: InquiryListRow) => void;
+}) {
   if (rows.length === 0) return null;
   if (rows.length === 1) {
-    return <InquiryHoverPreview row={rows[0]} />;
+    return <InquiryHoverPreview row={rows[0]} onOpen={onSelectInquiry} />;
   }
   return (
     <div className="max-h-[min(70vh,22rem)] space-y-0 overflow-y-auto text-left">
@@ -115,13 +137,122 @@ function DayInquiriesHoverContent({ rows }: { rows: InquiryListRow[] }) {
           key={row.id}
           className={cn(i > 0 && "mt-3 border-t border-border pt-3")}
         >
-          <InquiryHoverPreview row={row} hideFooter />
+          <InquiryHoverPreview row={row} hideFooter onOpen={onSelectInquiry} />
         </div>
       ))}
       <p className="mt-3 text-[10px] leading-snug text-muted-foreground md:text-xs">
         Klikk på en rad for å åpne
       </p>
     </div>
+  );
+}
+
+function FollowUpDayHoverPopover({
+  dayRows,
+  cellClass,
+  day,
+  isToday,
+  onSelectInquiry,
+}: {
+  dayRows: InquiryListRow[];
+  cellClass: string;
+  day: number;
+  isToday: boolean;
+  onSelectInquiry: (row: InquiryListRow) => void;
+}) {
+  const popoverActionsRef = useRef<PopoverRoot.Actions | null>(null);
+
+  function selectInquiry(row: InquiryListRow) {
+    popoverActionsRef.current?.close();
+    onSelectInquiry(row);
+  }
+
+  const dayInner = (
+    <>
+      <div
+        className={cn(
+          "flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold sm:size-7 sm:text-sm md:size-8 md:text-base",
+          isToday
+            ? "bg-success !text-white shadow-sm [&_svg]:!text-white"
+            : "bg-card/80 text-rn-text-heading shadow-sm backdrop-blur-[2px]",
+        )}
+      >
+        {day}
+      </div>
+      <div
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain rounded-md [-webkit-overflow-scrolling:touch]",
+          "min-h-[2.25rem] px-0.5 py-0.5",
+        )}
+      >
+        {dayRows.map((r) => (
+          <button
+            key={r.id}
+            type="button"
+            className={cn(
+              "w-full rounded-md px-1 py-0.5 text-left text-[10px] font-semibold leading-tight transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-0 sm:text-[11px] md:px-1.5 md:py-1 md:text-xs",
+              inquiryChipClass(r.status),
+              r.status === "lost" && "opacity-80",
+            )}
+            onClick={() => selectInquiry(r)}
+            aria-label={`${r.customerName}, ${INQUIRY_STATUS_LABELS[r.status]}`}
+          >
+            <span className="line-clamp-2">{r.customerName}</span>
+          </button>
+        ))}
+      </div>
+    </>
+  );
+
+  return (
+    <PopoverPrimitive.Root modal={false} actionsRef={popoverActionsRef}>
+      <PopoverPrimitive.Trigger
+        openOnHover
+        delay={180}
+        closeDelay={220}
+        nativeButton={false}
+        aria-label={`${dayRows.length} forespørsel${dayRows.length === 1 ? "" : "er"} ${day}. dato`}
+        render={(props) => (
+          <div
+            {...props}
+            className={cn(
+              props.className,
+              cellClass,
+              "cursor-default text-left outline-none focus-visible:ring-2 focus-visible:ring-success/40 focus-visible:ring-offset-0",
+            )}
+          >
+            {dayInner}
+          </div>
+        )}
+      />
+      <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Positioner
+          className="isolate z-80 outline-none"
+          positionMethod="fixed"
+          side="top"
+          align="center"
+          sideOffset={10}
+          collisionAvoidance={{
+            side: "shift",
+            align: "shift",
+            fallbackAxisSide: "none",
+          }}
+        >
+          <PopoverPrimitive.Popup
+            initialFocus={(openType) => openType === "keyboard"}
+            className={cn(
+              "max-w-[min(20rem,calc(100vw-1.5rem))] origin-(--transform-origin) rounded-md border-2 border-rn-border-strong bg-popover p-3 text-popover-foreground shadow-rn-card outline-none",
+              "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            )}
+          >
+            <DayInquiriesHoverContent
+              rows={dayRows}
+              onSelectInquiry={selectInquiry}
+            />
+          </PopoverPrimitive.Popup>
+        </PopoverPrimitive.Positioner>
+      </PopoverPrimitive.Portal>
+    </PopoverPrimitive.Root>
   );
 }
 
@@ -260,96 +391,26 @@ export function InquiriesFollowUpMonthCalendar({
         cn("ring-2 ring-inset ring-success", !hasRows && "bg-success/5"),
     );
 
-    const dayInner = (
-      <>
-        <div
-          className={cn(
-            "flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold sm:size-7 sm:text-sm md:size-8 md:text-base",
-            isToday
-              ? "bg-success !text-white shadow-sm [&_svg]:!text-white"
-              : hasRows
-                ? "bg-card/80 text-rn-text-heading shadow-sm backdrop-blur-[2px]"
-                : "text-rn-text-heading",
-          )}
-        >
-          {day}
-        </div>
-        <div
-          className={cn(
-            "flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain rounded-md [-webkit-overflow-scrolling:touch]",
-            hasRows && "min-h-[2.25rem] px-0.5 py-0.5",
-          )}
-        >
-          {dayRows.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              className={cn(
-                "w-full rounded-md px-1 py-0.5 text-left text-[10px] font-semibold leading-tight transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-0 sm:text-[11px] md:px-1.5 md:py-1 md:text-xs",
-                inquiryChipClass(r.status),
-                r.status === "lost" && "opacity-80",
-              )}
-              onClick={() => onSelectInquiry(r)}
-              aria-label={`${r.customerName}, ${INQUIRY_STATUS_LABELS[r.status]}`}
-            >
-              <span className="line-clamp-2">{r.customerName}</span>
-            </button>
-          ))}
-        </div>
-      </>
-    );
-
     dayCells.push(
       hasRows ? (
-        <PopoverPrimitive.Root key={ymd} modal={false}>
-          <PopoverPrimitive.Trigger
-            openOnHover
-            delay={180}
-            closeDelay={220}
-            nativeButton={false}
-            aria-label={`${dayRows.length} forespørsel${dayRows.length === 1 ? "" : "er"} ${day}. dato`}
-            render={(props) => (
-              <div
-                {...props}
-                className={cn(
-                  props.className,
-                  cellClass,
-                  "cursor-default text-left outline-none focus-visible:ring-2 focus-visible:ring-success/40 focus-visible:ring-offset-0",
-                )}
-              >
-                {dayInner}
-              </div>
-            )}
-          />
-          <PopoverPrimitive.Portal>
-            <PopoverPrimitive.Positioner
-              className="isolate z-80 outline-none"
-              positionMethod="fixed"
-              side="top"
-              align="center"
-              sideOffset={10}
-              collisionAvoidance={{
-                side: "shift",
-                align: "shift",
-                fallbackAxisSide: "none",
-              }}
-            >
-              <PopoverPrimitive.Popup
-                initialFocus={(openType) => openType === "keyboard"}
-                className={cn(
-                  "max-w-[min(20rem,calc(100vw-1.5rem))] origin-(--transform-origin) rounded-md border-2 border-rn-border-strong bg-popover p-3 text-popover-foreground shadow-rn-card outline-none",
-                  "pointer-events-none select-none",
-                  "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-                )}
-              >
-                <DayInquiriesHoverContent rows={dayRows} />
-              </PopoverPrimitive.Popup>
-            </PopoverPrimitive.Positioner>
-          </PopoverPrimitive.Portal>
-        </PopoverPrimitive.Root>
+        <FollowUpDayHoverPopover
+          key={ymd}
+          dayRows={dayRows}
+          cellClass={cellClass}
+          day={day}
+          isToday={isToday}
+          onSelectInquiry={onSelectInquiry}
+        />
       ) : (
         <div key={ymd} className={cellClass}>
-          {dayInner}
+          <div
+            className={cn(
+              "flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold sm:size-7 sm:text-sm md:size-8 md:text-base",
+              isToday ? "bg-success !text-white shadow-sm [&_svg]:!text-white" : "text-rn-text-heading",
+            )}
+          >
+            {day}
+          </div>
         </div>
       ),
     );

@@ -19,8 +19,10 @@ import {
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { notifyAccommodationCreated } from "@/lib/notifications/actions/org-events";
+import { redirectAfterCreate } from "@/lib/navigation/redirect-after-create";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ACCOMMODATION_RESERVATION_LABELS } from "@/components/overnatting/types";
@@ -56,6 +58,7 @@ export function NewAccommodationReservationForm({
 }: NewAccommodationReservationFormProps) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
+  const { invalidateOvernatting } = useTenantDataInvalidation();
   const router = useRouter();
   const rid = useId().replace(/:/g, "");
 
@@ -158,9 +161,9 @@ export function NewAccommodationReservationForm({
       reservationId: reservationRow.id,
     });
 
+    invalidateOvernatting();
     toast.success("Reservasjon registrert");
-    router.push("/app/overnatting");
-    router.refresh();
+    redirectAfterCreate(router, "/app/overnatting");
   }
 
   if (!canManage) {

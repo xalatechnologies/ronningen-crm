@@ -41,6 +41,14 @@ export const RN_PAGE_SEARCH_FIELD_WRAP =
 export const RN_PAGE_SEARCH_INPUT =
   "h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm dark:bg-background dark:text-foreground md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
+/** Matcher søkefeltets høyde (h-12 / md:h-14) — bruk med `variant="success"`. */
+export const RN_PAGE_SEARCH_BUTTON =
+  "h-12 min-h-12 w-full shrink-0 px-6 text-app-base font-bold md:h-14 md:min-h-14 lg:w-auto lg:min-w-44 [&_svg]:size-5";
+
+/** Felles actions-wrapper når toolbar er søk + primærknapp (Kunder / Partnere). */
+export const RN_PAGE_SEARCH_ACTIONS =
+  "w-full md:flex-1 md:min-w-0 md:flex-nowrap md:items-stretch";
+
 /**
  * Native `<select>` — samme feltstil som øvrige skjema-/filterkontroller (border-2, success-fokus).
  * Brukes med `NativeSelect` (chevron + `pr-11`); legg f.eks. til `pl-11`/`pl-12` ved ledende ikon.

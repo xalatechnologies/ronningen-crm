@@ -1,8 +1,10 @@
 "use client";
 
 import type { PartnerRow } from "@/components/customers/types";
+import { CustomersPageSearchToolbar } from "@/components/customers/customers-page-search-toolbar";
+import { AppPageHeader } from "@/components/layout/app-page-header";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -22,16 +24,14 @@ import {
   type PartnerFormInput,
 } from "@/lib/validations";
 import {
-  RN_PAGE_SEARCH_FIELD_WRAP,
-  RN_PAGE_SEARCH_INPUT,
-  RN_PAGE_SEARCH_TOOLBAR,
+  RN_PAGE_SEARCH_ACTIONS,
 } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, ChevronRight, Plus, Search, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm, type Resolver, type UseFormReturn } from "react-hook-form";
@@ -317,47 +317,32 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
 
   return (
     <>
-      <header className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
-        <div
-          className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-4 xl:gap-5"
-          role="search"
-          aria-label="Partnere — søk og ny partner"
-        >
-            <h1 className="customers-partners-hero app-title">
-              Partnere
-            </h1>
-          <div className={RN_PAGE_SEARCH_TOOLBAR}>
-            <div className={RN_PAGE_SEARCH_FIELD_WRAP}>
-              <Search
-                className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
-                aria-hidden
-              />
-              <Input
-                id="partners-search"
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
+      <div className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
+        <div className="customers-page-hero">
+          <AppPageHeader
+            className="mb-0"
+            surface="default"
+            title="Partnere"
+            titleClassName="customers-partners-hero"
+            actionsClassName={RN_PAGE_SEARCH_ACTIONS}
+            actions={
+              <CustomersPageSearchToolbar
+                searchId="partners-search"
+                searchAriaLabel="Søk partnere"
+                searchPlaceholder="Søk partner…"
+                query={query}
+                onQueryChange={(value) => {
+                  setQuery(value);
                   setPartnersPage(1);
                 }}
-                placeholder="Søk partner…"
-                className={RN_PAGE_SEARCH_INPUT}
-                aria-label="Søk partnere"
+                addLabel="Ny partner"
+                onAdd={() => setAddOpen(true)}
+                toolbarAriaLabel="Partnere — søk og ny partner"
               />
-            </div>
-            <Button
-              type="button"
-              onClick={() => setAddOpen(true)}
-              className={cn(
-                buttonVariants({ variant: "success", size: "cta" }),
-                "lg:w-auto lg:min-w-44",
-              )}
-            >
-              <Plus className="size-5" aria-hidden />
-              Ny partner
-            </Button>
-          </div>
+            }
+          />
         </div>
-      </header>
+      </div>
 
       {partners.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center md:px-8 md:py-16">

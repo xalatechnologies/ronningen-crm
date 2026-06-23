@@ -9,6 +9,7 @@ import {
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { notifyInquiryCreated } from "@/lib/notifications/actions/org-events";
+import { redirectAfterCreate } from "@/lib/navigation/redirect-after-create";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
@@ -160,8 +161,7 @@ export function NewInquiryForm({
 
     invalidateInquiries();
     toast.success("Forespørsel registrert");
-    router.push("/app/inquiries");
-    router.refresh();
+    redirectAfterCreate(router, "/app/inquiries");
   }
 
   if (!canManageInquiries) {

@@ -13,16 +13,9 @@ import {
 import { BookingDetailSheet } from "@/components/bookings/booking-detail-sheet";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
 import { AppPageHeader } from "@/components/layout/app-page-header";
+import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/ui/form-select";
@@ -583,6 +576,7 @@ export function BookingsList({
             : "Booking satt til avventer",
       );
       invalidateBookings();
+      setSelectedBookingId((current) => (current === id ? null : current));
     } finally {
       setUpdatingId(null);
     }
@@ -1052,54 +1046,32 @@ export function BookingsList({
           </div>
       </div>
 
-      <Dialog
+      <ConfirmActionDialog
         open={pendingStatusConfirm != null}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) setPendingStatusConfirm(null);
+        onOpenChange={(open) => {
+          if (!open && updatingId == null) setPendingStatusConfirm(null);
         }}
-      >
-        <DialogContent
-          showCloseButton
-          className="z-[100] max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-6 shadow-xl sm:max-w-md"
-        >
-          {pendingStatusConfirm ? (
-            <>
-              <DialogHeader className="text-left">
-                <DialogTitle className="app-section-title">
-                  {statusConfirmTitle(pendingStatusConfirm.next)}
-                </DialogTitle>
-                <DialogDescription className="text-app-base leading-relaxed text-muted-foreground">
-                  {pendingStatusConfirm.message}
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="cta"
-                  className="w-full border-2 border-rn-border-strong sm:w-auto"
-                  onClick={() => setPendingStatusConfirm(null)}
-                >
-                  Avbryt
-                </Button>
-                <Button
-                  type="button"
-                  disabled={updatingId != null}
-                  className={cn(
-                    buttonVariants({ variant: "default" }),
-                    "h-11 w-full rounded-md border-2 border-red-200 bg-red-600 font-semibold text-white hover:bg-red-700 sm:w-auto",
-                  )}
-                  onClick={() => void confirmPendingStatusChange()}
-                >
-                  {pendingStatusConfirm.next === "cancelled"
-                    ? "Ja, avbestill"
-                    : "Bekreft"}
-                </Button>
-              </DialogFooter>
-            </>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+        title={
+          pendingStatusConfirm
+            ? statusConfirmTitle(pendingStatusConfirm.next)
+            : ""
+        }
+        description={pendingStatusConfirm?.message ?? ""}
+        confirmLabel={
+          pendingStatusConfirm?.next === "cancelled"
+            ? "Ja, avbestill"
+            : "Bekreft"
+        }
+        busy={updatingId != null}
+        busyLabel="Lagrer…"
+        contentClassName="z-[100]"
+        confirmClassName={
+          pendingStatusConfirm?.next === "cancelled"
+            ? "border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700"
+            : "border-2 border-rn-accent-border bg-success !text-white hover:bg-rn-accent-fill-hover"
+        }
+        onConfirm={confirmPendingStatusChange}
+      />
 
       {selectedRow ? (
         <BookingDetailSheet

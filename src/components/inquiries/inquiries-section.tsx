@@ -33,19 +33,54 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatAppDateTime } from "@/lib/format-datetime";
+import { formatBookingListDateLabel } from "@/lib/booking-period";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
   type BookingInquiryStatus,
 } from "@/lib/validations";
 import { cn } from "@/lib/utils";
-import { format, isBefore } from "date-fns";
-import { nb } from "date-fns/locale";
+import { isBefore } from "date-fns";
 import { Calendar, ChevronDown, ChevronRight, Inbox, ListFilter, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-const tableHeadClass =
-  "font-semibold tracking-wider text-rn-text-column uppercase text-xs md:text-sm";
+const inquiriesTableHeadClass =
+  "bookings-list-table-head py-4 font-semibold tracking-wider text-rn-text-column uppercase sm:py-5";
+
+const inquiriesTableCellClass = "px-6 py-5 sm:px-8 sm:py-6";
+
+const inquiriesTableCellPrimaryClass = cn(
+  inquiriesTableCellClass,
+  "inquiries-list-row-title font-heading font-semibold text-foreground",
+);
+
+const inquiriesTableCellBodyClass = cn(
+  inquiriesTableCellClass,
+  "inquiries-list-row-cell text-foreground",
+);
+
+const inquiriesTableCellMetaClass = cn(
+  inquiriesTableCellClass,
+  "inquiries-list-row-meta text-muted-foreground",
+);
+
+function formatInquiryPreferredDate(row: InquiryListRow): string {
+  if (!row.preferredEventDateIso) return "—";
+  return formatBookingListDateLabel({
+    eventDateIso: row.preferredEventDateIso,
+    eventEndDateIso: row.preferredEventEndDateIso,
+    eventStartTime: null,
+    eventEndTime: null,
+  });
+}
+
+function formatInquiryListDate(iso: string): string {
+  return new Intl.DateTimeFormat("nb-NO", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(`${iso.slice(0, 10)}T12:00:00`));
+}
 
 type InquiryStatusFilter = "all" | Exclude<BookingInquiryStatus, "converted">;
 
@@ -416,15 +451,17 @@ export function InquiriesSection({
           <div className="overflow-x-auto">
             <Table className="min-w-[920px]">
               <TableHeader>
-                <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
-                  <TableHead className={cn(tableHeadClass, "pl-6 md:pl-8")}>
+                <TableRow className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
+                  <TableHead className={cn(inquiriesTableHeadClass, "pl-6 md:pl-8")}>
                     Kunde
                   </TableHead>
-                  <TableHead className={tableHeadClass}>Lokale</TableHead>
-                  <TableHead className={tableHeadClass}>Ønsket dato</TableHead>
-                  <TableHead className={tableHeadClass}>Status</TableHead>
-                  <TableHead className={tableHeadClass}>Neste oppfølging</TableHead>
-                  <TableHead className={cn(tableHeadClass, "pr-6 text-right md:pr-8")}>
+                  <TableHead className={inquiriesTableHeadClass}>Lokale</TableHead>
+                  <TableHead className={inquiriesTableHeadClass}>Ønsket dato</TableHead>
+                  <TableHead className={inquiriesTableHeadClass}>Status</TableHead>
+                  <TableHead className={inquiriesTableHeadClass}>Neste oppfølging</TableHead>
+                  <TableHead
+                    className={cn(inquiriesTableHeadClass, "pr-6 text-right md:pr-8")}
+                  >
                     Oppdatert
                   </TableHead>
                 </TableRow>
@@ -437,22 +474,16 @@ export function InquiriesSection({
                     onClick={() => openRow(row)}
                     aria-label={`Åpne forespørsel: ${row.customerName}`}
                   >
-                    <TableCell className="px-6 py-4 font-medium text-rn-text-heading md:px-8 md:py-5">
+                    <TableCell className={inquiriesTableCellPrimaryClass}>
                       {row.customerName}
                     </TableCell>
-                    <TableCell className="px-6 py-4 md:px-8 md:py-5">
+                    <TableCell className={inquiriesTableCellBodyClass}>
                       {row.propertyName ?? "—"}
                     </TableCell>
-                    <TableCell className="px-6 py-4 tabular-nums md:px-8 md:py-5">
-                      {row.preferredEventDateIso
-                        ? format(
-                            new Date(`${row.preferredEventDateIso}T12:00:00`),
-                            "d. MMM yyyy",
-                            { locale: nb },
-                          )
-                        : "—"}
+                    <TableCell className={inquiriesTableCellMetaClass}>
+                      {formatInquiryPreferredDate(row)}
                     </TableCell>
-                    <TableCell className="px-6 py-4 md:px-8 md:py-5">
+                    <TableCell className={inquiriesTableCellBodyClass}>
                       <span
                         className={cn(
                           "inline-flex rounded-md border-2 px-2.5 py-0.5 text-xs font-semibold md:text-sm",
@@ -462,17 +493,17 @@ export function InquiriesSection({
                         {INQUIRY_STATUS_LABELS[row.status]}
                       </span>
                     </TableCell>
-                    <TableCell className="px-6 py-4 tabular-nums md:px-8 md:py-5">
+                    <TableCell className={inquiriesTableCellMetaClass}>
                       {row.nextFollowUpAtIso
                         ? formatAppDateTime(row.nextFollowUpAtIso)
                         : "—"}
                     </TableCell>
-                    <TableCell className="px-6 py-4 text-right md:px-8 md:py-5">
-                      <span className="inline-flex w-full items-center justify-end gap-2 tabular-nums">
+                    <TableCell
+                      className={cn(inquiriesTableCellMetaClass, "text-right")}
+                    >
+                      <span className="inline-flex w-full items-center justify-end gap-2">
                         <span>
-                          {format(new Date(row.updatedAtIso), "d. MMM yyyy", {
-                            locale: nb,
-                          })}
+                          {formatInquiryListDate(row.updatedAtIso)}
                         </span>
                         <ChevronRight
                           className="size-4 shrink-0 text-muted-foreground/75 transition-colors group-hover:text-rn-text-heading group-hover:opacity-100 opacity-80"

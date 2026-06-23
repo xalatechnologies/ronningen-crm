@@ -117,6 +117,19 @@ export function resolveBookingPaymentForPersist(
   return resolveStandardBookingPaymentFromAmounts(total, inputPaid);
 }
 
+/**
+ * Ny reservasjon: avtalt total + depositum → innbetalt, rest og status.
+ * Bruker beløpsbasert logikk (ikke eksplisitt «unpaid» som ignorerer depositum).
+ */
+export function resolveNewBookingPaymentAmounts(
+  agreedTotalNok: number,
+  depositPaidNok: number,
+): ReturnType<typeof resolveStandardBookingPaymentFromAmounts> {
+  const total = Number.isFinite(agreedTotalNok) ? agreedTotalNok : 0;
+  const deposit = Number.isFinite(depositPaidNok) ? depositPaidNok : 0;
+  return resolveStandardBookingPaymentFromAmounts(total, deposit);
+}
+
 /** Forhåndsvis restbeløp etter lagring ut fra valgt status og beløp. */
 export function previewBookingRemainingAfterSave(
   data: PaymentFormSnapshot,

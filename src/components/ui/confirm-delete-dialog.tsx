@@ -39,7 +39,7 @@ export function ConfirmDeleteDialog({
     >
       <DialogContent
         showCloseButton
-        className="max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-6 shadow-xl sm:max-w-md"
+        className="max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-[length:var(--app-card-padding)] shadow-xl sm:max-w-md"
       >
         <DialogHeader className="text-left">
           <DialogTitle className="app-section-title">
@@ -54,7 +54,7 @@ export function ConfirmDeleteDialog({
             type="button"
             variant="outline"
             size="cta"
-            className="w-full border-2 border-rn-border-strong sm:w-auto"
+            className="w-full border-2 border-rn-border-strong font-heading font-bold sm:w-auto"
             disabled={busy}
             onClick={() => onOpenChange(false)}
           >
@@ -64,7 +64,7 @@ export function ConfirmDeleteDialog({
             type="button"
             size="cta"
             disabled={busy}
-            className="w-full border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700 sm:w-auto"
+            className="w-full border-2 border-red-200 bg-red-600 font-heading font-bold !text-white hover:bg-red-700 sm:w-auto"
             onClick={() => void onConfirm()}
           >
             {busy ? "Sletter…" : confirmLabel}
