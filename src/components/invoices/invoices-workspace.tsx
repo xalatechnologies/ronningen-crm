@@ -4,6 +4,7 @@ import type { UnpaidInvoiceRow } from "@/components/invoices/types";
 import { BOOKING_PAYMENT_STATUS_LABELS } from "@/constants/booking-payment-status";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
 import {
   type InvoiceRowFilter,
   daysRelativeToDue,
@@ -210,52 +211,15 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
 function MarkInvoicePaidButton({
   row,
   canMark,
-  busyId,
-  onBusyChange,
+  busy,
+  onRequestConfirm,
 }: {
   row: UnpaidInvoiceRow;
   canMark: boolean;
-  busyId: string | null;
-  onBusyChange: (id: string | null) => void;
+  busy: boolean;
+  onRequestConfirm: () => void;
 }) {
-  const supabase = useSupabase();
-  const router = useRouter();
-  const busy = busyId === row.id;
-
   if (!canMark) return null;
-
-  async function onMarkPaid() {
-    const ok = confirm(
-      `Registrere full betaling for «${row.customerName}»?\n\n` +
-        `Total innbetaling settes til ${formatNok(row.totalNok)}. Restbeløp blir 0 kr.`,
-    );
-    if (!ok) return;
-
-    onBusyChange(row.id);
-    try {
-      const total = row.totalNok;
-      const { error } = await supabase
-        .from("bookings")
-        .update({
-          paid_amount: total,
-          remaining_amount: 0,
-          payment_status: "paid",
-        })
-        .eq("id", row.id);
-
-      if (error) {
-        toast.error("Kunne ikke oppdatere betaling", {
-          description: error.message,
-        });
-        return;
-      }
-
-      toast.success("Bookingen er markert som fullt betalt");
-      router.refresh();
-    } finally {
-      onBusyChange(null);
-    }
-  }
 
   return (
     <Button
@@ -267,7 +231,7 @@ function MarkInvoicePaidButton({
         "invoices-action-btn h-10 w-full justify-center gap-1.5 rounded-md border-2 border-success/60 bg-success/10 px-3 font-heading font-bold text-emerald-950 shadow-sm hover:bg-success/20 md:h-11 md:gap-2 md:px-4 dark:text-emerald-100",
         busy && "opacity-70",
       )}
-      onClick={() => void onMarkPaid()}
+      onClick={onRequestConfirm}
     >
       <CheckCircle2 className="size-3.5 shrink-0 md:size-4" aria-hidden />
       Registrer betalt
@@ -288,12 +252,48 @@ export function InvoicesWorkspace({
   todayYmd,
   canMarkInvoicesPaid = false,
 }: InvoicesWorkspaceProps) {
+  const supabase = useSupabase();
+  const router = useRouter();
+  const [markPaidConfirmRow, setMarkPaidConfirmRow] =
+    useState<UnpaidInvoiceRow | null>(null);
   const [markingBookingId, setMarkingBookingId] = useState<string | null>(null);
+  const markingBusy =
+    markPaidConfirmRow != null && markingBookingId === markPaidConfirmRow.id;
   const filtered = useMemo(
     () =>
       rows.filter((r) => matchesInvoiceFilter(r, filter, todayYmd)),
     [rows, filter, todayYmd],
   );
+
+  async function confirmMarkPaid() {
+    if (!markPaidConfirmRow) return;
+
+    const row = markPaidConfirmRow;
+    setMarkingBookingId(row.id);
+    try {
+      const { error } = await supabase
+        .from("bookings")
+        .update({
+          paid_amount: row.totalNok,
+          remaining_amount: 0,
+          payment_status: "paid",
+        })
+        .eq("id", row.id);
+
+      if (error) {
+        toast.error("Kunne ikke oppdatere betaling", {
+          description: error.message,
+        });
+        return;
+      }
+
+      setMarkPaidConfirmRow(null);
+      toast.success("Bookingen er markert som fullt betalt");
+      router.refresh();
+    } finally {
+      setMarkingBookingId(null);
+    }
+  }
 
   if (rows.length === 0) {
     return (
@@ -452,8 +452,8 @@ export function InvoicesWorkspace({
                       <MarkInvoicePaidButton
                         row={r}
                         canMark={canMarkInvoicesPaid}
-                        busyId={markingBookingId}
-                        onBusyChange={setMarkingBookingId}
+                        busy={markingBookingId === r.id}
+                        onRequestConfirm={() => setMarkPaidConfirmRow(r)}
                       />
                       <Link
                         href={`/app/invoices/print/${r.id}`}
@@ -478,6 +478,52 @@ export function InvoicesWorkspace({
           </table>
         </div>
       )}
+
+      <ConfirmActionDialog
+        open={markPaidConfirmRow != null}
+        onOpenChange={(open) => {
+          if (!open) setMarkPaidConfirmRow(null);
+        }}
+        title="Registrer full betaling"
+        description={
+          markPaidConfirmRow ? (
+            <div className="space-y-4">
+              <p>
+                Bekreft at kunden har betalt hele beløpet for{" "}
+                <span className="font-semibold text-foreground">
+                  «{markPaidConfirmRow.customerName}»
+                </span>
+                .
+              </p>
+              <div className="rounded-md border-2 border-rn-border-strong/60 bg-muted/30 px-4 py-3">
+                <dl className="space-y-2 text-sm">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <dt className="text-muted-foreground">Total innbetaling</dt>
+                    <dd className="font-heading font-bold tabular-nums text-success">
+                      {formatNok(markPaidConfirmRow.totalNok)}
+                    </dd>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-4">
+                    <dt className="text-muted-foreground">Restbeløp etterpå</dt>
+                    <dd className="font-heading font-bold tabular-nums text-foreground">
+                      {formatNok(0)}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+              <p className="text-sm">
+                Betalingsstatus oppdateres til betalt. Dette kan ikke angres
+                automatisk herfra.
+              </p>
+            </div>
+          ) : null
+        }
+        confirmLabel="Ja, registrer betalt"
+        busy={markingBusy}
+        busyLabel="Registrerer…"
+        confirmClassName="border-2 border-success/70 bg-success !text-white hover:bg-success/90"
+        onConfirm={confirmMarkPaid}
+      />
     </section>
   );
 }
