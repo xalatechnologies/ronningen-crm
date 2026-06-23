@@ -8,7 +8,6 @@ import {
   isSandboxBilling,
 } from "@/lib/billing/constants";
 import { requireOrgBillingPageAccess } from "@/lib/settings/require-settings-access";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -21,8 +20,7 @@ function BillingSettingsFallback() {
 }
 
 export default async function BillingSettingsPage() {
-  const supabase = await createServerSupabaseClient();
-  const { isOwner } = await requireOrgBillingPageAccess(supabase);
+  const { isOwner } = await requireOrgBillingPageAccess();
 
   return (
     <div className="flex flex-col gap-6">

@@ -1,10 +1,13 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import {
   isSupportTicketCategory,
   isSupportTicketStatus,
 } from "@/lib/support/labels";
 import type { OrgSupportOverview, OrgSupportTicket } from "@/lib/support/types";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-client";
+import type { Database } from "@/types/database.types";
 
 function emptyOverview(): OrgSupportOverview {
   return { tickets: [], openCount: 0 };
@@ -12,10 +15,11 @@ function emptyOverview(): OrgSupportOverview {
 
 export async function fetchOrgSupportOverview(
   orgId: string,
+  supabase?: SupabaseClient<Database>,
 ): Promise<OrgSupportOverview> {
-  const supabase = await createServerSupabaseClient();
+  const client = supabase ?? (await getCachedServerSupabaseClient());
 
-  const { data: tickets, error: ticketsError } = await supabase
+  const { data: tickets, error: ticketsError } = await client
     .from("platform_support_tickets")
     .select(
       "id, subject, category, status, created_at, updated_at, created_by_user_id",
@@ -28,7 +32,7 @@ export async function fetchOrgSupportOverview(
 
   const ticketIds = tickets.map((t) => t.id);
 
-  const { data: notes } = await supabase
+  const { data: notes } = await client
     .from("platform_support_notes")
     .select("id, ticket_id, author_user_id, body, created_at")
     .in("ticket_id", ticketIds)

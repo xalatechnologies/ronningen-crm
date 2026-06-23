@@ -1,6 +1,5 @@
 import type { UserRole } from "@/constants/roles";
-import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
 import { redirect } from "next/navigation";
 
 export type OrgMemberContext = {
@@ -10,18 +9,14 @@ export type OrgMemberContext = {
 };
 
 export async function requireOrgMember(): Promise<OrgMemberContext> {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { userId, organizationId, role } =
+    await getCachedServerOrganizationContext();
 
-  if (!user) redirect("/auth/login");
-
-  const { organizationId, role } = await resolveServerOrganizationContext(supabase);
+  if (!userId) redirect("/auth/login");
 
   if (!organizationId || !role) {
     redirect("/app/onboarding");
   }
 
-  return { userId: user.id, orgId: organizationId, role };
+  return { userId, orgId: organizationId, role };
 }

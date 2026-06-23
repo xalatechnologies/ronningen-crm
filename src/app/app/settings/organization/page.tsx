@@ -2,14 +2,16 @@ import { OrganizationProfileForm } from "@/components/settings/organization-prof
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import type { OrganizationProfileRow } from "@/lib/organizations/organization-profile";
 import { requireOrgAdminSettingsAccess } from "@/lib/settings/require-settings-access";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-client";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function OrganizationSettingsPage() {
-  const supabase = await createServerSupabaseClient();
-  const { orgId } = await requireOrgAdminSettingsAccess(supabase);
+  const [supabase, { orgId }] = await Promise.all([
+    getCachedServerSupabaseClient(),
+    requireOrgAdminSettingsAccess(),
+  ]);
 
   const { data, error } = await supabase
     .from("organizations")

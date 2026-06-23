@@ -1,15 +1,16 @@
 import { AccountSettingsForm } from "@/components/settings/account-settings-form";
 import { AppPageHeader } from "@/components/layout/app-page-header";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getCachedServerAuthUser } from "@/lib/supabase/cached-server-auth";
+import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-client";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccountSettingsPage() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([
+    getCachedServerSupabaseClient(),
+    getCachedServerAuthUser(),
+  ]);
 
   if (!user) redirect("/auth/login");
 

@@ -2,15 +2,29 @@ import {
   TeamMembersSection,
   type TeamMemberRow,
 } from "@/components/settings/team-members-section";
+import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
+import { canManageMembers } from "@/lib/organizations/organization-permissions";
+import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-client";
 import { isUserRole } from "@/lib/validations";
-import { requireOrgAdminSettingsAccess } from "@/lib/settings/require-settings-access";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function TeamSettingsPage() {
-  const supabase = await createServerSupabaseClient();
-  const { orgId } = await requireOrgAdminSettingsAccess(supabase);
+  const [supabase, { organizationId, role }] = await Promise.all([
+    getCachedServerSupabaseClient(),
+    getCachedServerOrganizationContext(),
+  ]);
+
+  if (!organizationId || !role) {
+    redirect("/app/onboarding");
+  }
+
+  if (!canManageMembers(role)) {
+    redirect("/app/settings");
+  }
+
+  const orgId = organizationId;
 
   const { data: memberRows, error } = await supabase
     .from("organization_members")
@@ -41,13 +55,13 @@ export default async function TeamSettingsPage() {
 
   const members: TeamMemberRow[] = (memberRows ?? [])
     .map((row) => {
-      const role = isUserRole(row.role) ? row.role : null;
-      if (!role) return null;
+      const memberRole = isUserRole(row.role) ? row.role : null;
+      if (!memberRole) return null;
       const p = profileById.get(row.user_id);
       return {
         id: row.id,
         userId: row.user_id,
-        role,
+        role: memberRole,
         createdAtIso: row.created_at,
         fullName: p?.full_name ?? null,
         email: p?.email ?? null,

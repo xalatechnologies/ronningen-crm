@@ -1,12 +1,14 @@
 import { SettingsHub } from "@/components/settings/settings-hub";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-client";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const supabase = await createServerSupabaseClient();
-  const orgId = await requireServerOrganizationId();
+  const [supabase, orgId] = await Promise.all([
+    getCachedServerSupabaseClient(),
+    requireServerOrganizationId(),
+  ]);
 
   const [{ count: propertyCount }, { count: teamCount }] = await Promise.all([
     supabase

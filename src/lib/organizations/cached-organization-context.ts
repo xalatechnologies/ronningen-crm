@@ -1,11 +1,11 @@
 import { cache } from "react";
 
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-client";
 
 import { resolveServerOrganizationContext } from "./organization-context";
 
 export const getCachedServerOrganizationContext = cache(async () => {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await getCachedServerSupabaseClient();
   return resolveServerOrganizationContext(supabase);
 });
 
