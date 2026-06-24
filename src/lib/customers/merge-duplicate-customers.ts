@@ -91,6 +91,22 @@ export async function mergeDuplicateCustomersWithClient(
       if (bookingErr) {
         return { ok: false, error: bookingErr.message };
       }
+      const { error: inquiryErr } = await supabase
+        .from("booking_inquiries")
+        .update({ customer_id: keeper.id })
+        .eq("customer_id", v.id)
+        .eq("organization_id", organizationId);
+      if (inquiryErr) {
+        return { ok: false, error: inquiryErr.message };
+      }
+      const { error: accommodationErr } = await supabase
+        .from("accommodation_reservations")
+        .update({ customer_id: keeper.id })
+        .eq("customer_id", v.id)
+        .eq("organization_id", organizationId);
+      if (accommodationErr) {
+        return { ok: false, error: accommodationErr.message };
+      }
       const { error: delErr } = await supabase
         .from("customers")
         .delete()

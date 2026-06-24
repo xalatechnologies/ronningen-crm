@@ -20,6 +20,7 @@ import { AppPageHeader } from "@/components/layout/app-page-header";
 import { CustomersPageSearchToolbar } from "@/components/customers/customers-page-search-toolbar";
 import { RN_CARD_SHELL, RN_PAGE_SEARCH_ACTIONS } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
+import { deleteCustomerWithClient } from "@/lib/customers/delete-customer";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -119,7 +120,7 @@ export function CustomersSection({
 }: CustomersSectionProps) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
-  const { invalidateCustomers } = useTenantDataInvalidation();
+  const { invalidateCustomers, invalidateInquiries } = useTenantDataInvalidation();
   const [query, setQuery] = useState("");
   const [customersPage, setCustomersPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -217,18 +218,21 @@ export function CustomersSection({
     if (!currentOrganizationId) return;
     setDeleteBusyId(id);
     try {
-      const { error } = await supabase
-        .from("customers")
-        .delete()
-        .eq("id", id)
-        .eq("organization_id", currentOrganizationId);
-      if (error) {
-        toast.error("Kunne ikke slette", { description: error.message });
+      const result = await deleteCustomerWithClient(
+        supabase,
+        currentOrganizationId,
+        id,
+      );
+      if (!result.ok) {
+        toast.error("Kan ikke slette kunde", { description: result.error });
         return;
       }
       toast.success("Kunde slettet");
       if (selectedId === id) setSelectedId(null);
       invalidateCustomers();
+      if (result.deletedInquiries > 0) {
+        invalidateInquiries();
+      }
     } finally {
       setDeleteBusyId(null);
     }

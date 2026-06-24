@@ -133,7 +133,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
               </SheetTitle>
             </SheetHeader>
             <div className="pt-2">
-              <MobileNavLinks />
+              <MobileNavLinks onNavigate={() => setMobileOpen(false)} />
             </div>
           </SheetContent>
         </Sheet>
