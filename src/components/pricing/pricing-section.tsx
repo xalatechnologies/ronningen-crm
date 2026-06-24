@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { Input } from "@/components/ui/input";
 import { PriceInput } from "@/components/ui/price-input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +42,7 @@ import {
   Plus,
   Puzzle,
   Sparkles,
+  Trash2,
   UtensilsCrossed,
 } from "lucide-react";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
@@ -323,8 +325,10 @@ export function PricingSection({
   services,
   loadError,
 }: PricingSectionProps) {
+  const supabase = useSupabase();
   const { canManageFinance } = useOrganizationPermissions();
   const canEdit = canManageFinance;
+  const { invalidatePricing } = useTenantDataInvalidation();
 
   const [packageDialog, setPackageDialog] = useState<{
     open: boolean;
@@ -335,6 +339,45 @@ export function PricingSection({
     open: boolean;
     row: ServiceRow | null;
   }>({ open: false, row: null });
+
+  const [deleteTarget, setDeleteTarget] = useState<{
+    kind: CatalogKind;
+    id: string;
+    name: string;
+  } | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+
+  async function confirmDeleteCatalog() {
+    if (!deleteTarget) return;
+    setDeleteBusy(true);
+    try {
+      const { error } = await supabase
+        .from(deleteTarget.kind)
+        .delete()
+        .eq("id", deleteTarget.id);
+      if (error) {
+        toast.error("Kunne ikke slette", { description: error.message });
+        return;
+      }
+      toast.success(
+        deleteTarget.kind === "packages"
+          ? "Pakke slettet"
+          : "Tjeneste slettet",
+      );
+      setDeleteTarget(null);
+      invalidatePricing();
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
+
+  const catalogActionButtonClass = (isPopular: boolean) =>
+    cn(
+      "rounded-md p-2.5 transition-colors",
+      isPopular
+        ? "text-white/70 hover:bg-white/10 hover:text-white"
+        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+    );
 
   const sortedPackages = useMemo(
     () =>
@@ -429,22 +472,38 @@ export function PricingSection({
                 </span>
               ) : null}
               {canEdit ? (
-                <button
-                  type="button"
-                  className={cn(
-                    "absolute top-4 left-4 z-10 rounded-md p-2.5 transition-colors",
-                    isPopular
-                      ? "text-white/70 hover:bg-white/10 hover:text-white"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  )}
-                  title="Rediger pakke"
-                  onClick={() => setPackageDialog({ open: true, row: pkg })}
-                  aria-label={`Rediger pakke ${pkg.name}`}
-                >
-                  <Pencil className="size-5" aria-hidden />
-                </button>
+                <div className="absolute top-4 left-4 z-10 flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    className={catalogActionButtonClass(isPopular)}
+                    title="Rediger pakke"
+                    onClick={() => setPackageDialog({ open: true, row: pkg })}
+                    aria-label={`Rediger pakke ${pkg.name}`}
+                  >
+                    <Pencil className="size-5" aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(
+                      catalogActionButtonClass(isPopular),
+                      !isPopular && "hover:text-destructive",
+                      isPopular && "hover:text-red-300",
+                    )}
+                    title="Slett pakke"
+                    onClick={() =>
+                      setDeleteTarget({
+                        kind: "packages",
+                        id: pkg.id,
+                        name: pkg.name,
+                      })
+                    }
+                    aria-label={`Slett pakke ${pkg.name}`}
+                  >
+                    <Trash2 className="size-5" aria-hidden />
+                  </button>
+                </div>
               ) : null}
-              <div className={cn("pr-2", canEdit && "pl-11")}>
+              <div className={cn("pr-2", canEdit && "pl-[4.75rem]")}>
                 <span
                   className={cn(
                     "pricing-package-tier-label mb-3 block font-semibold tracking-wider text-stone-500 uppercase",
@@ -631,24 +690,48 @@ export function PricingSection({
                     <TableCell
                       className={cn(pricingTableCellClass, "text-right")}
                     >
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        className="size-11 rounded-md text-muted-foreground disabled:opacity-40 md:size-12"
-                        disabled={!canEdit}
-                        title={
-                          !canEdit
-                            ? "Krever eier-, admin- eller regnskapstilgang"
-                            : undefined
-                        }
-                        onClick={() =>
-                          setServiceDialog({ open: true, row: svc })
-                        }
-                        aria-label={`Rediger ${svc.name}`}
-                      >
-                        <Pencil className="size-5 md:size-6" aria-hidden />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className="size-11 rounded-md text-muted-foreground disabled:opacity-40 md:size-12"
+                          disabled={!canEdit}
+                          title={
+                            !canEdit
+                              ? "Krever eier-, admin- eller regnskapstilgang"
+                              : undefined
+                          }
+                          onClick={() =>
+                            setServiceDialog({ open: true, row: svc })
+                          }
+                          aria-label={`Rediger ${svc.name}`}
+                        >
+                          <Pencil className="size-5 md:size-6" aria-hidden />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className="size-11 rounded-md text-muted-foreground hover:text-destructive disabled:opacity-40 md:size-12"
+                          disabled={!canEdit}
+                          title={
+                            !canEdit
+                              ? "Krever eier-, admin- eller regnskapstilgang"
+                              : "Slett tjeneste"
+                          }
+                          onClick={() =>
+                            setDeleteTarget({
+                              kind: "services",
+                              id: svc.id,
+                              name: svc.name,
+                            })
+                          }
+                          aria-label={`Slett ${svc.name}`}
+                        >
+                          <Trash2 className="size-5 md:size-6" aria-hidden />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -679,6 +762,25 @@ export function PricingSection({
           else setServiceDialog((s) => ({ ...s, open: true }));
         }}
         row={serviceDialog.row}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={
+          deleteTarget?.kind === "packages"
+            ? "Slette pakke?"
+            : "Slette tilleggstjeneste?"
+        }
+        description={
+          deleteTarget
+            ? `«${deleteTarget.name}» fjernes permanent fra priskatalogen. Dette kan ikke angres.`
+            : ""
+        }
+        busy={deleteBusy}
+        onConfirm={confirmDeleteCatalog}
       />
     </div>
   );

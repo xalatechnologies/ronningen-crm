@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import Link from "next/link";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { useSupabase } from "@/providers/supabase-provider";
@@ -47,6 +47,8 @@ import { eachBookingYmdInRange } from "@/lib/booking-period";
 
 const bookingsTableHeadClass =
   "bookings-list-table-head font-semibold tracking-wider text-rn-text-column uppercase";
+
+const BOOKINGS_LIST_PAGE_SIZE = 6;
 
 const filterEyebrowClass =
   "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
@@ -524,6 +526,7 @@ export function BookingsList({
   const [audienceFilter, setAudienceFilter] = useState<BookingAudienceFilter>("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [page, setPage] = useState(1);
 
   function resetFilters() {
     setQuery("");
@@ -532,7 +535,12 @@ export function BookingsList({
     setAudienceFilter("");
     setDateFrom("");
     setDateTo("");
+    setPage(1);
   }
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, filter, paymentFilter, audienceFilter, dateFrom, dateTo]);
 
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
@@ -641,6 +649,22 @@ export function BookingsList({
     }
     return rows;
   }, [bookings, query, filter, paymentFilter, audienceFilter, dateFrom, dateTo]);
+
+  const pagination = useMemo(() => {
+    const totalPages = Math.max(
+      1,
+      Math.ceil(filtered.length / BOOKINGS_LIST_PAGE_SIZE),
+    );
+    const currentPage = Math.min(Math.max(1, page), totalPages);
+    const start = (currentPage - 1) * BOOKINGS_LIST_PAGE_SIZE;
+    return {
+      totalPages,
+      currentPage,
+      pageRows: filtered.slice(start, start + BOOKINGS_LIST_PAGE_SIZE),
+    };
+  }, [filtered, page]);
+
+  const { totalPages, currentPage, pageRows } = pagination;
 
   const trendPositive =
     quickStats.monthOverMonthPct != null &&
@@ -760,7 +784,7 @@ export function BookingsList({
                   </p>
                 </div>
               ) : (
-                filtered.map((row) => (
+                pageRows.map((row) => (
                   <button
                     key={row.id}
                     type="button"
@@ -886,34 +910,34 @@ export function BookingsList({
                   ? "Ingen bookinger"
                   : filtered.length === 0
                     ? `Ingen rader samsvarer med filteret · ${bookings.length} ${bookings.length === 1 ? "booking" : "bookinger"} totalt`
-                    : `Viser 1–${filtered.length} av ${bookings.length} bookinger`}
+                    : filtered.length <= BOOKINGS_LIST_PAGE_SIZE
+                      ? `Viser ${filtered.length} av ${bookings.length} bookinger`
+                      : `Viser ${(currentPage - 1) * BOOKINGS_LIST_PAGE_SIZE + 1}–${Math.min(currentPage * BOOKINGS_LIST_PAGE_SIZE, filtered.length)} av ${filtered.length}${filtered.length !== bookings.length ? ` treff (${bookings.length} totalt)` : " bookinger"}`}
               </span>
-              {bookings.length > 0 ? (
+              {filtered.length > BOOKINGS_LIST_PAGE_SIZE ? (
               <div className="flex items-center justify-center gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="icon-sm"
                   className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
-                  disabled
+                  disabled={currentPage <= 1}
                   aria-label="Forrige side"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
                   <ChevronLeft className="size-[18px]" />
                 </Button>
-                <Button
-                  type="button"
-                  size="icon-sm"
-                  className="size-10 rounded-md border-2 border-success bg-success text-primary-foreground"
-                >
-                  1
-                </Button>
+                <span className="min-w-[5.5rem] text-center text-app-sm font-semibold tabular-nums text-muted-foreground">
+                  Side {currentPage} / {totalPages}
+                </span>
                 <Button
                   type="button"
                   variant="outline"
                   size="icon-sm"
                   className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
-                  disabled
+                  disabled={currentPage >= totalPages}
                   aria-label="Neste side"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 >
                   <ChevronRight className="size-[18px]" />
                 </Button>

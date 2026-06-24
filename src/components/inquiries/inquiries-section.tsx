@@ -40,9 +40,11 @@ import {
 } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { isBefore } from "date-fns";
-import { Calendar, ChevronDown, ChevronRight, Inbox, ListFilter, Plus, Search } from "lucide-react";
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Inbox, ListFilter, Plus, Search } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const INQUIRIES_LIST_PAGE_SIZE = 6;
 
 const inquiriesTableHeadClass =
   "bookings-list-table-head py-4 font-semibold tracking-wider text-rn-text-column uppercase sm:py-5";
@@ -159,6 +161,11 @@ export function InquiriesSection({
   const [selected, setSelected] = useState<InquiryListRow | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showCalendarView, setShowCalendarView] = useState(false);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, statusFilter, dueOnly, dateFrom, dateTo]);
 
   const activeInquiries = useMemo(
     () => inquiries.filter(isActiveInquiry),
@@ -215,12 +222,29 @@ export function InquiriesSection({
     });
   }, [activeInquiries, query, statusFilter, dueOnly, dateFrom, dateTo]);
 
+  const pagination = useMemo(() => {
+    const totalPages = Math.max(
+      1,
+      Math.ceil(filtered.length / INQUIRIES_LIST_PAGE_SIZE),
+    );
+    const currentPage = Math.min(Math.max(1, page), totalPages);
+    const start = (currentPage - 1) * INQUIRIES_LIST_PAGE_SIZE;
+    return {
+      totalPages,
+      currentPage,
+      pageRows: filtered.slice(start, start + INQUIRIES_LIST_PAGE_SIZE),
+    };
+  }, [filtered, page]);
+
+  const { totalPages, currentPage, pageRows } = pagination;
+
   function resetFilters() {
     setQuery("");
     setStatusFilter("all");
     setDueOnly(false);
     setDateFrom("");
     setDateTo("");
+    setPage(1);
   }
 
   function openRow(row: InquiryListRow) {
@@ -467,7 +491,7 @@ export function InquiriesSection({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((row) => (
+                {pageRows.map((row) => (
                   <TableRow
                     key={row.id}
                     className="group cursor-pointer border-rn-border-strong/40 hover:bg-rn-surface-row-hover"
@@ -515,6 +539,52 @@ export function InquiriesSection({
                 ))}
               </TableBody>
             </Table>
+            {filtered.length > INQUIRIES_LIST_PAGE_SIZE ? (
+              <div className="flex flex-col items-stretch justify-between gap-4 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
+                <span className="text-app-sm font-medium text-rn-footer-text md:text-app-base">
+                  Viser {(currentPage - 1) * INQUIRIES_LIST_PAGE_SIZE + 1}–
+                  {Math.min(
+                    currentPage * INQUIRIES_LIST_PAGE_SIZE,
+                    filtered.length,
+                  )}{" "}
+                  av {filtered.length}
+                  {filtered.length !== activeInquiries.length
+                    ? ` treff (${activeInquiries.length} totalt)`
+                    : filtered.length === 1
+                      ? " forespørsel"
+                      : " forespørsler"}
+                </span>
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
+                    disabled={currentPage <= 1}
+                    aria-label="Forrige side"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  >
+                    <ChevronLeft className="size-[18px]" />
+                  </Button>
+                  <span className="min-w-[5.5rem] text-center text-app-sm font-semibold tabular-nums text-muted-foreground">
+                    Side {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
+                    disabled={currentPage >= totalPages}
+                    aria-label="Neste side"
+                    onClick={() =>
+                      setPage((p) => Math.min(totalPages, p + 1))
+                    }
+                  >
+                    <ChevronRight className="size-[18px]" />
+                  </Button>
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
