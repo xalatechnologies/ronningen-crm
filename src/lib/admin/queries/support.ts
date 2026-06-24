@@ -10,7 +10,7 @@ import {
 } from "@/lib/support/labels";
 import type { AdminQueueItem } from "@/lib/admin/types";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 
 export type AdminSupportNote = {
   id: string;

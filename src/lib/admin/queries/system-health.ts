@@ -10,7 +10,7 @@ import { buildFailedPaymentQueue } from "@/lib/admin/trend-data";
 import type { AdminQueueItem } from "@/lib/admin/types";
 import { isBillingEnabled } from "@/lib/billing/constants";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 
 export type { HealthStatus } from "@/lib/admin/platform-integration-status";
 

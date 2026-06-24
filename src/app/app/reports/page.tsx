@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { ReportsPageClient } from "@/components/app-pages/tenant-page-clients";
+import { ReportsPageClient } from "@/components/app-pages/reports-page-client";
 import { AppPageSkeleton } from "@/components/shared/app-page-skeleton";
 
 export default function ReportsPage() {

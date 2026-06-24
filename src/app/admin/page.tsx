@@ -28,7 +28,7 @@ import {
 import { fetchAdminOverviewStats } from "@/lib/admin/queries/overview";
 import { formatNok } from "@/lib/admin/revenue-metrics";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 import Link from "next/link";
 
 export default async function AdminOverviewPage() {

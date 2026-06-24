@@ -20,7 +20,7 @@ import {
 } from "@/lib/admin/actions/users";
 import type { AdminUserDetail } from "@/lib/admin/queries/users-billing-audit";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 import { AdminTableDetailLink } from "@/components/admin/admin-table-detail-link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

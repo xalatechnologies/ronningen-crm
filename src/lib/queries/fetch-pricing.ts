@@ -4,6 +4,11 @@ import type { Database } from "@/types/database.types";
 type PackageRow = Database["public"]["Tables"]["packages"]["Row"];
 type ServiceRow = Database["public"]["Tables"]["services"]["Row"];
 
+const PACKAGE_COLUMNS =
+  "id, organization_id, name, description, price, active, created_at, updated_at";
+const SERVICE_COLUMNS =
+  "id, organization_id, name, description, price, active, created_at, updated_at";
+
 export type PricingPageData = {
   packages: PackageRow[];
   services: ServiceRow[];
@@ -16,13 +21,13 @@ export async function fetchPricingPageData(
 ): Promise<PricingPageData> {
   const { data: packages, error: pErr } = await supabase
     .from("packages")
-    .select("*")
+    .select(PACKAGE_COLUMNS)
     .eq("organization_id", orgId)
     .order("price", { ascending: true });
 
   const { data: services, error: sErr } = await supabase
     .from("services")
-    .select("*")
+    .select(SERVICE_COLUMNS)
     .eq("organization_id", orgId)
     .order("name", { ascending: true });
 

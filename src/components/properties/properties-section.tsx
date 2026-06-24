@@ -280,10 +280,21 @@ export function PropertiesSection({
     const payload = payloadFromForm(data);
 
     if (dialog.row) {
+      let orgId: string;
+      try {
+        orgId = requireOrganizationId(currentOrganizationId);
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+        );
+        return;
+      }
+
       const { error } = await supabase
         .from("properties")
         .update(payload)
-        .eq("id", dialog.row.id);
+        .eq("id", dialog.row.id)
+        .eq("organization_id", orgId);
 
       if (error) {
         toast.error("Kunne ikke lagre", { description: error.message });
@@ -320,13 +331,14 @@ export function PropertiesSection({
   }
 
   async function confirmDelete() {
-    if (!deleteTarget) return;
+    if (!deleteTarget || !currentOrganizationId) return;
     setDeleteBusy(true);
     try {
       const { error } = await supabase
         .from("properties")
         .delete()
-        .eq("id", deleteTarget.id);
+        .eq("id", deleteTarget.id)
+        .eq("organization_id", currentOrganizationId);
 
       if (error) {
         toast.error("Kunne ikke slette", {

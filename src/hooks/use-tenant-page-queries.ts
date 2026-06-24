@@ -54,7 +54,7 @@ export function useDashboardQuery() {
 export function useBookingsQuery() {
   const { supabase, orgId, role, enabled } = useTenantQueryContext();
   return useQuery({
-    queryKey: tenantQueryKeys.bookings(orgId ?? ""),
+    queryKey: tenantQueryKeys.bookings(orgId ?? "", role),
     enabled: enabled && Boolean(orgId),
     staleTime: tenantStaleTimes.list,
     queryFn: () => fetchBookingsPageData(supabase, orgId!, role),
@@ -64,7 +64,7 @@ export function useBookingsQuery() {
 export function useInquiriesQuery() {
   const { supabase, orgId, role, enabled } = useTenantQueryContext();
   return useQuery({
-    queryKey: tenantQueryKeys.inquiries(orgId ?? ""),
+    queryKey: tenantQueryKeys.inquiries(orgId ?? "", role),
     enabled: enabled && Boolean(orgId),
     staleTime: tenantStaleTimes.list,
     queryFn: () => fetchInquiriesPageData(supabase, orgId!, role),
@@ -84,7 +84,7 @@ export function useCustomersQuery() {
 export function useFinanceQuery() {
   const { supabase, orgId, role, enabled } = useTenantQueryContext();
   return useQuery({
-    queryKey: tenantQueryKeys.finance(orgId ?? ""),
+    queryKey: tenantQueryKeys.finance(orgId ?? "", role),
     enabled: enabled && Boolean(orgId),
     staleTime: tenantStaleTimes.finance,
     queryFn: () => fetchFinancePageData(supabase, orgId!, role),
@@ -104,7 +104,7 @@ export function usePricingQuery() {
 export function useInvoicesQuery() {
   const { supabase, orgId, role, enabled } = useTenantQueryContext();
   return useQuery({
-    queryKey: tenantQueryKeys.invoices(orgId ?? ""),
+    queryKey: tenantQueryKeys.invoices(orgId ?? "", role),
     enabled: enabled && Boolean(orgId),
     staleTime: tenantStaleTimes.list,
     queryFn: () => fetchInvoicesPageData(supabase, orgId!, role),
@@ -114,7 +114,7 @@ export function useInvoicesQuery() {
 export function useAssetsQuery() {
   const { supabase, orgId, role, enabled } = useTenantQueryContext();
   return useQuery({
-    queryKey: tenantQueryKeys.assets(orgId ?? ""),
+    queryKey: tenantQueryKeys.assets(orgId ?? "", role),
     enabled: enabled && Boolean(orgId),
     staleTime: tenantStaleTimes.list,
     queryFn: () => fetchAssetsPageData(supabase, orgId!, role),
@@ -125,7 +125,7 @@ export function useOvernattingQuery(ym?: string) {
   const { supabase, orgId, role, enabled } = useTenantQueryContext();
   const initialYm = resolveOvernattingYm(ym);
   return useQuery({
-    queryKey: tenantQueryKeys.overnatting(orgId ?? "", initialYm),
+    queryKey: tenantQueryKeys.overnatting(orgId ?? "", initialYm, role),
     enabled: enabled && Boolean(orgId),
     staleTime: tenantStaleTimes.list,
     queryFn: () =>

@@ -1,4 +1,8 @@
 import type { TransactionListItem } from "@/components/finance/types";
+import {
+  fetchAllRowsInDateRange,
+  rollingYearBounds,
+} from "@/lib/queries/fetch-paged";
 import type { TenantSupabaseClient } from "@/lib/queries/types";
 import { canManageFinance } from "@/lib/role-access";
 import type { UserRole } from "@/constants/roles";
@@ -34,22 +38,29 @@ export async function fetchFinancePageData(
 ): Promise<FinancePageData> {
   const canManageTransactions = canManageFinance(role);
 
+  const { fromYmd, toYmd } = rollingYearBounds(5);
+
   const { data: properties, error: pErr } = await supabase
     .from("properties")
     .select("id, name")
     .eq("organization_id", orgId)
     .order("name");
 
-  const { data: rawList, error: tErr } = await supabase
-    .from("transactions")
-    .select(
-      "id, property_id, type, category, description, amount, transaction_date, properties(name)",
-    )
-    .eq("organization_id", orgId)
-    .order("transaction_date", { ascending: false })
-    .limit(10000);
+  const { data: rawList, error: tErr } = await fetchAllRowsInDateRange<RawTx>(
+    supabase,
+    "transactions",
+    orgId,
+    "transaction_date",
+    fromYmd,
+    toYmd,
+    {
+      select:
+        "id, property_id, type, category, description, amount, transaction_date, properties(name)",
+      orderBy: { column: "transaction_date", ascending: false },
+    },
+  );
 
-  const loadError = pErr?.message ?? tErr?.message ?? null;
+  const loadError = pErr?.message ?? tErr ?? null;
 
   const nameByProperty = new Map(
     (properties ?? []).map((p) => [p.id, p.name] as const),

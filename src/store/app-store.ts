@@ -7,13 +7,8 @@ import {
   type DisplayDensity,
 } from "@/config/display";
 import { defaultTheme, type ThemePreference } from "@/config/theme";
-import type { ActiveWorkspace } from "@/types/app.types";
 
 type AppState = {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-  activeWorkspace: ActiveWorkspace;
-  setActiveWorkspace: (workspace: ActiveWorkspace) => void;
   displayDensity: DisplayDensity;
   setDisplayDensity: (density: DisplayDensity) => void;
   theme: ThemePreference;
@@ -23,10 +18,6 @@ type AppState = {
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      sidebarOpen: false,
-      setSidebarOpen: (open) => set({ sidebarOpen: open }),
-      activeWorkspace: null,
-      setActiveWorkspace: (workspace) => set({ activeWorkspace: workspace }),
       displayDensity: defaultDisplayDensity,
       setDisplayDensity: (displayDensity) => set({ displayDensity }),
       theme: defaultTheme,

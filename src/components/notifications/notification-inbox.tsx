@@ -22,7 +22,7 @@ import { RN_CARD_SHELL, RN_SEGMENT_CONTROL, RN_TEXT_SEGMENT } from "@/lib/rn-ui"
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/providers/notification-provider";
 import { format, formatDistanceToNow } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 import {
   Bell,
   CheckCheck,

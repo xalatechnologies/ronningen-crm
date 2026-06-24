@@ -1,4 +1,4 @@
-import { FinancePageClient } from "@/components/app-pages/tenant-page-clients";
+import { FinancePageClient } from "@/components/app-pages/finance-page-client";
 
 export default function FinancePage() {
   return <FinancePageClient />;

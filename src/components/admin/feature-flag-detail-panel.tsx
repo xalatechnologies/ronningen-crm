@@ -10,7 +10,7 @@ import { adminAuditHref } from "@/lib/admin/dashboard-links";
 import { resolveFeatureFlagStatus } from "@/lib/admin/feature-flag-status";
 import type { AdminFeatureFlag } from "@/lib/admin/queries/feature-flags";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";

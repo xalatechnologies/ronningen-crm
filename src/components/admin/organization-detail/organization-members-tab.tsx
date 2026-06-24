@@ -17,7 +17,7 @@ import { transferOrganizationOwnership } from "@/lib/admin/actions/users";
 import type { AdminOrganizationDetail } from "@/lib/admin/queries/organizations";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

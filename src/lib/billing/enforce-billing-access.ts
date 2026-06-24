@@ -1,3 +1,5 @@
+import "server-only";
+
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { isStripeConfigured } from "@/lib/billing/constants";
 import { getStripeClient } from "@/lib/billing/stripe";

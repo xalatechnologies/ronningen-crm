@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { BillingPlanId } from "@/config/billing-plans";
 import type Stripe from "stripe";
 import {

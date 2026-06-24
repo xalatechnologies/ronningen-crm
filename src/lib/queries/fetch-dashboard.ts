@@ -52,23 +52,71 @@ export async function fetchDashboardData(
     now.getFullYear() - 1,
     now.getFullYear(),
   ] as const;
+  const chartStartYmd = `${chartYears[0]}-01-01`;
+  const today = startOfToday();
+  const todayYmd = ymd(today);
+  const windowEnd = addDays(today, 30);
+  const windowEndYmd = ymd(windowEnd);
 
-  const [bookingsRes, propRes] = await Promise.all([
+  const bookingMoneySelect =
+    "id, event_type, event_date, total_price, paid_amount, remaining_amount, status";
+
+  const [
+    moneyRes,
+    chartRes,
+    alertsRes,
+    upcomingRes,
+    propRes,
+  ] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select(bookingMoneySelect)
+      .eq("organization_id", orgId),
+    supabase
+      .from("bookings")
+      .select(bookingMoneySelect)
+      .eq("organization_id", orgId)
+      .gte("event_date", chartStartYmd)
+      .lte("event_date", `${chartYears[2]}-12-31`),
     supabase
       .from("bookings")
       .select(
-        "id, event_type, event_date, total_price, paid_amount, remaining_amount, status, customers(name), properties(name)",
+        "id, event_type, event_date, remaining_amount, status, customers(name)",
       )
-      .eq("organization_id", orgId),
+      .eq("organization_id", orgId)
+      .gt("remaining_amount", 0)
+      .lte("event_date", todayYmd)
+      .not("status", "in", '("cancelled","avbestilt")')
+      .order("event_date", { ascending: true })
+      .order("remaining_amount", { ascending: false })
+      .limit(5),
+    supabase
+      .from("bookings")
+      .select(
+        "id, event_type, event_date, status, customers(name), properties(name)",
+      )
+      .eq("organization_id", orgId)
+      .gte("event_date", todayYmd)
+      .lte("event_date", windowEndYmd)
+      .not("status", "in", '("cancelled","avbestilt")')
+      .order("event_date", { ascending: true })
+      .limit(12),
     supabase.from("properties").select("id").eq("organization_id", orgId),
   ]);
 
   const loadError =
-    [bookingsRes.error?.message, propRes.error?.message]
+    [
+      moneyRes.error?.message,
+      chartRes.error?.message,
+      alertsRes.error?.message,
+      upcomingRes.error?.message,
+      propRes.error?.message,
+    ]
       .filter(Boolean)
       .join(" — ") || null;
 
-  const rawBookings = (bookingsRes.data ?? []) as unknown as RawBooking[];
+  const rawBookings = (moneyRes.data ?? []) as unknown as RawBooking[];
+  const chartBookings = (chartRes.data ?? []) as unknown as RawBooking[];
   const moneyRows = rawBookings.map((r) => ({
     total_price: Number(r.total_price),
     paid_amount: Number(r.paid_amount),
@@ -96,23 +144,19 @@ export async function fetchDashboardData(
   ).length;
   const propertyCount = propRes.data?.length ?? 0;
 
-  const monthlyByYear = buildMonthlyInvoicedByEventYear(moneyRows, chartYears);
+  const monthlyByYear = buildMonthlyInvoicedByEventYear(
+    chartBookings.map((r) => ({
+      total_price: Number(r.total_price),
+      paid_amount: Number(r.paid_amount),
+      remaining_amount: Number(r.remaining_amount),
+      status: r.status,
+      event_date: r.event_date,
+    })),
+    chartYears,
+  );
 
-  const today = startOfToday();
-  const todayYmd = ymd(today);
-  const windowEnd = addDays(today, 30);
-  const windowEndYmd = ymd(windowEnd);
-
-  const paymentAlerts = rawBookings
-    .filter((r) => !isCancelledBookingStatus(r.status))
-    .filter((r) => Number(r.remaining_amount) > 0)
-    .filter((r) => r.event_date <= todayYmd)
-    .sort(
-      (a, b) =>
-        a.event_date.localeCompare(b.event_date) ||
-        Number(b.remaining_amount) - Number(a.remaining_amount),
-    )
-    .slice(0, 5)
+  const paymentAlerts = (alertsRes.data ?? [])
+    .map((row) => row as unknown as RawBooking)
     .map((r) => {
       const name = r.customers?.name?.trim() || "Ukjent kunde";
       const type = r.event_type?.trim() || "Arrangement";
@@ -126,11 +170,8 @@ export async function fetchDashboardData(
       };
     });
 
-  const upcoming = rawBookings
-    .filter((r) => !isCancelledBookingStatus(r.status))
-    .filter((r) => r.event_date >= todayYmd && r.event_date <= windowEndYmd)
-    .sort((a, b) => a.event_date.localeCompare(b.event_date))
-    .slice(0, 12)
+  const upcoming = (upcomingRes.data ?? [])
+    .map((row) => row as unknown as RawBooking)
     .map((r) => {
       const name = r.customers?.name?.trim() || "Ukjent kunde";
       const type = r.event_type?.trim() || "Arrangement";

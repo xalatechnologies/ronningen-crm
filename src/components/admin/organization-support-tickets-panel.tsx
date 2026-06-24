@@ -17,7 +17,7 @@ import {
   SUPPORT_STATUS_LABELS,
 } from "@/lib/support/labels";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 
 export function OrganizationSupportTicketsPanel({
   organizationSlug,

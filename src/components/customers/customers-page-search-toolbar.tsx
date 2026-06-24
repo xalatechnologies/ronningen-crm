@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   RN_PAGE_SEARCH_BUTTON,
@@ -8,7 +8,6 @@ import {
   RN_PAGE_SEARCH_INPUT,
   RN_PAGE_SEARCH_TOOLBAR,
 } from "@/lib/rn-ui";
-import { cn } from "@/lib/utils";
 import { Plus, Search } from "lucide-react";
 
 export type CustomersPageSearchToolbarProps = {
@@ -54,11 +53,10 @@ export function CustomersPageSearchToolbar({
       </div>
       <Button
         type="button"
+        variant="success"
+        size="cta"
         onClick={onAdd}
-        className={cn(
-          buttonVariants({ variant: "success" }),
-          RN_PAGE_SEARCH_BUTTON,
-        )}
+        className={RN_PAGE_SEARCH_BUTTON}
       >
         <Plus className="size-5" aria-hidden />
         {addLabel}

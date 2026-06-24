@@ -1,4 +1,4 @@
-import { PricingPageClient } from "@/components/app-pages/tenant-page-clients";
+import { PricingPageClient } from "@/components/app-pages/pricing-page-client";
 
 export default function PricingPage() {
   return <PricingPageClient />;

@@ -6,7 +6,7 @@ import { AdminDataPanel } from "@/components/admin/admin-data-panel";
 import { setPlatformAdmin } from "@/lib/admin/actions/users";
 import type { AdminUserDetail } from "@/lib/admin/queries/users-billing-audit";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";

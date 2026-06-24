@@ -3,7 +3,7 @@ import { AdminDataPanel } from "@/components/admin/admin-data-panel";
 import { getStripeModeLabel } from "@/lib/billing/constants";
 import type { AdminOrganizationDetail } from "@/lib/admin/queries/organizations";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return "—";

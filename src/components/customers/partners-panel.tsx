@@ -32,7 +32,6 @@ import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm, type Resolver, type UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
@@ -139,7 +138,6 @@ function PartnerFields({
 export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
-  const router = useRouter();
   const { invalidateCustomers } = useTenantDataInvalidation();
   const [query, setQuery] = useState("");
   const [partnersPage, setPartnersPage] = useState(1);
@@ -256,11 +254,10 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
     addForm.reset({ category: "catering", name: "", phone: "", email: "", notes: "" });
     setAddOpen(false);
     invalidateCustomers();
-    router.refresh();
   }
 
   async function onSavePartner(data: PartnerFormInput) {
-    if (!selectedId) return;
+    if (!selectedId || !currentOrganizationId) return;
     const { error } = await supabase
       .from("partners")
       .update({
@@ -270,7 +267,8 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
         email: data.email.trim() || null,
         notes: data.notes?.trim() || null,
       })
-      .eq("id", selectedId);
+      .eq("id", selectedId)
+      .eq("organization_id", currentOrganizationId);
 
     if (error) {
       toast.error("Kunne ikke lagre", { description: error.message });
@@ -279,13 +277,17 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
 
     toast.success("Lagret");
     invalidateCustomers();
-    router.refresh();
   }
 
   async function performPartnerDelete(id: string) {
+    if (!currentOrganizationId) return;
     setDeleteBusyId(id);
     try {
-      const { error } = await supabase.from("partners").delete().eq("id", id);
+      const { error } = await supabase
+        .from("partners")
+        .delete()
+        .eq("id", id)
+        .eq("organization_id", currentOrganizationId);
       if (error) {
         toast.error("Kunne ikke slette", { description: error.message });
         return;
@@ -293,7 +295,6 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
       toast.success("Partner slettet");
       if (selectedId === id) setSelectedId(null);
       invalidateCustomers();
-      router.refresh();
     } finally {
       setDeleteBusyId(null);
     }

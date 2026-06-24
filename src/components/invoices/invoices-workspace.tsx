@@ -14,6 +14,7 @@ import {
   suggestInkassoReview,
 } from "@/lib/invoice-row-utils";
 import { cn } from "@/lib/utils";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useSupabase } from "@/providers/supabase-provider";
 import {
   AlertTriangle,
@@ -23,7 +24,6 @@ import {
   Scale,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -253,7 +253,7 @@ export function InvoicesWorkspace({
   canMarkInvoicesPaid = false,
 }: InvoicesWorkspaceProps) {
   const supabase = useSupabase();
-  const router = useRouter();
+  const { invalidateInvoices } = useTenantDataInvalidation();
   const [markPaidConfirmRow, setMarkPaidConfirmRow] =
     useState<UnpaidInvoiceRow | null>(null);
   const [markingBookingId, setMarkingBookingId] = useState<string | null>(null);
@@ -289,7 +289,7 @@ export function InvoicesWorkspace({
 
       setMarkPaidConfirmRow(null);
       toast.success("Bookingen er markert som fullt betalt");
-      router.refresh();
+      invalidateInvoices();
     } finally {
       setMarkingBookingId(null);
     }

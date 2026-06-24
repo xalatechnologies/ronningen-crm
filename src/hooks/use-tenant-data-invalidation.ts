@@ -9,6 +9,7 @@ import {
   invalidateCustomersQueries,
   invalidateFinanceQueries,
   invalidateInquiriesQueries,
+  invalidateInvoicesQueries,
   invalidateOvernattingQueries,
   invalidatePricingQueries,
   invalidateTenantQueries,
@@ -47,6 +48,10 @@ export function useTenantDataInvalidation() {
     invalidateOvernatting: () => {
       if (!currentOrganizationId) return;
       invalidateOvernattingQueries(queryClient, currentOrganizationId);
+    },
+    invalidateInvoices: () => {
+      if (!currentOrganizationId) return;
+      invalidateInvoicesQueries(queryClient, currentOrganizationId);
     },
   };
 }

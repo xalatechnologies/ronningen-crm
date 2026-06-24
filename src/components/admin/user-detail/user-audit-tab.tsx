@@ -10,7 +10,7 @@ import {
 import { formatAuditActionLabel } from "@/lib/admin/audit-labels";
 import type { AdminUserDetail } from "@/lib/admin/queries/users-billing-audit";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 
 export function UserAuditTab({ user }: { user: AdminUserDetail }) {
   return (

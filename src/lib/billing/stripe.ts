@@ -1,3 +1,5 @@
+import "server-only";
+
 import Stripe from "stripe";
 
 import { assertBillingConfigured } from "@/lib/billing/billing-env";

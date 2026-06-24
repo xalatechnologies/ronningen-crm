@@ -1,5 +1,6 @@
 "use client";
 
+import { queryKeys } from "@/lib/query-keys";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { useSupabase } from "@/providers/supabase-provider";
 import { useQuery } from "@tanstack/react-query";
@@ -9,7 +10,7 @@ export function usePlatformAdmin() {
   const supabase = useSupabase();
 
   const { data: isPlatformAdmin = false, isLoading } = useQuery({
-    queryKey: ["platform-admin", user?.id],
+    queryKey: queryKeys.auth.platformAdmin(user?.id),
     enabled: !authLoading && Boolean(user && supabase),
     retry: false,
     queryFn: async () => {

@@ -1,15 +1,20 @@
 export const tenantQueryKeys = {
   all: ["tenant"] as const,
   dashboard: (orgId: string) => ["tenant", "dashboard", orgId] as const,
-  bookings: (orgId: string) => ["tenant", "bookings", orgId] as const,
-  inquiries: (orgId: string) => ["tenant", "inquiries", orgId] as const,
+  bookings: (orgId: string, role: string | null) =>
+    ["tenant", "bookings", orgId, role] as const,
+  inquiries: (orgId: string, role: string | null) =>
+    ["tenant", "inquiries", orgId, role] as const,
   customers: (orgId: string) => ["tenant", "customers", orgId] as const,
-  finance: (orgId: string) => ["tenant", "finance", orgId] as const,
+  finance: (orgId: string, role: string | null) =>
+    ["tenant", "finance", orgId, role] as const,
   pricing: (orgId: string) => ["tenant", "pricing", orgId] as const,
-  invoices: (orgId: string) => ["tenant", "invoices", orgId] as const,
-  assets: (orgId: string) => ["tenant", "assets", orgId] as const,
-  overnatting: (orgId: string, ym: string) =>
-    ["tenant", "overnatting", orgId, ym] as const,
+  invoices: (orgId: string, role: string | null) =>
+    ["tenant", "invoices", orgId, role] as const,
+  assets: (orgId: string, role: string | null) =>
+    ["tenant", "assets", orgId, role] as const,
+  overnatting: (orgId: string, ym: string, role: string | null) =>
+    ["tenant", "overnatting", orgId, ym, role] as const,
   reports: (orgId: string, year: number, month: number | null) =>
     ["tenant", "reports", orgId, year, month] as const,
 };

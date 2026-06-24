@@ -671,7 +671,7 @@ export function AssetsSection({
           >
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12 xl:gap-16">
               <div className="min-w-0 shrink-0 lg:max-w-md">
-                <p className="assets-kpi-label">Total verdi</p>
+                <p className="assets-kpi-label">Inventar total</p>
                 <p className="assets-kpi-value mt-2 font-heading text-success">
                   {formatNok(stats.totalValue)}
                 </p>

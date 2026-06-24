@@ -214,9 +214,14 @@ export function CustomersSection({
   }
 
   async function performCustomerDelete(id: string) {
+    if (!currentOrganizationId) return;
     setDeleteBusyId(id);
     try {
-      const { error } = await supabase.from("customers").delete().eq("id", id);
+      const { error } = await supabase
+        .from("customers")
+        .delete()
+        .eq("id", id)
+        .eq("organization_id", currentOrganizationId);
       if (error) {
         toast.error("Kunne ikke slette", { description: error.message });
         return;

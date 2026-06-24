@@ -14,6 +14,8 @@ import {
   type CustomerUpsertFormInput,
 } from "@/lib/validations";
 import { cn } from "@/lib/utils";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -29,7 +31,6 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
@@ -95,7 +96,8 @@ export function CustomerDrawerBody({
   deleteBusy = false,
 }: CustomerDrawerBodyProps) {
   const supabase = useSupabase();
-  const router = useRouter();
+  const { currentOrganizationId } = useCurrentOrganization();
+  const { invalidateCustomers } = useTenantDataInvalidation();
   const [notesDraft, setNotesDraft] = useState(() => customer.notes ?? "");
   const notesBaselineRef = useRef({
     customerId: customer.id,
@@ -117,11 +119,13 @@ export function CustomerDrawerBody({
 
   const persistNotes = useCallback(
     async (customerId: string, notes: string) => {
+      if (!currentOrganizationId) return;
       const value = notes.trim() || null;
       const { error } = await supabase
         .from("customers")
         .update({ notes: value })
-        .eq("id", customerId);
+        .eq("id", customerId)
+        .eq("organization_id", currentOrganizationId);
       if (error) {
         toast.error("Kunne ikke lagre notat", { description: error.message });
         return;
@@ -130,9 +134,9 @@ export function CustomerDrawerBody({
       notesBaselineRef.current = { customerId, text: display };
       setNotesDraft(display);
       toast.success("Notat lagret");
-      router.refresh();
+      invalidateCustomers();
     },
-    [supabase, router],
+    [supabase, invalidateCustomers, currentOrganizationId],
   );
 
   useEffect(() => {
@@ -147,6 +151,7 @@ export function CustomerDrawerBody({
   }, [notesDraft, customer.id, persistNotes]);
 
   async function onSaveProfile(data: CustomerUpsertFormInput) {
+    if (!currentOrganizationId) return;
     setSavingProfile(true);
     const { error } = await supabase
       .from("customers")
@@ -155,7 +160,8 @@ export function CustomerDrawerBody({
         phone: data.phone.trim() || null,
         email: data.email.trim() || null,
       })
-      .eq("id", customer.id);
+      .eq("id", customer.id)
+      .eq("organization_id", currentOrganizationId);
 
     setSavingProfile(false);
 
@@ -166,7 +172,7 @@ export function CustomerDrawerBody({
 
     toast.success("Profil oppdatert");
     setEditingProfile(false);
-    router.refresh();
+    invalidateCustomers();
   }
 
   return (

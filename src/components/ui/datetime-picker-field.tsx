@@ -10,7 +10,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import * as React from "react";
 

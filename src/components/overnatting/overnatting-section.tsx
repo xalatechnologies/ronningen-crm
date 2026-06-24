@@ -58,7 +58,7 @@ import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 import { BedDouble, Building2, Calendar, Plus, RotateCcw, Search, Users } from "lucide-react";
 import Link from "next/link";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";

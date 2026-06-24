@@ -54,14 +54,14 @@ const routePrefetchers: Record<
   },
   [ROUTE_PATHS.bookings]: async (qc, supabase, orgId, role) => {
     await qc.prefetchQuery({
-      queryKey: tenantQueryKeys.bookings(orgId),
+      queryKey: tenantQueryKeys.bookings(orgId, role),
       staleTime: tenantStaleTimes.list,
       queryFn: () => fetchBookingsPageData(supabase, orgId, role),
     });
   },
   [ROUTE_PATHS.inquiries]: async (qc, supabase, orgId, role) => {
     await qc.prefetchQuery({
-      queryKey: tenantQueryKeys.inquiries(orgId),
+      queryKey: tenantQueryKeys.inquiries(orgId, role),
       staleTime: tenantStaleTimes.list,
       queryFn: () => fetchInquiriesPageData(supabase, orgId, role),
     });
@@ -82,21 +82,21 @@ const routePrefetchers: Record<
   },
   [ROUTE_PATHS.finance]: async (qc, supabase, orgId, role) => {
     await qc.prefetchQuery({
-      queryKey: tenantQueryKeys.finance(orgId),
+      queryKey: tenantQueryKeys.finance(orgId, role),
       staleTime: tenantStaleTimes.finance,
       queryFn: () => fetchFinancePageData(supabase, orgId, role),
     });
   },
   [ROUTE_PATHS.invoices]: async (qc, supabase, orgId, role) => {
     await qc.prefetchQuery({
-      queryKey: tenantQueryKeys.invoices(orgId),
+      queryKey: tenantQueryKeys.invoices(orgId, role),
       staleTime: tenantStaleTimes.list,
       queryFn: () => fetchInvoicesPageData(supabase, orgId, role),
     });
   },
   [ROUTE_PATHS.assets]: async (qc, supabase, orgId, role) => {
     await qc.prefetchQuery({
-      queryKey: tenantQueryKeys.assets(orgId),
+      queryKey: tenantQueryKeys.assets(orgId, role),
       staleTime: tenantStaleTimes.list,
       queryFn: () => fetchAssetsPageData(supabase, orgId, role),
     });
@@ -104,7 +104,7 @@ const routePrefetchers: Record<
   [ROUTE_PATHS.overnatting]: async (qc, supabase, orgId, role) => {
     const ym = resolveOvernattingYm(undefined);
     await qc.prefetchQuery({
-      queryKey: tenantQueryKeys.overnatting(orgId, ym),
+      queryKey: tenantQueryKeys.overnatting(orgId, ym, role),
       staleTime: tenantStaleTimes.list,
       queryFn: () => fetchOvernattingPageData(supabase, orgId, role, ym),
     });

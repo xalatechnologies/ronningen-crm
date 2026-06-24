@@ -1,6 +1,6 @@
 import { formatAccommodationTimeLabel } from "@/lib/accommodation-time";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 
 const APP_DATETIME_PATTERN = "d. MMM yyyy 'kl.' HH:mm";
 const APP_DATE_PATTERN = "d. MMM yyyy";

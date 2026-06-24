@@ -1,3 +1,5 @@
+import "server-only";
+
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";

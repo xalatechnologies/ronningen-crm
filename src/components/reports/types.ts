@@ -74,6 +74,9 @@ export type ReportsPricingKpis = {
 
 /** Inventar: tilstand og forsikring — samme logikk som Inventar-siden. */
 export type ReportsFacilityStats = {
+  assetTotalValueNok: number;
+  assetRowCount: number;
+  assetTotalUnits: number;
   assetOperationalCount: number;
   assetMaintenanceCount: number;
   assetReplaceCount: number;

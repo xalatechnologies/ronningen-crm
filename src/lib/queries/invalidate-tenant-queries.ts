@@ -2,6 +2,20 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { tenantQueryKeys } from "@/lib/queries/tenant-query-keys";
 
+function invalidateTenantDomain(
+  queryClient: QueryClient,
+  orgId: string,
+  domain: string,
+) {
+  void queryClient.invalidateQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey[0] === "tenant" &&
+      query.queryKey[1] === domain &&
+      query.queryKey[2] === orgId,
+  });
+}
+
 export function invalidateTenantQueries(
   queryClient: QueryClient,
   orgId: string | null,
@@ -34,15 +48,11 @@ export function invalidateBookingsQueries(
   queryClient: QueryClient,
   orgId: string,
 ) {
-  void queryClient.invalidateQueries({
-    queryKey: tenantQueryKeys.bookings(orgId),
-  });
+  invalidateTenantDomain(queryClient, orgId, "bookings");
   void queryClient.invalidateQueries({
     queryKey: tenantQueryKeys.dashboard(orgId),
   });
-  void queryClient.invalidateQueries({
-    queryKey: tenantQueryKeys.invoices(orgId),
-  });
+  invalidateTenantDomain(queryClient, orgId, "invoices");
   invalidateReportsQueries(queryClient, orgId);
 }
 
@@ -50,9 +60,7 @@ export function invalidateInquiriesQueries(
   queryClient: QueryClient,
   orgId: string,
 ) {
-  void queryClient.invalidateQueries({
-    queryKey: tenantQueryKeys.inquiries(orgId),
-  });
+  invalidateTenantDomain(queryClient, orgId, "inquiries");
   invalidateReportsQueries(queryClient, orgId);
 }
 
@@ -70,9 +78,7 @@ export function invalidateFinanceQueries(
   queryClient: QueryClient,
   orgId: string,
 ) {
-  void queryClient.invalidateQueries({
-    queryKey: tenantQueryKeys.finance(orgId),
-  });
+  invalidateTenantDomain(queryClient, orgId, "finance");
   invalidateReportsQueries(queryClient, orgId);
 }
 
@@ -90,9 +96,15 @@ export function invalidateAssetsQueries(
   queryClient: QueryClient,
   orgId: string,
 ) {
-  void queryClient.invalidateQueries({
-    queryKey: tenantQueryKeys.assets(orgId),
-  });
+  invalidateTenantDomain(queryClient, orgId, "assets");
+  invalidateReportsQueries(queryClient, orgId);
+}
+
+export function invalidateInvoicesQueries(
+  queryClient: QueryClient,
+  orgId: string,
+) {
+  invalidateTenantDomain(queryClient, orgId, "invoices");
   invalidateReportsQueries(queryClient, orgId);
 }
 

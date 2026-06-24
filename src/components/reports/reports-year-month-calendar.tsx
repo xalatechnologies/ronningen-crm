@@ -82,7 +82,6 @@ export function ReportsYearMonthCalendar({
       const q = next.toString();
       const href = q ? `${pathname}?${q}` : pathname;
       router.push(href, { scroll: false });
-      router.refresh();
     },
     [pathname, router],
   );

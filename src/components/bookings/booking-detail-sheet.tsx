@@ -42,10 +42,11 @@ import {
   resolveStandardBookingPaymentFromAmounts,
 } from "@/constants/booking-payment-status";
 import { cn } from "@/lib/utils";
+import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Save, Trash2, X, XCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useForm, useWatch, Controller, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
@@ -107,7 +108,8 @@ export function BookingDetailSheet({
   canDeleteBooking = false,
 }: BookingDetailSheetProps) {
   const supabase = useSupabase();
-  const router = useRouter();
+  const { currentOrganizationId } = useCurrentOrganization();
+  const { invalidateBookings } = useTenantDataInvalidation();
   const [detailSaving, setDetailSaving] = useState(false);
   const [inkassoBusy, setInkassoBusy] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -197,6 +199,7 @@ export function BookingDetailSheet({
     deleteBusy;
 
   async function onSave(data: BookingDetailEditInput) {
+    if (!currentOrganizationId) return;
     setDetailSaving(true);
     try {
       const { error: custErr } = await supabase
@@ -207,7 +210,8 @@ export function BookingDetailSheet({
           email: data.email.trim() ? data.email.trim() : null,
           address: data.address.trim() ? data.address.trim() : null,
         })
-        .eq("id", bookingRow.customerId);
+        .eq("id", bookingRow.customerId)
+        .eq("organization_id", currentOrganizationId);
 
       if (custErr) {
         toast.error("Kunne ikke oppdatere kunde", {
@@ -241,7 +245,8 @@ export function BookingDetailSheet({
           payment_status: finalPaymentStatus,
           notes: data.notes?.trim() ? data.notes.trim() : null,
         })
-        .eq("id", bookingRow.id);
+        .eq("id", bookingRow.id)
+        .eq("organization_id", currentOrganizationId);
 
       if (bookErr) {
         toast.error("Kunne ikke oppdatere booking", {
@@ -252,19 +257,21 @@ export function BookingDetailSheet({
 
       toast.success("Endringer lagret");
       onOpenChange(false);
-      await router.refresh();
+      invalidateBookings();
     } finally {
       setDetailSaving(false);
     }
   }
 
   async function registerCollectionNotice() {
+    if (!currentOrganizationId) return;
     setInkassoBusy(true);
     try {
       const { error } = await supabase
         .from("bookings")
         .update({ collection_notice_sent_at: new Date().toISOString() })
-        .eq("id", bookingRow.id);
+        .eq("id", bookingRow.id)
+        .eq("organization_id", currentOrganizationId);
       if (error) {
         toast.error("Kunne ikke registrere innkassovarsel", {
           description: error.message,
@@ -272,19 +279,21 @@ export function BookingDetailSheet({
         return;
       }
       toast.success("Innkassovarsel registrert");
-      await router.refresh();
+      invalidateBookings();
     } finally {
       setInkassoBusy(false);
     }
   }
 
   async function clearCollectionNotice() {
+    if (!currentOrganizationId) return;
     setInkassoBusy(true);
     try {
       const { error } = await supabase
         .from("bookings")
         .update({ collection_notice_sent_at: null })
-        .eq("id", bookingRow.id);
+        .eq("id", bookingRow.id)
+        .eq("organization_id", currentOrganizationId);
       if (error) {
         toast.error("Kunne ikke fjerne markering", {
           description: error.message,
@@ -292,19 +301,21 @@ export function BookingDetailSheet({
         return;
       }
       toast.success("Markering fjernet");
-      await router.refresh();
+      invalidateBookings();
     } finally {
       setInkassoBusy(false);
     }
   }
 
   async function performDeleteBooking() {
+    if (!currentOrganizationId) return;
     setDeleteBusy(true);
     try {
       const { error } = await supabase
         .from("bookings")
         .delete()
-        .eq("id", bookingRow.id);
+        .eq("id", bookingRow.id)
+        .eq("organization_id", currentOrganizationId);
 
       if (error) {
         toast.error("Kunne ikke slette booking", {
@@ -316,7 +327,7 @@ export function BookingDetailSheet({
       toast.success("Booking slettet");
       setDeleteDialogOpen(false);
       onOpenChange(false);
-      await router.refresh();
+      invalidateBookings();
     } finally {
       setDeleteBusy(false);
     }

@@ -7,7 +7,7 @@ import {
   parseLocalDate,
 } from "@/lib/dashboard-metrics";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 
 export type OrgForTrend = {
   subscriptionStatus: string;

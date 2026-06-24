@@ -288,6 +288,66 @@ function PipelineSection({
   );
 }
 
+function InventarSection({ facility }: { facility: ReportsFacilityStats }) {
+  const isEmpty = facility.assetRowCount === 0;
+
+  return (
+    <section
+      id="inventar"
+      className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
+      aria-label="Inventar"
+    >
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <ReportsSectionHeader
+          title="Inventar"
+          description="Total verdi og tilstand i inventarregisteret per i dag."
+        />
+        <Link
+          href="/app/assets"
+          className="shrink-0 text-app-sm font-semibold text-success underline-offset-2 hover:underline"
+        >
+          Inventar →
+        </Link>
+      </div>
+      {isEmpty ? (
+        <div className="mt-4 rounded-md border border-rn-border-strong/60 bg-muted/20 px-4 py-3 text-app-sm text-muted-foreground">
+          Ingen inventar registrert ennå.{" "}
+          <Link
+            href="/app/assets"
+            className="font-semibold text-success underline-offset-2 hover:underline"
+          >
+            Legg til inventar
+          </Link>
+        </div>
+      ) : (
+        <div className={cn(KPI_GRID, "mt-5")}>
+          <ReportsKpiTile
+            label="Inventar total"
+            value={formatNok(facility.assetTotalValueNok)}
+            valueClassName="text-success"
+          >
+            <p className="reports-kpi-caption mt-3 tabular-nums">
+              {facility.assetRowCount}{" "}
+              {facility.assetRowCount === 1 ? "registrering" : "registreringer"}{" "}
+              · {facility.assetTotalUnits}{" "}
+              {facility.assetTotalUnits === 1 ? "enhet" : "enheter"}
+            </p>
+          </ReportsKpiTile>
+          <ReportsKpiTile
+            label="I drift"
+            value={facility.assetOperationalCount}
+          />
+          <ReportsKpiTile
+            label="Vedlikehold"
+            value={facility.assetMaintenanceCount}
+          />
+          <ReportsKpiTile label="Bytte" value={facility.assetReplaceCount} />
+        </div>
+      )}
+    </section>
+  );
+}
+
 function ReportsDetailsCollapsible({
   kpis,
   facility,
@@ -722,6 +782,7 @@ export function ReportsSection({
               reportsPeriodLabel={reportsPeriodLabel}
             />
             <PipelineSection bookings={bookings} inquiries={inquiries} />
+            <InventarSection facility={facility} />
             <ReportsDetailsCollapsible
               kpis={kpis}
               facility={facility}

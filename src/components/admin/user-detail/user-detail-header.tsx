@@ -27,7 +27,7 @@ import {
 import type { AdminUserDetail } from "@/lib/admin/queries/users-billing-audit";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";

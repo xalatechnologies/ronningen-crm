@@ -25,13 +25,18 @@ export type CustomersPageData = {
   loadError: string | null;
 };
 
+const CUSTOMER_COLUMNS =
+  "id, organization_id, name, email, phone, address, notes, created_at, updated_at";
+const PARTNER_COLUMNS =
+  "id, organization_id, category, name, phone, email, notes, created_at, updated_at";
+
 export async function fetchCustomersPageData(
   supabase: TenantSupabaseClient,
   orgId: string,
 ): Promise<CustomersPageData> {
   const { data: customers, error: cErr } = await supabase
     .from("customers")
-    .select("*")
+    .select(CUSTOMER_COLUMNS)
     .eq("organization_id", orgId)
     .order("created_at", { ascending: false });
 
@@ -45,7 +50,7 @@ export async function fetchCustomersPageData(
 
   const { data: partners, error: pErr } = await supabase
     .from("partners")
-    .select("*")
+    .select(PARTNER_COLUMNS)
     .eq("organization_id", orgId)
     .order("name", { ascending: true });
 

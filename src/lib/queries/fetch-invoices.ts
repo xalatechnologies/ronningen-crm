@@ -33,11 +33,6 @@ type RawBooking = {
   properties: { name: string } | null;
 };
 
-function isCancelledStatus(status: string) {
-  const x = status.toLowerCase();
-  return x === "cancelled" || x === "avbestilt";
-}
-
 function toLocalYmd(d: Date) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -65,15 +60,15 @@ export async function fetchInvoicesPageData(
       "id, event_type, event_date, event_end_date, event_start_time, event_end_time, total_price, paid_amount, remaining_amount, status, booking_reference, payment_due_date, collection_notice_sent_at, payment_status, customers(name, phone, email, address), properties(name)",
     )
     .eq("organization_id", orgId)
+    .gt("remaining_amount", 0)
+    .not("status", "in", '("cancelled","avbestilt")')
     .order("event_date", { ascending: true });
 
   const loadError = error?.message ?? null;
 
   const rowsUnsorted: UnpaidInvoiceRow[] = (rawList ?? [])
     .map((row) => row as unknown as RawBooking)
-    .filter((r) => !isCancelledStatus(r.status))
     .filter((r) => !hideFromOutstandingInvoices(r.payment_status))
-    .filter((r) => Number(r.remaining_amount) > 0)
     .map((r) => {
       const name = r.customers?.name?.trim() || "Ukjent kunde";
       const totalNok = Number(r.total_price);

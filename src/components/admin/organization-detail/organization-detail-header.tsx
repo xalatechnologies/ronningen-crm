@@ -22,7 +22,7 @@ import { startImpersonation } from "@/lib/admin/actions/impersonation";
 import { syncSubscriptionFromOrganization } from "@/lib/admin/actions/billing";
 import type { AdminOrganizationDetail } from "@/lib/admin/queries/organizations";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";

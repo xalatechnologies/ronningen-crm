@@ -14,7 +14,7 @@ import { formatNotificationCategory } from "@/lib/notifications/notification-eve
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/providers/notification-provider";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

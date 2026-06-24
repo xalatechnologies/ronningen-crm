@@ -1,4 +1,4 @@
-import { CustomersPageClient } from "@/components/app-pages/tenant-page-clients";
+import { CustomersPageClient } from "@/components/app-pages/customers-page-client";
 
 export default function CustomersPage() {
   return <CustomersPageClient />;

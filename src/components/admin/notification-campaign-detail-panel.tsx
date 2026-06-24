@@ -4,7 +4,7 @@ import { adminAuditHref } from "@/lib/admin/dashboard-links";
 import { formatCampaignStatusLabel } from "@/lib/admin/notification-labels";
 import type { AdminNotificationCampaign } from "@/lib/admin/queries/notifications";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale";
+import { nb } from "date-fns/locale/nb";
 import Link from "next/link";
 
 type NotificationCampaignDetailPanelProps = {

@@ -34,6 +34,7 @@ import type { TenantSupabaseClient } from "@/lib/queries/types";
 
 type RawAssetAgg = {
   value: number;
+  quantity: number;
   condition: string | null;
   insurance_status: string | null;
 };
@@ -84,6 +85,7 @@ export async function fetchReportsPageData(
   const reportYearEndYmd = `${reportYear}-12-31`;
   const yearStart = `${reportYear}-01-01`;
   const prevYear = reportYear - 1;
+  const bookingsFetchStart = `${prevYear}-01-01`;
 
   let periodStart: string;
   let periodEnd: string;
@@ -132,31 +134,40 @@ export async function fetchReportsPageData(
         "id, event_type, fest_type, event_date, event_end_date, total_price, paid_amount, remaining_amount, status",
       )
       .eq("organization_id", orgId)
+      .gte("event_date", bookingsFetchStart)
+      .lte("event_date", reportYearEndYmd)
       .order("event_date", { ascending: false }),
     supabase
       .from("booking_inquiries")
       .select(
         "status, estimated_total, preferred_event_date, created_at, converted_booking_id, converted_at, updated_at",
       )
-      .eq("organization_id", orgId),
+      .eq("organization_id", orgId)
+      .gte("created_at", `${bookingsFetchStart}T00:00:00`)
+      .lte("created_at", `${reportYearEndYmd}T23:59:59`),
     supabase
       .from("accommodation_reservations")
       .select("status, total_price, check_in_date, check_out_date")
-      .eq("organization_id", orgId),
+      .eq("organization_id", orgId)
+      .gte("check_in_date", bookingsFetchStart)
+      .lte("check_in_date", reportYearEndYmd),
     supabase
       .from("assets")
-      .select("value, condition, insurance_status")
+      .select("value, quantity, condition, insurance_status")
       .eq("organization_id", orgId)
       .limit(10_000),
     supabase
       .from("transactions")
       .select("type, amount, transaction_date")
       .eq("organization_id", orgId)
-      .limit(10_000),
+      .gte("transaction_date", bookingsFetchStart)
+      .lte("transaction_date", reportYearEndYmd),
     supabase
       .from("customers")
       .select("created_at")
-      .eq("organization_id", orgId),
+      .eq("organization_id", orgId)
+      .gte("created_at", `${bookingsFetchStart}T00:00:00`)
+      .lte("created_at", `${reportYearEndYmd}T23:59:59`),
     supabase.from("partners").select("id").eq("organization_id", orgId),
     supabase.from("properties").select("id").eq("organization_id", orgId),
     supabase.from("packages").select("id").eq("organization_id", orgId),
@@ -185,6 +196,8 @@ export async function fetchReportsPageData(
     []) as unknown as ReportTransactionRow[];
   const rawCustomers = (customersRes.data ?? []) as unknown as ReportCustomerRow[];
 
+  let assetTotalValueNok = 0;
+  let assetTotalUnits = 0;
   let assetOperationalCount = 0;
   let assetMaintenanceCount = 0;
   let assetReplaceCount = 0;
@@ -194,6 +207,8 @@ export async function fetchReportsPageData(
   let assetUninsuredValueNok = 0;
   for (const r of rawAssets) {
     const v = Number(r.value);
+    assetTotalValueNok += v;
+    assetTotalUnits += Number(r.quantity);
     const b = assetStatusBucket(r.condition);
     if (b === "operational") assetOperationalCount += 1;
     else if (b === "maintenance") assetMaintenanceCount += 1;
@@ -208,6 +223,9 @@ export async function fetchReportsPageData(
   }
 
   const facility: ReportsFacilityStats = {
+    assetTotalValueNok,
+    assetRowCount: rawAssets.length,
+    assetTotalUnits,
     assetOperationalCount,
     assetMaintenanceCount,
     assetReplaceCount,
