@@ -23,7 +23,6 @@ import {
   createSupportTicket,
   updateSupportTicketStatus,
 } from "@/lib/admin/actions/support";
-import { adminSupportHref } from "@/lib/admin/dashboard-links";
 import type {
   AdminSupportOverview,
   AdminSupportTicket,
@@ -47,7 +46,7 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const STATUS_OPTIONS = SUPPORT_SETTABLE_STATUSES.map((value) => ({
@@ -58,6 +57,13 @@ const STATUS_OPTIONS = SUPPORT_SETTABLE_STATUSES.map((value) => ({
 const tableHeadClass =
   "px-6 py-4 text-left text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
+
+function parseSupportFilter(value: string | null): AdminSupportFilter {
+  if (value === "open" || value === "waiting" || value === "resolved") {
+    return value;
+  }
+  return "all";
+}
 
 function ticketRowClass(status: SupportTicketStatus): string | undefined {
   if (status === "waiting") return "bg-amber-500/5";
@@ -306,6 +312,11 @@ export function AdminSupportWorkspace({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 
+  useEffect(() => {
+    setFilter(parseSupportFilter(searchParams.get("filter")));
+    setSearch(searchParams.get("q") ?? "");
+  }, [searchParams]);
+
   const counts = useMemo(
     () => computeAdminSupportFilterCounts(data.tickets),
     [data.tickets],
@@ -353,6 +364,13 @@ export function AdminSupportWorkspace({
     updateUrl({ q: nextSearch });
   }
 
+  function showOpenTickets() {
+    updateFilter("open");
+    document
+      .getElementById("support-ticket-list")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   const openCaption =
     overview.open === 0
       ? "Ingen åpne saker akkurat nå"
@@ -369,7 +387,7 @@ export function AdminSupportWorkspace({
         title="Åpne saker"
         items={data.openQueue}
         emptyLabel="Ingen åpne support-saker."
-        viewAllHref={adminSupportHref("open")}
+        onViewAll={showOpenTickets}
       />
 
       <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
@@ -472,7 +490,10 @@ export function AdminSupportWorkspace({
           </section>
         ) : null}
 
-        <div className="app-table overflow-x-auto border-t border-rn-border-strong/50">
+        <div
+          id="support-ticket-list"
+          className="app-table overflow-x-auto border-t border-rn-border-strong/50"
+        >
           <table className="w-full min-w-[960px] text-left text-app-base">
             <thead>
               <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">

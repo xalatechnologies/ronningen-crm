@@ -481,6 +481,21 @@
     font-size: calc(15px * var(--app-type-scale));
   }
 
+  /**
+   * Overnatting (reservasjoner) — samme filterstørrelse som Reservasjoner.
+   */
+  .overnatting-page-workspace .overnatting-list-search {
+    font-size: calc(15px * var(--app-read-type-scale));
+  }
+
+  .overnatting-page-workspace .overnatting-list-filters span.font-heading.text-app-base {
+    font-size: calc(15px * var(--app-type-scale));
+  }
+
+  .overnatting-page-workspace .overnatting-list-filter-count {
+    font-size: calc(15px * var(--app-type-scale));
+  }
+
   .bookings-list-workspace .bookings-list-row-title {
     font-size: calc(21px * var(--app-type-scale));
     line-height: 1.25;
@@ -1151,6 +1166,15 @@
     font-size: calc(14px * var(--app-type-scale));
     font-weight: 600;
     line-height: 1.45;
+    letter-spacing: 0.01em;
+  }
+
+  [data-theme="dark"] .platform-admin .admin-inline-link {
+    background-color: color-mix(in srgb, var(--muted) 55%, transparent);
+  }
+
+  [data-theme="dark"] .platform-admin .admin-inline-link:hover {
+    color: #f8fafc !important;
   }
 
   .admin-page-workspace .admin-kpi-grid .dashboard-kpi-value {

@@ -121,6 +121,25 @@
 
 .admin-action-btn {
   font-size: calc(14px * var(--app-type-scale));
+  font-weight: 600;
+}
+
+.platform-admin .admin-action-btn--secondary {
+  border-width: 2px !important;
+  border-color: var(--rn-border-strong) !important;
+  background-color: var(--card);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+}
+
+.platform-admin .admin-action-btn--secondary:hover {
+  background-color: color-mix(in srgb, var(--muted) 70%, var(--card));
+  color: var(--foreground);
+}
+
+.platform-admin .admin-action-btn.border-rn-accent-border {
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.12);
 }
 
 .admin-table-select {

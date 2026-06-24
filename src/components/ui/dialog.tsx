@@ -136,6 +136,7 @@ function DialogDescription({
 }: DialogPrimitive.Description.Props) {
   return (
     <DialogPrimitive.Description
+      render={<div />}
       data-slot="dialog-description"
       className={cn(
         "app-text-secondary *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",

@@ -1,7 +1,7 @@
 "use client";
 
 import { ADMIN_NAV_ICONS } from "@/config/admin-nav-icons";
-import { adminNavigationGroups } from "@/config/admin-routes";
+import { adminNavigationGroups, adminRoutes } from "@/config/admin-routes";
 import { RN_NAV_LINK_ACTIVE, RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -26,7 +26,28 @@ function useHydrated() {
   return hydrated;
 }
 
-export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function AdminNavBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+
+  const label = count > 9 ? "9+" : String(count);
+
+  return (
+    <span
+      className="ml-auto flex min-h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold leading-none text-white"
+      aria-hidden
+    >
+      {label}
+    </span>
+  );
+}
+
+export function AdminNavLinks({
+  onNavigate,
+  supportOpenCount = 0,
+}: {
+  onNavigate?: () => void;
+  supportOpenCount?: number;
+}) {
   const pathname = usePathname();
   const hydrated = useHydrated();
 
@@ -41,6 +62,9 @@ export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
             const active = hydrated && isActive(pathname, item.href);
             const Icon =
               ADMIN_NAV_ICONS[item.segment] ?? ADMIN_NAV_ICONS.overview;
+            const isSupport = item.href === adminRoutes.support;
+            const badgeCount =
+              isSupport && active ? 0 : isSupport ? supportOpenCount : 0;
 
             return (
               <Link
@@ -54,6 +78,11 @@ export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
                     : "border-transparent font-medium text-rn-text-body hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover hover:text-rn-text-heading",
                 )}
                 aria-current={active ? "page" : undefined}
+                aria-label={
+                  badgeCount > 0
+                    ? `${item.label}, ${badgeCount} åpne henvendelser`
+                    : undefined
+                }
               >
                 <Icon
                   className={cn(
@@ -62,7 +91,8 @@ export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
                   )}
                   aria-hidden
                 />
-                {item.label}
+                <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                <AdminNavBadge count={badgeCount} />
               </Link>
             );
           })}

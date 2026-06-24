@@ -109,7 +109,7 @@ export function OrganizationDetailHeader({
         detailLayout
         backLink={{
           href: adminRoutes.organizations,
-          label: "← Alle organisasjoner",
+          label: "Alle organisasjoner",
         }}
         title={org.name}
         description={

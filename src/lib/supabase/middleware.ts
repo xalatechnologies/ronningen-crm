@@ -2,6 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { isAdminPath, isAuthPath, isProtectedPath } from "@/config/routes";
+import {
+  ADMIN_SUPPORT_SEEN_COOKIE,
+  adminSupportSeenCookieOptions,
+  isAdminSupportPath,
+} from "@/lib/admin/support-nav-badge";
 import { safeInternalRedirect } from "@/lib/security/safe-redirect";
 import {
   getSupabasePublicEnvForClient,
@@ -95,6 +100,14 @@ export async function updateSession(request: NextRequest) {
   }
 
   response.headers.set("x-pathname", pathname);
+
+  if (isAdminSupportPath(pathname)) {
+    response.cookies.set(
+      ADMIN_SUPPORT_SEEN_COOKIE,
+      new Date().toISOString(),
+      adminSupportSeenCookieOptions,
+    );
+  }
 
   return response;
 }

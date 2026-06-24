@@ -1,6 +1,7 @@
 import { AdminSupportWorkspace } from "@/components/admin/admin-support-workspace";
 import type { AdminSupportFilter } from "@/lib/admin/dashboard-links";
 import { fetchAdminSupportOverview } from "@/lib/admin/queries/support";
+
 type PageProps = {
   searchParams: Promise<{ filter?: string; q?: string }>;
 };

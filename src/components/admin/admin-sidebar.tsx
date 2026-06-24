@@ -4,7 +4,13 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 
-export function AdminSidebar({ className }: { className?: string }) {
+export function AdminSidebar({
+  className,
+  supportOpenCount = 0,
+}: {
+  className?: string;
+  supportOpenCount?: number;
+}) {
   const copyrightYear = new Date().getFullYear();
 
   return (
@@ -45,7 +51,7 @@ export function AdminSidebar({ className }: { className?: string }) {
         className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-[length:calc(var(--app-card-padding)*0.35)] pt-0 pb-2 md:px-[length:calc(var(--app-card-padding)*0.45)]"
         aria-label="Plattformadmin-meny"
       >
-        <AdminNavLinks />
+        <AdminNavLinks supportOpenCount={supportOpenCount} />
       </nav>
 
       <footer className="shrink-0 border-t border-rn-border-strong/50 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)] md:py-5">

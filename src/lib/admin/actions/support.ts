@@ -46,6 +46,7 @@ export async function createSupportTicket(input: {
   });
 
   revalidatePath(adminRoutes.support);
+  revalidatePath("/admin", "layout");
   revalidatePath("/app/settings/support");
   return { ok: true as const, ticketId: data.id };
 }
@@ -142,6 +143,7 @@ export async function updateSupportTicketStatus(input: {
   });
 
   revalidatePath(adminRoutes.support);
+  revalidatePath("/admin", "layout");
   revalidatePath("/app/settings/support");
   return { ok: true as const };
 }

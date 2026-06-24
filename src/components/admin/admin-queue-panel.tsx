@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import {
+  AdminActionButton,
   AdminLinkButton,
 } from "@/components/admin/admin-action-button";
 import { AdminDataPanel } from "@/components/admin/admin-data-panel";
@@ -12,20 +13,28 @@ export function AdminQueuePanel({
   emptyLabel,
   items,
   viewAllHref,
+  onViewAll,
 }: {
   title: string;
   emptyMessage?: string;
   emptyLabel?: string;
   items: AdminQueueItem[];
   viewAllHref?: string;
+  onViewAll?: () => void;
 }) {
   const empty = emptyMessage ?? emptyLabel ?? "Ingen elementer.";
 
+  const viewAllAction =
+    onViewAll != null ? (
+      <AdminActionButton type="button" onClick={onViewAll}>
+        Se alle
+      </AdminActionButton>
+    ) : viewAllHref ? (
+      <AdminLinkButton href={viewAllHref}>Se alle</AdminLinkButton>
+    ) : undefined;
+
   return (
-    <AdminDataPanel
-      title={title}
-      action={viewAllHref ? <AdminLinkButton href={viewAllHref}>Se alle</AdminLinkButton> : undefined}
-    >
+    <AdminDataPanel title={title} action={viewAllAction}>
       {items.length === 0 ? (
         <p className="mt-4 app-text-muted">{empty}</p>
       ) : (

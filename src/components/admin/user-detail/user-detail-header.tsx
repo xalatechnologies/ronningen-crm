@@ -166,7 +166,7 @@ export function UserDetailHeader({
         detailLayout
         backLink={{
           href: adminRoutes.users,
-          label: "← Alle brukere",
+          label: "Alle brukere",
         }}
         title={user.fullName ?? user.email ?? "Bruker"}
         description={

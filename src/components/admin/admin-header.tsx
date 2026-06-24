@@ -72,7 +72,7 @@ function HeaderAvatarOrInitials({
   );
 }
 
-export function AdminHeader() {
+export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: number }) {
   const { user, loading } = useAuthUser();
   const supabase = useSupabase();
   const router = useRouter();
@@ -105,7 +105,7 @@ export function AdminHeader() {
       <AdminSearchShortcut />
 
       <div className="flex min-w-0 shrink-0 items-center md:hidden">
-        <AdminMobileNav />
+        <AdminMobileNav supportOpenCount={supportOpenCount} />
       </div>
 
       <div className="ml-auto flex shrink-0 items-center gap-2 md:gap-3">

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import { adminRoutes } from "@/config/admin-routes";
 import {
   isSupportTicketCategory,
   type SupportTicketCategory,
@@ -11,6 +12,13 @@ import { requireOrgMember } from "@/lib/support/require-org-member";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const SUPPORT_PATH = "/app/settings/support";
+const ADMIN_LAYOUT_PATH = "/admin";
+
+function revalidateSupportSurfaces() {
+  revalidatePath(SUPPORT_PATH);
+  revalidatePath(adminRoutes.support);
+  revalidatePath(ADMIN_LAYOUT_PATH, "layout");
+}
 
 export async function createOrgSupportTicket(input: {
   subject: string;
@@ -62,7 +70,7 @@ export async function createOrgSupportTicket(input: {
     return { ok: false as const, error: noteError.message };
   }
 
-  revalidatePath(SUPPORT_PATH);
+  revalidateSupportSurfaces();
   return { ok: true as const, ticketId: ticket.id };
 }
 
@@ -111,6 +119,6 @@ export async function replyToOrgSupportTicket(input: {
     })
     .eq("id", ticket.id);
 
-  revalidatePath(SUPPORT_PATH);
+  revalidateSupportSurfaces();
   return { ok: true as const };
 }

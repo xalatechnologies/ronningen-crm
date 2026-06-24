@@ -1,6 +1,11 @@
 import { cn } from "@/lib/utils";
+import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
+
+function normalizeBackLinkLabel(label: string): string {
+  return label.replace(/^←\s*/, "").trim();
+}
 
 /** Felles topp-seksjon for app-sider (samme mønster som Rapporter). */
 export function AppPageHeader({
@@ -41,9 +46,19 @@ export function AppPageHeader({
   const backLinkBlock = backLink ? (
     <Link
       href={backLink.href}
-      className="admin-inline-link mb-2 inline-flex w-fit items-center text-app-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      className={cn(
+        "admin-inline-link group mb-3 inline-flex w-fit max-w-full items-center gap-1.5 rounded-md border-2 border-rn-border-strong bg-muted/35 px-3 py-1.5 text-app-sm font-semibold text-foreground shadow-sm transition-all",
+        "hover:border-success/45 hover:bg-success/10 hover:text-success",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+      )}
     >
-      {backLink.label}
+      <span
+        className="flex size-6 shrink-0 items-center justify-center rounded-[length:var(--app-radius)] bg-success/15 text-success transition-colors group-hover:bg-success/25"
+        aria-hidden
+      >
+        <ChevronLeft className="size-4" />
+      </span>
+      <span className="truncate">{normalizeBackLinkLabel(backLink.label)}</span>
     </Link>
   ) : null;
 

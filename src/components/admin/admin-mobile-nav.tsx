@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { MenuIcon } from "lucide-react";
 import { useState } from "react";
 
-export function AdminMobileNav() {
+export function AdminMobileNav({ supportOpenCount = 0 }: { supportOpenCount?: number }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -51,7 +51,10 @@ export function AdminMobileNav() {
           className="flex flex-col gap-[length:var(--spacing-app-gap)] px-[length:calc(var(--app-card-padding)*0.35)] pt-3 pb-4 md:px-[length:calc(var(--app-card-padding)*0.45)]"
           aria-label="Mobil plattformadmin-meny"
         >
-          <AdminNavLinks onNavigate={() => setOpen(false)} />
+          <AdminNavLinks
+            onNavigate={() => setOpen(false)}
+            supportOpenCount={supportOpenCount}
+          />
         </nav>
       </SheetContent>
     </Sheet>

@@ -1,5 +1,6 @@
 import { adminRoutes } from "@/config/admin-routes";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import { readAdminSupportLastSeenAt } from "@/lib/admin/support-nav-badge-cookies";
 import type { AdminSupportFilter } from "@/lib/admin/dashboard-links";
 import {
   isSupportTicketCategory,
@@ -51,6 +52,26 @@ function emptyOverview(): AdminSupportOverview {
     openQueue: [],
     statusCounts: { all: 0, open: 0, waiting: 0, resolved: 0 },
   };
+}
+
+/** Unseen open tickets since admin last visited Support — used for nav badge. */
+export async function fetchAdminSupportNavBadgeCount(): Promise<number> {
+  const admin = createSupabaseAdminClient();
+  const lastSeenAt = await readAdminSupportLastSeenAt();
+
+  let query = admin
+    .from("platform_support_tickets")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "open");
+
+  if (lastSeenAt) {
+    query = query.gt("updated_at", lastSeenAt);
+  }
+
+  const { count, error } = await query;
+
+  if (error) return 0;
+  return count ?? 0;
 }
 
 function resolveTicketSource(

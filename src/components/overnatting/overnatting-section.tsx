@@ -564,7 +564,7 @@ export function OvernattingSection({
                     type="button"
                     variant="outline"
                     size="cta"
-                    className="gap-2"
+                    className="gap-2 border-2 border-rn-border-strong font-semibold"
                     onClick={openNewUnit}
                   >
                     <BedDouble className="size-5" aria-hidden />
@@ -779,157 +779,157 @@ export function OvernattingSection({
             </h2>
 
             <section
-              className="mt-4 flex flex-col gap-4"
+              className="overnatting-list-filters mt-4"
               aria-label="Filtrer reservasjoner"
             >
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:gap-4">
-                <div className="relative min-w-0 flex-1">
-                  <Label htmlFor={`${rid}-res-search`} className={filterEyebrowClass}>
-                    Søk
-                  </Label>
-                  <Search
-                    className="pointer-events-none absolute top-[calc(50%+0.625rem)] left-4 size-5 -translate-y-1/2 text-rn-text-slate"
-                    aria-hidden
-                  />
-                  <Input
-                    id={`${rid}-res-search`}
-                    aria-label="Søk blant reservasjoner"
-                    className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-                    placeholder="Kunde, enhet eller notat …"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    autoComplete="off"
-                  />
-                </div>
+              <div className="flex min-w-0 flex-col gap-4">
+                <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-end xl:gap-5">
+                  <div className="relative min-w-0 w-full xl:max-w-md 2xl:max-w-xl">
+                    <Label htmlFor={`${rid}-res-search`} className={filterEyebrowClass}>
+                      Søk
+                    </Label>
+                    <Search
+                      className="pointer-events-none absolute top-[calc(50%+0.625rem)] left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
+                      aria-hidden
+                    />
+                    <Input
+                      id={`${rid}-res-search`}
+                      aria-label="Søk blant reservasjoner"
+                      className="overnatting-list-search h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                      placeholder="Kunde, enhet eller notat …"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      autoComplete="off"
+                    />
+                  </div>
 
-                <div className="flex min-w-0 flex-col lg:flex-1 lg:items-end">
-                  <p className={cn(filterEyebrowClass, "w-full lg:text-right")}>
-                    Status
-                  </p>
-                  <div
-                    className="grid min-w-0 w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:flex lg:flex-row lg:flex-wrap lg:items-stretch lg:justify-end lg:gap-2.5 xl:w-auto xl:flex-nowrap"
-                    role="group"
-                    aria-label="Filtrer etter status"
-                  >
-                    {(
-                      [
-                        ["all", "Alle", filterCounts.all, null],
+                  <div className="min-w-0 w-full flex-1">
+                    <p className={filterEyebrowClass}>Status</p>
+                    <div
+                      className="grid min-w-0 w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3"
+                      role="group"
+                      aria-label="Filtrer etter status"
+                    >
+                      {(
                         [
-                          "confirmed",
-                          ACCOMMODATION_RESERVATION_LABELS.confirmed,
-                          filterCounts.confirmed,
-                          "emerald",
-                        ],
-                        [
-                          "tentative",
-                          ACCOMMODATION_RESERVATION_LABELS.tentative,
-                          filterCounts.tentative,
-                          "amber",
-                        ],
-                        [
-                          "cancelled",
-                          ACCOMMODATION_RESERVATION_LABELS.cancelled,
-                          filterCounts.cancelled,
-                          "rose",
-                        ],
-                      ] as const
-                    ).map(([key, label, count, tone]) => {
-                      const active = statusFilter === key;
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => setStatusFilter(key)}
-                          className={cn(
-                            "flex min-h-12 w-full items-center justify-between gap-2 rounded-md border-2 px-3 py-3 text-left transition-all sm:gap-3 sm:px-4 lg:min-h-14 lg:w-auto lg:min-w-[7rem] lg:max-w-[10.5rem] xl:min-w-[7.5rem]",
-                            active
-                              ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
-                              : tone === "emerald"
-                                ? "border-emerald-400/90 bg-card text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50 dark:text-emerald-100 dark:hover:bg-emerald-950/40"
-                                : tone === "amber"
-                                  ? "border-amber-400/90 bg-card text-amber-950 hover:border-amber-500 hover:bg-amber-50 dark:text-amber-100 dark:hover:bg-amber-950/40"
-                                  : tone === "rose"
-                                    ? "border-red-400/90 bg-card text-red-950 hover:border-red-500 hover:bg-red-50 dark:text-red-200 dark:hover:bg-red-950/40"
-                                    : "border-rn-border-strong bg-card text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
-                          )}
-                        >
-                          <span
+                          ["all", "Alle", filterCounts.all, null],
+                          [
+                            "confirmed",
+                            ACCOMMODATION_RESERVATION_LABELS.confirmed,
+                            filterCounts.confirmed,
+                            "emerald",
+                          ],
+                          [
+                            "tentative",
+                            ACCOMMODATION_RESERVATION_LABELS.tentative,
+                            filterCounts.tentative,
+                            "amber",
+                          ],
+                          [
+                            "cancelled",
+                            ACCOMMODATION_RESERVATION_LABELS.cancelled,
+                            filterCounts.cancelled,
+                            "rose",
+                          ],
+                        ] as const
+                      ).map(([key, label, count, tone]) => {
+                        const active = statusFilter === key;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => setStatusFilter(key)}
                             className={cn(
-                              "font-heading text-app-base font-semibold",
-                              active ? "!text-white" : undefined,
-                            )}
-                          >
-                            {label}
-                          </span>
-                          <span
-                            className={cn(
-                              "inline-flex min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-app-sm font-bold tabular-nums",
+                              "flex min-h-12 w-full min-w-0 items-center justify-between gap-2 rounded-md border-2 px-3 py-3 text-left transition-all sm:gap-3 sm:px-4 md:min-h-[3.25rem] md:rounded-md md:px-4 md:py-3.5",
                               active
-                                ? "border-white/30 bg-white/20 !text-white"
-                                : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
+                                ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
+                                : tone === "emerald"
+                                  ? "border-emerald-400/90 bg-card text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50 dark:text-emerald-100 dark:hover:bg-emerald-950/40"
+                                  : tone === "amber"
+                                    ? "border-amber-400/90 bg-card text-amber-950 hover:border-amber-500 hover:bg-amber-50 dark:text-amber-100 dark:hover:bg-amber-950/40"
+                                    : tone === "rose"
+                                      ? "border-red-400/90 bg-card text-red-950 hover:border-red-500 hover:bg-red-50 dark:text-red-200 dark:hover:bg-red-950/40"
+                                      : "border-rn-border-strong bg-card text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
                             )}
                           >
-                            {count}
-                          </span>
-                        </button>
-                      );
-                    })}
+                            <span
+                              className={cn(
+                                "truncate font-heading text-app-sm font-semibold sm:text-app-base",
+                                active ? "!text-white" : undefined,
+                              )}
+                            >
+                              {label}
+                            </span>
+                            <span
+                              className={cn(
+                                "overnatting-list-filter-count inline-flex shrink-0 min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-app-sm font-bold tabular-nums",
+                                active
+                                  ? "border-white/30 bg-white/20 !text-white"
+                                  : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
+                              )}
+                            >
+                              {count}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
-                <div className="w-full shrink-0 sm:w-44 md:w-48">
-                  <Label htmlFor={`${rid}-res-unit`} className={filterEyebrowClass}>
-                    Enhet
-                  </Label>
-                  <FormSelect
-                    id={`${rid}-res-unit`}
-                    value={unitFilter}
-                    onValueChange={setUnitFilter}
-                    aria-label="Filtrer etter enhet"
-                    className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
-                    placeholder="Alle enheter"
-                    options={toIdNameOptions(sortedUnits)}
-                  />
-                </div>
-                <div className="w-full shrink-0 sm:w-44 md:w-48">
-                  <Label htmlFor={`${rid}-res-from`} className={filterEyebrowClass}>
-                    Fra dato
-                  </Label>
-                  <DatePickerField
-                    id={`${rid}-res-from`}
-                    value={dateFrom}
-                    onChange={setDateFrom}
-                    maxYmd={dateTo || undefined}
-                    variant="toolbar"
-                    className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
-                  />
-                </div>
-                <div className="w-full shrink-0 sm:w-44 md:w-48">
-                  <Label htmlFor={`${rid}-res-to`} className={filterEyebrowClass}>
-                    Til dato
-                  </Label>
-                  <DatePickerField
-                    id={`${rid}-res-to`}
-                    value={dateTo}
-                    onChange={setDateTo}
-                    minYmd={dateFrom || undefined}
-                    variant="toolbar"
-                    className="h-11 min-h-11 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
-                  />
-                </div>
-                <div className="flex w-full shrink-0 sm:w-auto sm:self-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={!hasActiveFilters}
-                    className="h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold sm:h-12 sm:w-auto sm:px-5 sm:text-app-base"
-                    onClick={resetFilters}
-                  >
-                    <RotateCcw className="size-4 shrink-0" aria-hidden />
-                    Nullstill filter
-                  </Button>
+                <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
+                  <div className="min-w-0">
+                    <Label htmlFor={`${rid}-res-unit`} className={filterEyebrowClass}>
+                      Enhet
+                    </Label>
+                    <FormSelect
+                      id={`${rid}-res-unit`}
+                      value={unitFilter}
+                      onValueChange={setUnitFilter}
+                      aria-label="Filtrer etter enhet"
+                      className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+                      placeholder="Alle enheter"
+                      options={toIdNameOptions(sortedUnits)}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <Label htmlFor={`${rid}-res-from`} className={filterEyebrowClass}>
+                      Fra dato
+                    </Label>
+                    <DatePickerField
+                      id={`${rid}-res-from`}
+                      value={dateFrom}
+                      onChange={setDateFrom}
+                      maxYmd={dateTo || undefined}
+                      variant="toolbar"
+                      className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <Label htmlFor={`${rid}-res-to`} className={filterEyebrowClass}>
+                      Til dato
+                    </Label>
+                    <DatePickerField
+                      id={`${rid}-res-to`}
+                      value={dateTo}
+                      onChange={setDateTo}
+                      minYmd={dateFrom || undefined}
+                      variant="toolbar"
+                      className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+                    />
+                  </div>
+                  <div className="flex min-w-0 sm:col-span-2 lg:col-span-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!hasActiveFilters}
+                      className="h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold sm:h-12 sm:text-app-base"
+                      onClick={resetFilters}
+                    >
+                      <RotateCcw className="size-4 shrink-0" aria-hidden />
+                      Nullstill filter
+                    </Button>
+                  </div>
                 </div>
               </div>
             </section>
