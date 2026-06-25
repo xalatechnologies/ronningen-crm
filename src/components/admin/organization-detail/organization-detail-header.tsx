@@ -1,19 +1,18 @@
 "use client";
 
-import { AdminAccessBadge } from "@/components/admin/admin-access-badge";
-import { AdminPlanBadge } from "@/components/admin/admin-badges";
 import {
   AdminActionButton,
   AdminLinkButton,
 } from "@/components/admin/admin-action-button";
 import { AdminConfirmActionDialog } from "@/components/admin/admin-confirm-action-dialog";
-import { AdminDetailHeaderMeta } from "@/components/admin/admin-detail-header-meta";
-import { AdminDetailTabBar } from "@/components/admin/admin-detail-tab-bar";
-import { AdminHealthBadge } from "@/components/admin/admin-health-badge";
 import {
-  ORGANIZATION_DETAIL_TABS,
-  type OrganizationDetailTabId,
-} from "@/components/admin/organization-detail/tabs";
+  OrganizationDetailAccessBadge,
+  OrganizationDetailHealthBadge,
+  OrganizationDetailPlanBadge,
+} from "@/components/admin/organization-detail/organization-detail-badges";
+import { OrganizationDetailMeta } from "@/components/admin/organization-detail/organization-detail-meta";
+import { OrganizationDetailTabBar } from "@/components/admin/organization-detail/organization-detail-tab-bar";
+import type { OrganizationDetailTabId } from "@/components/admin/organization-detail/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AppPageHeader } from "@/components/layout/app-page-header";
@@ -104,6 +103,7 @@ export function OrganizationDetailHeader({
   return (
     <>
       <AppPageHeader
+        className="admin-org-detail-header mb-0"
         surface="card"
         compact
         detailLayout
@@ -113,25 +113,25 @@ export function OrganizationDetailHeader({
         }}
         title={org.name}
         description={
-          <AdminDetailHeaderMeta
-            lead={org.slug}
+          <OrganizationDetailMeta
+            slug={org.slug}
             items={metaItems}
             badges={
               <>
-                <AdminHealthBadge health={org.health} />
-                <AdminAccessBadge
+                <OrganizationDetailHealthBadge health={org.health} />
+                <OrganizationDetailAccessBadge
                   isSuspended={org.isSuspended}
                   subscriptionStatus={org.subscriptionStatus}
                   providerSubscriptionId={org.providerSubscriptionId}
                   billingEnabled={billingEnabled}
                 />
-                <AdminPlanBadge plan={org.subscriptionPlan} />
+                <OrganizationDetailPlanBadge plan={org.subscriptionPlan} />
               </>
             }
           />
         }
         actions={
-          <>
+          <div className="admin-org-detail-actions flex flex-wrap items-center gap-2 md:gap-3">
             <AdminActionButton
               type="button"
               disabled={syncBusy || impersonateBusy}
@@ -149,17 +149,12 @@ export function OrganizationDetailHeader({
             <AdminLinkButton href="/app/dashboard">
               Åpne dashboard
             </AdminLinkButton>
-          </>
+          </div>
         }
         toolbar={
-          <AdminDetailTabBar
-            tabs={ORGANIZATION_DETAIL_TABS}
-            activeTab={tab}
-            onTabChange={onTabChange}
-            aria-label="Organisasjonsdetaljer"
-          />
+          <OrganizationDetailTabBar activeTab={tab} onTabChange={onTabChange} />
         }
-        toolbarClassName="py-2.5 sm:py-3"
+        toolbarClassName="px-0 pt-4"
       />
 
       <AdminConfirmActionDialog

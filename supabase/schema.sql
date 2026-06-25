@@ -50,7 +50,8 @@ create table if not exists public.partners (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint partners_category_check check (
-    category in ('catering', 'decoration', 'cleaning', 'other')
+    char_length(trim(category)) >= 2
+    and char_length(category) <= 80
   )
 );
 

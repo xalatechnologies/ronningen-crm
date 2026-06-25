@@ -541,7 +541,7 @@ function ReportsModuleFooter() {
         </Link>
         {" · "}
         <Link
-          href="/app/customers"
+          href="/app/customers?tab=partners"
           className="font-medium text-success underline-offset-2 hover:underline"
         >
           Partnere

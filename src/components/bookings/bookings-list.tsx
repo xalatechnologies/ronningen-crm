@@ -3,7 +3,6 @@
 import type {
   BookingListRow,
   BookingStatus,
-  BookingsQuickStats,
 } from "@/components/bookings/types";
 import {
   BookingsMonthCalendar,
@@ -43,7 +42,7 @@ import { toast } from "sonner";
 import { useSupabase } from "@/providers/supabase-provider";
 
 import { RN_CARD_SHELL, RN_SEGMENT_CONTROL } from "@/lib/rn-ui";
-import { eachBookingYmdInRange } from "@/lib/booking-period";
+import { computeBookingsQuickStats } from "@/lib/bookings/quick-stats";
 
 const bookingsTableHeadClass =
   "bookings-list-table-head font-semibold tracking-wider text-rn-text-column uppercase";
@@ -105,12 +104,6 @@ function formatNokCompact(n: number) {
   );
 }
 
-function pctDelta(prev: number, curr: number): number | null {
-  if (prev === 0 && curr === 0) return null;
-  if (prev === 0) return null;
-  return ((curr - prev) / prev) * 100;
-}
-
 function statusConfirmTitle(next: BookingStatus): string {
   switch (next) {
     case "cancelled":
@@ -120,71 +113,6 @@ function statusConfirmTitle(next: BookingStatus): string {
     default:
       return "Bekreft handling";
   }
-}
-
-function computeQuickStats(rows: BookingListRow[]): BookingsQuickStats {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m0 = now.getMonth();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const thisYm = `${y}-${pad(m0 + 1)}`;
-  const prevD = new Date(y, m0 - 1, 1);
-  const prevYm = `${prevD.getFullYear()}-${pad(prevD.getMonth() + 1)}`;
-
-  const monthLabel = new Intl.DateTimeFormat("nb-NO", {
-    month: "long",
-    year: "numeric",
-  }).format(now);
-  const prevMonthLabel = new Intl.DateTimeFormat("nb-NO", {
-    month: "long",
-    year: "numeric",
-  }).format(prevD);
-
-  let currentMonthRevenue = 0;
-  let prevMonthRevenue = 0;
-  const daysWithEvents = new Set<string>();
-  const daysInMonth = new Date(y, m0 + 1, 0).getDate();
-
-  const active = rows.filter((r) => r.status !== "cancelled");
-  let guestSum = 0;
-
-  for (const r of active) {
-    guestSum += r.guests;
-
-    const ym = r.eventDateIso.slice(0, 7);
-    if (ym === thisYm) {
-      currentMonthRevenue += r.totalNok;
-    }
-    if (ym === prevYm) {
-      prevMonthRevenue += r.totalNok;
-    }
-    for (const ymd of eachBookingYmdInRange(
-      r.eventDateIso,
-      r.eventEndDateIso,
-    )) {
-      if (ymd.slice(0, 7) === thisYm) {
-        daysWithEvents.add(ymd);
-      }
-    }
-  }
-
-  const calendarFillPct =
-    daysInMonth > 0
-      ? Math.min(100, Math.round((daysWithEvents.size / daysInMonth) * 100))
-      : 0;
-
-  const avgGuestsActive =
-    active.length > 0 ? Math.round(guestSum / active.length) : null;
-
-  return {
-    currentMonthRevenue,
-    prevMonthRevenue,
-    monthOverMonthPct: pctDelta(prevMonthRevenue, currentMonthRevenue),
-    monthLabel,
-    prevMonthLabel,
-    calendarFillPct,
-    avgGuestsActive,
-  };
 }
 
 function BookingsFiltersSection({
@@ -613,7 +541,10 @@ export function BookingsList({
     await runBookingStatusUpdate(pending.id, pending.next);
   }
 
-  const quickStats = useMemo(() => computeQuickStats(bookings), [bookings]);
+  const quickStats = useMemo(
+    () => computeBookingsQuickStats(bookings),
+    [bookings],
+  );
 
   const filterCounts = useMemo(() => {
     const counts = { all: bookings.length, confirmed: 0, pending: 0, cancelled: 0 };

@@ -15,11 +15,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormSelectField } from "@/components/ui/form-select";
+import { AutocompleteField } from "@/components/ui/autocomplete-field";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  PARTNER_CATEGORIES,
+  PARTNER_CATEGORY_SUGGESTIONS,
+  partnerCategoryToLabel,
+  partnerLabelToCategory,
   partnerFormSchema,
   type PartnerFormInput,
 } from "@/lib/validations";
@@ -32,11 +34,11 @@ import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useForm, type Resolver, type UseFormReturn } from "react-hook-form";
+import { useEffect, useMemo, useState } from "react";
+import { useForm, Controller, type Resolver, type UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 
-const PARTNERS_PAGE_SIZE = 4;
+const PARTNERS_PAGE_SIZE = 10;
 
 const partnersTableHeadClass =
   "customers-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
@@ -45,18 +47,7 @@ const fieldClass =
   "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
 function partnerCategoryLabelNb(category: string): string {
-  switch (category) {
-    case "catering":
-      return "Catering";
-    case "decoration":
-      return "Dekorasjon";
-    case "cleaning":
-      return "Renhold";
-    case "other":
-      return "Annet";
-    default:
-      return category;
-  }
+  return partnerCategoryToLabel(category);
 }
 
 function PartnerFields({
@@ -72,17 +63,28 @@ function PartnerFields({
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor={`${idPrefix}-cat`}>Kategori</Label>
-        <FormSelectField
+        <Controller
           name="category"
           control={control}
-          id={`${idPrefix}-cat`}
-          options={[
-            { value: "catering", label: "Catering" },
-            { value: "decoration", label: "Dekorasjon" },
-            { value: "cleaning", label: "Renhold" },
-            { value: "other", label: "Annet" },
-          ]}
+          render={({ field, fieldState }) => (
+            <AutocompleteField
+              id={`${idPrefix}-cat`}
+              value={partnerCategoryToLabel(field.value ?? "")}
+              onValueChange={(value) =>
+                field.onChange(partnerLabelToCategory(value))
+              }
+              suggestions={PARTNER_CATEGORY_SUGGESTIONS}
+              placeholder="Velg eller skriv egen kategori"
+              aria-label="Partnerkategori"
+              aria-invalid={fieldState.invalid}
+              inputClassName={fieldClass}
+            />
+          )}
         />
+        <p className="text-xs text-muted-foreground">
+          Velg Catering, Dekorasjon, Renhold eller Annet — eller skriv en egen
+          kategori.
+        </p>
         {err.category ? (
           <p className="text-xs text-destructive">{err.category.message}</p>
         ) : null}
@@ -135,19 +137,46 @@ function PartnerFields({
   );
 }
 
-export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
+export function PartnersPanel({
+  partners,
+  showHeader = true,
+  query: queryProp,
+  onQueryChange: onQueryChangeProp,
+  addOpen: addOpenProp,
+  onAddOpenChange: onAddOpenChangeProp,
+}: {
+  partners: PartnerRow[];
+  showHeader?: boolean;
+  query?: string;
+  onQueryChange?: (value: string) => void;
+  addOpen?: boolean;
+  onAddOpenChange?: (open: boolean) => void;
+}) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateCustomers } = useTenantDataInvalidation();
-  const [query, setQuery] = useState("");
+  const [internalQuery, setInternalQuery] = useState("");
   const [partnersPage, setPartnersPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [addOpen, setAddOpen] = useState(false);
+  const [internalAddOpen, setInternalAddOpen] = useState(false);
   const [deleteBusyId, setDeleteBusyId] = useState<string | null>(null);
   const [partnerDeleteTarget, setPartnerDeleteTarget] = useState<{
     id: string;
     name: string;
   } | null>(null);
+
+  const query = queryProp ?? internalQuery;
+  const setQuery = onQueryChangeProp ?? setInternalQuery;
+  const addOpen = addOpenProp ?? internalAddOpen;
+  const setAddOpen = onAddOpenChangeProp ?? setInternalAddOpen;
+
+  function handleQueryChange(value: string) {
+    setQuery(value);
+  }
+
+  useEffect(() => {
+    setPartnersPage(1);
+  }, [query]);
 
   const addForm = useForm<PartnerFormInput>({
     resolver: zodResolver(partnerFormSchema) as Resolver<PartnerFormInput>,
@@ -209,12 +238,8 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
   const { totalPages, currentPage, pageRows } = pagination;
 
   function openEdit(p: PartnerRow) {
-    const cat = p.category as PartnerFormInput["category"];
-    const category = (PARTNER_CATEGORIES as readonly string[]).includes(p.category)
-      ? cat
-      : "other";
     editForm.reset({
-      category,
+      category: p.category,
       name: p.name,
       phone: p.phone ?? "",
       email: p.email ?? "",
@@ -235,7 +260,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
     }
 
     const { error } = await supabase.from("partners").insert({
-      category: data.category,
+      category: partnerLabelToCategory(data.category),
       name: data.name,
       phone: data.phone.trim() || null,
       email: data.email.trim() || null,
@@ -261,7 +286,7 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
     const { error } = await supabase
       .from("partners")
       .update({
-        category: data.category,
+        category: partnerLabelToCategory(data.category),
         name: data.name,
         phone: data.phone.trim() || null,
         email: data.email.trim() || null,
@@ -318,32 +343,31 @@ export function PartnersPanel({ partners }: { partners: PartnerRow[] }) {
 
   return (
     <>
-      <div className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
-        <div className="customers-page-hero">
-          <AppPageHeader
-            className="mb-0"
-            surface="default"
-            title="Partnere"
-            titleClassName="customers-partners-hero"
-            actionsClassName={RN_PAGE_SEARCH_ACTIONS}
-            actions={
-              <CustomersPageSearchToolbar
-                searchId="partners-search"
-                searchAriaLabel="Søk partnere"
-                searchPlaceholder="Søk partner…"
-                query={query}
-                onQueryChange={(value) => {
-                  setQuery(value);
-                  setPartnersPage(1);
-                }}
-                addLabel="Ny partner"
-                onAdd={() => setAddOpen(true)}
-                toolbarAriaLabel="Partnere — søk og ny partner"
-              />
-            }
-          />
+      {showHeader ? (
+        <div className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
+          <div className="customers-page-hero">
+            <AppPageHeader
+              className="mb-0"
+              surface="default"
+              title="Partnere"
+              titleClassName="customers-partners-hero"
+              actionsClassName={RN_PAGE_SEARCH_ACTIONS}
+              actions={
+                <CustomersPageSearchToolbar
+                  searchId="partners-search"
+                  searchAriaLabel="Søk partnere"
+                  searchPlaceholder="Søk partner…"
+                  query={query}
+                  onQueryChange={handleQueryChange}
+                  addLabel="Ny partner"
+                  onAdd={() => setAddOpen(true)}
+                  toolbarAriaLabel="Partnere — søk og ny partner"
+                />
+              }
+            />
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {partners.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center md:px-8 md:py-16">

@@ -72,11 +72,41 @@ export const PARTNER_CATEGORIES = [
 
 export type PartnerCategory = (typeof PARTNER_CATEGORIES)[number];
 
+export const PARTNER_CATEGORY_PRESETS = [
+  { value: "catering", label: "Catering" },
+  { value: "decoration", label: "Dekorasjon" },
+  { value: "cleaning", label: "Renhold" },
+  { value: "other", label: "Annet" },
+] as const;
+
+export const PARTNER_CATEGORY_SUGGESTIONS = PARTNER_CATEGORY_PRESETS.map(
+  (preset) => preset.label,
+);
+
+export function partnerCategoryToLabel(category: string): string {
+  const preset = PARTNER_CATEGORY_PRESETS.find((p) => p.value === category);
+  return preset?.label ?? category;
+}
+
+export function partnerLabelToCategory(input: string): string {
+  const trimmed = input.trim();
+  const preset = PARTNER_CATEGORY_PRESETS.find(
+    (p) => p.label.toLowerCase() === trimmed.toLowerCase(),
+  );
+  return preset?.value ?? trimmed;
+}
+
 /** Partnere / leverandører på kundesiden */
 export const partnerFormSchema = z.object({
-  category: z.enum(PARTNER_CATEGORIES, {
-    message: "Velg kategori",
-  }),
+  category: z
+    .string()
+    .transform((s) => partnerLabelToCategory(s))
+    .pipe(
+      z
+        .string()
+        .min(2, "Kategori må være minst 2 tegn")
+        .max(80, "Maks 80 tegn"),
+    ),
   name: z
     .string()
     .transform((s) => s.trim())

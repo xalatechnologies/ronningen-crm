@@ -1,0 +1,199 @@
+/* Organisasjonsdetalj — design scoped til denne siden alene */
+
+.admin-org-detail {
+  --org-detail-border: var(--rn-border-strong);
+}
+
+/* Header-kort — samme vekt som øvrige admin-sider (border-2 / card-padding) */
+.admin-org-detail .admin-org-detail-header {
+  border: 2px solid var(--org-detail-border) !important;
+  border-radius: var(--app-radius);
+  background-color: var(--card);
+  box-shadow: var(--shadow-rn-card, 0 1px 3px rgb(15 23 42 / 0.08)) !important;
+}
+
+/* Tilbake-lenke — samme størrelse som andre detaljsider, nøytral (ikke grønn) */
+.admin-org-detail .admin-org-detail-header a.admin-inline-link {
+  margin-bottom: 0.75rem;
+  border: 2px solid var(--rn-border-strong);
+  background-color: color-mix(in srgb, var(--muted) 35%, var(--card));
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+  padding: 0.375rem 0.75rem;
+  font-size: calc(14px * var(--app-type-scale));
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.admin-org-detail .admin-org-detail-header a.admin-inline-link:hover {
+  border-color: color-mix(in srgb, var(--rn-border-strong) 80%, var(--foreground));
+  background-color: color-mix(in srgb, var(--muted) 50%, var(--card));
+  color: var(--foreground);
+}
+
+.admin-org-detail .admin-org-detail-header a.admin-inline-link > span[aria-hidden] {
+  display: flex;
+  width: 1.5rem;
+  height: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(var(--app-radius) - 4px);
+  background-color: color-mix(in srgb, var(--muted) 45%, transparent);
+  color: var(--foreground);
+}
+
+.admin-org-detail .admin-org-detail-header a.admin-inline-link::before {
+  content: none;
+}
+
+.admin-org-detail .org-detail-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: calc(15px * var(--app-read-type-scale));
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+.admin-org-detail .org-detail-meta-row > *:not(:last-child)::after {
+  content: "·";
+  margin-inline: 0.625rem;
+  color: color-mix(in srgb, var(--muted-foreground) 55%, transparent);
+}
+
+.admin-org-detail .org-detail-meta-slug {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: calc(14px * var(--app-type-scale));
+}
+
+.admin-org-detail .org-detail-meta-wrap {
+  gap: 0.75rem;
+}
+
+.admin-org-detail .org-detail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+  border: 2px solid color-mix(in srgb, var(--rn-border-strong) 70%, transparent);
+  border-radius: calc(var(--app-radius) - 2px);
+  background-color: color-mix(in srgb, var(--muted) 15%, var(--card));
+  padding: 0.25rem 0.625rem;
+  font-size: calc(13px * var(--app-type-scale));
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+@media (min-width: 768px) {
+  .admin-org-detail .org-detail-badge {
+    min-height: 2.125rem;
+    padding: 0.25rem 0.75rem;
+    font-size: calc(14px * var(--app-type-scale));
+  }
+}
+
+.admin-org-detail .org-detail-badge-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+}
+
+.admin-org-detail .org-detail-badge-dot--healthy {
+  background-color: hsl(142 76% 36%);
+}
+
+.admin-org-detail .org-detail-badge-dot--warning {
+  background-color: hsl(38 92% 40%);
+}
+
+.admin-org-detail .org-detail-badge-dot--at_risk {
+  background-color: hsl(25 95% 45%);
+}
+
+.admin-org-detail .org-detail-badge-dot--critical {
+  background-color: hsl(0 72% 51%);
+}
+
+.admin-org-detail .org-detail-badge-dot--trialing {
+  background-color: hsl(215 16% 47%);
+}
+
+.admin-org-detail .org-detail-badge-dot--active {
+  background-color: hsl(142 76% 36%);
+}
+
+.admin-org-detail .org-detail-badge-dot--neutral {
+  background-color: var(--muted-foreground);
+}
+
+.admin-org-detail .org-detail-tab-bar {
+  display: flex;
+  min-width: 0;
+  overflow-x: auto;
+  gap: 0.25rem;
+  border-bottom: 2px solid color-mix(in srgb, var(--rn-border-strong) 50%, transparent);
+}
+
+.admin-org-detail .org-detail-tab {
+  flex-shrink: 0;
+  margin-bottom: -2px;
+  min-height: 2.75rem;
+  border-bottom: 3px solid transparent;
+  padding: 0.75rem 1.25rem;
+  font-size: calc(15px * var(--app-type-scale));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.admin-org-detail .org-detail-tab:hover {
+  color: var(--foreground);
+}
+
+.admin-org-detail .org-detail-tab--active {
+  border-bottom-color: var(--foreground);
+  color: var(--foreground);
+}
+
+/* KPI — matcher admin-kpi-grid / dashboard-kpi på andre sider */
+.admin-org-detail .org-detail-kpi {
+  border: 2px solid var(--rn-border-strong);
+  border-radius: var(--app-radius);
+  background-color: var(--card);
+  padding: calc(var(--app-card-padding) * 0.85) var(--app-card-padding);
+  box-shadow: var(--shadow-rn-card, 0 1px 3px rgb(15 23 42 / 0.08));
+}
+
+@media (min-width: 768px) {
+  .admin-org-detail .org-detail-kpi {
+    padding: var(--app-card-padding);
+  }
+}
+
+.admin-org-detail .admin-org-detail-actions {
+  gap: 0.625rem;
+}
+
+.admin-org-detail .admin-org-detail-header > div:last-child {
+  border-top: none !important;
+  padding-inline: var(--app-card-padding) !important;
+  padding-top: 0.25rem !important;
+  padding-bottom: 1rem !important;
+}
+
+@media (min-width: 640px) {
+  .admin-org-detail .admin-org-detail-header > div:last-child {
+    padding-inline: calc(var(--app-card-padding) + 0.25rem) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .admin-org-detail .admin-org-detail-header > div:last-child {
+    padding-inline: calc(var(--app-card-padding) + 0.5rem) !important;
+    padding-bottom: 1.125rem !important;
+  }
+}

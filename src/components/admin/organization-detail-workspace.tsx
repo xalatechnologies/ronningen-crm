@@ -1,5 +1,7 @@
 "use client";
 
+import "./organization-detail/organization-detail.css";
+
 import { AdminDetailTabPanel } from "@/components/admin/admin-detail-tab-bar";
 import { OrganizationBillingTab } from "@/components/admin/organization-detail/organization-billing-tab";
 import { OrganizationDetailHeader } from "@/components/admin/organization-detail/organization-detail-header";
@@ -28,7 +30,7 @@ export function OrganizationDetailWorkspace({
   const { tab, setTab } = useOrganizationDetailTab(initialTab);
 
   return (
-    <div className="admin-page-workspace flex min-w-0 flex-col">
+    <div className="admin-org-detail admin-page-workspace flex min-w-0 flex-col">
       <OrganizationDetailHeader
         org={org}
         tab={tab}

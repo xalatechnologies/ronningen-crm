@@ -1,4 +1,4 @@
-import { AdminStatCard } from "@/components/admin/admin-badges";
+import { OrganizationDetailKpiCard } from "@/components/admin/organization-detail/organization-detail-kpi-card";
 import { AdminKpiGrid } from "@/components/admin/admin-kpi-grid";
 import type { AdminOrganizationDetail } from "@/lib/admin/queries/organizations";
 import { formatNok } from "@/lib/admin/revenue-metrics";
@@ -10,13 +10,16 @@ export function OrganizationDetailKpiStrip({
 }) {
   return (
     <AdminKpiGrid>
-      <AdminStatCard label="Medlemmer" value={org.members.length} />
-      <AdminStatCard label="Omsetning" value={formatNok(org.totalRevenue)} />
-      <AdminStatCard
+      <OrganizationDetailKpiCard label="Medlemmer" value={org.members.length} />
+      <OrganizationDetailKpiCard
+        label="Omsetning"
+        value={formatNok(org.totalRevenue)}
+      />
+      <OrganizationDetailKpiCard
         label="Utestående"
         value={formatNok(org.unpaidRemaining)}
       />
-      <AdminStatCard
+      <OrganizationDetailKpiCard
         label="Reservasjoner (30d)"
         value={org.bookingsLast30d}
       />

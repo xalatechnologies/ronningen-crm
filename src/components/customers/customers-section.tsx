@@ -18,6 +18,9 @@ import {
 } from "@/lib/validations";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { CustomersPageSearchToolbar } from "@/components/customers/customers-page-search-toolbar";
+import { CustomersPageTabBar } from "@/components/customers/customers-page-tab-bar";
+import { customersPageTabLabel } from "@/components/customers/tabs";
+import { useCustomersPageTab } from "@/components/customers/use-customers-page-tab";
 import { RN_CARD_SHELL, RN_PAGE_SEARCH_ACTIONS } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { deleteCustomerWithClient } from "@/lib/customers/delete-customer";
@@ -39,7 +42,7 @@ import type {
   PartnerRow,
 } from "./types";
 
-const CUSTOMERS_PAGE_SIZE = 4;
+const CUSTOMERS_PAGE_SIZE = 10;
 
 const customersTableHeadClass =
   "customers-table-head whitespace-nowrap px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
@@ -77,54 +80,22 @@ function aggregateByCustomer(bookings: CustomerBookingListItem[]) {
   return map;
 }
 
-function CustomersToolbar({
-  query,
-  onQueryChange,
-  onAdd,
-}: {
-  query: string;
-  onQueryChange: (value: string) => void;
-  onAdd: () => void;
-}) {
-  return (
-    <div className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
-      <div className="customers-page-hero">
-        <AppPageHeader
-          className="mb-0"
-          surface="default"
-          title="Kunder"
-          actionsClassName={RN_PAGE_SEARCH_ACTIONS}
-          actions={
-            <CustomersPageSearchToolbar
-              searchId="customers-search"
-              searchAriaLabel="Søk kunder"
-              searchPlaceholder="Søk på navn, e-post eller telefon…"
-              query={query}
-              onQueryChange={onQueryChange}
-              addLabel="Ny kunde"
-              onAdd={onAdd}
-              toolbarAriaLabel="Kunder — søk og ny kunde"
-            />
-          }
-        />
-      </div>
-    </div>
-  );
-}
-
 export function CustomersSection({
   customers,
   partners,
   bookings,
   loadError,
 }: CustomersSectionProps) {
+  const { tab, setTab } = useCustomersPageTab();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateCustomers, invalidateInquiries } = useTenantDataInvalidation();
   const [query, setQuery] = useState("");
+  const [partnersQuery, setPartnersQuery] = useState("");
   const [customersPage, setCustomersPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [partnersAddOpen, setPartnersAddOpen] = useState(false);
   const [deleteBusyId, setDeleteBusyId] = useState<string | null>(null);
   const [customerDeleteTarget, setCustomerDeleteTarget] =
     useState<CustomerRow | null>(null);
@@ -271,19 +242,63 @@ export function CustomersSection({
       ) : null}
 
       {!loadError ? (
-        <>
-          <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-            <PartnersPanel partners={partners} />
+        <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
+          <div className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
+            <div className="customers-page-hero">
+              <AppPageHeader
+                className="mb-0"
+                surface="default"
+                title={customersPageTabLabel(tab)}
+                titleClassName={
+                  tab === "partners" ? "customers-partners-hero" : undefined
+                }
+                actionsClassName={RN_PAGE_SEARCH_ACTIONS}
+                actions={
+                  <div className="flex w-full flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:gap-3">
+                    <CustomersPageTabBar
+                      activeTab={tab}
+                      onTabChange={setTab}
+                      customerCount={customers.length}
+                      partnerCount={partners.length}
+                    />
+                    {tab === "customers" ? (
+                      <CustomersPageSearchToolbar
+                        searchId="customers-search"
+                        searchAriaLabel="Søk kunder"
+                        searchPlaceholder="Søk på navn, e-post eller telefon…"
+                        query={query}
+                        onQueryChange={(v) => {
+                          setQuery(v);
+                          setCustomersPage(1);
+                        }}
+                        addLabel="Ny kunde"
+                        onAdd={() => setAddOpen(true)}
+                        toolbarAriaLabel="Kunder — søk og ny kunde"
+                      />
+                    ) : (
+                      <CustomersPageSearchToolbar
+                        searchId="partners-search"
+                        searchAriaLabel="Søk partnere"
+                        searchPlaceholder="Søk partner…"
+                        query={partnersQuery}
+                        onQueryChange={setPartnersQuery}
+                        addLabel="Ny partner"
+                        onAdd={() => setPartnersAddOpen(true)}
+                        toolbarAriaLabel="Partnere — søk og ny partner"
+                      />
+                    )}
+                  </div>
+                }
+              />
+            </div>
           </div>
-          <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-            <CustomersToolbar
-              query={query}
-              onQueryChange={(v) => {
-                setQuery(v);
-                setCustomersPage(1);
-              }}
-              onAdd={() => setAddOpen(true)}
-            />
+
+          <div
+            role="tabpanel"
+            id="tabpanel-customers"
+            aria-labelledby="tab-customers"
+            hidden={tab !== "customers"}
+          >
             {customers.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-4 px-6 py-14 text-center md:px-8 md:py-16">
                 <p className="customers-empty-hint text-muted-foreground">
@@ -424,7 +439,23 @@ export function CustomersSection({
               </>
             )}
           </div>
-        </>
+
+          <div
+            role="tabpanel"
+            id="tabpanel-partners"
+            aria-labelledby="tab-partners"
+            hidden={tab !== "partners"}
+          >
+            <PartnersPanel
+              partners={partners}
+              showHeader={false}
+              query={partnersQuery}
+              onQueryChange={setPartnersQuery}
+              addOpen={partnersAddOpen}
+              onAddOpenChange={setPartnersAddOpen}
+            />
+          </div>
+        </div>
       ) : null}
 
       <Sheet
