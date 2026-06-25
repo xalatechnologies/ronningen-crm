@@ -125,7 +125,8 @@ function mergeRangeWithYmd(
 function defaultMonthRange() {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  return { from: toLocalYmd(start), to: toLocalYmd(now) };
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return { from: toLocalYmd(start), to: toLocalYmd(end) };
 }
 
 function addDays(iso: string, delta: number): string {

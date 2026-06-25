@@ -55,11 +55,12 @@ export async function fetchAllRowsInDateRange<T>(
   return { data: rows, error: null };
 }
 
-export function rollingYearBounds(yearsBack: number): { fromYmd: string; toYmd: string } {
+export function rollingYearBounds(
+  yearsBack: number,
+  yearsForward = 1,
+): { fromYmd: string; toYmd: string } {
   const now = new Date();
-  const from = new Date(now.getFullYear() - yearsBack, 0, 1);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const toYmd = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  const fromYmd = `${from.getFullYear()}-01-01`;
+  const fromYmd = `${now.getFullYear() - yearsBack}-01-01`;
+  const toYmd = `${now.getFullYear() + yearsForward}-12-31`;
   return { fromYmd, toYmd };
 }

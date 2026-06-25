@@ -29,7 +29,8 @@ import { format } from "date-fns";
 import { nb } from "date-fns/locale/nb";
 import Link from "next/link";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
-import { useEffect, useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -96,6 +97,16 @@ type RawActivity = {
   created_at: string;
 };
 
+function mapRawActivities(data: RawActivity[]): InquiryActivityRow[] {
+  return data.map((r) => ({
+    id: r.id,
+    inquiryId: r.inquiry_id,
+    body: r.body,
+    kind: r.kind,
+    createdAtIso: r.created_at,
+  }));
+}
+
 export function InquiryDetailSheet({
   inquiry,
   open,
@@ -117,6 +128,11 @@ export function InquiryDetailSheet({
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteBody, setEditingNoteBody] = useState("");
+  const [editingNoteBusy, setEditingNoteBusy] = useState(false);
+  const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null);
+  const [deleteNoteBusy, setDeleteNoteBusy] = useState(false);
 
   const isConverted =
     inquiry?.status === "converted" || !!inquiry?.convertedBookingId;
@@ -152,6 +168,7 @@ export function InquiryDetailSheet({
     register: registerNote,
     handleSubmit: handleSubmitNote,
     reset: resetNote,
+    getValues: getNoteValues,
     formState: { errors: noteErrors },
   } = useForm<{ body: string }>({
     resolver: zodResolver(inquiryActivityNoteSchema) as Resolver<
@@ -189,15 +206,7 @@ export function InquiryDetailSheet({
           });
           setActivities([]);
         } else {
-          setActivities(
-            (data ?? []).map((r: RawActivity) => ({
-              id: r.id,
-              inquiryId: r.inquiry_id,
-              body: r.body,
-              kind: r.kind,
-              createdAtIso: r.created_at,
-            })),
-          );
+          setActivities(mapRawActivities((data ?? []) as RawActivity[]));
         }
         setLoadingActivities(false);
       }
@@ -208,11 +217,56 @@ export function InquiryDetailSheet({
   }, [inquiry?.id, open, supabase]);
 
   useEffect(() => {
-    if (!open) resetNote({ body: "" });
+    if (!open) {
+      resetNote({ body: "" });
+      setEditingNoteId(null);
+      setDeleteNoteId(null);
+    }
   }, [open, resetNote]);
+
+  const refreshActivities = useCallback(async () => {
+    if (!inquiry || !supabase) return;
+    const { data, error } = await supabase
+      .from("booking_inquiry_activities")
+      .select("id, inquiry_id, body, kind, created_at")
+      .eq("inquiry_id", inquiry.id)
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast.error("Kunne ikke laste aktiviteter", { description: error.message });
+      return;
+    }
+    setActivities(mapRawActivities((data ?? []) as RawActivity[]));
+  }, [inquiry, supabase]);
+
+  async function insertActivityNote(body: string): Promise<boolean> {
+    if (!inquiry || !supabase || !canManage) return false;
+    const trimmed = body.trim();
+    if (!trimmed) return true;
+
+    const parsed = inquiryActivityNoteSchema.safeParse({ body: trimmed });
+    if (!parsed.success) {
+      toast.error("Kunne ikke lagre notat", {
+        description: parsed.error.issues[0]?.message,
+      });
+      return false;
+    }
+
+    const { error } = await supabase.from("booking_inquiry_activities").insert({
+      inquiry_id: inquiry.id,
+      body: parsed.data.body,
+      kind: "note",
+    });
+    if (error) {
+      toast.error("Kunne ikke lagre notat", { description: error.message });
+      return false;
+    }
+    return true;
+  }
 
   async function onSave(data: BookingInquiryFormInput) {
     if (!inquiry || !supabase || isConverted || !canManage) return;
+
+    const pendingNote = getNoteValues("body");
 
     const { error } = await supabase
       .from("booking_inquiries")
@@ -237,7 +291,22 @@ export function InquiryDetailSheet({
       toast.error("Kunne ikke lagre", { description: error.message });
       return;
     }
-    toast.success("Forespørsel oppdatert");
+
+    if (pendingNote.trim()) {
+      const noteSaved = await insertActivityNote(pendingNote);
+      if (!noteSaved) {
+        toast.success("Forespørsel oppdatert");
+        invalidateInquiries();
+        return;
+      }
+      resetNote({ body: "" });
+    }
+
+    toast.success(
+      pendingNote.trim()
+        ? "Forespørsel og notat lagret"
+        : "Forespørsel oppdatert",
+    );
     invalidateInquiries();
     onOpenChange(false);
   }
@@ -265,32 +334,64 @@ export function InquiryDetailSheet({
 
   async function onAddNote(values: { body: string }) {
     if (!inquiry || !supabase || !canManage) return;
-    const { error } = await supabase.from("booking_inquiry_activities").insert({
-      inquiry_id: inquiry.id,
-      body: values.body.trim(),
-      kind: "note",
-    });
-    if (error) {
-      toast.error("Kunne ikke legge til notat", { description: error.message });
-      return;
-    }
+    const saved = await insertActivityNote(values.body);
+    if (!saved) return;
     toast.success("Notat lagt til");
     resetNote({ body: "" });
-    const { data } = await supabase
-      .from("booking_inquiry_activities")
-      .select("id, inquiry_id, body, kind, created_at")
-      .eq("inquiry_id", inquiry.id)
-      .order("created_at", { ascending: false });
-    setActivities(
-      (data ?? []).map((r: RawActivity) => ({
-        id: r.id,
-        inquiryId: r.inquiry_id,
-        body: r.body,
-        kind: r.kind,
-        createdAtIso: r.created_at,
-      })),
-    );
+    await refreshActivities();
     invalidateInquiries();
+  }
+
+  async function onSaveNoteEdit() {
+    if (!editingNoteId || !supabase || !canManage) return;
+    const parsed = inquiryActivityNoteSchema.safeParse({
+      body: editingNoteBody,
+    });
+    if (!parsed.success) {
+      toast.error("Kunne ikke oppdatere notat", {
+        description: parsed.error.issues[0]?.message,
+      });
+      return;
+    }
+    setEditingNoteBusy(true);
+    try {
+      const { error } = await supabase
+        .from("booking_inquiry_activities")
+        .update({ body: parsed.data.body })
+        .eq("id", editingNoteId);
+      if (error) {
+        toast.error("Kunne ikke oppdatere notat", { description: error.message });
+        return;
+      }
+      toast.success("Notat oppdatert");
+      setEditingNoteId(null);
+      await refreshActivities();
+      invalidateInquiries();
+    } finally {
+      setEditingNoteBusy(false);
+    }
+  }
+
+  async function confirmDeleteNote() {
+    if (!deleteNoteId || !supabase || !canManage) return;
+    setDeleteNoteBusy(true);
+    try {
+      const { error } = await supabase
+        .from("booking_inquiry_activities")
+        .delete()
+        .eq("id", deleteNoteId);
+      if (error) {
+        toast.error("Kunne ikke slette notat", { description: error.message });
+        return;
+      }
+      toast.success("Notat slettet");
+      if (editingNoteId === deleteNoteId) setEditingNoteId(null);
+      setDeleteNoteId(null);
+      await refreshActivities();
+      invalidateInquiries();
+    } finally {
+      setDeleteNoteBusy(false);
+    }
   }
 
   if (!inquiry) return null;
@@ -458,19 +559,87 @@ export function InquiryDetailSheet({
                       Ingen notater ennå.
                     </li>
                   ) : (
-                    activities.map((a) => (
-                      <li
-                        key={a.id}
-                        className="rounded-md border border-rn-border-strong/60 bg-muted/25 px-3 py-2 text-sm"
-                      >
-                        <p className="whitespace-pre-wrap text-foreground">
-                          {a.body}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {formatAppDateTime(a.createdAtIso)}
-                        </p>
-                      </li>
-                    ))
+                    activities.map((a) => {
+                      const isNote = a.kind === "note";
+                      const isEditing = editingNoteId === a.id;
+
+                      return (
+                        <li
+                          key={a.id}
+                          className="rounded-md border border-rn-border-strong/60 bg-muted/25 px-3 py-2 text-sm"
+                        >
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              <Textarea
+                                rows={3}
+                                value={editingNoteBody}
+                                onChange={(e) => setEditingNoteBody(e.target.value)}
+                                className="rounded-md border-2 border-rn-border-strong bg-background p-3 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                                aria-label="Rediger notat"
+                              />
+                              <div className="flex flex-wrap gap-2">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={editingNoteBusy}
+                                  onClick={() => void onSaveNoteEdit()}
+                                >
+                                  {editingNoteBusy ? "Lagrer…" : "Lagre notat"}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={editingNoteBusy}
+                                  onClick={() => setEditingNoteId(null)}
+                                >
+                                  Avbryt
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="min-w-0 flex-1 whitespace-pre-wrap text-foreground">
+                                  {a.body}
+                                </p>
+                                {isNote && canManage ? (
+                                  <div className="flex shrink-0 items-center gap-0.5">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon-sm"
+                                      className="size-8 shrink-0 rounded-md text-muted-foreground hover:text-foreground"
+                                      aria-label="Rediger notat"
+                                      onClick={() => {
+                                        setEditingNoteId(a.id);
+                                        setEditingNoteBody(a.body);
+                                      }}
+                                    >
+                                      <Pencil className="size-4" aria-hidden />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon-sm"
+                                      className="size-8 shrink-0 rounded-md text-destructive hover:bg-destructive/10"
+                                      aria-label="Slett notat"
+                                      onClick={() => setDeleteNoteId(a.id)}
+                                    >
+                                      <Trash2 className="size-4" aria-hidden />
+                                    </Button>
+                                  </div>
+                                ) : null}
+                              </div>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {formatAppDateTime(a.createdAtIso)}
+                                {!isNote ? " · Statusendring" : null}
+                              </p>
+                            </>
+                          )}
+                        </li>
+                      );
+                    })
                   )}
                 </ul>
               </div>
@@ -527,6 +696,18 @@ export function InquiryDetailSheet({
       confirmLabel="Ja, slett forespørsel"
       busy={deleteBusy}
       onConfirm={confirmDeleteInquiry}
+    />
+
+    <ConfirmDeleteDialog
+      open={deleteNoteId !== null}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) setDeleteNoteId(null);
+      }}
+      title="Slette notat?"
+      description="Notatet fjernes fra aktivitetsloggen. Dette kan ikke angres."
+      confirmLabel="Ja, slett notat"
+      busy={deleteNoteBusy}
+      onConfirm={confirmDeleteNote}
     />
     </>
   );

@@ -93,10 +93,17 @@ export async function updateSession(request: NextRequest) {
     );
     if (error || !isPlatformAdmin) {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/app";
+      redirectUrl.pathname = "/app/dashboard";
       redirectUrl.search = "";
       return NextResponse.redirect(redirectUrl);
     }
+  }
+
+  if (pathname === "/app" && user) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/app/dashboard";
+    redirectUrl.search = "";
+    return NextResponse.redirect(redirectUrl);
   }
 
   response.headers.set("x-pathname", pathname);
