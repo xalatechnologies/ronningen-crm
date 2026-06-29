@@ -613,52 +613,52 @@ export function NewBookingForm({
     packageSource === "catalog" && sortedPackages.length === 0;
 
   return (
-    <div className="mx-auto w-full space-y-5 pb-12 md:space-y-6 md:pb-8">
-      <header className="flex items-center gap-3 rounded-lg border-2 border-rn-border-strong bg-card px-3 py-3 shadow-rn-card sm:gap-4 sm:px-4 md:px-5">
-        <Link
-          href="/app/bookings"
-          aria-label="Tilbake til bookinger"
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "icon-sm" }),
-            "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
-          )}
-        >
-          <ArrowLeft className="size-5 text-success" aria-hidden />
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="app-title sm:text-app-2xl md:text-app-3xl">
-            Ny reservasjon
-          </h1>
-          <p className="mt-0.5 text-app-xs leading-snug text-muted-foreground sm:text-app-sm md:text-app-base md:leading-relaxed">
-            Registrer arrangement, kunde og økonomi — felles mønster som øvrige
-            sider.
-          </p>
-        </div>
-        <Link
-          href="/app/bookings"
-          aria-label="Lukk og gå til reservasjoner"
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "icon-sm" }),
-            "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
-          )}
-        >
-          <X className="size-5 text-rn-text-slate" aria-hidden />
-        </Link>
-      </header>
-
-      {existingCustomer ? (
-        <div
-          className="rounded-md border-2 border-success/35 bg-success/5 px-4 py-3 text-app-sm text-rn-text-body"
-          role="status"
-        >
-          Ny reservasjon for eksisterende kunde — navn, telefon og e-post kan ikke
-          endres her når de allerede er registrert. Mangler telefon eller
-          adresse, kan du fylle dem inn nedenfor; de lagres på kunden ved
-          booking.
-        </div>
-      ) : null}
-
+    <div className="mx-auto w-full pb-12 md:pb-8">
       <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+        <header className="flex items-center gap-3 border-b-2 border-rn-border-strong bg-card px-3 py-3 sm:gap-4 sm:px-4 md:px-5">
+          <Link
+            href="/app/bookings"
+            aria-label="Tilbake til bookinger"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "icon-sm" }),
+              "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
+            )}
+          >
+            <ArrowLeft className="size-5 text-success" aria-hidden />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="app-title sm:text-app-2xl md:text-app-3xl">
+              Ny reservasjon
+            </h1>
+            <p className="mt-0.5 text-app-xs leading-snug text-muted-foreground sm:text-app-sm md:text-app-base md:leading-relaxed">
+              Registrer arrangement, kunde og økonomi — felles mønster som øvrige
+              sider.
+            </p>
+          </div>
+          <Link
+            href="/app/bookings"
+            aria-label="Lukk og gå til reservasjoner"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "icon-sm" }),
+              "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
+            )}
+          >
+            <X className="size-5 text-rn-text-slate" aria-hidden />
+          </Link>
+        </header>
+
+        {existingCustomer ? (
+          <div
+            className="border-b-2 border-rn-border-strong bg-success/5 px-4 py-3 text-app-sm text-rn-text-body sm:px-6 md:px-8"
+            role="status"
+          >
+            Ny reservasjon for eksisterende kunde — navn, telefon og e-post kan ikke
+            endres her når de allerede er registrert. Mangler telefon eller
+            adresse, kan du fylle dem inn nedenfor; de lagres på kunden ved
+            booking.
+          </div>
+        ) : null}
+
         {/* RHF handleSubmit uses internal refs; keep handler passed as its callback. */}
         <form
           // eslint-disable-next-line react-hooks/refs -- react-hook-form integration
@@ -667,7 +667,7 @@ export function NewBookingForm({
           )}
           className="flex flex-col"
         >
-        <div className="border-b-2 border-rn-border-strong bg-rn-surface-wash px-6 py-4 md:px-8">
+        <div className="border-b-2 border-rn-border-strong/40 bg-card px-6 py-4 md:px-8">
           <div className="flex flex-col gap-4">
             <div className="min-w-0 flex-1 space-y-2">
               <Label className={labelClass}>Referansenummer</Label>
@@ -708,7 +708,7 @@ export function NewBookingForm({
             </div>
           </div>
         </div>
-        <div className="border-b-2 border-rn-border-strong bg-card p-6 md:p-8">
+        <div className="border-b-2 border-rn-border-strong/40 bg-card p-6 md:p-8">
           <div className="mb-6 flex items-center gap-2">
             <User className={cn("size-5", sectionIconWrap)} aria-hidden />
             <h3 className="app-card-title md:text-app-xl">
@@ -803,7 +803,7 @@ export function NewBookingForm({
           </div>
         </div>
 
-        <div className="border-b-2 border-rn-border-strong bg-rn-surface-wash p-6 md:p-8">
+        <div className="border-b-2 border-rn-border-strong/40 bg-card p-6 md:p-8">
           <div className="mb-6 flex items-center gap-2">
             <Calendar className={cn("size-5", sectionIconWrap)} aria-hidden />
             <h3 className="app-card-title md:text-app-xl">
@@ -1023,7 +1023,7 @@ export function NewBookingForm({
           </div>
         </div>
 
-        <div className="border-b-2 border-rn-border-strong p-6 md:p-8">
+        <div className="border-b-2 border-rn-border-strong/40 bg-card p-6 md:p-8">
           <div className="mb-6 flex items-center gap-2">
             <Package className={cn("size-5", sectionIconWrap)} aria-hidden />
             <h3 className="app-card-title md:text-app-xl">
@@ -1375,7 +1375,7 @@ export function NewBookingForm({
           </div>
         </div>
 
-        <div className="p-6 md:p-8">
+        <div className="bg-card p-6 md:p-8">
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-x-6 md:gap-y-5">
             <div className="space-y-2">
               <Label className={labelClass}>Betalt depositum (NOK)</Label>

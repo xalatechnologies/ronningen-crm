@@ -50,7 +50,9 @@ import {
   dayBeforeYmd,
   monthEndExclusiveYm,
   monthFirstDayYm,
+  ymAdd,
 } from "@/lib/overnatting-month";
+import { computeAccommodationQuickStats } from "@/lib/overnatting/quick-stats";
 import { RN_CARD_SHELL, RN_MODAL_FOOTER, RN_MODAL_MAX_HEIGHT, RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
 import {
   APP_TABLE_CELL_BODY,
@@ -64,7 +66,7 @@ import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale/nb";
-import { BedDouble, Building2, Calendar, Plus, RotateCcw, Search, Users } from "lucide-react";
+import { BedDouble, Building2, Calendar, Plus, RotateCcw, Search, Users, ArrowDownRight, ArrowUpRight, TrendingUp, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -114,6 +116,22 @@ function matchesAccommodationDateRange(
 
 const dialogSectionTitleClass =
   "text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground";
+
+function formatNok(n: number) {
+  return `${new Intl.NumberFormat("nb-NO").format(Math.round(n))} NOK`;
+}
+
+function formatNokCompact(n: number) {
+  const formatted = new Intl.NumberFormat("nb-NO").format(Math.round(n));
+  return (
+    <>
+      <span className="tracking-tight">{formatted}</span>{" "}
+      <span className="text-app-lg font-medium tracking-normal opacity-70 md:text-app-2xl">
+        NOK
+      </span>
+    </>
+  );
+}
 
 function ymNow(): string {
   const t = new Date();
@@ -263,8 +281,9 @@ export function OvernattingSection({
     const monthStart = monthFirstDayYm(monthYm);
     const endEx = monthEndExclusiveYm(monthYm);
     if (!monthStart || !endEx) return;
-    const beforeMonth = dayBeforeYmd(monthStart);
-    if (!beforeMonth) return;
+    const prevStart = monthFirstDayYm(ymAdd(monthYm, -1));
+    const beforeFetch = prevStart ? dayBeforeYmd(prevStart) : "";
+    if (!beforeFetch) return;
     setLoadingRes(true);
     const { data, error } = await supabase
       .from("accommodation_reservations")
@@ -273,7 +292,7 @@ export function OvernattingSection({
       )
       .eq("organization_id", orgId)
       .lt("check_in_date", endEx)
-      .gt("check_out_date", beforeMonth);
+      .gt("check_out_date", beforeFetch);
     setLoadingRes(false);
     if (error) {
       toast.error("Kunne ikke hente reservasjoner", {
@@ -540,6 +559,20 @@ export function OvernattingSection({
     setDateFrom("");
     setDateTo("");
   }
+
+  const activeUnitCount = useMemo(
+    () => sortedUnits.filter((u) => u.active).length,
+    [sortedUnits],
+  );
+
+  const quickStats = useMemo(
+    () =>
+      computeAccommodationQuickStats(reservations, activeUnitCount, monthYm),
+    [reservations, activeUnitCount, monthYm],
+  );
+
+  const trendPositive =
+    quickStats.monthOverMonthPct != null && quickStats.monthOverMonthPct >= 0;
 
   return (
     <div className="overnatting-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
@@ -1004,6 +1037,130 @@ export function OvernattingSection({
           </div>
         ) : null}
       </div>
+
+      {!loadError ? (
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-8">
+          <div className="flex min-w-0 flex-col justify-between rounded-md border-2 border-rn-accent-border bg-success p-7 text-white shadow-rn-hero-success md:p-9">
+            <div className="min-w-0">
+              <div className="mb-5 flex size-12 items-center justify-center rounded-md border border-white/20 bg-white/12 md:size-14">
+                <TrendingUp className="size-6 md:size-7" aria-hidden />
+              </div>
+              <h2 className="font-heading text-app-xl font-bold leading-snug text-white md:text-app-2xl">
+                Månedlig omsetning
+              </h2>
+              <p className="mt-3 text-app-sm leading-relaxed text-white/90 md:text-app-base">
+                Registrert på reservasjoner i{" "}
+                <span className="font-semibold text-white">
+                  {quickStats.monthLabel}
+                </span>
+                . Sammenlignes med {quickStats.prevMonthLabel}.
+              </p>
+            </div>
+            <div className="mt-10 min-w-0">
+              <div className="break-words text-app-3xl font-black leading-none tracking-tight md:text-app-3xl [&_span:last-child]:text-app-lg [&_span:last-child]:font-semibold [&_span:last-child]:opacity-85 md:[&_span:last-child]:text-app-2xl">
+                {formatNokCompact(quickStats.currentMonthRevenue)}
+              </div>
+              {quickStats.monthOverMonthPct != null ? (
+                <div
+                  className={cn(
+                    "mt-4 flex items-center gap-2 text-app-sm font-bold md:text-app-base",
+                    trendPositive ? "text-emerald-200" : "text-rose-200",
+                  )}
+                >
+                  {trendPositive ? (
+                    <ArrowUpRight className="size-4 shrink-0 md:size-5" aria-hidden />
+                  ) : (
+                    <ArrowDownRight className="size-4 shrink-0 md:size-5" aria-hidden />
+                  )}
+                  <span>
+                    {trendPositive ? "+" : ""}
+                    {quickStats.monthOverMonthPct
+                      .toFixed(1)
+                      .replace(".", ",")}
+                    % fra forrige måned
+                  </span>
+                </div>
+              ) : (
+                <p className="mt-4 text-app-sm font-medium text-white/75 md:text-app-base">
+                  Ingen sammenligning mot forrige måned (manglende grunnlag).
+                </p>
+              )}
+              <p className="mt-3 text-app-sm text-white/70">
+                Forrige måned: {formatNok(quickStats.prevMonthRevenue)}
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={cn(
+              "flex flex-col gap-8 md:col-span-2 md:flex-row md:gap-10",
+              RN_CARD_SHELL,
+              "p-7 md:p-9",
+            )}
+          >
+            <div className="min-w-0 flex-1">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
+                  <p className="mb-3 text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-app-sm">
+                    Beléggingsgrad
+                  </p>
+                  <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
+                    {quickStats.occupancyPct}%
+                  </p>
+                  <p className="mt-3 text-app-base leading-snug text-muted-foreground md:text-app-lg">
+                    Andel enhetsnetter som er reservert i måneden.
+                  </p>
+                </div>
+                <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
+                  <p className="mb-3 text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-app-sm">
+                    Snitt gjester
+                  </p>
+                  <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
+                    {quickStats.avgGuestsActive ?? "—"}
+                  </p>
+                  <p className="mt-3 text-app-base text-muted-foreground md:text-app-lg">
+                    Per reservasjon.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex w-full flex-col justify-between rounded-md border-2 border-success/50 bg-gradient-to-b from-rn-surface-gradient-from to-muted p-6 md:w-[38%] md:max-w-[340px] md:p-8">
+              <div>
+                <p className="text-app-xs font-semibold tracking-wider text-success uppercase dark:!text-white md:text-app-sm">
+                  {quickStats.monthLabel}
+                </p>
+                <p className="mt-3 dashboard-kpi-value text-success dark:!text-white md:text-app-3xl">
+                  {formatNok(quickStats.currentMonthRevenue)}
+                </p>
+              </div>
+              <div className="mt-8 space-y-3 border-t-2 border-success/20 pt-5">
+                <div className="flex justify-between text-app-base md:text-app-lg">
+                  <span className="font-medium text-rn-text-body">
+                    Forrige måned
+                  </span>
+                  <span className="font-bold tabular-nums text-rn-text-heading">
+                    {formatNok(quickStats.prevMonthRevenue)}
+                  </span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full border border-rn-border-strong/40 bg-muted">
+                  <div
+                    className="h-full rounded-full bg-success transition-[width]"
+                    style={{
+                      width: (() => {
+                        const { currentMonthRevenue: c, prevMonthRevenue: p } =
+                          quickStats;
+                        if (c + p === 0) return "0%";
+                        const max = Math.max(c, p, 1);
+                        return `${Math.min(100, Math.round((c / max) * 100))}%`;
+                      })(),
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <Dialog open={unitDialogOpen} onOpenChange={setUnitDialogOpen}>
         <DialogContent className="max-w-lg border-2 border-rn-border-strong" showCloseButton>

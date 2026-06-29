@@ -38,11 +38,29 @@ function FormSection({
   title,
   hint,
   children,
+  variant = "card",
 }: {
   title: string;
   hint?: string;
   children: ReactNode;
+  variant?: "card" | "flat";
 }) {
+  if (variant === "flat") {
+    return (
+      <section className="space-y-4 border-t-2 border-rn-border-strong/40 pt-6 first:border-t-0 first:pt-0">
+        <header className="space-y-1">
+          <h3 className="font-heading text-base font-bold tracking-tight text-rn-text-heading md:text-lg">
+            {title}
+          </h3>
+          {hint ? (
+            <p className="text-sm leading-relaxed text-muted-foreground">{hint}</p>
+          ) : null}
+        </header>
+        <div className="space-y-4 md:space-y-5">{children}</div>
+      </section>
+    );
+  }
+
   return (
     <section className="space-y-4 rounded-lg border-2 border-rn-border-strong/45 bg-card/70 p-4 shadow-sm sm:p-5">
       <header className="space-y-1">
@@ -393,20 +411,23 @@ export function InquiryFormBody({
 
   if (sectioned) {
     return (
-      <div className="flex flex-col gap-5 md:gap-6">
+      <div className="flex flex-col">
         <FormSection
+          variant="flat"
           title="Kunde"
           hint="Velg en kunde fra listen, eller la den stå tom og fyll inn kontaktdetaljer for en ny kunde."
         >
           {customerBlock}
         </FormSection>
         <FormSection
+          variant="flat"
           title="Henvendelse"
           hint="Dette er foreløpig informasjon — du justerer alt når du oppretter reservasjonen."
         >
           {inquiryBlock}
         </FormSection>
         <FormSection
+          variant="flat"
           title="Oppfølging"
           hint="Ny forespørsel er vanligvis «Ny». Bruk påminnelse for å huske neste kontakt."
         >

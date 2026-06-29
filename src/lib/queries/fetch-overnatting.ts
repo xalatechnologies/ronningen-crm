@@ -6,6 +6,7 @@ import {
   dayBeforeYmd,
   monthEndExclusiveYm,
   monthFirstDayYm,
+  ymAdd,
 } from "@/lib/overnatting-month";
 import type { TenantSupabaseClient } from "@/lib/queries/types";
 import { canManageBookings } from "@/lib/role-access";
@@ -79,11 +80,12 @@ export async function fetchOvernattingPageData(
 
   const monthStart = monthFirstDayYm(initialYm);
   const endEx = monthEndExclusiveYm(initialYm);
-  const beforeMonth = monthStart ? dayBeforeYmd(monthStart) : "";
+  const prevStart = monthFirstDayYm(ymAdd(initialYm, -1));
+  const beforeFetch = prevStart ? dayBeforeYmd(prevStart) : "";
 
   let rawRes: RawRes[] | null = null;
   let rErr: string | null = null;
-  if (monthStart && endEx && beforeMonth) {
+  if (monthStart && endEx && beforeFetch) {
     const q = await supabase
       .from("accommodation_reservations")
       .select(
@@ -91,7 +93,7 @@ export async function fetchOvernattingPageData(
       )
       .eq("organization_id", orgId)
       .lt("check_in_date", endEx)
-      .gt("check_out_date", beforeMonth);
+      .gt("check_out_date", beforeFetch);
     rawRes = q.data as RawRes[] | null;
     rErr = q.error?.message ?? null;
   }

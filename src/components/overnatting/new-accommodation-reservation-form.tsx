@@ -190,39 +190,39 @@ export function NewAccommodationReservationForm({
   const activeUnits = units.filter((u) => u.active);
 
   return (
-    <div className="mx-auto w-full space-y-5 pb-12 md:space-y-6 md:pb-8">
-      <header className="flex items-center gap-3 rounded-lg border-2 border-rn-border-strong bg-card px-3 py-3 shadow-rn-card sm:gap-4 sm:px-4 md:px-5">
-        <Link
-          href="/app/overnatting"
-          aria-label="Tilbake til overnatting"
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "icon-sm" }),
-            "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
-          )}
-        >
-          <ArrowLeft className="size-5 text-success" aria-hidden />
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="app-title sm:text-app-2xl md:text-app-3xl">
-            Ny reservasjon
-          </h1>
-          <p className="mt-0.5 text-app-xs leading-snug text-muted-foreground sm:text-app-sm md:text-app-base md:leading-relaxed">
-            Kobler kunde til enhet og oppholdsperiode under «Tidspunkt» lenger ned.
-          </p>
-        </div>
-        <Link
-          href="/app/overnatting"
-          aria-label="Lukk"
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "icon-sm" }),
-            "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
-          )}
-        >
-          <X className="size-5 text-rn-text-slate" aria-hidden />
-        </Link>
-      </header>
-
+    <div className="mx-auto w-full pb-12 md:pb-8">
       <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+        <header className="flex items-center gap-3 border-b-2 border-rn-border-strong bg-card px-3 py-3 sm:gap-4 sm:px-4 md:px-5">
+          <Link
+            href="/app/overnatting"
+            aria-label="Tilbake til overnatting"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "icon-sm" }),
+              "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
+            )}
+          >
+            <ArrowLeft className="size-5 text-success" aria-hidden />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="app-title sm:text-app-2xl md:text-app-3xl">
+              Ny reservasjon
+            </h1>
+            <p className="mt-0.5 text-app-xs leading-snug text-muted-foreground sm:text-app-sm md:text-app-base md:leading-relaxed">
+              Kobler kunde til enhet og oppholdsperiode under «Tidspunkt» lenger ned.
+            </p>
+          </div>
+          <Link
+            href="/app/overnatting"
+            aria-label="Lukk"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "icon-sm" }),
+              "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
+            )}
+          >
+            <X className="size-5 text-rn-text-slate" aria-hidden />
+          </Link>
+        </header>
+
         <form
           className="flex flex-col"
           onSubmit={(e) => {
@@ -230,11 +230,12 @@ export function NewAccommodationReservationForm({
             void form.handleSubmit(onSubmit)();
           }}
         >
-          <div className="flex flex-col gap-6 border-b-2 border-rn-border-strong bg-card px-6 py-6 sm:px-8 sm:py-7">
-            <div className="space-y-2">
-              <Label className={labelClass} htmlFor={`${rid}-unit`}>
-                Enhet
-              </Label>
+          <div className="flex flex-col bg-card px-6 py-6 sm:px-8 sm:py-7">
+            <section className="space-y-4">
+              <div className="space-y-2">
+                <Label className={labelClass} htmlFor={`${rid}-unit`}>
+                  Enhet
+                </Label>
               <FormSelectField
                 name="unitId"
                 control={form.control}
@@ -339,16 +340,17 @@ export function NewAccommodationReservationForm({
                 </div>
               </div>
             ) : null}
+            </section>
 
-            <div className="space-y-4 rounded-md border-2 border-rn-border-strong/45 bg-rn-surface-wash/25 p-4 sm:p-5">
-              <div className="space-y-1.5">
+            <section className="space-y-4 border-t-2 border-rn-border-strong/40 pt-6">
+              <header className="space-y-1.5">
                 <p className={labelClass}>Tidspunkt</p>
                 <p className="text-app-sm leading-snug text-muted-foreground">
                   Velg ankomst- og avreisedato. Du kan valgfritt legge inn klokkeslett for
                   innsjekk og utsjekk (vises i lister). Netter følger fortsatt datoene;
                   avreisedato er siste dag.
                 </p>
-              </div>
+              </header>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label className={labelClass} htmlFor={`${rid}-checkin`}>
@@ -433,8 +435,9 @@ export function NewAccommodationReservationForm({
                   ) : null}
                 </div>
               </div>
-            </div>
+            </section>
 
+            <section className="space-y-4 border-t-2 border-rn-border-strong/40 pt-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label className={labelClass} htmlFor={`${rid}-guests`}>
@@ -501,9 +504,10 @@ export function NewAccommodationReservationForm({
                 {...form.register("notes")}
               />
             </div>
+            </section>
           </div>
 
-          <div className="flex flex-col gap-3 bg-muted/35 px-6 py-4 sm:flex-row sm:justify-end sm:px-8">
+          <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-muted/35 px-6 py-4 sm:flex-row sm:justify-end sm:px-8">
             <Link
               href="/app/overnatting"
               className={cn(

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { BookingInquiryStatus } from "@/lib/validations";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { formatAppDateTime } from "@/lib/format-datetime";
 import type { ReactNode } from "react";
 import { useMemo, useRef, useState } from "react";
@@ -340,6 +340,14 @@ export function InquiriesFollowUpMonthCalendar({
     setCursor(new Date(year, monthIndex + 1, 1));
   }
 
+  function prevYear() {
+    setCursor(new Date(year - 1, monthIndex, 1));
+  }
+
+  function nextYear() {
+    setCursor(new Date(year + 1, monthIndex, 1));
+  }
+
   function goToday() {
     const d = new Date();
     setCursor(new Date(d.getFullYear(), d.getMonth(), 1));
@@ -453,6 +461,16 @@ export function InquiriesFollowUpMonthCalendar({
               variant="outline"
               size="icon-sm"
               className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
+              onClick={prevYear}
+              aria-label="Forrige år"
+            >
+              <ChevronsLeft className="size-[18px]" aria-hidden />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
               onClick={prevMonth}
               aria-label="Forrige måned"
             >
@@ -467,6 +485,16 @@ export function InquiriesFollowUpMonthCalendar({
               aria-label="Neste måned"
             >
               <ChevronRight className="size-[18px]" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
+              onClick={nextYear}
+              aria-label="Neste år"
+            >
+              <ChevronsRight className="size-[18px]" aria-hidden />
             </Button>
           </div>
         </div>
