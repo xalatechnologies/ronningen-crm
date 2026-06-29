@@ -115,11 +115,18 @@ function mergeRangeWithYmd(
   ymd: string,
 ): { from: string; to: string } {
   const y = transactionYmd(ymd);
-  let from = transactionYmd(range.from);
-  let to = transactionYmd(range.to);
+  if (!y) return range;
+
+  let from = range.from ? transactionYmd(range.from) : "";
+  let to = range.to ? transactionYmd(range.to) : "";
+
+  if (!from && !to) return { from: y, to: y };
+  if (!from) return { from: y, to };
+  if (!to) return { from, to: y };
+
   if (from > to) [from, to] = [to, from];
-  if (y && y < from) from = y;
-  if (y && y > to) to = y;
+  if (y < from) from = y;
+  if (y > to) to = y;
   return { from, to };
 }
 
@@ -582,7 +589,7 @@ export function FinanceSection({
 }: FinanceSectionProps) {
   const supabase = useSupabase();
   const { invalidateFinance } = useTenantDataInvalidation();
-  const [range, setRange] = useState(defaultMonthRange);
+  const [range, setRange] = useState({ from: "", to: "" });
   const [propertyId, setPropertyId] = useState("");
   const [page, setPage] = useState(1);
   const [addOpen, setAddOpen] = useState(false);
@@ -613,17 +620,22 @@ export function FinanceSection({
   }, []);
 
   const period = useMemo(() => {
-    if (range.from <= range.to) return { from: range.from, to: range.to };
-    return { from: range.to, to: range.from };
+    const from = range.from.trim();
+    const to = range.to.trim();
+    if (!from && !to) return { from: "", to: "" };
+    if (from && to) {
+      if (from <= to) return { from, to };
+      return { from: to, to: from };
+    }
+    return { from, to };
   }, [range.from, range.to]);
 
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
       if (propertyId && t.property_id !== propertyId) return false;
       const d = transactionYmd(t.transaction_date);
-      if (d < period.from || d > period.to) {
-        return false;
-      }
+      if (period.from && d < period.from) return false;
+      if (period.to && d > period.to) return false;
       return true;
     });
   }, [transactions, propertyId, period.from, period.to]);
@@ -640,6 +652,14 @@ export function FinanceSection({
   }, [filtered, page]);
 
   const comparison = useMemo(() => {
+    if (!period.from || !period.to) {
+      return {
+        prevIncome: 0,
+        prevExpense: 0,
+        dIncome: null,
+        dExpense: null,
+      };
+    }
     const { prevStart, prevEnd } = previousPeriodBounds(period.from, period.to);
     const prevRows = transactions.filter((t) => {
       if (propertyId && t.property_id !== propertyId) return false;
@@ -821,7 +841,7 @@ export function FinanceSection({
               </div>
             ) : null}
 
-            {range.from > range.to ? (
+            {range.from && range.to && range.from > range.to ? (
               <div className="mt-6 border-t border-rn-border-strong/50 pt-4">
                 <p className="finance-range-hint text-muted-foreground">
                   «Til dato» er før «fra dato» — vi viser likevel alle transaksjoner mellom

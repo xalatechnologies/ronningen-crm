@@ -247,7 +247,7 @@ function BookingsFiltersSection({
           </div>
         </div>
 
-        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 2xl:items-end">
+        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
           <div className="min-w-0">
             <Label htmlFor="bookings-date-from" className={filterEyebrowClass}>
               Fra dato
@@ -258,7 +258,7 @@ function BookingsFiltersSection({
               onChange={setDateFrom}
               maxYmd={dateTo || undefined}
               variant="toolbar"
-              className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+              className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
             />
           </div>
           <div className="min-w-0">
@@ -271,7 +271,7 @@ function BookingsFiltersSection({
               onChange={setDateTo}
               minYmd={dateFrom || undefined}
               variant="toolbar"
-              className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+              className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
             />
           </div>
           <div className="min-w-0">
@@ -283,7 +283,7 @@ function BookingsFiltersSection({
               value={paymentFilter}
               onValueChange={(v) => setPaymentFilter(v as BookingPaymentFilter)}
               aria-label="Filtrer etter betaling"
-              className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+              className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
               placeholder="Alle betalinger"
               options={[
                 { value: "unpaid", label: BOOKING_PAYMENT_STATUS_LABELS.unpaid },
@@ -294,14 +294,14 @@ function BookingsFiltersSection({
           </div>
           <div className="min-w-0">
             <Label htmlFor="bookings-audience-filter" className={filterEyebrowClass}>
-              Arrangementstype
+              Type
             </Label>
             <FormSelect
               id="bookings-audience-filter"
               value={audienceFilter}
               onValueChange={(v) => setAudienceFilter(v as BookingAudienceFilter)}
-              aria-label="Filtrer etter arrangementstype"
-              className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+              aria-label="Filtrer etter type"
+              className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
               placeholder="Alle typer"
               options={[
                 { value: "Privat", label: "Privat" },
@@ -309,12 +309,12 @@ function BookingsFiltersSection({
               ]}
             />
           </div>
-          <div className="flex min-w-0 sm:col-span-2 lg:col-span-1 2xl:col-span-1">
+          <div className="flex min-w-0 sm:col-span-2 lg:col-span-4 xl:col-span-1 xl:justify-end">
             <Button
               type="button"
               variant="outline"
               disabled={!hasActiveFilters}
-              className="h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold sm:h-12 sm:text-app-base"
+              className="h-11 w-full min-w-0 gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold sm:h-12 sm:text-app-base xl:w-auto xl:min-w-[11.5rem]"
               onClick={onResetFilters}
             >
               <RotateCcw className="size-4 shrink-0" aria-hidden />
