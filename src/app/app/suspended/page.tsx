@@ -1,22 +1,19 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { signOutToLogin } from "@/lib/auth/sign-out";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function SuspendedPage() {
   const { currentOrganization } = useCurrentOrganization();
   const supabase = useSupabase();
-  const router = useRouter();
 
   async function signOut() {
-    await supabase.auth.signOut();
-    router.push("/auth/login");
-    router.refresh();
+    await signOutToLogin(supabase);
   }
 
   const reason =

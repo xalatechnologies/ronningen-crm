@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/ui/form-select";
 import { BOOKING_PAYMENT_STATUS_LABELS } from "@/constants/booking-payment-status";
 import { cn } from "@/lib/utils";
+import { APP_LIST_ROW_DATE } from "@/lib/table-typography";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -47,7 +48,7 @@ import { computeBookingsQuickStats } from "@/lib/bookings/quick-stats";
 const bookingsTableHeadClass =
   "bookings-list-table-head font-semibold tracking-wider text-rn-text-column uppercase";
 
-const BOOKINGS_LIST_PAGE_SIZE = 6;
+import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
 const filterEyebrowClass =
   "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
@@ -584,14 +585,14 @@ export function BookingsList({
   const pagination = useMemo(() => {
     const totalPages = Math.max(
       1,
-      Math.ceil(filtered.length / BOOKINGS_LIST_PAGE_SIZE),
+      Math.ceil(filtered.length / TENANT_LIST_PAGE_SIZE),
     );
     const currentPage = Math.min(Math.max(1, page), totalPages);
-    const start = (currentPage - 1) * BOOKINGS_LIST_PAGE_SIZE;
+    const start = (currentPage - 1) * TENANT_LIST_PAGE_SIZE;
     return {
       totalPages,
       currentPage,
-      pageRows: filtered.slice(start, start + BOOKINGS_LIST_PAGE_SIZE),
+      pageRows: filtered.slice(start, start + TENANT_LIST_PAGE_SIZE),
     };
   }, [filtered, page]);
 
@@ -751,8 +752,8 @@ export function BookingsList({
                             </span>
                           </p>
                         ) : null}
-                        <div className="bookings-list-row-meta mt-1 flex flex-wrap items-center gap-2 text-muted-foreground">
-                          <span>{row.date}</span>
+                        <div className="bookings-list-row-meta mt-1 flex flex-wrap items-center gap-2">
+                          <span className={APP_LIST_ROW_DATE}>{row.date}</span>
                           <span
                             className="size-1 shrink-0 rounded-full bg-border"
                             aria-hidden
@@ -841,11 +842,11 @@ export function BookingsList({
                   ? "Ingen bookinger"
                   : filtered.length === 0
                     ? `Ingen rader samsvarer med filteret · ${bookings.length} ${bookings.length === 1 ? "booking" : "bookinger"} totalt`
-                    : filtered.length <= BOOKINGS_LIST_PAGE_SIZE
+                    : filtered.length <= TENANT_LIST_PAGE_SIZE
                       ? `Viser ${filtered.length} av ${bookings.length} bookinger`
-                      : `Viser ${(currentPage - 1) * BOOKINGS_LIST_PAGE_SIZE + 1}–${Math.min(currentPage * BOOKINGS_LIST_PAGE_SIZE, filtered.length)} av ${filtered.length}${filtered.length !== bookings.length ? ` treff (${bookings.length} totalt)` : " bookinger"}`}
+                      : `Viser ${(currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1}–${Math.min(currentPage * TENANT_LIST_PAGE_SIZE, filtered.length)} av ${filtered.length}${filtered.length !== bookings.length ? ` treff (${bookings.length} totalt)` : " bookinger"}`}
               </span>
-              {filtered.length > BOOKINGS_LIST_PAGE_SIZE ? (
+              {filtered.length > TENANT_LIST_PAGE_SIZE ? (
               <div className="flex items-center justify-center gap-2">
                 <Button
                   type="button"

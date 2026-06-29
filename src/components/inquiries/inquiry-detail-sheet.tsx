@@ -22,6 +22,7 @@ import {
   type BookingInquiryStatus,
 } from "@/lib/validations";
 import { formatAppDateTime } from "@/lib/format-datetime";
+import { RN_MODAL_FOOTER } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -441,12 +442,12 @@ export function InquiryDetailSheet({
             <div className="flex flex-col gap-6 px-6 py-6 sm:px-8 sm:py-7">
               {isConverted ? (
                 <div className="rounded-md border-2 border-success/35 bg-success/10 px-4 py-3 text-sm text-foreground">
-                  Denne forespørselen er konvertert til booking. Gå til{" "}
+                  Denne forespørselen er konvertert til reservasjon. Gå til{" "}
                   <Link
                     href="/app/bookings"
                     className="font-semibold text-success underline underline-offset-2"
                   >
-                    Bookinger
+                    Reservasjoner
                   </Link>{" "}
                   for å redigere oppdraget.
                 </div>
@@ -647,7 +648,12 @@ export function InquiryDetailSheet({
           </div>
 
           {!isConverted && canManage ? (
-            <div className="flex shrink-0 flex-col gap-3 border-t-2 border-rn-border-strong bg-muted/35 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-8 sm:py-4">
+            <div
+              className={cn(
+                RN_MODAL_FOOTER,
+                "flex shrink-0 flex-col gap-3 border-t-2 border-rn-border-strong bg-muted/35 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-8 sm:py-4",
+              )}
+            >
               <Button
                 type="button"
                 variant="destructive"
@@ -665,7 +671,7 @@ export function InquiryDetailSheet({
                     "inline-flex w-full justify-center sm:w-auto",
                   )}
                 >
-                  Opprett booking
+                  Konverter til reservasjon
                 </Link>
                 <Button
                   type="button"

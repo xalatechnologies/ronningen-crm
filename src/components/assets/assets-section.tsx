@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { APP_DATA_BODY, APP_DATA_PRIMARY } from "@/lib/table-typography";
 import {
   type AssetStatusBucket,
   assetInsuranceBucket,
@@ -913,7 +914,7 @@ export function AssetsSection({
                         <div className="flex size-11 shrink-0 items-center justify-center rounded-md border border-success/20 bg-rn-surface-gradient-from text-success md:size-12">
                           <Icon className="size-5 md:size-6" aria-hidden />
                         </div>
-                        <span className="assets-row-name text-success">
+                        <span className={cn("assets-row-name", APP_DATA_PRIMARY, "text-success")}>
                           {a.name}
                         </span>
                       </div>
@@ -921,6 +922,7 @@ export function AssetsSection({
                     <TableCell
                       className={cn(
                         assetsTableCellClass,
+                        APP_DATA_BODY,
                         "assets-row-meta",
                       )}
                     >
@@ -929,7 +931,8 @@ export function AssetsSection({
                     <TableCell
                       className={cn(
                         assetsTableCellClass,
-                        "assets-row-qty text-center",
+                        APP_DATA_BODY,
+                        "assets-row-qty text-center tabular-nums",
                       )}
                     >
                       {a.quantity}

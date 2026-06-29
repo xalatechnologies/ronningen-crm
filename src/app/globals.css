@@ -535,6 +535,11 @@
     line-height: 1.45;
   }
 
+  .app-data-row-date {
+    font-size: calc(15px * var(--app-read-type-scale));
+    line-height: 1.45;
+  }
+
   .inquiries-page-workspace .inquiries-list-row-meta {
     font-size: calc(14px * var(--app-read-type-scale));
     line-height: 1.45;

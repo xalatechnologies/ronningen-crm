@@ -428,10 +428,10 @@ export const newBookingFormFieldsSchema = z.object({
     .pipe(z.string().max(300, "Adresse kan ikke overstige 300 tegn")),
   festType: z
     .string()
-    .min(1, "Velg festtype")
+    .min(1, "Velg type")
     .pipe(
       z.enum(NEW_BOOKING_FEST_TYPE_VALUES, {
-        message: "Velg festtype",
+        message: "Velg type",
       }),
     ),
   festTypeCustom: z.string().max(120, "Maks 120 tegn").optional(),
@@ -633,7 +633,7 @@ export function createNewBookingFormSchema(
       if (!t) {
         ctx.addIssue({
           code: "custom",
-          message: "Beskriv festtypen",
+          message: "Beskriv typen",
           path: ["festTypeCustom"],
         });
       }

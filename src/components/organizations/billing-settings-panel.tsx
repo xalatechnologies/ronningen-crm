@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 
@@ -12,6 +12,11 @@ import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { createCheckoutSession } from "@/lib/billing/actions/create-checkout-session";
 import { createPortalSession } from "@/lib/billing/actions/create-portal-session";
 import { syncSubscriptionAfterCheckout } from "@/lib/billing/actions/sync-subscription-after-checkout";
+import {
+  clearBillingCheckoutParams,
+  markBillingActivatedForDashboard,
+  readBillingCheckoutParams,
+} from "@/lib/billing/billing-checkout-return";
 import {
   canManageStripeSubscription,
   needsStripeCheckout,
@@ -76,9 +81,10 @@ function SubscriptionStatusBadge({
   );
 }
 
-function BillingSettingsSkeleton() {
+function BillingSettingsSkeleton({ label = "Laster fakturering" }: { label?: string }) {
   return (
-    <div className="flex flex-col gap-6" aria-busy="true" aria-label="Laster fakturering">
+    <div className="flex flex-col gap-6" aria-busy="true" aria-label={label}>
+      <p className="text-app-sm font-medium text-muted-foreground">{label}…</p>
       <div className={cn(RN_CARD_SHELL, "h-28 animate-pulse bg-muted/20")} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,320px)]">
         <div className={cn(RN_CARD_SHELL, "h-64 animate-pulse bg-muted/20")} />
@@ -182,7 +188,6 @@ export function BillingSettingsPanel({
 }) {
   const router = useRouter();
   const supabase = useSupabase();
-  const searchParams = useSearchParams();
   const { currentOrganization, currentOrganizationId, loading, refreshOrganizations } =
     useCurrentOrganization();
   const [subscription, setSubscription] = useState<SubscriptionRow | null>(
@@ -208,15 +213,14 @@ export function BillingSettingsPanel({
   );
 
   useEffect(() => {
-    const checkout = searchParams.get("checkout");
-    const sessionId = searchParams.get("session_id");
+    const { checkout, sessionId } = readBillingCheckoutParams();
 
     if (checkout === "canceled") {
       if (!checkoutHandledRef.current) {
         checkoutHandledRef.current = true;
         toast.message("Betaling avbrutt. Fullfør for å få tilgang til appen.");
       }
-      router.replace("/app/settings/billing", { scroll: false });
+      clearBillingCheckoutParams();
       return;
     }
 
@@ -236,17 +240,16 @@ export function BillingSettingsPanel({
       if (cancelled) return;
 
       if (result.ok) {
-        toast.success("Abonnement aktivert. Velkommen!");
-        await refreshOrganizations();
-        await reloadSubscription(currentOrganizationId);
-        router.refresh();
-        router.replace("/app/settings/billing", { scroll: false });
-      } else {
-        toast.error(
-          "Betalingen er registrert, men vi kunne ikke oppdatere abonnementet ennå. Prøv «Oppdater status» eller vent et øyeblikk.",
-        );
-        checkoutHandledRef.current = false;
+        markBillingActivatedForDashboard();
+        window.location.assign("/app/dashboard");
+        return;
       }
+
+      toast.error(
+        "Betalingen er registrert, men vi kunne ikke oppdatere abonnementet ennå. Prøv «Oppdater status» eller vent et øyeblikk.",
+      );
+      checkoutHandledRef.current = false;
+      clearBillingCheckoutParams();
 
       if (!cancelled) setCheckoutSyncing(false);
     })();
@@ -254,13 +257,7 @@ export function BillingSettingsPanel({
     return () => {
       cancelled = true;
     };
-  }, [
-    searchParams,
-    currentOrganizationId,
-    refreshOrganizations,
-    reloadSubscription,
-    router,
-  ]);
+  }, [currentOrganizationId]);
 
   useEffect(() => {
     if (!supabase || !currentOrganizationId) {
@@ -303,7 +300,7 @@ export function BillingSettingsPanel({
   async function handleRefreshStatus() {
     if (!currentOrganizationId) return;
     setActionLoading(true);
-    const sessionId = searchParams.get("session_id");
+    const { sessionId } = readBillingCheckoutParams();
     const result = await syncSubscriptionAfterCheckout(
       currentOrganizationId,
       sessionId,
@@ -318,6 +315,7 @@ export function BillingSettingsPanel({
     toast.success("Abonnement oppdatert.");
     await refreshOrganizations();
     await reloadSubscription(currentOrganizationId);
+    clearBillingCheckoutParams();
     router.refresh();
   }
 
@@ -350,7 +348,11 @@ export function BillingSettingsPanel({
   }
 
   if (subLoading || checkoutSyncing || (loading && !currentOrganization)) {
-    return <BillingSettingsSkeleton />;
+    return (
+      <BillingSettingsSkeleton
+        label={checkoutSyncing ? "Aktiverer abonnement" : "Laster fakturering"}
+      />
+    );
   }
 
   if (!currentOrganization) {

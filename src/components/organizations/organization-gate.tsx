@@ -19,6 +19,19 @@ import {
   toTenantAccessInput,
 } from "@/lib/subscriptions/subscription-utils";
 
+function GateLoadingState({ label = "Laster …" }: { label?: string }) {
+  return (
+    <div
+      className="flex min-h-svh flex-col items-center justify-center gap-4 bg-background px-4 py-16 text-foreground"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="size-10 animate-spin rounded-full border-4 border-muted border-t-success" />
+      <p className="text-base font-medium text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
 export function OrganizationGate({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -31,7 +44,8 @@ export function OrganizationGate({ children }: { children: ReactNode }) {
 
   const loading = authLoading || orgLoading;
   const hasOrganizations = organizations.length > 0;
-  const showInitialLoader = loading && !hasOrganizations;
+  const showGateLoader =
+    authLoading || !isAuthenticated || (orgLoading && !hasOrganizations);
   const onOnboarding = pathname === TENANT_ONBOARDING_PATH;
   const suspendedBlocked =
     currentOrganization && isSuspendedAccess(currentOrganization);
@@ -74,17 +88,8 @@ export function OrganizationGate({ children }: { children: ReactNode }) {
     suspendedBlocked,
   ]);
 
-  if (showInitialLoader) {
-    return (
-      <div
-        className="flex min-h-svh flex-col items-center justify-center gap-4 bg-background px-4 py-16 text-foreground"
-        role="status"
-        aria-live="polite"
-      >
-        <div className="size-10 animate-spin rounded-full border-4 border-muted border-t-success" />
-        <p className="text-base font-medium text-muted-foreground">Laster …</p>
-      </div>
-    );
+  if (showGateLoader) {
+    return <GateLoadingState />;
   }
 
   if (!hasOrganizations && !onOnboarding) {

@@ -3,6 +3,7 @@
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { APP_DATA_AMOUNT, APP_DATA_PRIMARY } from "@/lib/table-typography";
 import {
   Dialog,
   DialogContent,
@@ -651,7 +652,7 @@ export function PricingSection({
                         <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-success/20 bg-rn-surface-gradient-from text-success md:size-12">
                           <Icon className="size-5 md:size-7" aria-hidden />
                         </div>
-                        <span className="pricing-service-name font-heading font-semibold text-success">
+                        <span className={cn("pricing-service-name", APP_DATA_PRIMARY, "text-success")}>
                           {svc.name}
                         </span>
                       </div>
@@ -662,7 +663,7 @@ export function PricingSection({
                         "whitespace-normal",
                       )}
                     >
-                      <span className="pricing-service-price text-app-base tabular-nums">
+                      <span className={cn("pricing-service-price text-app-base", APP_DATA_AMOUNT)}>
                         {formatNok(svc.price)}
                       </span>
                       {svc.description?.trim() ? (

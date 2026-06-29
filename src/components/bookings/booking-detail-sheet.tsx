@@ -4,6 +4,7 @@ import type {
   BookingListRow,
   BookingStatus,
 } from "@/components/bookings/types";
+import { RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
@@ -348,11 +349,11 @@ export function BookingDetailSheet({
         side="right"
         showCloseButton={false}
         className={cn(
-          "flex h-full w-full max-w-[min(100vw,72rem)] flex-col gap-0 border-l-2 border-rn-border-strong bg-card p-0 sm:max-w-6xl",
+          "flex h-dvh min-h-0 w-full max-w-[min(100vw,72rem)] flex-col gap-0 overflow-hidden border-l-2 border-rn-border-strong bg-card p-0 sm:max-w-6xl",
           "shadow-rn-card",
         )}
       >
-        <SheetHeader className="flex flex-row items-center justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head px-6 py-5 sm:px-8 sm:py-6">
+        <SheetHeader className="flex shrink-0 flex-row items-center justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head px-6 py-5 sm:px-8 sm:py-6">
           <SheetTitle className="app-section-title min-w-0 flex-1 text-left tracking-tight">
             Rediger booking
           </SheetTitle>
@@ -373,10 +374,10 @@ export function BookingDetailSheet({
         </SheetHeader>
 
         <form
-          className="flex flex-1 flex-col overflow-hidden"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
           onSubmit={handleSubmit(onSave)}
         >
-          <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6 sm:p-8">
+          <div className={cn(RN_MODAL_SCROLL_BODY, "flex flex-col gap-6 p-6 sm:p-8")}>
             <div aria-label="Bookingstatus">
               <BookingStatusBadge status={bookingRow.status} />
             </div>
@@ -479,7 +480,7 @@ export function BookingDetailSheet({
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="bde-fest" className={labelClass}>
-                    Type fest
+                    Type
                   </Label>
                   <Input
                     id="bde-fest"
@@ -847,7 +848,7 @@ export function BookingDetailSheet({
             </section>
           </div>
 
-          <SheetFooter className="mt-0 flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer/50 p-6 sm:flex-row sm:flex-wrap sm:justify-stretch">
+          <SheetFooter className="mt-0 max-h-none flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer/50 p-6 sm:max-h-none sm:flex-row sm:flex-wrap sm:justify-stretch">
             <Button
               type="submit"
               variant="success"

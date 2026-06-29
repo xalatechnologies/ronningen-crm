@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { MenuIcon, ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { signOutToLogin } from "@/lib/auth/sign-out";
 import { useMemo, useState, type ReactNode } from "react";
 
 function initialsFromUser(email: string | undefined, metaName: unknown): string {
@@ -86,7 +86,6 @@ export function AppHeader({ children }: { children?: ReactNode }) {
   const { user, loading } = useAuthUser();
   const { isPlatformAdmin } = usePlatformAdmin();
   const supabase = useSupabase();
-  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const initials = useMemo(
@@ -97,9 +96,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
   const avatarUrl = useMemo(() => avatarUrlFromUser(user), [user]);
 
   async function signOut() {
-    await supabase.auth.signOut();
-    router.push("/auth/login");
-    router.refresh();
+    await signOutToLogin(supabase);
   }
 
   return (

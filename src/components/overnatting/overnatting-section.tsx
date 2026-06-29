@@ -51,7 +51,12 @@ import {
   monthEndExclusiveYm,
   monthFirstDayYm,
 } from "@/lib/overnatting-month";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { RN_CARD_SHELL, RN_MODAL_FOOTER, RN_MODAL_MAX_HEIGHT, RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
+import {
+  APP_TABLE_CELL_BODY,
+  APP_TABLE_CELL_DATE,
+  APP_TABLE_CELL_PRIMARY,
+} from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
@@ -964,16 +969,18 @@ export function OvernattingSection({
                   ) : (
                     filteredReservations.map((r) => (
                       <TableRow key={r.id}>
-                        <TableCell className="font-medium">{r.customerName}</TableCell>
-                        <TableCell>{r.unitName}</TableCell>
-                        <TableCell className="tabular-nums">
+                        <TableCell className={APP_TABLE_CELL_PRIMARY}>{r.customerName}</TableCell>
+                        <TableCell className={APP_TABLE_CELL_BODY}>{r.unitName}</TableCell>
+                        <TableCell className={APP_TABLE_CELL_DATE}>
                           {formatAppDateFromParts(r.checkInDate, r.checkInTime)}
                         </TableCell>
-                        <TableCell className="tabular-nums">
+                        <TableCell className={APP_TABLE_CELL_DATE}>
                           {formatAppDateFromParts(r.checkOutDate, r.checkOutTime)}
                         </TableCell>
-                        <TableCell>{r.guestCount}</TableCell>
-                        <TableCell>
+                        <TableCell className={cn(APP_TABLE_CELL_BODY, "tabular-nums")}>
+                          {r.guestCount}
+                        </TableCell>
+                        <TableCell className={APP_TABLE_CELL_BODY}>
                           {ACCOMMODATION_RESERVATION_LABELS[r.status]}
                         </TableCell>
                         {canManage ? (
@@ -1108,23 +1115,27 @@ export function OvernattingSection({
 
       <Dialog open={editResOpen} onOpenChange={setEditResOpen}>
         <DialogContent
-          className="max-w-lg gap-0 border-2 border-rn-border-strong p-0 sm:max-w-xl"
+          className={cn(
+            "max-w-lg gap-0 overflow-hidden border-2 border-rn-border-strong p-0 sm:max-w-xl",
+            RN_MODAL_MAX_HEIGHT,
+            "flex flex-col",
+          )}
           showCloseButton
         >
-          <DialogHeader className="border-b border-rn-border-strong/50 px-6 pb-4 pt-6 sm:px-8">
+          <DialogHeader className="shrink-0 border-b border-rn-border-strong/50 px-6 pb-4 pt-6 sm:px-8">
             <DialogTitle className="font-heading text-app-lg md:text-app-xl">
               Rediger reservasjon
             </DialogTitle>
           </DialogHeader>
           {editingRes ? (
             <form
-              className="flex flex-col"
+              className="flex min-h-0 flex-1 flex-col"
               onSubmit={(e) => {
                 e.preventDefault();
                 void editResForm.handleSubmit(onSaveEditRes)();
               }}
             >
-              <div className="space-y-5 px-6 py-5 sm:px-8">
+              <div className={cn(RN_MODAL_SCROLL_BODY, "space-y-5 px-6 py-5 sm:px-8")}>
                 <div className="rounded-md border border-rn-border-strong/45 bg-muted/25 px-3.5 py-3">
                   <p className={dialogSectionTitleClass}>Kunde</p>
                   <p className="mt-1 font-heading text-app-base font-semibold text-rn-text-heading">
@@ -1322,7 +1333,12 @@ export function OvernattingSection({
                 </div>
               </div>
 
-              <DialogFooter className="mx-0 mb-0 mt-0 rounded-b-[length:var(--app-radius)] border-t border-rn-border-strong/50 bg-muted/25 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-8 sm:py-4 flex flex-col gap-3">
+              <DialogFooter
+                className={cn(
+                  RN_MODAL_FOOTER,
+                  "mx-0 mb-0 mt-0 flex flex-col gap-3 rounded-b-[length:var(--app-radius)] border-t border-rn-border-strong/50 bg-muted/25 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-8 sm:py-4",
+                )}
+              >
                 <Button
                   type="button"
                   variant="destructive"

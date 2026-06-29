@@ -22,6 +22,7 @@ import { CustomersPageTabBar } from "@/components/customers/customers-page-tab-b
 import { customersPageTabLabel } from "@/components/customers/tabs";
 import { useCustomersPageTab } from "@/components/customers/use-customers-page-tab";
 import { RN_CARD_SHELL, RN_PAGE_SEARCH_ACTIONS } from "@/lib/rn-ui";
+import { APP_DATA_AMOUNT, APP_DATA_BODY, APP_DATA_PRIMARY } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import { deleteCustomerWithClient } from "@/lib/customers/delete-customer";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
@@ -42,7 +43,7 @@ import type {
   PartnerRow,
 } from "./types";
 
-const CUSTOMERS_PAGE_SIZE = 10;
+import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
 const customersTableHeadClass =
   "customers-table-head whitespace-nowrap px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
@@ -116,14 +117,14 @@ export function CustomersSection({
   const pagination = useMemo(() => {
     const totalPages = Math.max(
       1,
-      Math.ceil(filtered.length / CUSTOMERS_PAGE_SIZE),
+      Math.ceil(filtered.length / TENANT_LIST_PAGE_SIZE),
     );
     const currentPage = Math.min(Math.max(1, customersPage), totalPages);
-    const start = (currentPage - 1) * CUSTOMERS_PAGE_SIZE;
+    const start = (currentPage - 1) * TENANT_LIST_PAGE_SIZE;
     return {
       totalPages,
       currentPage,
-      pageRows: filtered.slice(start, start + CUSTOMERS_PAGE_SIZE),
+      pageRows: filtered.slice(start, start + TENANT_LIST_PAGE_SIZE),
     };
   }, [filtered, customersPage]);
 
@@ -348,30 +349,31 @@ export function CustomersSection({
                           <td className="px-6 py-5 md:px-8 md:py-6">
                             <span
                               className={cn(
-                                "customers-row-name font-heading font-semibold",
-                                isActive ? "text-success" : "text-foreground",
+                                "customers-row-name",
+                                APP_DATA_PRIMARY,
+                                isActive ? "text-success" : "",
                               )}
                             >
                               {c.name}
                             </span>
                           </td>
-                          <td className="customers-row-meta px-6 py-5 md:px-8 md:py-6">
+                          <td className={cn("customers-row-meta px-6 py-5 md:px-8 md:py-6", APP_DATA_BODY)}>
                             {c.phone ?? "—"}
                           </td>
-                          <td className="customers-row-meta px-6 py-5 md:px-8 md:py-6">
+                          <td className={cn("customers-row-meta px-6 py-5 md:px-8 md:py-6", APP_DATA_BODY)}>
                             {c.email ?? "—"}
                           </td>
                           <td className="px-6 py-5 md:px-8 md:py-6">
                             <span
                               className={cn(
-                                "customers-booking-count-pill inline-flex items-center tabular-nums",
+                                "customers-booking-count-pill inline-flex items-center font-semibold tabular-nums",
                                 st.count > 0 ? "text-success" : "text-rn-text-body",
                               )}
                             >
                               {st.count}
                             </span>
                           </td>
-                          <td className="customers-row-metric px-6 py-5 font-bold tabular-nums text-success md:px-8 md:py-6">
+                          <td className={cn("customers-row-metric px-6 py-5 md:px-8 md:py-6", APP_DATA_AMOUNT, "font-bold text-success")}>
                             {formatNok(st.spent)}
                           </td>
                           <td className="px-6 py-5 text-right md:px-8 md:py-6">
@@ -392,17 +394,14 @@ export function CustomersSection({
                 {filtered.length > 0 ? (
                   <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
                     <span>
-                      Viser{" "}
-                      {pageRows.length
-                        ? (currentPage - 1) * CUSTOMERS_PAGE_SIZE + 1
-                        : 0}
-                      –
-                      {Math.min(
-                        currentPage * CUSTOMERS_PAGE_SIZE,
-                        filtered.length,
-                      )}{" "}
-                      av {filtered.length}
+                      {filtered.length <= TENANT_LIST_PAGE_SIZE
+                        ? `Viser ${filtered.length} ${filtered.length === 1 ? "kunde" : "kunder"}`
+                        : `Viser ${(currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1}–${Math.min(
+                            currentPage * TENANT_LIST_PAGE_SIZE,
+                            filtered.length,
+                          )} av ${filtered.length}`}
                     </span>
+                    {filtered.length > TENANT_LIST_PAGE_SIZE ? (
                     <div className="flex flex-wrap items-center gap-2">
                       <Button
                         type="button"
@@ -434,6 +433,7 @@ export function CustomersSection({
                         <ChevronRight className="size-5" aria-hidden />
                       </Button>
                     </div>
+                    ) : null}
                   </div>
                 ) : null}
               </>

@@ -65,3 +65,15 @@ export const RN_NATIVE_SELECT_CHEVRON_CLASS =
  */
 export const RN_SELECT_TRIGGER_FIELD_CLASS =
   "box-border flex min-h-12 w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-4 py-2 text-app-control font-medium shadow-sm outline-none transition-[color,box-shadow] select-none focus-visible:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background data-popup-open:border-rn-accent-border disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 data-placeholder:text-muted-foreground";
+
+/** Modal/sheet max height — respects mobile safe areas and dynamic viewport. */
+export const RN_MODAL_MAX_HEIGHT =
+  "max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))]";
+
+/** Scrollable body inside a flex modal shell (header + footer stay visible). */
+export const RN_MODAL_SCROLL_BODY =
+  "min-h-0 flex-1 overflow-y-auto overscroll-contain";
+
+/** Pinned modal/sheet footer — safe-area padding on notched devices. */
+export const RN_MODAL_FOOTER =
+  "shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))]";

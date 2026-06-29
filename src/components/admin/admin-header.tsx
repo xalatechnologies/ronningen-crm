@@ -13,11 +13,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { signOutToLogin } from "@/lib/auth/sign-out";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 function initialsFromUser(email: string | undefined, metaName: unknown): string {
@@ -75,7 +75,6 @@ function HeaderAvatarOrInitials({
 export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: number }) {
   const { user, loading } = useAuthUser();
   const supabase = useSupabase();
-  const router = useRouter();
 
   const initials = useMemo(
     () => initialsFromUser(user?.email, user?.user_metadata?.full_name),
@@ -91,9 +90,7 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
   }, [user]);
 
   async function signOut() {
-    await supabase.auth.signOut();
-    router.push("/auth/login");
-    router.refresh();
+    await signOutToLogin(supabase);
   }
 
   return (

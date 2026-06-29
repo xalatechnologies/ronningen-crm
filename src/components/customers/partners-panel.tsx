@@ -38,7 +38,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm, Controller, type Resolver, type UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 
-const PARTNERS_PAGE_SIZE = 10;
+import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
 const partnersTableHeadClass =
   "customers-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
@@ -224,14 +224,14 @@ export function PartnersPanel({
   const pagination = useMemo(() => {
     const totalPages = Math.max(
       1,
-      Math.ceil(filtered.length / PARTNERS_PAGE_SIZE),
+      Math.ceil(filtered.length / TENANT_LIST_PAGE_SIZE),
     );
     const currentPage = Math.min(Math.max(1, partnersPage), totalPages);
-    const start = (currentPage - 1) * PARTNERS_PAGE_SIZE;
+    const start = (currentPage - 1) * TENANT_LIST_PAGE_SIZE;
     return {
       totalPages,
       currentPage,
-      pageRows: filtered.slice(start, start + PARTNERS_PAGE_SIZE),
+      pageRows: filtered.slice(start, start + TENANT_LIST_PAGE_SIZE),
     };
   }, [filtered, partnersPage]);
 
@@ -447,17 +447,14 @@ export function PartnersPanel({
             {filtered.length > 0 ? (
               <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
                 <span>
-                  Viser{" "}
-                  {pageRows.length
-                    ? (currentPage - 1) * PARTNERS_PAGE_SIZE + 1
-                    : 0}
-                  –
-                  {Math.min(
-                    currentPage * PARTNERS_PAGE_SIZE,
-                    filtered.length,
-                  )}{" "}
-                  av {filtered.length}
+                  {filtered.length <= TENANT_LIST_PAGE_SIZE
+                    ? `Viser ${filtered.length} ${filtered.length === 1 ? "partner" : "partnere"}`
+                    : `Viser ${(currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1}–${Math.min(
+                        currentPage * TENANT_LIST_PAGE_SIZE,
+                        filtered.length,
+                      )} av ${filtered.length}`}
                 </span>
+                {filtered.length > TENANT_LIST_PAGE_SIZE ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <Button
                     type="button"
@@ -487,6 +484,7 @@ export function PartnersPanel({
                     <ChevronRight className="size-5" aria-hidden />
                   </Button>
                 </div>
+                ) : null}
               </div>
             ) : null}
           </>

@@ -221,13 +221,13 @@ export function InquiryFormBody({
         </div>
         <div className="space-y-2">
           <Label className={labelClass} htmlFor={`${rid}-fest`}>
-            Festtype (valgfritt)
+            Type (valgfritt)
           </Label>
           <Input
             id={`${rid}-fest`}
             disabled={disabled}
             className={fieldClass}
-            placeholder="F.eks. bryllup, konfirmasjon …"
+            placeholder="F.eks. bryllup, konferanse, jubileum …"
             {...register("festType")}
           />
         </div>
@@ -402,7 +402,7 @@ export function InquiryFormBody({
         </FormSection>
         <FormSection
           title="Henvendelse"
-          hint="Dette er foreløpig informasjon — du justerer alt når du oppretter selve bookingen."
+          hint="Dette er foreløpig informasjon — du justerer alt når du oppretter reservasjonen."
         >
           {inquiryBlock}
         </FormSection>

@@ -19,6 +19,10 @@ import { notifyTeamMemberAdded } from "@/lib/notifications/actions/org-events";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
+  APP_TABLE_CELL_DATE,
+  APP_TABLE_CELL_PRIMARY,
+} from "@/lib/table-typography";
+import {
   teamMemberAddSchema,
   type TeamMemberAddInput,
 } from "@/lib/validations";
@@ -297,10 +301,10 @@ export function TeamMembersSection({
           <TableBody>
             {members.map((m) => (
               <TableRow key={m.id}>
-                <TableCell className="font-medium">
+                <TableCell className={APP_TABLE_CELL_PRIMARY}>
                   {m.fullName?.trim() || "—"}
                 </TableCell>
-                <TableCell>{m.email ?? "—"}</TableCell>
+                <TableCell className="font-medium">{m.email ?? "—"}</TableCell>
                 <TableCell>
                   {m.role === "owner" ? (
                     <span className="font-medium">
@@ -316,7 +320,7 @@ export function TeamMembersSection({
                     />
                   )}
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className={APP_TABLE_CELL_DATE}>
                   {format(new Date(m.createdAtIso), "d. MMM yyyy", {
                     locale: nb,
                   })}

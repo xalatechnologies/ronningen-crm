@@ -42,6 +42,6 @@ export const INQUIRY_STATUS_LABELS: Record<BookingInquiryStatus, string> = {
   contacted: "Kontaktet",
   quote_sent: "Tilbud sendt",
   awaiting_customer: "Venter på svar",
-  converted: "Konvertert til booking",
+  converted: "Konvertert til reservasjon",
   lost: "Tapt",
 };

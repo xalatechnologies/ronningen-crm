@@ -36,6 +36,12 @@ import { formatAppDateTime } from "@/lib/format-datetime";
 import { formatBookingListDateLabel } from "@/lib/booking-period";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
+  APP_TABLE_CELL_BODY,
+  APP_TABLE_CELL_DATE,
+  APP_TABLE_CELL_PRIMARY,
+  APP_TABLE_HEAD,
+} from "@/lib/table-typography";
+import {
   type BookingInquiryStatus,
 } from "@/lib/validations";
 import { cn } from "@/lib/utils";
@@ -44,26 +50,23 @@ import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Inbox, ListFilter, Pl
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-const INQUIRIES_LIST_PAGE_SIZE = 6;
+import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
-const inquiriesTableHeadClass =
-  "bookings-list-table-head py-4 font-semibold tracking-wider text-rn-text-column uppercase sm:py-5";
-
-const inquiriesTableCellClass = "px-6 py-5 sm:px-8 sm:py-6";
+const inquiriesTableHeadClass = cn("bookings-list-table-head", APP_TABLE_HEAD);
 
 const inquiriesTableCellPrimaryClass = cn(
-  inquiriesTableCellClass,
-  "inquiries-list-row-title font-heading font-semibold text-foreground",
+  APP_TABLE_CELL_PRIMARY,
+  "inquiries-list-row-title",
 );
 
 const inquiriesTableCellBodyClass = cn(
-  inquiriesTableCellClass,
-  "inquiries-list-row-cell text-foreground",
+  APP_TABLE_CELL_BODY,
+  "inquiries-list-row-cell",
 );
 
-const inquiriesTableCellMetaClass = cn(
-  inquiriesTableCellClass,
-  "inquiries-list-row-meta text-muted-foreground",
+const inquiriesTableCellDateClass = cn(
+  APP_TABLE_CELL_DATE,
+  "inquiries-list-row-meta",
 );
 
 function formatInquiryPreferredDate(row: InquiryListRow): string {
@@ -225,14 +228,14 @@ export function InquiriesSection({
   const pagination = useMemo(() => {
     const totalPages = Math.max(
       1,
-      Math.ceil(filtered.length / INQUIRIES_LIST_PAGE_SIZE),
+      Math.ceil(filtered.length / TENANT_LIST_PAGE_SIZE),
     );
     const currentPage = Math.min(Math.max(1, page), totalPages);
-    const start = (currentPage - 1) * INQUIRIES_LIST_PAGE_SIZE;
+    const start = (currentPage - 1) * TENANT_LIST_PAGE_SIZE;
     return {
       totalPages,
       currentPage,
-      pageRows: filtered.slice(start, start + INQUIRIES_LIST_PAGE_SIZE),
+      pageRows: filtered.slice(start, start + TENANT_LIST_PAGE_SIZE),
     };
   }, [filtered, page]);
 
@@ -504,7 +507,7 @@ export function InquiriesSection({
                     <TableCell className={inquiriesTableCellBodyClass}>
                       {row.propertyName ?? "—"}
                     </TableCell>
-                    <TableCell className={inquiriesTableCellMetaClass}>
+                    <TableCell className={inquiriesTableCellDateClass}>
                       {formatInquiryPreferredDate(row)}
                     </TableCell>
                     <TableCell className={inquiriesTableCellBodyClass}>
@@ -517,13 +520,13 @@ export function InquiriesSection({
                         {INQUIRY_STATUS_LABELS[row.status]}
                       </span>
                     </TableCell>
-                    <TableCell className={inquiriesTableCellMetaClass}>
+                    <TableCell className={inquiriesTableCellDateClass}>
                       {row.nextFollowUpAtIso
                         ? formatAppDateTime(row.nextFollowUpAtIso)
                         : "—"}
                     </TableCell>
                     <TableCell
-                      className={cn(inquiriesTableCellMetaClass, "text-right")}
+                      className={cn(inquiriesTableCellDateClass, "text-right")}
                     >
                       <span className="inline-flex w-full items-center justify-end gap-2">
                         <span>
@@ -539,12 +542,12 @@ export function InquiriesSection({
                 ))}
               </TableBody>
             </Table>
-            {filtered.length > INQUIRIES_LIST_PAGE_SIZE ? (
+            {filtered.length > TENANT_LIST_PAGE_SIZE ? (
               <div className="flex flex-col items-stretch justify-between gap-4 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
                 <span className="text-app-sm font-medium text-rn-footer-text md:text-app-base">
-                  Viser {(currentPage - 1) * INQUIRIES_LIST_PAGE_SIZE + 1}–
+                  Viser {(currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1}–
                   {Math.min(
-                    currentPage * INQUIRIES_LIST_PAGE_SIZE,
+                    currentPage * TENANT_LIST_PAGE_SIZE,
                     filtered.length,
                   )}{" "}
                   av {filtered.length}

@@ -28,7 +28,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RN_SEGMENT_CONTROL } from "@/lib/rn-ui";
+import { RN_SEGMENT_CONTROL, RN_MODAL_FOOTER, RN_MODAL_MAX_HEIGHT, RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
+import { APP_DATA_BODY, APP_DATA_DATE, APP_DATA_PRIMARY } from "@/lib/table-typography";
 import {
   transactionFormSchema,
   type TransactionFormInput,
@@ -344,8 +345,8 @@ function TransactionFormInner({
   }
 
   return (
-    <>
-      <div className="border-b border-rn-border-strong/50 px-5 pb-4 pt-5 pr-12 sm:px-8 sm:pt-6 sm:pb-5 sm:pr-14">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="shrink-0 border-b border-rn-border-strong/50 px-5 pb-4 pt-5 pr-12 sm:px-8 sm:pt-6 sm:pb-5 sm:pr-14">
         <DialogHeader className="gap-2 text-left">
           <DialogTitle className="font-heading text-2xl font-bold tracking-tight text-rn-text-heading">
             {isEdit ? "Rediger transaksjon" : "Ny transaksjon"}
@@ -360,9 +361,9 @@ function TransactionFormInner({
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col"
+        className="flex min-h-0 flex-1 flex-col"
       >
-        <div className="space-y-6 px-5 py-6 sm:space-y-7 sm:px-8 sm:py-7">
+        <div className={cn(RN_MODAL_SCROLL_BODY, "space-y-6 px-5 py-6 sm:space-y-7 sm:px-8 sm:py-7")}>
           <div className="space-y-2">
             <Label className={txDialogFieldLabel} htmlFor={`tx-property-${formFieldId}`}>
               Lokale
@@ -544,7 +545,12 @@ function TransactionFormInner({
           </div>
         </div>
 
-        <DialogFooter className="mx-0 mb-0 shrink-0 flex-col-reverse gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-5 py-4 sm:flex-row sm:justify-end sm:px-8 sm:py-5">
+        <DialogFooter
+          className={cn(
+            RN_MODAL_FOOTER,
+            "mx-0 mb-0 flex-col-reverse gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-5 py-4 sm:flex-row sm:justify-end sm:px-8 sm:py-5",
+          )}
+        >
           <Button
             type="button"
             variant="outline"
@@ -564,7 +570,7 @@ function TransactionFormInner({
           </Button>
         </DialogFooter>
       </form>
-    </>
+    </div>
   );
 }
 
@@ -703,22 +709,33 @@ export function FinanceSection({
         className="mb-0"
         title="Finans"
         actions={
-          <Button
-            type="button"
-            onClick={() => setAddOpen(true)}
-            disabled={!canManageTransactions || properties.length === 0}
-            title={
-              !canManageTransactions
-                ? "Krever eier-, admin- eller regnskapstilgang"
-                : properties.length === 0
-                  ? "Legg til lokaler først"
-                  : undefined
-            }
-            className={cn(buttonVariants({ variant: "success", size: "cta" }))}
-          >
-            <Plus className="size-5" aria-hidden />
-            Ny transaksjon
-          </Button>
+          properties.length === 0 && canManageTransactions ? (
+            <Button
+              nativeButton={false}
+              render={<Link href="/app/settings/lokaler" />}
+              className={cn(buttonVariants({ variant: "success", size: "cta" }))}
+            >
+              <Plus className="size-5" aria-hidden />
+              Legg til lokale
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              disabled={!canManageTransactions || properties.length === 0}
+              title={
+                !canManageTransactions
+                  ? "Krever eier-, admin- eller regnskapstilgang"
+                  : properties.length === 0
+                    ? "Legg til lokaler først"
+                    : undefined
+              }
+              className={cn(buttonVariants({ variant: "success", size: "cta" }))}
+            >
+              <Plus className="size-5" aria-hidden />
+              Ny transaksjon
+            </Button>
+          )
         }
         toolbar={
           <>
@@ -792,15 +809,14 @@ export function FinanceSection({
                 role="status"
               >
                 <div className="rounded-md border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-50">
-                  Ingen lokaler er registrert. Uten lokale kan du ikke knytte transaksjoner.
-                  {" "}
+                  Ingen lokaler er registrert. Uten lokale kan du ikke knytte transaksjoner.{" "}
                   <Link
-                    href="/app/assets"
-                    className="font-semibold text-success underline underline-offset-2"
+                    href="/app/settings/lokaler"
+                    className="font-semibold text-amber-950 underline underline-offset-2 dark:text-amber-50"
                   >
-                    Åpne Inventar
+                    Registrer lokaler under Innstillinger
                   </Link>
-                  {" "}for å legge til lokaler.
+                  .
                 </div>
               </div>
             ) : null}
@@ -944,12 +960,12 @@ export function FinanceSection({
             {properties.length === 0 ? (
               <p>
                 <Link
-                  href="/app/assets"
+                  href="/app/settings/lokaler"
                   className="font-semibold text-success underline underline-offset-2"
                 >
-                  Registrer lokaler under Inventar
-                </Link>
-                {" "}før du kan legge inn transaksjoner.
+                  Registrer lokaler under Innstillinger
+                </Link>{" "}
+                før du kan legge inn transaksjoner.
               </p>
             ) : canManageTransactions ? (
               <p>Bruk «Ny transaksjon» over for å registrere første post.</p>
@@ -993,7 +1009,8 @@ export function FinanceSection({
                     <TableCell
                       className={cn(
                         financeTableCellClass,
-                        "finance-row-date tabular-nums",
+                        APP_DATA_DATE,
+                        "finance-row-date",
                       )}
                     >
                       {formatDisplayDate(r.transaction_date)}
@@ -1001,7 +1018,8 @@ export function FinanceSection({
                     <TableCell
                       className={cn(
                         financeTableCellClass,
-                        "finance-row-desc max-w-[220px] font-semibold text-rn-text-heading",
+                        APP_DATA_PRIMARY,
+                        "finance-row-desc max-w-[220px]",
                       )}
                     >
                       <span className="line-clamp-2">
@@ -1011,6 +1029,7 @@ export function FinanceSection({
                     <TableCell
                       className={cn(
                         financeTableCellClass,
+                        APP_DATA_BODY,
                         "finance-row-meta",
                       )}
                     >
@@ -1128,7 +1147,10 @@ export function FinanceSection({
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent
-          className="w-[calc(100%-1.25rem)] max-w-lg gap-0 overflow-hidden rounded-md border-2 border-rn-border-strong bg-card p-0 text-foreground shadow-xl sm:max-w-xl"
+          className={cn(
+            "flex w-[calc(100%-1.25rem)] max-w-lg flex-col gap-0 overflow-hidden rounded-md border-2 border-rn-border-strong bg-card p-0 text-foreground shadow-xl sm:max-w-xl",
+            RN_MODAL_MAX_HEIGHT,
+          )}
           showCloseButton
         >
           {addOpen && properties.length > 0 ? (
@@ -1150,7 +1172,10 @@ export function FinanceSection({
         }}
       >
         <DialogContent
-          className="w-[calc(100%-1.25rem)] max-w-lg gap-0 overflow-hidden rounded-md border-2 border-rn-border-strong bg-card p-0 text-foreground shadow-xl sm:max-w-xl"
+          className={cn(
+            "flex w-[calc(100%-1.25rem)] max-w-lg flex-col gap-0 overflow-hidden rounded-md border-2 border-rn-border-strong bg-card p-0 text-foreground shadow-xl sm:max-w-xl",
+            RN_MODAL_MAX_HEIGHT,
+          )}
           showCloseButton
         >
           {editRow && properties.length > 0 ? (

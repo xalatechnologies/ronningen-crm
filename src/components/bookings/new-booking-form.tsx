@@ -814,7 +814,7 @@ export function NewBookingForm({
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
               <div className="space-y-2">
                 <Label className={labelClass}>
-                  Festtype
+                  Type
                   <RequiredMark />
                 </Label>
                 <FormSelectField
@@ -833,7 +833,7 @@ export function NewBookingForm({
                 {festType === NEW_BOOKING_FEST_TYPE_ANNET ? (
                   <div className="space-y-2 pt-1">
                     <Label className={labelClass}>
-                      Beskriv festtype
+                      Beskriv type
                       <RequiredMark />
                     </Label>
                     <Input
@@ -841,7 +841,7 @@ export function NewBookingForm({
                         fieldClass,
                         errors.festTypeCustom && "border-destructive",
                       )}
-                      placeholder="F.eks. jubileum, temafest …"
+                      placeholder="F.eks. jubileum, konferanse …"
                       {...register("festTypeCustom")}
                     />
                     {errors.festTypeCustom ? (

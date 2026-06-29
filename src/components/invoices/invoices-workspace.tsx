@@ -14,6 +14,7 @@ import {
   suggestInkassoReview,
 } from "@/lib/invoice-row-utils";
 import { cn } from "@/lib/utils";
+import { APP_DATA_BODY, APP_DATA_DATE } from "@/lib/table-typography";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useSupabase } from "@/providers/supabase-provider";
 import {
@@ -88,7 +89,7 @@ function DueAndWarnings({
   return (
     <div className="flex min-w-0 max-w-72 flex-col gap-2">
       <div>
-        <div className="font-heading invoices-due-date font-semibold tabular-nums text-foreground">
+        <div className={cn("font-heading invoices-due-date", APP_DATA_DATE)}>
           {formatMediumDate(due)}
         </div>
         {customDue ? (
@@ -387,11 +388,9 @@ export function InvoicesWorkspace({
                         </div>
                       ) : null}
                       <div className="invoices-row-meta mt-2 lg:hidden">
-                        <span className="font-medium text-foreground">
-                          {r.eventType}
-                        </span>
+                        <span className={APP_DATA_BODY}>{r.eventType}</span>
                         <span> · </span>
-                        <span className="tabular-nums">{r.eventDateLabel}</span>
+                        <span className={APP_DATA_DATE}>{r.eventDateLabel}</span>
                       </div>
                       <div className="invoices-rest-amount-mobile mt-2 text-destructive md:hidden">
                         {formatNok(r.remainingNok)}
@@ -411,7 +410,7 @@ export function InvoicesWorkspace({
                       <span className="invoices-row-pill inline-flex w-fit rounded-md border border-success/30 bg-emerald-50 px-2.5 py-1 font-bold text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-100">
                         {r.eventType}
                       </span>
-                      <div className="invoices-row-meta tabular-nums">
+                      <div className={cn("invoices-row-meta", APP_DATA_DATE)}>
                         {r.eventDateLabel}
                       </div>
                       {r.propertyName ? (
