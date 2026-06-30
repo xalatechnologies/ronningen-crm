@@ -18,6 +18,7 @@ import { FormSelectField, toStringOptions } from "@/components/ui/form-select";
 import { Textarea } from "@/components/ui/textarea";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { completeTenantSetup } from "@/lib/organizations/actions/complete-tenant-setup";
 import {
   PROPERTY_TYPES,
   propertyFormSchema,
@@ -334,6 +335,11 @@ export function PropertiesSection({
     router.refresh();
 
     if (setupMode && wasFirstProperty) {
+      const completed = await completeTenantSetup();
+      if (!completed.ok) {
+        toast.error(completed.error);
+        return;
+      }
       toast.success("Oppsett fullført — velkommen til dashboardet!");
       window.location.assign("/app/dashboard");
     }

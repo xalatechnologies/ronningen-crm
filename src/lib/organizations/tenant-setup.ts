@@ -16,6 +16,20 @@ export type TenantSetupProfileFields = {
 
 export type TenantSetupStep = "organization" | "lokaler";
 
+export function isTenantSetupPending(
+  tenantSetupCompletedAt: string | null | undefined,
+): boolean {
+  return tenantSetupCompletedAt == null || tenantSetupCompletedAt === "";
+}
+
+export function shouldPromptTenantSetup(input: {
+  role: UserRole | null;
+  tenantSetupCompletedAt: string | null | undefined;
+}): boolean {
+  if (!shouldEnforceTenantSetup(input.role)) return false;
+  return isTenantSetupPending(input.tenantSetupCompletedAt);
+}
+
 export function isOrganizationProfileComplete(
   profile: TenantSetupProfileFields,
 ): boolean {
@@ -31,9 +45,11 @@ export function isOrganizationProfileComplete(
 }
 
 export function resolveTenantSetupStep(input: {
+  setupPending: boolean;
   profileComplete: boolean;
   propertyCount: number;
 }): TenantSetupStep | null {
+  if (!input.setupPending) return null;
   if (!input.profileComplete) return "organization";
   if (input.propertyCount === 0) return "lokaler";
   return null;

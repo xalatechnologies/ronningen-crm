@@ -8,8 +8,9 @@ import {
 } from "@/lib/organizations/organization-queries";
 import {
   isOrganizationProfileComplete,
+  isTenantSetupPending,
   resolveTenantSetupStep,
-  shouldEnforceTenantSetup,
+  shouldPromptTenantSetup,
   tenantSetupPathForStep,
   TENANT_ONBOARDING_PATH,
   type TenantSetupStep,
@@ -28,14 +29,12 @@ export async function fetchTenantSetupStatus(
   organizationId: string,
   role: UserRole | null,
 ): Promise<TenantSetupStatus> {
-  if (!shouldEnforceTenantSetup(role)) {
-    return { step: null, redirectPath: null };
-  }
-
   const [{ data: org }, { count, error: countError }] = await Promise.all([
     supabase
       .from("organizations")
-      .select("org_number, address_line1, city, contact_email, contact_phone")
+      .select(
+        "org_number, address_line1, city, contact_email, contact_phone, tenant_setup_completed_at",
+      )
       .eq("id", organizationId)
       .maybeSingle(),
     supabase
@@ -48,10 +47,33 @@ export async function fetchTenantSetupStatus(
     return { step: null, redirectPath: null };
   }
 
+  if (
+    !shouldPromptTenantSetup({
+      role,
+      tenantSetupCompletedAt: org.tenant_setup_completed_at,
+    })
+  ) {
+    return { step: null, redirectPath: null };
+  }
+
+  const propertyCount = countError ? 0 : (count ?? 0);
   const step = resolveTenantSetupStep({
+    setupPending: isTenantSetupPending(org.tenant_setup_completed_at),
     profileComplete: isOrganizationProfileComplete(org),
-    propertyCount: countError ? 0 : (count ?? 0),
+    propertyCount,
   });
+
+  if (
+    step == null &&
+    isTenantSetupPending(org.tenant_setup_completed_at) &&
+    propertyCount > 0 &&
+    isOrganizationProfileComplete(org)
+  ) {
+    await supabase
+      .from("organizations")
+      .update({ tenant_setup_completed_at: new Date().toISOString() })
+      .eq("id", organizationId);
+  }
 
   return {
     step,

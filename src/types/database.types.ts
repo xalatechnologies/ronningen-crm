@@ -408,6 +408,7 @@ export type Database = {
           billing_email: string | null;
           last_activity_at: string | null;
           trial_ends_at: string | null;
+          tenant_setup_completed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -436,6 +437,7 @@ export type Database = {
           billing_email?: string | null;
           last_activity_at?: string | null;
           trial_ends_at?: string | null;
+          tenant_setup_completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -464,6 +466,7 @@ export type Database = {
           billing_email?: string | null;
           last_activity_at?: string | null;
           trial_ends_at?: string | null;
+          tenant_setup_completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

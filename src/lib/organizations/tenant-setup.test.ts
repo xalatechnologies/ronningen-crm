@@ -33,13 +33,35 @@ describe("tenant setup", () => {
 
   it("walks organization then lokaler before setup is done", () => {
     expect(
-      resolveTenantSetupStep({ profileComplete: false, propertyCount: 0 }),
+      resolveTenantSetupStep({
+        setupPending: true,
+        profileComplete: false,
+        propertyCount: 0,
+      }),
     ).toBe("organization");
     expect(
-      resolveTenantSetupStep({ profileComplete: true, propertyCount: 0 }),
+      resolveTenantSetupStep({
+        setupPending: true,
+        profileComplete: true,
+        propertyCount: 0,
+      }),
     ).toBe("lokaler");
     expect(
-      resolveTenantSetupStep({ profileComplete: true, propertyCount: 2 }),
+      resolveTenantSetupStep({
+        setupPending: true,
+        profileComplete: true,
+        propertyCount: 2,
+      }),
+    ).toBeNull();
+  });
+
+  it("does not prompt when first-time setup is already completed", () => {
+    expect(
+      resolveTenantSetupStep({
+        setupPending: false,
+        profileComplete: false,
+        propertyCount: 0,
+      }),
     ).toBeNull();
   });
 

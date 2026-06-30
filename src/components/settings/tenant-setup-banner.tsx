@@ -1,6 +1,13 @@
-import { cn } from "@/lib/utils";
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { completeTenantSetup } from "@/lib/organizations/actions/complete-tenant-setup";
 import type { TenantSetupStep } from "@/lib/organizations/tenant-setup";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const COPY: Record<
   TenantSetupStep,
@@ -27,7 +34,25 @@ export function TenantSetupBanner({
   step: TenantSetupStep;
   className?: string;
 }) {
+  const router = useRouter();
+  const [skipping, setSkipping] = useState(false);
   const content = COPY[step];
+
+  async function skipForNow() {
+    setSkipping(true);
+    try {
+      const result = await completeTenantSetup();
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      toast.message("Du kan fullføre oppsettet senere under Innstillinger.");
+      router.push("/app/dashboard");
+      router.refresh();
+    } finally {
+      setSkipping(false);
+    }
+  }
 
   return (
     <div
@@ -47,6 +72,17 @@ export function TenantSetupBanner({
       <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground md:text-base">
         {content.description}
       </p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={skipping}
+          onClick={() => void skipForNow()}
+        >
+          {skipping ? "Lagrer …" : "Hopp over og gå til dashboard"}
+        </Button>
+      </div>
     </div>
   );
 }
