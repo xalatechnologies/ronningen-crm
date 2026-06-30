@@ -66,10 +66,13 @@ export async function enforceBillingAccess(): Promise<BillingEnforcementResult> 
     }
 
     try {
-      const nextStatus = row.provider_customer_id ? "incomplete" : "canceled";
+      const nextStatus = "incomplete";
       await admin
         .from("organizations")
-        .update({ subscription_status: nextStatus })
+        .update({
+          subscription_status: nextStatus,
+          trial_ends_at: null,
+        })
         .eq("id", row.organization_id);
 
       await admin

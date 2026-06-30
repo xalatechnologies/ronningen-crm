@@ -10,6 +10,10 @@ import {
   organizationRowToFormDefaults,
   type OrganizationProfileRow,
 } from "@/lib/organizations/organization-profile";
+import {
+  isOrganizationProfileComplete,
+  TENANT_SETUP_LOKALER_PATH,
+} from "@/lib/organizations/tenant-setup";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import {
   organizationProfileFormSchema,
@@ -66,8 +70,10 @@ function FormSection({
 
 export function OrganizationProfileForm({
   organization,
+  setupMode = false,
 }: {
   organization: OrganizationProfileRow;
+  setupMode?: boolean;
 }) {
   const supabase = useSupabase();
   const router = useRouter();
@@ -124,6 +130,23 @@ export function OrganizationProfileForm({
     toast.success("Organisasjonsprofil lagret");
     await refreshOrganizations();
     router.refresh();
+
+    if (setupMode) {
+      const updated = formInputToOrganizationUpdate(data);
+      if (
+        isOrganizationProfileComplete({
+          org_number: updated.org_number,
+          address_line1: updated.address_line1,
+          city: updated.city,
+          contact_email: updated.contact_email,
+          contact_phone: updated.contact_phone,
+        })
+      ) {
+        router.push(TENANT_SETUP_LOKALER_PATH);
+      } else {
+        toast.message("Fyll ut org.nr., adresse og kontakt for å gå videre.");
+      }
+    }
   }
 
   const {
@@ -301,7 +324,11 @@ export function OrganizationProfileForm({
             disabled={isSubmitting}
             className="w-full sm:w-auto"
           >
-            {isSubmitting ? "Lagrer…" : "Lagre organisasjon"}
+            {isSubmitting
+              ? "Lagrer…"
+              : setupMode
+                ? "Lagre og fortsett til lokaler"
+                : "Lagre organisasjon"}
           </Button>
         </div>
       </form>

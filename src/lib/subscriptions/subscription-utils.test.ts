@@ -65,7 +65,7 @@ describe("resolveTenantAccess", () => {
     ).toBe("suspended");
   });
 
-  it("requires billing setup when billing is enabled without Stripe sub", () => {
+  it("grants full access for active local trial when billing is enabled", () => {
     expect(
       resolveTenantAccess(
         {
@@ -76,7 +76,7 @@ describe("resolveTenantAccess", () => {
         },
         { billingEnabled: true },
       ),
-    ).toBe("billing_only");
+    ).toBe("full");
   });
 
   it("allows legacy trial when billing is disabled", () => {

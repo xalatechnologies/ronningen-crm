@@ -15,6 +15,7 @@ const ADMIN_AUDIT_ACTION_LABELS: Record<string, string> = {
   "user.platform_admin_granted": "Plattformadmin tildelt",
   "user.platform_admin_revoked": "Plattformadmin fjernet",
   "user.disabled": "Bruker deaktivert",
+  "user.deleted_after_org_delete": "Bruker slettet etter org-sletting",
   "user.enabled": "Bruker aktivert",
   "user.password_reset_initiated": "Passordtilbakestilling startet",
   "subscription.payment_retried": "Betaling forsøkt på nytt",

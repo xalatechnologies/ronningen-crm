@@ -19,6 +19,7 @@ import {
 } from "@/lib/billing/billing-checkout-return";
 import {
   canManageStripeSubscription,
+  canOfferStripeCheckout,
   needsStripeCheckout,
 } from "@/lib/billing/billing-ui-state";
 import {
@@ -26,6 +27,10 @@ import {
   SAAS_TRIAL_DAYS,
 } from "@/lib/billing/constants";
 import { SUBSCRIPTION_STATUS_LABELS } from "@/lib/admin/subscription-labels";
+import {
+  isTrialPeriodExpired,
+  trialDaysLeft,
+} from "@/lib/subscriptions/subscription-utils";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -99,8 +104,10 @@ function resolveAttentionMessage(input: {
   status: string;
   trialExpired: boolean;
   showCheckout: boolean;
+  offerCheckout: boolean;
   hasStripeSubscription: boolean;
   isOwner: boolean;
+  daysLeft: number | null;
 }): AttentionMessage | null {
   if (!input.billingOn) {
     return {
@@ -141,16 +148,28 @@ function resolveAttentionMessage(input: {
   }
 
   if (
-    input.showCheckout &&
-    (input.status === "trialing" || input.status === "active") &&
+    input.offerCheckout &&
+    input.status === "trialing" &&
     !input.hasStripeSubscription
   ) {
+    const daysLabel =
+      input.daysLeft != null && input.daysLeft >= 0
+        ? `${input.daysLeft} ${input.daysLeft === 1 ? "dag" : "dager"}`
+        : null;
+    const endingSoon = input.daysLeft != null && input.daysLeft <= 7;
+
     return {
-      tone: "warning",
-      title: "Koble til Stripe",
+      tone: endingSoon ? "warning" : "info",
+      title: endingSoon
+        ? "Prøveperioden utløper snart"
+        : "Gratis prøveperiode",
       body: input.isOwner
-        ? "Abonnementet må kobles til Stripe. Fullfør betaling for å starte 30 dagers prøveperiode."
-        : "Organisasjonseieren må fullføre betaling for å koble abonnementet til Stripe.",
+        ? daysLabel
+          ? `Du har ${daysLabel} igjen av prøveperioden. Legg til betaling når du er klar for å fortsette etter prøven.`
+          : "Du er i prøveperiode. Legg til betaling når du er klar for å fortsette etter prøven."
+        : daysLabel
+          ? `Organisasjonen har ${daysLabel} igjen av prøveperioden. Eieren kan legge til betaling under Fakturering.`
+          : "Organisasjonen er i prøveperiode. Eieren kan legge til betaling under Fakturering.",
     };
   }
 
@@ -380,14 +399,19 @@ export function BillingSettingsPanel({
   const hasStripeCustomer = Boolean(subscription?.provider_customer_id);
   const showDevIds = process.env.NODE_ENV === "development";
 
-  const periodEnd = subscription?.current_period_end
-    ? new Date(subscription.current_period_end)
-    : null;
+  const periodEndIso =
+    subscription?.current_period_end ?? currentOrganization.periodEnd;
+  const periodEnd = periodEndIso ? new Date(periodEndIso) : null;
+
+  const trialAccessInput = {
+    is_suspended: false,
+    subscription_status: status,
+    current_period_end: periodEndIso,
+    provider_subscription_id: subscription?.provider_subscription_id ?? null,
+  };
 
   const trialExpired =
-    status === "trialing" &&
-    periodEnd != null &&
-    periodEnd.getTime() < Date.now();
+    status === "trialing" && isTrialPeriodExpired(trialAccessInput);
 
   const showCheckout = needsStripeCheckout({
     billingEnabled: billingOn,
@@ -395,6 +419,16 @@ export function BillingSettingsPanel({
     status,
     trialExpired,
   });
+
+  const offerCheckout = canOfferStripeCheckout({
+    billingEnabled: billingOn,
+    hasStripeSubscription,
+    status,
+    trialExpired,
+  });
+
+  const daysLeft =
+    status === "trialing" ? trialDaysLeft(trialAccessInput) : null;
 
   const showPortal = canManageStripeSubscription({
     billingEnabled: billingOn,
@@ -408,14 +442,20 @@ export function BillingSettingsPanel({
     status,
     trialExpired,
     showCheckout,
+    offerCheckout,
     hasStripeSubscription,
     isOwner,
+    daysLeft,
   });
+
+  const showCheckoutCta = showCheckout || offerCheckout;
 
   const primaryCtaLabel =
     status === "incomplete" || trialExpired
       ? "Fullfør betaling"
-      : "Start abonnement";
+      : offerCheckout
+        ? "Legg til betaling"
+        : "Start abonnement";
 
   return (
     <div className="flex flex-col gap-6">
@@ -500,7 +540,7 @@ export function BillingSettingsPanel({
           </dl>
 
           <div className="flex flex-col gap-3 border-t border-rn-border-strong/50 pt-5">
-            {billingOn && showCheckout && isOwner ? (
+            {billingOn && showCheckoutCta && isOwner ? (
               <Button
                 type="button"
                 size="cta"
@@ -511,7 +551,7 @@ export function BillingSettingsPanel({
               </Button>
             ) : null}
 
-            {billingOn && isOwner && (showCheckout || !hasStripeSubscription) ? (
+            {billingOn && isOwner && (showCheckoutCta || !hasStripeSubscription) ? (
               <Button
                 type="button"
                 variant="outline"

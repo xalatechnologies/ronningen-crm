@@ -20,6 +20,7 @@ import {
   FormSelectField,
   toIdNameOptions,
 } from "@/components/ui/form-select";
+import { PropertySelectField } from "@/components/properties/property-select-field";
 import {
   Table,
   TableBody,
@@ -376,17 +377,18 @@ function TransactionFormInner({
               Lokale
             </Label>
             <div className="relative">
-              <Building2
-                className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
-              <FormSelectField
+              {properties.length > 0 ? (
+                <Building2
+                  className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden
+                />
+              ) : null}
+              <PropertySelectField
                 name="propertyId"
                 control={control}
                 id={`tx-property-${formFieldId}`}
-                className="bg-background py-0 pl-12"
-                aria-label="Lokale for transaksjonen"
-                options={toIdNameOptions(properties)}
+                className={properties.length > 0 ? "bg-background py-0 pl-12" : undefined}
+                properties={properties}
               />
             </div>
             {formState.errors.propertyId ? (

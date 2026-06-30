@@ -9,6 +9,13 @@ import {
 } from "@/lib/subscriptions/subscription-utils";
 import { isBillingEnabled } from "@/lib/billing/constants";
 import { getImpersonationContext } from "@/lib/admin/impersonation";
+import {
+  fetchActiveOrganizationId,
+  fetchUserOrganizations,
+} from "@/lib/organizations/organization-queries";
+import { resolveTenantAppOrganization } from "@/lib/organizations/resolve-tenant-app-organization";
+import { isAllowedDuringTenantSetup } from "@/lib/organizations/tenant-setup";
+import { fetchTenantSetupStatus } from "@/lib/organizations/tenant-setup-queries";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { cache } from "react";
 import { redirect } from "next/navigation";
@@ -43,16 +50,60 @@ const getTenantAppAccessCached = cache(async function getTenantAppAccessCached(
 
   const impersonation = await getImpersonationContext();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("active_organization_id")
-    .eq("id", user.id)
-    .maybeSingle();
+  if (impersonation?.organizationId) {
+    const organizationId = impersonation.organizationId;
 
-  const organizationId =
-    impersonation?.organizationId ?? profile?.active_organization_id ?? null;
+    const [{ data: org }, { data: subscription }] = await Promise.all([
+      supabase
+        .from("organizations")
+        .select("is_suspended, subscription_status, suspended_reason")
+        .eq("id", organizationId)
+        .maybeSingle(),
+      supabase
+        .from("subscriptions")
+        .select("current_period_end, provider_subscription_id")
+        .eq("organization_id", organizationId)
+        .maybeSingle(),
+    ]);
 
-  if (!organizationId) {
+    if (!org) {
+      return {
+        userId: user.id,
+        organizationId: null,
+        accessLevel: "full",
+        suspendedReason: null,
+      };
+    }
+
+    const accessLevel = resolveTenantAccess(
+      {
+        is_suspended: org.is_suspended,
+        subscription_status: org.subscription_status,
+        current_period_end: subscription?.current_period_end ?? null,
+        provider_subscription_id: subscription?.provider_subscription_id ?? null,
+      },
+      { billingEnabled: isBillingEnabled() },
+    );
+
+    return {
+      userId: user.id,
+      organizationId,
+      accessLevel,
+      suspendedReason: org.suspended_reason,
+    };
+  }
+
+  const [memberships, activeOrganizationId] = await Promise.all([
+    fetchUserOrganizations(supabase, user.id),
+    fetchActiveOrganizationId(supabase, user.id),
+  ]);
+
+  const tenantMembership = resolveTenantAppOrganization(
+    memberships,
+    activeOrganizationId,
+  );
+
+  if (!tenantMembership) {
     return {
       userId: user.id,
       organizationId: null,
@@ -61,34 +112,22 @@ const getTenantAppAccessCached = cache(async function getTenantAppAccessCached(
     };
   }
 
-  const [{ data: org }, { data: subscription }] = await Promise.all([
-    supabase
-      .from("organizations")
-      .select("is_suspended, subscription_status, suspended_reason")
-      .eq("id", organizationId)
-      .maybeSingle(),
-    supabase
-      .from("subscriptions")
-      .select("current_period_end, provider_subscription_id")
-      .eq("organization_id", organizationId)
-      .maybeSingle(),
-  ]);
+  const organizationId = tenantMembership.organizationId;
+  const org = tenantMembership.organization;
 
-  if (!org) {
-    return {
-      userId: user.id,
-      organizationId,
-      accessLevel: "full",
-      suspendedReason: null,
-    };
-  }
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("current_period_end, provider_subscription_id")
+    .eq("organization_id", organizationId)
+    .maybeSingle();
 
   const accessLevel = resolveTenantAccess(
     {
-      is_suspended: org.is_suspended,
-      subscription_status: org.subscription_status,
-      current_period_end: subscription?.current_period_end ?? null,
-      provider_subscription_id: subscription?.provider_subscription_id ?? null,
+      is_suspended: org.isSuspended,
+      subscription_status: org.subscriptionStatus,
+      current_period_end: subscription?.current_period_end ?? org.periodEnd,
+      provider_subscription_id:
+        subscription?.provider_subscription_id ?? org.providerSubscriptionId,
     },
     { billingEnabled: isBillingEnabled() },
   );
@@ -97,7 +136,7 @@ const getTenantAppAccessCached = cache(async function getTenantAppAccessCached(
     userId: user.id,
     organizationId,
     accessLevel,
-    suspendedReason: org.suspended_reason,
+    suspendedReason: org.suspendedReason,
   };
 });
 
@@ -138,6 +177,33 @@ export async function requireTenantAppAccess(pathname: string): Promise<TenantAp
     !isAllowedWhenBillingBlocked(pathname)
   ) {
     redirect(TENANT_BILLING_PATH);
+  }
+
+  const impersonation = await getImpersonationContext();
+  if (ctx.organizationId && !impersonation) {
+    const supabase = await createServerSupabaseClient();
+    const [memberships, activeOrganizationId] = await Promise.all([
+      fetchUserOrganizations(supabase, ctx.userId),
+      fetchActiveOrganizationId(supabase, ctx.userId),
+    ]);
+    const tenantMembership = resolveTenantAppOrganization(
+      memberships,
+      activeOrganizationId,
+    );
+
+    if (!tenantMembership) {
+      redirect(TENANT_ONBOARDING_PATH);
+    }
+
+    const setup = await fetchTenantSetupStatus(
+      supabase,
+      tenantMembership.organizationId,
+      tenantMembership.role,
+    );
+
+    if (setup.redirectPath && !isAllowedDuringTenantSetup(pathname)) {
+      redirect(setup.redirectPath);
+    }
   }
 
   return ctx;

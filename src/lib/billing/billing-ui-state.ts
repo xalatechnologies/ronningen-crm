@@ -1,4 +1,4 @@
-/** Whether the org must complete Stripe Checkout (no active Stripe subscription yet). */
+/** Whether the org must complete Stripe Checkout (blocks app access). */
 export function needsStripeCheckout(input: {
   billingEnabled: boolean;
   hasStripeSubscription: boolean;
@@ -17,12 +17,30 @@ export function needsStripeCheckout(input: {
     return true;
   }
 
-  // Legacy orgs (manual trial/active) when billing is turned on — require Stripe setup.
-  if (input.status === "trialing" || input.status === "active") {
+  // Active local trial — checkout is optional until expiry.
+  if (input.status === "trialing" && !input.trialExpired) {
+    return false;
+  }
+
+  // Legacy active without Stripe when billing is on.
+  if (input.status === "active") {
     return true;
   }
 
   return false;
+}
+
+/** Whether owner may connect Stripe voluntarily during local trial. */
+export function canOfferStripeCheckout(input: {
+  billingEnabled: boolean;
+  hasStripeSubscription: boolean;
+  status: string;
+  trialExpired: boolean;
+}): boolean {
+  if (!input.billingEnabled || input.hasStripeSubscription) {
+    return false;
+  }
+  return input.status === "trialing" && !input.trialExpired;
 }
 
 /** Whether Stripe Customer Portal should be offered (existing Stripe customer/sub). */

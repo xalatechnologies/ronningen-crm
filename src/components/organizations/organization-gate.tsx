@@ -15,6 +15,7 @@ import {
   isSuspendedAccess,
   TENANT_BILLING_PATH,
   TENANT_ONBOARDING_PATH,
+  TENANT_SETUP_ORGANIZATION_PATH,
   TENANT_SUSPENDED_PATH,
   toTenantAccessInput,
 } from "@/lib/subscriptions/subscription-utils";
@@ -65,7 +66,7 @@ export function OrganizationGate({ children }: { children: ReactNode }) {
     }
 
     if (hasOrganizations && onOnboarding) {
-      router.replace("/app/dashboard");
+      router.replace(TENANT_SETUP_ORGANIZATION_PATH);
       return;
     }
 

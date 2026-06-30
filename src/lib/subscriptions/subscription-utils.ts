@@ -27,7 +27,14 @@ function requiresBillingSetup(
   options?: TenantAccessOptions,
 ): boolean {
   if (!options?.billingEnabled) return false;
-  return lacksStripeSubscription(input);
+  if (!lacksStripeSubscription(input)) return false;
+  if (
+    input.subscription_status === "trialing" &&
+    !isTrialPeriodExpired(input)
+  ) {
+    return false;
+  }
+  return true;
 }
 
 export function isTrialPeriodExpired(input: TenantAccessInput): boolean {
@@ -137,18 +144,37 @@ export function shouldShowTrialEndingWarning(
   if (!org || org.subscription_status !== "trialing") return false;
   if (!org.current_period_end) return false;
 
-  const daysLeft = Math.ceil(
-    (new Date(org.current_period_end).getTime() - Date.now()) /
-      (1000 * 60 * 60 * 24),
-  );
+  const daysLeft = trialDaysLeft(org);
+  if (daysLeft === null) return false;
 
   return daysLeft >= 0 && daysLeft <= 7;
 }
 
-export const TENANT_ONBOARDING_PATH = "/app/onboarding";
+/** Whole days until trial ends; negative when expired. */
+export function trialDaysLeft(input: TenantAccessInput): number | null {
+  if (!input.current_period_end) return null;
+  return Math.ceil(
+    (new Date(input.current_period_end).getTime() - Date.now()) /
+      (1000 * 60 * 60 * 24),
+  );
+}
+
+import {
+  TENANT_ACCOUNT_PATH,
+  TENANT_ONBOARDING_PATH,
+  TENANT_SETUP_LOKALER_PATH,
+  TENANT_SETUP_ORGANIZATION_PATH,
+} from "@/lib/organizations/tenant-setup";
+
+export {
+  TENANT_ACCOUNT_PATH,
+  TENANT_ONBOARDING_PATH,
+  TENANT_SETUP_LOKALER_PATH,
+  TENANT_SETUP_ORGANIZATION_PATH,
+};
+
 export const TENANT_BILLING_PATH = "/app/settings/billing";
 export const TENANT_SUPPORT_PATH = "/app/settings/support";
-export const TENANT_ACCOUNT_PATH = "/app/settings/account";
 export const TENANT_SUSPENDED_PATH = "/app/suspended";
 
 export function isAllowedWhenBillingBlocked(pathname: string): boolean {
@@ -159,7 +185,11 @@ export function isAllowedWhenBillingBlocked(pathname: string): boolean {
     pathname.startsWith(`${TENANT_SUPPORT_PATH}/`) ||
     pathname === TENANT_ACCOUNT_PATH ||
     pathname.startsWith(`${TENANT_ACCOUNT_PATH}/`) ||
-    pathname === TENANT_ONBOARDING_PATH
+    pathname === TENANT_ONBOARDING_PATH ||
+    pathname === TENANT_SETUP_ORGANIZATION_PATH ||
+    pathname.startsWith(`${TENANT_SETUP_ORGANIZATION_PATH}/`) ||
+    pathname === TENANT_SETUP_LOKALER_PATH ||
+    pathname.startsWith(`${TENANT_SETUP_LOKALER_PATH}/`)
   );
 }
 

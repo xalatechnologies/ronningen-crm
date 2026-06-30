@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { CreateOrganizationForm } from "@/components/organizations/create-organization-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchUserOrganizations } from "@/lib/organizations/organization-queries";
+import { resolvePostAuthRedirect } from "@/lib/organizations/tenant-setup-queries";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,7 @@ export default async function OnboardingPage() {
   try {
     const memberships = await fetchUserOrganizations(supabase, user.id);
     if (memberships.length > 0) {
-      redirect("/app/dashboard");
+      redirect(await resolvePostAuthRedirect(supabase, user.id));
     }
   } catch {
     // Fall through to client form — OrganizationProvider will reconcile access.
@@ -38,8 +39,8 @@ export default async function OnboardingPage() {
         </CardHeader>
         <CardContent>
           <p className="mb-6 text-app-base text-muted-foreground">
-            Gi organisasjonen et navn for å starte. Du blir satt som eier og
-            får tilgang til dashboardet.
+            Gi organisasjonen et navn for å starte. Deretter fyller du inn
+            virksomhetsinfo og registrerer lokaler under Innstillinger.
           </p>
           <CreateOrganizationForm />
         </CardContent>

@@ -23,6 +23,7 @@ import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { safeInternalRedirect } from "@/lib/security/safe-redirect";
+import { shouldResolveAuthDestination } from "@/lib/organizations/tenant-setup";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
@@ -64,8 +65,21 @@ export function LoginForm() {
       return;
     }
 
+    let destination = redirect;
+    if (shouldResolveAuthDestination(redirect)) {
+      const response = await fetch("/api/auth/destination");
+      if (response.ok) {
+        const payload = (await response.json().catch(() => null)) as {
+          redirectTo?: string;
+        } | null;
+        if (payload?.redirectTo) {
+          destination = safeInternalRedirect(payload.redirectTo, redirect);
+        }
+      }
+    }
+
     // Full navigation avoids a blank RSC transition while /app layouts load.
-    window.location.assign(redirect);
+    window.location.assign(destination);
   }
 
   return (

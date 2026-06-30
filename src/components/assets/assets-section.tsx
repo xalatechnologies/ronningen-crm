@@ -19,6 +19,7 @@ import {
   FormSelectField,
   toIdNameOptions,
 } from "@/components/ui/form-select";
+import { PropertySelectField } from "@/components/properties/property-select-field";
 import {
   Table,
   TableBody,
@@ -326,13 +327,11 @@ function AssetFormFields({
             >
               Lokale
             </Label>
-            <FormSelectField
+            <PropertySelectField
               name="propertyId"
               control={control}
               id={idProperty}
-              aria-label="Lokale"
-              aria-invalid={!!formState.errors.propertyId}
-              options={toIdNameOptions(properties)}
+              properties={properties}
             />
             {formState.errors.propertyId ? (
               <p className="text-sm text-destructive" role="alert">

@@ -16,6 +16,7 @@ import {
 import { requireOrganizationOwner } from "@/lib/billing/require-organization-owner";
 import { getStripeClient } from "@/lib/billing/stripe";
 import { STRIPE_PROVIDER } from "@/lib/billing/constants";
+import { resolveRemainingTrialDays } from "@/lib/billing/resolve-stripe-trial-days";
 import { BLOCKING_STRIPE_SUBSCRIPTION_STATUSES } from "@/lib/billing/stripe-subscription-statuses";
 import { syncSubscriptionFromStripe } from "@/lib/billing/sync-subscription-from-stripe";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
@@ -73,7 +74,9 @@ export async function createCheckoutSessionForOrganization(input: {
 
   const { data: subscription } = await admin
     .from("subscriptions")
-    .select("provider_customer_id, provider_subscription_id, status")
+    .select(
+      "provider_customer_id, provider_subscription_id, status, current_period_end",
+    )
     .eq("organization_id", input.organizationId)
     .maybeSingle();
 
@@ -147,15 +150,19 @@ export async function createCheckoutSessionForOrganization(input: {
     subscription?.provider_subscription_id,
   );
 
+  const remainingTrialDays = hadPriorStripeSubscription
+    ? 0
+    : resolveRemainingTrialDays(subscription?.current_period_end);
+
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
     client_reference_id: input.organizationId,
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
-      ...(hadPriorStripeSubscription
-        ? {}
-        : { trial_period_days: plan.trialDays }),
+      ...(remainingTrialDays > 0
+        ? { trial_period_days: remainingTrialDays }
+        : {}),
       metadata: {
         organization_id: input.organizationId,
         plan_id: planId,

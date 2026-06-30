@@ -30,9 +30,20 @@ export const SAAS_PLAN_ID = DEFAULT_BILLING_PLAN_ID;
 export const STRIPE_PROVIDER = "stripe";
 
 export function getInitialSubscriptionStatus(): SubscriptionStatus {
-  return isBillingEnabled() ? "incomplete" : DEFAULT_SUBSCRIPTION_STATUS;
+  return isBillingEnabled() ? "trialing" : DEFAULT_SUBSCRIPTION_STATUS;
 }
 
 export function getInitialSubscriptionPlan(): SubscriptionPlan | typeof SAAS_PLAN_ID {
   return isBillingEnabled() ? SAAS_PLAN_ID : DEFAULT_SUBSCRIPTION_PLAN;
+}
+
+/** Local trial window for new orgs (before Stripe is connected). */
+export function getInitialTrialPeriodBounds(): {
+  start: string;
+  end: string;
+} {
+  const start = new Date();
+  const end = new Date(start);
+  end.setDate(end.getDate() + SAAS_TRIAL_DAYS);
+  return { start: start.toISOString(), end: end.toISOString() };
 }

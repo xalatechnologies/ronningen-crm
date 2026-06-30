@@ -1,5 +1,7 @@
+import { AccountDeleteSection } from "@/components/settings/account-delete-section";
 import { AccountSettingsForm } from "@/components/settings/account-settings-form";
 import { AppPageHeader } from "@/components/layout/app-page-header";
+import { getAccountDeletionEligibility } from "@/lib/auth/account-deletion";
 import { getCachedServerAuthUser } from "@/lib/supabase/cached-server-auth";
 import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-client";
 import { redirect } from "next/navigation";
@@ -20,6 +22,8 @@ export default async function AccountSettingsPage() {
     .eq("id", user.id)
     .maybeSingle();
 
+  const deletionEligibility = await getAccountDeletionEligibility(user.id);
+
   return (
     <div className="flex flex-col gap-6">
       <AppPageHeader
@@ -32,6 +36,11 @@ export default async function AccountSettingsPage() {
       <AccountSettingsForm
         initialFullName={profile?.full_name ?? ""}
         email={user.email ?? ""}
+      />
+      <AccountDeleteSection
+        email={user.email ?? ""}
+        eligible={deletionEligibility.eligible}
+        blockers={deletionEligibility.blockers}
       />
     </div>
   );

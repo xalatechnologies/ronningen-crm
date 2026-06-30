@@ -26,6 +26,7 @@ import {
   toIdNameOptions,
   toStringOptions,
 } from "@/components/ui/form-select";
+import { PropertySelectField } from "@/components/properties/property-select-field";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
@@ -1195,13 +1196,14 @@ export function OvernattingSection({
               <Label className={labelClass} htmlFor={`${rid}-p`}>
                 Lokale (valgfritt)
               </Label>
-              <FormSelectField
+              <PropertySelectField
                 name="propertyId"
                 control={unitForm.control}
                 id={`${rid}-p`}
                 className={cn(fieldClass, "font-medium")}
+                optional
                 placeholder="— Ingen kobling —"
-                options={toIdNameOptions(properties)}
+                properties={properties}
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">

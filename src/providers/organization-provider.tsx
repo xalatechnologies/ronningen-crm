@@ -89,6 +89,17 @@ export function OrganizationProvider({
       setCurrentOrganizationIdState(resolved.organizationId);
       setCurrentRole(resolved.role);
 
+      if (typeof window !== "undefined") {
+        if (memberships.length === 0) {
+          window.localStorage.removeItem(ACTIVE_ORGANIZATION_STORAGE_KEY);
+        } else if (resolved.organizationId) {
+          window.localStorage.setItem(
+            ACTIVE_ORGANIZATION_STORAGE_KEY,
+            resolved.organizationId,
+          );
+        }
+      }
+
       if (
         !impersonationOrgId &&
         resolved.organizationId &&

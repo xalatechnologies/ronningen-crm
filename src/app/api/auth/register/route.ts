@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { mapAuthErrorToNorwegian } from "@/lib/auth/auth-error-messages";
 import { normalizeEmail } from "@/lib/auth/normalize-email";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import { resolvePostAuthRedirect } from "@/lib/organizations/tenant-setup-queries";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { registerSchema } from "@/lib/validations";
 
@@ -84,9 +85,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const redirectTo = await resolvePostAuthRedirect(supabase, created.user.id);
+
     return NextResponse.json({
       ok: true,
-      redirectTo: "/app/onboarding",
+      redirectTo,
       origin: getAppOrigin(request),
     });
   } catch (error) {

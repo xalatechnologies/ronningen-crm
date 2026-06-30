@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 
 import { logAdminAction } from "@/lib/admin/audit-log";
+import { cleanupOrganizationMembersAfterDelete } from "@/lib/admin/delete-organization-members";
+import { purgeOrganizationTenantData } from "@/lib/admin/delete-organization-cascade";
 import { requirePlatformAdmin } from "@/lib/admin/require-platform-admin";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { adminRoutes } from "@/config/admin-routes";
@@ -177,19 +179,49 @@ export async function deleteOrganization(input: {
     }
   }
 
+  const purgeResult = await purgeOrganizationTenantData(admin, input.organizationId);
+  if (!purgeResult.ok) {
+    return { ok: false as const, error: purgeResult.error };
+  }
+
   const { error } = await admin
     .from("organizations")
     .delete()
     .eq("id", input.organizationId);
 
-  if (error) return { ok: false as const, error: error.message };
+  if (error) {
+    return {
+      ok: false as const,
+      error:
+        error.message.includes("foreign key")
+          ? "Kunne ikke slette organisasjonen på grunn av gjenværende data. Kontakt utvikler."
+          : error.message,
+    };
+  }
+
+  const memberCleanup = await cleanupOrganizationMembersAfterDelete(admin, {
+    organizationId: input.organizationId,
+    memberUserIds: memberIds,
+    actorUserId: adminUser.userId,
+  });
+
+  if (memberCleanup.errors.length > 0) {
+    console.error(
+      "[admin/deleteOrganization] Member cleanup errors",
+      memberCleanup.errors,
+    );
+  }
 
   await logAdminAction({
     actorUserId: adminUser.userId,
     action: "organization.deleted",
     targetType: "organization",
     targetId: input.organizationId,
-    metadata: { deleted: org },
+    metadata: {
+      deleted: org,
+      deletedAuthUserIds: memberCleanup.deletedUserIds,
+      skippedPlatformAdminIds: memberCleanup.skippedPlatformAdminIds,
+    },
   });
 
   revalidatePath("/admin");

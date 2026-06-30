@@ -8,8 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
-import { createCheckoutSession } from "@/lib/billing/actions/create-checkout-session";
-import { isBillingEnabled } from "@/lib/billing/constants";
+import {
+  isBillingEnabled,
+  SAAS_MONTHLY_PRICE_NOK,
+  SAAS_TRIAL_DAYS,
+} from "@/lib/billing/constants";
 import { triggerWelcomeNotification } from "@/lib/notifications/actions/welcome";
 import {
   createOrganizationForUser,
@@ -52,18 +55,7 @@ export function CreateOrganizationForm() {
         void triggerWelcomeNotification({ organizationName: org.name });
       }
 
-      if (isBillingEnabled()) {
-        const checkout = await createCheckoutSession(org.id);
-        if (!checkout.ok) {
-          toast.error(checkout.error);
-          window.location.assign("/app/settings/billing");
-          return;
-        }
-        window.location.href = checkout.url;
-        return;
-      }
-
-      window.location.assign("/app/dashboard");
+      window.location.assign("/app/settings/organization");
     } catch (error) {
       toast.error(
         toOrganizationError(error, "Kunne ikke opprette organisasjon.").message,
@@ -87,19 +79,13 @@ export function CreateOrganizationForm() {
         />
       </div>
       <Button type="submit" size="cta" disabled={submitting || authLoading}>
-        {submitting
-          ? "Oppretter…"
-          : authLoading
-            ? "Laster…"
-            : isBillingEnabled()
-            ? "Opprett og gå til betaling"
-            : "Opprett organisasjon"}
+        {submitting ? "Oppretter…" : authLoading ? "Laster…" : "Opprett organisasjon"}
       </Button>
       {isBillingEnabled() ? (
         <p className="text-app-sm text-muted-foreground">
-          Du fullfører betaling på neste steg. 30 dagers gratis prøveperiode,
-          deretter 500 kr/mnd. Kort registreres ved oppstart; første trekk skjer
-          etter prøveperioden.
+          Du får {SAAS_TRIAL_DAYS} dagers gratis prøveperiode uten betalingskort.
+          Etter prøveperioden må du legge til betaling ({SAAS_MONTHLY_PRICE_NOK}{" "}
+          kr/mnd) under Innstillinger → Fakturering for å fortsette.
         </p>
       ) : null}
     </form>

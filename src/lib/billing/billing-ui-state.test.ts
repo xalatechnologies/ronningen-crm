@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   canManageStripeSubscription,
+  canOfferStripeCheckout,
   needsStripeCheckout,
 } from "@/lib/billing/billing-ui-state";
 
@@ -28,13 +29,24 @@ describe("needsStripeCheckout", () => {
     ).toBe(true);
   });
 
-  it("returns true for legacy trialing org without Stripe sub", () => {
+  it("returns false for active local trial without Stripe sub", () => {
     expect(
       needsStripeCheckout({
         billingEnabled: true,
         hasStripeSubscription: false,
         status: "trialing",
         trialExpired: false,
+      }),
+    ).toBe(false);
+  });
+
+  it("returns true when local trial has expired", () => {
+    expect(
+      needsStripeCheckout({
+        billingEnabled: true,
+        hasStripeSubscription: false,
+        status: "trialing",
+        trialExpired: true,
       }),
     ).toBe(true);
   });
@@ -46,6 +58,30 @@ describe("needsStripeCheckout", () => {
         hasStripeSubscription: true,
         status: "incomplete",
         trialExpired: false,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("canOfferStripeCheckout", () => {
+  it("returns true during active local trial", () => {
+    expect(
+      canOfferStripeCheckout({
+        billingEnabled: true,
+        hasStripeSubscription: false,
+        status: "trialing",
+        trialExpired: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("returns false after trial expires", () => {
+    expect(
+      canOfferStripeCheckout({
+        billingEnabled: true,
+        hasStripeSubscription: false,
+        status: "trialing",
+        trialExpired: true,
       }),
     ).toBe(false);
   });

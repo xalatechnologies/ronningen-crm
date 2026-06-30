@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   getInitialSubscriptionPlan,
   getInitialSubscriptionStatus,
+  getInitialTrialPeriodBounds,
+  isBillingEnabled,
 } from "@/lib/billing/constants";
 import type { SubscriptionPlan, SubscriptionStatus, UserRole } from "@/constants/roles";
 import { isUserRole } from "@/lib/validations";
@@ -241,6 +243,7 @@ export async function createOrganizationForUser(
 
   const initialStatus = getInitialSubscriptionStatus();
   const initialPlan = getInitialSubscriptionPlan();
+  const trialBounds = isBillingEnabled() ? getInitialTrialPeriodBounds() : null;
 
   const slugBase = slugifyOrganizationName(name);
   let slug = slugBase;
@@ -254,6 +257,7 @@ export async function createOrganizationForUser(
         slug,
         subscription_status: initialStatus,
         subscription_plan: initialPlan,
+        ...(trialBounds ? { trial_ends_at: trialBounds.end } : {}),
       })
       .select("id, name, slug, logo_url, subscription_status, subscription_plan")
       .single();
@@ -280,6 +284,12 @@ export async function createOrganizationForUser(
           organization_id: org.id,
           plan: initialPlan,
           status: initialStatus,
+          ...(trialBounds
+            ? {
+                current_period_start: trialBounds.start,
+                current_period_end: trialBounds.end,
+              }
+            : {}),
         });
 
       if (subscriptionError) {

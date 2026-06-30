@@ -227,12 +227,14 @@ export type PropertiesSectionProps = {
   properties: PropertyListRow[];
   canManage: boolean;
   loadError: string | null;
+  setupMode?: boolean;
 };
 
 export function PropertiesSection({
   properties,
   canManage,
   loadError,
+  setupMode = false,
 }: PropertiesSectionProps) {
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
@@ -278,6 +280,8 @@ export function PropertiesSection({
 
   async function onSubmit(data: PropertyFormInput) {
     const payload = payloadFromForm(data);
+
+    const wasFirstProperty = !dialog.row && properties.length === 0;
 
     if (dialog.row) {
       let orgId: string;
@@ -328,6 +332,11 @@ export function PropertiesSection({
 
     closeDialog();
     router.refresh();
+
+    if (setupMode && wasFirstProperty) {
+      toast.success("Oppsett fullført — velkommen til dashboardet!");
+      window.location.assign("/app/dashboard");
+    }
   }
 
   async function confirmDelete() {
@@ -366,7 +375,11 @@ export function PropertiesSection({
         compact
         className="mb-0"
         title="Lokaler"
-        description="Registrer og administrer lokaler som brukes i bookinger, inventar og finans."
+        description={
+          setupMode
+            ? "Legg til minst ett lokale for å fullføre oppsettet og komme i gang med bookinger."
+            : "Registrer og administrer lokaler som brukes i bookinger, inventar og finans."
+        }
         actions={
           canManage ? (
             <Button

@@ -10,6 +10,7 @@ import {
   toIdNameOptions,
   toStringOptions,
 } from "@/components/ui/form-select";
+import { PropertySelectField } from "@/components/properties/property-select-field";
 import { Textarea } from "@/components/ui/textarea";
 import {
   BOOKING_INQUIRY_FORM_STATUSES,
@@ -209,14 +210,14 @@ export function InquiryFormBody({
         <Label className={labelClass} htmlFor={`${rid}-property`}>
           Lokale (valgfritt)
         </Label>
-        <FormSelectField
+        <PropertySelectField
           name="propertyId"
           control={control}
           id={`${rid}-property`}
           disabled={disabled}
-          className="font-medium"
+          optional
           placeholder="— Ikke valgt —"
-          options={toIdNameOptions(properties)}
+          properties={properties}
         />
       </div>
 
