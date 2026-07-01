@@ -37,32 +37,76 @@ export function resolveTrialPeriodEnd(
   return estimated.toISOString();
 }
 
+export type MrrTrendMode = "realized" | "estimated";
+
+function statusContributesToMrrTrend(
+  status: string,
+  mode: MrrTrendMode,
+): boolean {
+  if (mode === "realized") return status === "active";
+  return (
+    status === "active" ||
+    status === "trialing" ||
+    status === "past_due"
+  );
+}
+
+export function countOrgsForMrrTrendAt(
+  orgs: OrgForTrend[],
+  monthEnd: Date,
+  mode: MrrTrendMode,
+): number {
+  return orgs.filter((org) => {
+    if (org.isSuspended) return false;
+    if (!statusContributesToMrrTrend(org.subscriptionStatus, mode)) return false;
+    return new Date(org.createdAt) <= monthEnd;
+  }).length;
+}
+
+function monthEndForCalendarMonth(
+  year: number,
+  month: number,
+  referenceDate: Date,
+): Date | null {
+  const currentYear = referenceDate.getFullYear();
+  const currentMonth = referenceDate.getMonth();
+
+  if (year > currentYear || (year === currentYear && month > currentMonth)) {
+    return null;
+  }
+
+  if (year === currentYear && month === currentMonth) {
+    return referenceDate;
+  }
+
+  return new Date(year, month + 1, 0, 23, 59, 59, 999);
+}
+
+function formatTrendMonthLabel(date: Date): string {
+  return date
+    .toLocaleDateString("nb-NO", { month: "short" })
+    .replace(/\./g, "")
+    .toUpperCase();
+}
+
+/** Calendar-year SaaS MRR trend (January–December). */
 export function buildMonthlyTrend(
   orgs: OrgForTrend[],
-  currentMrr: number,
+  mode: MrrTrendMode = "estimated",
+  referenceDate: Date = new Date(),
 ): TrendPoint[] {
+  const year = referenceDate.getFullYear();
   const months: TrendPoint[] = [];
-  const now = new Date();
 
-  for (let i = 11; i >= 0; i -= 1) {
-    const monthEnd = new Date(
-      now.getFullYear(),
-      now.getMonth() - i + 1,
-      0,
-      23,
-      59,
-      59,
-      999,
-    );
-    const label = monthEnd.toLocaleDateString("nb-NO", { month: "short" });
+  for (let month = 0; month < 12; month += 1) {
+    const monthEnd = monthEndForCalendarMonth(year, month, referenceDate);
+    const label = formatTrendMonthLabel(new Date(year, month, 1));
 
-    const activeAtMonth = orgs.filter((org) => {
-      if (org.isSuspended || org.subscriptionStatus !== "active") return false;
-      return new Date(org.createdAt) <= monthEnd;
-    }).length;
-
-    const value =
-      i === 0 ? currentMrr : activeAtMonth * SAAS_MONTHLY_PRICE_NOK;
+    const orgCount =
+      monthEnd == null
+        ? 0
+        : countOrgsForMrrTrendAt(orgs, monthEnd, mode);
+    const value = orgCount * SAAS_MONTHLY_PRICE_NOK;
 
     months.push({ label, value });
   }
@@ -99,29 +143,25 @@ export function buildBookingRevenueTrend(
     status: string;
   }[],
   months = 12,
+  referenceDate: Date = new Date(),
 ): TrendPoint[] {
   const points: TrendPoint[] = [];
-  const now = new Date();
+  const year = referenceDate.getFullYear();
 
-  for (let i = months - 1; i >= 0; i -= 1) {
-    const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthEnd = new Date(
-      now.getFullYear(),
-      now.getMonth() - i + 1,
-      0,
-      23,
-      59,
-      59,
-      999,
-    );
-    const label = monthStart.toLocaleDateString("nb-NO", { month: "short" });
+  for (let month = 0; month < months; month += 1) {
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = monthEndForCalendarMonth(year, month, referenceDate);
+    const label = formatTrendMonthLabel(monthStart);
 
-    const value = (bookings ?? []).reduce((sum, booking) => {
-      if (isCancelledBookingStatus(booking.status)) return sum;
-      const eventDate = parseLocalDate(booking.event_date);
-      if (eventDate < monthStart || eventDate > monthEnd) return sum;
-      return sum + Number(booking.total_price ?? 0);
-    }, 0);
+    const value =
+      monthEnd == null
+        ? 0
+        : (bookings ?? []).reduce((sum, booking) => {
+            if (isCancelledBookingStatus(booking.status)) return sum;
+            const eventDate = parseLocalDate(booking.event_date);
+            if (eventDate < monthStart || eventDate > monthEnd) return sum;
+            return sum + Number(booking.total_price ?? 0);
+          }, 0);
 
     points.push({ label, value });
   }

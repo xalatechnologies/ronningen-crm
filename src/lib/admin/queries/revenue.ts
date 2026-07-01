@@ -127,7 +127,7 @@ export async function fetchAdminRevenueOverview(): Promise<AdminRevenueOverview>
   );
 
   const periodEndByOrg = buildPeriodEndByOrg(subscriptions ?? []);
-  const revenueTrend = buildMonthlyTrend(analytics.orgs, metrics.mrrNok);
+  const revenueTrend = buildMonthlyTrend(analytics.orgs, "realized");
   const bookingRevenueTrend = buildBookingRevenueTrend(bookings ?? []);
   const trialExpiringQueue = buildTrialExpiringQueue(
     orgs ?? [],

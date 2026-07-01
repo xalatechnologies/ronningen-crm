@@ -124,6 +124,7 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
 
   const statusCounts: Record<string, number> = {};
   for (const org of orgs ?? []) {
+    if (org.is_suspended) continue;
     statusCounts[org.subscription_status] =
       (statusCounts[org.subscription_status] ?? 0) + 1;
   }
@@ -185,7 +186,7 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
 
   const revenueTrend = buildMonthlyTrend(
     subscriptionAnalytics.orgs,
-    revenue.mrrNok,
+    "estimated",
   );
   const newTenantsTrend = buildDailyNewOrgsTrend(
     (orgs ?? []).map((o) => ({ createdAt: o.created_at })),

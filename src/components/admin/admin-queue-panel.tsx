@@ -14,6 +14,7 @@ export function AdminQueuePanel({
   items,
   viewAllHref,
   onViewAll,
+  embedded = false,
 }: {
   title: string;
   emptyMessage?: string;
@@ -21,6 +22,7 @@ export function AdminQueuePanel({
   items: AdminQueueItem[];
   viewAllHref?: string;
   onViewAll?: () => void;
+  embedded?: boolean;
 }) {
   const empty = emptyMessage ?? emptyLabel ?? "Ingen elementer.";
 
@@ -34,7 +36,7 @@ export function AdminQueuePanel({
     ) : undefined;
 
   return (
-    <AdminDataPanel title={title} action={viewAllAction}>
+    <AdminDataPanel title={title} action={viewAllAction} embedded={embedded}>
       {items.length === 0 ? (
         <p className="mt-4 app-text-muted">{empty}</p>
       ) : (

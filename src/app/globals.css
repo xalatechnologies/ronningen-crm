@@ -438,6 +438,30 @@
     color: #f8fafc;
   }
 
+  [data-theme="dark"] .admin-overview-dashboard .dashboard-kpi-value.text-success {
+    color: #4ade80;
+  }
+
+  [data-theme="dark"] .admin-overview-dashboard .dashboard-kpi-value.text-destructive {
+    color: #f87171;
+  }
+
+  .admin-overview-dashboard .admin-overview-kpi-tile {
+    border-color: var(--rn-border-strong);
+  }
+
+  .admin-overview-dashboard .admin-overview-kpi-tile:hover {
+    border-color: color-mix(in srgb, var(--success) 45%, var(--rn-border-strong));
+  }
+
+  [data-theme="dark"] .admin-overview-dashboard .dashboard-kpi-label {
+    color: color-mix(in srgb, var(--foreground) 72%, transparent);
+  }
+
+  [data-theme="dark"] .admin-overview-dashboard .app-text-secondary {
+    color: color-mix(in srgb, var(--foreground) 78%, transparent);
+  }
+
   .dashboard-kpi-caption {
     font-size: calc(15px * var(--app-read-type-scale));
     line-height: 1.5;
@@ -1174,6 +1198,53 @@
     letter-spacing: 0.01em;
   }
 
+  .admin-page-workspace [data-slot="table-head"] {
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    color: var(--foreground);
+  }
+
+  .admin-page-workspace [data-slot="table-header"] [data-slot="table-row"] {
+    background-color: var(--rn-surface-table-head);
+    border-bottom: 2px solid color-mix(in srgb, var(--rn-border-strong) 70%, transparent);
+  }
+
+  [data-theme="dark"] .admin-page-workspace [data-slot="table-head"] {
+    color: #f8fafc;
+  }
+
+  .admin-page-workspace .admin-overview-trend-chart .app-section-title,
+  .admin-page-workspace .admin-trend-chart-header .app-section-title {
+    font-weight: 700;
+    color: var(--foreground);
+  }
+
+  [data-theme="dark"] .admin-page-workspace .admin-overview-trend-chart .app-section-title,
+  [data-theme="dark"] .admin-page-workspace .admin-trend-chart-header .app-section-title {
+    color: #f8fafc;
+  }
+
+  .admin-page-workspace .admin-trend-chart-subtitle {
+    font-size: calc(14px * var(--app-read-type-scale));
+    line-height: 1.5;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--foreground) 80%, transparent);
+  }
+
+  [data-theme="dark"] .admin-page-workspace .admin-trend-chart-subtitle {
+    color: #cbd5e1;
+  }
+
+  .admin-overview-dashboard .admin-overview-table-head {
+    font-size: calc(14px * var(--app-type-scale));
+  }
+
+  @media (min-width: 640px) {
+    .admin-overview-dashboard .admin-overview-table-head {
+      font-size: calc(15px * var(--app-type-scale));
+    }
+  }
+
   [data-theme="dark"] .platform-admin .admin-inline-link {
     background-color: color-mix(in srgb, var(--muted) 55%, transparent);
   }
@@ -1224,6 +1295,7 @@
   }
 
   @media (max-width: 639px) {
+    .admin-overview-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
     .admin-users-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
     .admin-revenue-dashboard .dashboard-kpi-value,
     .admin-support-dashboard .dashboard-oversikt-card .dashboard-kpi-value,

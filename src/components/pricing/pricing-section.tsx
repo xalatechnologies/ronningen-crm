@@ -507,8 +507,8 @@ export function PricingSection({
               <div className={cn("pr-2", canEdit && "pl-[4.75rem]")}>
                 <span
                   className={cn(
-                    "pricing-package-tier-label mb-3 block font-semibold tracking-wider text-stone-500 uppercase",
-                    isPopular && "text-stone-400",
+                    "pricing-package-tier-label mb-3 block font-semibold tracking-wider uppercase",
+                    isPopular ? "text-stone-400" : "text-muted-foreground",
                   )}
                 >
                   {pkg.name.toUpperCase()}
@@ -518,7 +518,7 @@ export function PricingSection({
                     <p
                       className={cn(
                         "pricing-package-price-alt font-heading font-semibold leading-tight tracking-tight text-balance",
-                        isPopular ? "text-white" : "text-stone-900",
+                        isPopular ? "text-white" : "text-foreground",
                       )}
                     >
                       Pris etter avtale
@@ -527,7 +527,7 @@ export function PricingSection({
                     <p
                       className={cn(
                         "pricing-package-price leading-tight",
-                        isPopular ? "text-white" : "text-stone-900",
+                        isPopular ? "text-white" : "text-foreground",
                       )}
                     >
                       {formatNok(pkg.price)}

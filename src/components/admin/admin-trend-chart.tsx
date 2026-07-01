@@ -18,8 +18,10 @@ export type TrendValueFormat = "number" | "nok";
 
 type AdminTrendChartProps = {
   title: string;
+  subtitle?: string;
   points: TrendPoint[];
   valueFormat?: TrendValueFormat;
+  periodHint?: string;
   className?: string;
   embedded?: boolean;
 };
@@ -57,15 +59,20 @@ function formatTrendValue(value: number, valueFormat: TrendValueFormat): string 
 
 export function AdminTrendChart({
   title,
+  subtitle,
   points,
   valueFormat = "number",
+  periodHint: periodHintProp,
   className,
   embedded = false,
 }: AdminTrendChartProps) {
   const chartBars = useMemo(() => {
     const max = Math.max(0, ...points.map((p) => p.value));
     const scaleMax = max > 0 ? max : 1;
-    const lastIndex = points.length - 1;
+    const highlightIndex =
+      points.length === 12
+        ? new Date().getMonth()
+        : points.length - 1;
 
     return points.map((point, index) => {
       const hasValue = point.value > 0;
@@ -78,7 +85,7 @@ export function AdminTrendChart({
         value: point.value,
         hasValue,
         heightPct,
-        highlight: index === lastIndex,
+        highlight: index === highlightIndex,
       };
     });
   }, [points]);
@@ -87,7 +94,10 @@ export function AdminTrendChart({
   const formatAxis =
     valueFormat === "nok" ? formatNokChartAxis : formatNumberChartAxis;
   const periodHint =
-    points.length > 7 ? "Siste 12 måneder" : "Siste 7 dager";
+    periodHintProp ??
+    (points.length === 12
+      ? String(new Date().getFullYear())
+      : "Siste 7 dager");
 
   return (
     <section
@@ -101,14 +111,19 @@ export function AdminTrendChart({
         className,
       )}
     >
-      <h2 className="app-section-title">{title}</h2>
+      <div className="admin-trend-chart-header">
+        <h2 className="app-section-title font-bold text-foreground">{title}</h2>
+        {subtitle ? (
+          <p className="admin-trend-chart-subtitle mt-1.5">{subtitle}</p>
+        ) : null}
+      </div>
 
       <div className="mt-4 border-t border-rn-border-strong/35 pt-4">
         <div
           className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between"
           aria-hidden
         >
-          <span className="text-app-xs font-semibold text-muted-foreground md:text-app-sm">
+          <span className="text-app-xs font-semibold text-foreground md:text-app-sm">
             {periodHint}
           </span>
           <span className="text-[11px] tabular-nums text-muted-foreground md:text-app-xs">
