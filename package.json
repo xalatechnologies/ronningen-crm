@@ -18,7 +18,8 @@
     "verify:legacy-migration": "node --env-file=.env.local scripts/verify-legacy-migration.mjs",
     "stripe:setup": "node --env-file=.env.local scripts/stripe-setup.mjs",
     "billing:verify-env": "node --env-file=.env.local scripts/verify-billing-env.mjs",
-    "stitch:export": "node --env-file=.env.local scripts/stitch-export.mjs"
+    "stitch:export": "node --env-file=.env.local scripts/stitch-export.mjs",
+    "i18n:audit": "node scripts/i18n-audit.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

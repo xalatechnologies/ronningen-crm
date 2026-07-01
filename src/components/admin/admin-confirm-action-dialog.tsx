@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import type { ReactNode } from "react";
 import { AdminActionButton } from "@/components/admin/admin-action-button";
 import {
@@ -27,11 +28,14 @@ export function AdminConfirmActionDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "Bekreft",
+  confirmLabel,
   confirmVariant = "default",
   busy = false,
   onConfirm,
 }: AdminConfirmActionDialogProps) {
+  const { t } = useTranslation();
+  const resolvedConfirm = confirmLabel ?? t("common.actions.confirm");
+
   return (
     <Dialog
       open={open}
@@ -52,7 +56,7 @@ export function AdminConfirmActionDialog({
             disabled={busy}
             onClick={() => onOpenChange(false)}
           >
-            Avbryt
+            {t("common.actions.cancel")}
           </AdminActionButton>
           <AdminActionButton
             type="button"
@@ -60,7 +64,7 @@ export function AdminConfirmActionDialog({
             disabled={busy}
             onClick={() => void onConfirm()}
           >
-            {busy ? "Behandler…" : confirmLabel}
+            {busy ? t("admin.behandler") : resolvedConfirm}
           </AdminActionButton>
         </DialogFooter>
       </DialogContent>

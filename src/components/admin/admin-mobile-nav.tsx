@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminNavLinks } from "@/components/admin/admin-nav-links";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,7 @@ import { MenuIcon } from "lucide-react";
 import { useState } from "react";
 
 export function AdminMobileNav({ supportOpenCount = 0 }: { supportOpenCount?: number }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
@@ -27,7 +29,7 @@ export function AdminMobileNav({ supportOpenCount = 0 }: { supportOpenCount?: nu
             variant="ghost"
             size="icon"
             className="size-11 shrink-0 md:hidden"
-            aria-label="Åpne meny"
+            aria-label={t("admin.apne_meny")}
           >
             <MenuIcon className="size-6" />
           </Button>
@@ -49,7 +51,7 @@ export function AdminMobileNav({ supportOpenCount = 0 }: { supportOpenCount?: nu
         </SheetHeader>
         <nav
           className="flex flex-col gap-[length:var(--spacing-app-gap)] px-[length:calc(var(--app-card-padding)*0.35)] pt-3 pb-4 md:px-[length:calc(var(--app-card-padding)*0.45)]"
-          aria-label="Mobil plattformadmin-meny"
+          aria-label={t("admin.mobil_plattformadmin_meny")}
         >
           <AdminNavLinks
             onNavigate={() => setOpen(false)}

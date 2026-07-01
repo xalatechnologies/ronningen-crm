@@ -18,7 +18,9 @@ import { DatePickerField } from "@/components/ui/date-picker-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/ui/form-select";
-import { BOOKING_PAYMENT_STATUS_LABELS } from "@/constants/booking-payment-status";
+import { BOOKING_PAYMENT_STATUS_VALUES, bookingPaymentStatusLabel } from "@/constants/booking-payment-status";
+import { useTranslation } from "@/i18n/client";
+import { statusLabel } from "@/lib/navigation/nav-labels";
 import { cn } from "@/lib/utils";
 import { APP_LIST_ROW_DATE } from "@/lib/table-typography";
 import {
@@ -91,29 +93,14 @@ function matchesBookingDateRange(
   return true;
 }
 
-function formatNok(n: number) {
-  return `${new Intl.NumberFormat("nb-NO").format(Math.round(n))} NOK`;
-}
-
-function formatNokCompact(n: number) {
-  const formatted = new Intl.NumberFormat("nb-NO").format(Math.round(n));
+function formatNokCompact(n: number, formatCurrency: (amount: number) => string) {
+  const formatted = formatCurrency(n).replace(/\s?NOK$/, "");
   return (
     <>
       <span className="tracking-tight">{formatted}</span>{" "}
       <span className="text-app-lg font-medium tracking-normal opacity-70 md:text-app-2xl">NOK</span>
     </>
   );
-}
-
-function statusConfirmTitle(next: BookingStatus): string {
-  switch (next) {
-    case "cancelled":
-      return "Avbestille booking?";
-    case "pending":
-      return "Flytte booking til avventer?";
-    default:
-      return "Bekreft handling";
-  }
 }
 
 function BookingsFiltersSection({
@@ -154,6 +141,7 @@ function BookingsFiltersSection({
   };
   secondaryRowEnd?: ReactNode;
 }) {
+  const { t } = useTranslation();
   const hasActiveFilters =
     query.trim() !== "" ||
     filter !== "all" ||
@@ -165,13 +153,13 @@ function BookingsFiltersSection({
   return (
     <section
       className="bookings-list-filters border-t border-rn-border-strong/35 px-4 py-5 sm:px-6 md:px-8 md:py-6"
-      aria-label="Søk og filtrer reservasjoner"
+      aria-label={t("bookings.searchFilterAria")}
     >
       <div className="flex min-w-0 flex-col gap-4">
         <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-end xl:gap-5">
           <div className="relative min-w-0 w-full xl:max-w-md 2xl:max-w-xl">
             <Label htmlFor="bookings-search" className={filterEyebrowClass}>
-              Søk
+              {t("bookings.search")}
             </Label>
             <Search
               className="pointer-events-none absolute top-[calc(50%+0.625rem)] left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
@@ -179,9 +167,9 @@ function BookingsFiltersSection({
             />
             <Input
               id="bookings-search"
-              aria-label="Søk blant reservasjoner"
+              aria-label={t("bookings.searchAria")}
               className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-              placeholder="Kunde, telefon, referanse eller type …"
+              placeholder={t("bookings.searchPlaceholder")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               autoComplete="off"
@@ -189,18 +177,18 @@ function BookingsFiltersSection({
           </div>
 
           <div className="min-w-0 w-full flex-1">
-            <p className={filterEyebrowClass}>Status</p>
+            <p className={filterEyebrowClass}>{t("common.fields.status")}</p>
             <div
               className="grid min-w-0 w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3"
               role="group"
-              aria-label="Filtrer etter status"
+              aria-label={t("bookings.filterStatusAria")}
             >
               {(
                 [
-                  ["all", "Alle", filterCounts.all, null],
-                  ["confirmed", "Bekreftet", filterCounts.confirmed, "emerald"],
-                  ["pending", "Avventer", filterCounts.pending, "amber"],
-                  ["cancelled", "Avbestilt", filterCounts.cancelled, "rose"],
+                  ["all", t("common.actions.all"), filterCounts.all, null],
+                  ["confirmed", statusLabel("confirmed", t), filterCounts.confirmed, "emerald"],
+                  ["pending", statusLabel("pending", t), filterCounts.pending, "amber"],
+                  ["cancelled", statusLabel("cancelled", t), filterCounts.cancelled, "rose"],
                 ] as const
               ).map(([key, label, count, tone]) => {
                 const active = filter === key;
@@ -250,7 +238,7 @@ function BookingsFiltersSection({
         <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
           <div className="min-w-0">
             <Label htmlFor="bookings-date-from" className={filterEyebrowClass}>
-              Fra dato
+              {t("bookings.dateFrom")}
             </Label>
             <DatePickerField
               id="bookings-date-from"
@@ -263,7 +251,7 @@ function BookingsFiltersSection({
           </div>
           <div className="min-w-0">
             <Label htmlFor="bookings-date-to" className={filterEyebrowClass}>
-              Til dato
+              {t("bookings.dateTo")}
             </Label>
             <DatePickerField
               id="bookings-date-to"
@@ -276,36 +264,37 @@ function BookingsFiltersSection({
           </div>
           <div className="min-w-0">
             <Label htmlFor="bookings-payment-filter" className={filterEyebrowClass}>
-              Betaling
+              {t("bookings.payment")}
             </Label>
             <FormSelect
               id="bookings-payment-filter"
               value={paymentFilter}
               onValueChange={(v) => setPaymentFilter(v as BookingPaymentFilter)}
-              aria-label="Filtrer etter betaling"
+              aria-label={t("bookings.filterPaymentAria")}
               className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
-              placeholder="Alle betalinger"
-              options={[
-                { value: "unpaid", label: BOOKING_PAYMENT_STATUS_LABELS.unpaid },
-                { value: "partial", label: BOOKING_PAYMENT_STATUS_LABELS.partial },
-                { value: "paid", label: BOOKING_PAYMENT_STATUS_LABELS.paid },
-              ]}
+              placeholder={t("bookings.allPayments")}
+              options={BOOKING_PAYMENT_STATUS_VALUES.filter((v) =>
+                ["unpaid", "partial", "paid"].includes(v),
+              ).map((v) => ({
+                value: v,
+                label: bookingPaymentStatusLabel(v, t),
+              }))}
             />
           </div>
           <div className="min-w-0">
             <Label htmlFor="bookings-audience-filter" className={filterEyebrowClass}>
-              Type
+              {t("common.fields.type")}
             </Label>
             <FormSelect
               id="bookings-audience-filter"
               value={audienceFilter}
               onValueChange={(v) => setAudienceFilter(v as BookingAudienceFilter)}
-              aria-label="Filtrer etter type"
+              aria-label={t("bookings.filterTypeAria")}
               className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
-              placeholder="Alle typer"
+              placeholder={t("bookings.allTypes")}
               options={[
-                { value: "Privat", label: "Privat" },
-                { value: "Bedrift", label: "Bedrift" },
+                { value: "Privat", label: t("bookings.private") },
+                { value: "Bedrift", label: t("bookings.corporate") },
               ]}
             />
           </div>
@@ -318,7 +307,7 @@ function BookingsFiltersSection({
               onClick={onResetFilters}
             >
               <RotateCcw className="size-4 shrink-0" aria-hidden />
-              Nullstill filter
+              {t("bookings.resetFilters")}
             </Button>
           </div>
         </div>
@@ -372,19 +361,20 @@ function FindBookingsCardHeader({
   view: "list" | "calendar";
   setView: (v: "list" | "calendar") => void;
 }) {
+  const { t } = useTranslation();
   return (
     <header className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
       <div className="bookings-list-hero">
         <AppPageHeader
           className="mb-0"
           surface="default"
-          title="Reservasjoner"
+          title={t("bookings.title")}
           actions={
           <div className="flex flex-wrap items-center gap-3 lg:shrink-0">
             <div
               className={RN_SEGMENT_CONTROL}
               role="tablist"
-              aria-label="Bytt visning"
+              aria-label={t("bookings.switchViewAria")}
             >
               <button
                 type="button"
@@ -400,7 +390,7 @@ function FindBookingsCardHeader({
                 )}
               >
                 <List className="size-5 shrink-0 opacity-90" aria-hidden />
-                Liste
+                {t("bookings.list")}
               </button>
               <button
                 type="button"
@@ -416,7 +406,7 @@ function FindBookingsCardHeader({
                 )}
               >
                 <CalendarDays className="size-5 shrink-0 opacity-90" aria-hidden />
-                Kalender
+                {t("bookings.calendar")}
               </button>
             </div>
             <Link
@@ -424,7 +414,7 @@ function FindBookingsCardHeader({
               className={cn(buttonVariants({ variant: "success", size: "cta" }))}
             >
               <Plus className="size-5" aria-hidden />
-              Ny reservasjon
+              {t("bookings.new")}
             </Link>
           </div>
         }
@@ -446,6 +436,7 @@ export function BookingsList({
   loadError,
   canDeleteBookings = false,
 }: BookingsListProps) {
+  const { t, formatCurrency } = useTranslation();
   const supabase = useSupabase();
   const { invalidateBookings } = useTenantDataInvalidation();
   const [view, setView] = useState<"list" | "calendar">("list");
@@ -499,7 +490,7 @@ export function BookingsList({
         .eq("id", id);
 
       if (error) {
-        toast.error("Kunne ikke oppdatere status", {
+        toast.error(t("bookings.statusUpdateFailed"), {
           description: error.message,
         });
         return;
@@ -507,10 +498,10 @@ export function BookingsList({
 
       toast.success(
         next === "confirmed"
-          ? "Booking bekreftet"
+          ? t("bookings.statusUpdated.confirmed")
           : next === "cancelled"
-            ? "Booking avbestilt"
-            : "Booking satt til avventer",
+            ? t("bookings.statusUpdated.cancelled")
+            : t("bookings.statusUpdated.pending"),
       );
       invalidateBookings();
       setSelectedBookingId((current) => (current === id ? null : current));
@@ -609,7 +600,7 @@ export function BookingsList({
           className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-app-sm text-destructive md:text-app-base"
           role="alert"
         >
-          Kunne ikke laste bookinger: {loadError}
+          {t("bookings.loadError", { error: loadError })}
         </div>
       ) : null}
 
@@ -670,7 +661,7 @@ export function BookingsList({
                   "py-0",
                 )}
               >
-                Kunde &amp; arrangement
+                {t("bookings.tableCustomerEvent")}
               </div>
               <div
                 className={cn(
@@ -679,7 +670,7 @@ export function BookingsList({
                   "py-0",
                 )}
               >
-                Gjester
+                {t("bookings.tableGuests")}
               </div>
               <div
                 className={cn(
@@ -688,7 +679,7 @@ export function BookingsList({
                   "py-0",
                 )}
               >
-                Økonomi
+                {t("bookings.tableFinance")}
               </div>
               <div
                 className={cn(
@@ -697,7 +688,7 @@ export function BookingsList({
                   "py-0",
                 )}
               >
-                Status · detaljer
+                {t("bookings.tableStatusDetails")}
               </div>
             </div>
 
@@ -706,13 +697,13 @@ export function BookingsList({
                 <div className="space-y-4 px-6 py-16 text-center sm:px-10 sm:py-20 md:px-8">
                   <p className="bookings-list-empty-title font-heading font-bold tracking-tight text-rn-text-heading">
                     {bookings.length === 0
-                      ? "Ingen bookinger ennå"
-                      : "Ingen treff i listen"}
+                      ? t("bookings.emptyTitle")
+                      : t("bookings.emptyFilteredTitle")}
                   </p>
                   <p className="bookings-list-empty-body mx-auto max-w-lg text-muted-foreground">
                     {bookings.length === 0
-                      ? "Opprett en ny reservasjon for å se den her. Du kan også importere eller legge til kunder fra Kunder."
-                      : "Juster søket eller bytt filter (Alle, Bekreftet, …). Nullstill ved å velge «Alle» og tømme søkefeltet."}
+                      ? t("bookings.emptyDescription")
+                      : t("bookings.emptyFilteredDescription")}
                   </p>
                 </div>
               ) : (
@@ -725,7 +716,15 @@ export function BookingsList({
                       "cursor-pointer border-0 outline-none hover:bg-rn-surface-row-hover focus-visible:bg-rn-surface-row-hover focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
                       row.dimmed && "opacity-60",
                     )}
-                    aria-label={`Åpne bookingdetaljer for ${row.customer}${row.customerPhone?.trim() ? `, ${row.customerPhone.trim()}` : ""}${row.festType?.trim() ? `, ${row.festType.trim()}` : ""}`}
+                    aria-label={t("bookings.openDetailsAria", {
+                      customer: row.customer,
+                      phone: row.customerPhone?.trim()
+                        ? `, ${row.customerPhone.trim()}`
+                        : "",
+                      festType: row.festType?.trim()
+                        ? `, ${row.festType.trim()}`
+                        : "",
+                    })}
                     onClick={() => setSelectedBookingId(row.id)}
                   >
                     <div className="col-span-12 flex items-center gap-4 sm:col-span-4">
@@ -778,13 +777,13 @@ export function BookingsList({
                     <div className="col-span-12 mt-3 flex items-center gap-2 sm:col-span-2 sm:mt-0">
                       <Users className="size-6 shrink-0 text-muted-foreground md:size-7" aria-hidden />
                       <span className="bookings-list-row-metric font-semibold text-foreground">
-                        {row.guests} gjester
+                        {t("bookings.guestsCount", { count: row.guests })}
                       </span>
                     </div>
                     <div className="col-span-12 mt-3 text-left sm:col-span-4 sm:mt-0 sm:px-4 sm:text-right">
                       <div className="inline-block text-left sm:text-right">
                         <div className="bookings-list-row-amount font-bold tabular-nums text-foreground">
-                          {formatNok(row.totalNok)}
+                          {formatCurrency(row.totalNok)}
                         </div>
                         {row.paidFraction !== null ? (
                           <div className="mt-1 flex flex-wrap items-center gap-2 sm:justify-end">
@@ -839,12 +838,35 @@ export function BookingsList({
             <div className="flex flex-col items-stretch justify-between gap-4 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
               <span className="bookings-list-footer-caption font-medium text-rn-footer-text">
                 {bookings.length === 0
-                  ? "Ingen bookinger"
+                  ? t("bookings.footer.noBookings")
                   : filtered.length === 0
-                    ? `Ingen rader samsvarer med filteret · ${bookings.length} ${bookings.length === 1 ? "booking" : "bookinger"} totalt`
+                    ? t("bookings.footer.noRowsMatch", {
+                        total: bookings.length,
+                        bookingsLabel:
+                          bookings.length === 1
+                            ? t("bookings.footer.bookingWord")
+                            : t("bookings.footer.bookingsWord"),
+                      })
                     : filtered.length <= TENANT_LIST_PAGE_SIZE
-                      ? `Viser ${filtered.length} av ${bookings.length} bookinger`
-                      : `Viser ${(currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1}–${Math.min(currentPage * TENANT_LIST_PAGE_SIZE, filtered.length)} av ${filtered.length}${filtered.length !== bookings.length ? ` treff (${bookings.length} totalt)` : " bookinger"}`}
+                      ? t("bookings.footer.showingAll", {
+                          shown: filtered.length,
+                          total: bookings.length,
+                        })
+                      : t("bookings.footer.showingRange", {
+                          from:
+                            (currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1,
+                          to: Math.min(
+                            currentPage * TENANT_LIST_PAGE_SIZE,
+                            filtered.length,
+                          ),
+                          filtered: filtered.length,
+                          extra:
+                            filtered.length !== bookings.length
+                              ? t("bookings.footer.extraMatches", {
+                                  total: bookings.length,
+                                })
+                              : ` ${t("bookings.footer.bookingsWord")}`,
+                        })}
               </span>
               {filtered.length > TENANT_LIST_PAGE_SIZE ? (
               <div className="flex items-center justify-center gap-2">
@@ -854,13 +876,16 @@ export function BookingsList({
                   size="icon-sm"
                   className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
                   disabled={currentPage <= 1}
-                  aria-label="Forrige side"
+                  aria-label={t("common.pagination.prevPage")}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
                   <ChevronLeft className="size-[18px]" />
                 </Button>
                 <span className="min-w-[5.5rem] text-center text-app-sm font-semibold tabular-nums text-muted-foreground">
-                  Side {currentPage} / {totalPages}
+                  {t("common.pagination.pageOf", {
+                    current: currentPage,
+                    total: totalPages,
+                  })}
                 </span>
                 <Button
                   type="button"
@@ -868,7 +893,7 @@ export function BookingsList({
                   size="icon-sm"
                   className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
                   disabled={currentPage >= totalPages}
-                  aria-label="Neste side"
+                  aria-label={t("common.pagination.nextPage")}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 >
                   <ChevronRight className="size-[18px]" />
@@ -887,19 +912,18 @@ export function BookingsList({
                 <TrendingUp className="size-6 md:size-7" aria-hidden />
               </div>
               <h2 className="font-heading text-app-xl font-bold leading-snug text-white md:text-app-2xl">
-                Månedlig omsetning
+                {t("bookings.stats.monthlyRevenue")}
               </h2>
               <p className="mt-3 text-app-sm leading-relaxed text-white/90 md:text-app-base">
-                Fakturert på bookinger i{" "}
-                <span className="font-semibold text-white">
-                  {quickStats.monthLabel}
-                </span>
-                . Sammenlignes med {quickStats.prevMonthLabel}.
+                {t("bookings.stats.monthlyRevenueDesc", {
+                  month: quickStats.monthLabel,
+                  prevMonth: quickStats.prevMonthLabel,
+                })}
               </p>
             </div>
             <div className="mt-10 min-w-0">
               <div className="break-words text-app-3xl font-black leading-none tracking-tight md:text-app-3xl [&_span:last-child]:text-app-lg [&_span:last-child]:font-semibold [&_span:last-child]:opacity-85 md:[&_span:last-child]:text-app-2xl">
-                {formatNokCompact(quickStats.currentMonthRevenue)}
+                {formatNokCompact(quickStats.currentMonthRevenue, formatCurrency)}
               </div>
               {quickStats.monthOverMonthPct != null ? (
                 <div
@@ -914,20 +938,23 @@ export function BookingsList({
                     <ArrowDownRight className="size-4 shrink-0 md:size-5" aria-hidden />
                   )}
                   <span>
-                    {trendPositive ? "+" : ""}
-                    {quickStats.monthOverMonthPct
-                      .toFixed(1)
-                      .replace(".", ",")}
-                    % fra forrige måned
+                    {t("bookings.stats.percentFromPrevMonth", {
+                      sign: trendPositive ? "+" : "",
+                      percent: quickStats.monthOverMonthPct
+                        .toFixed(1)
+                        .replace(".", ","),
+                    })}
                   </span>
                 </div>
               ) : (
                 <p className="mt-4 text-app-sm font-medium text-white/75 md:text-app-base">
-                  Ingen sammenligning mot forrige måned (manglende grunnlag).
+                  {t("bookings.stats.noComparison")}
                 </p>
               )}
               <p className="mt-3 text-app-sm text-white/70">
-                Forrige måned: {formatNok(quickStats.prevMonthRevenue)}
+                {t("bookings.stats.prevMonthAmount", {
+                  amount: formatCurrency(quickStats.prevMonthRevenue),
+                })}
               </p>
             </div>
           </div>
@@ -943,24 +970,24 @@ export function BookingsList({
               <div className="grid grid-cols-1 gap-4">
                 <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
                   <p className="mb-3 text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-app-sm">
-                    Kalenderdekning
+                    {t("bookings.stats.calendarCoverage")}
                   </p>
                   <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
                     {quickStats.calendarFillPct}%
                   </p>
                   <p className="mt-3 text-app-base leading-snug text-muted-foreground md:text-app-lg">
-                    Av dager i måneden med minst ett arrangement.
+                    {t("bookings.stats.calendarCoverageDesc")}
                   </p>
                 </div>
                 <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
                   <p className="mb-3 text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-app-sm">
-                    Snitt gjester
+                    {t("bookings.stats.avgGuests")}
                   </p>
                   <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
                     {quickStats.avgGuestsActive ?? "—"}
                   </p>
                   <p className="mt-3 text-app-base text-muted-foreground md:text-app-lg">
-                    Per booking.
+                    {t("bookings.stats.avgGuestsDesc")}
                   </p>
                 </div>
               </div>
@@ -968,19 +995,19 @@ export function BookingsList({
             <div className="flex w-full flex-col justify-between rounded-md border-2 border-success/50 bg-gradient-to-b from-rn-surface-gradient-from to-muted p-6 md:w-[38%] md:max-w-[340px] md:p-8">
               <div>
                 <p className="text-app-xs font-semibold tracking-wider text-success uppercase dark:!text-white md:text-app-sm">
-                  Denne måneden
+                  {t("bookings.stats.thisMonth")}
                 </p>
                 <p className="mt-3 dashboard-kpi-value text-success dark:!text-white md:text-app-3xl">
-                  {formatNok(quickStats.currentMonthRevenue)}
+                  {formatCurrency(quickStats.currentMonthRevenue)}
                 </p>
               </div>
               <div className="mt-8 space-y-3 border-t-2 border-success/20 pt-5">
                 <div className="flex justify-between text-app-base md:text-app-lg">
                   <span className="font-medium text-rn-text-body">
-                    Forrige måned
+                    {t("bookings.stats.prevMonthLabel")}
                   </span>
                   <span className="font-bold tabular-nums text-rn-text-heading">
-                    {formatNok(quickStats.prevMonthRevenue)}
+                    {formatCurrency(quickStats.prevMonthRevenue)}
                   </span>
                 </div>
                 <div className="h-2.5 overflow-hidden rounded-full border border-rn-border-strong/40 bg-muted">
@@ -1009,17 +1036,21 @@ export function BookingsList({
         }}
         title={
           pendingStatusConfirm
-            ? statusConfirmTitle(pendingStatusConfirm.next)
+            ? pendingStatusConfirm.next === "cancelled"
+              ? t("bookings.confirmCancel")
+              : pendingStatusConfirm.next === "pending"
+                ? t("bookings.confirmPending")
+                : t("bookings.confirmAction")
             : ""
         }
         description={pendingStatusConfirm?.message ?? ""}
         confirmLabel={
           pendingStatusConfirm?.next === "cancelled"
-            ? "Ja, avbestill"
-            : "Bekreft"
+            ? t("bookings.confirmYesCancel")
+            : t("common.actions.confirm")
         }
         busy={updatingId != null}
-        busyLabel="Lagrer…"
+        busyLabel={t("bookings.saving")}
         contentClassName="z-[100]"
         confirmClassName={
           pendingStatusConfirm?.next === "cancelled"
@@ -1046,7 +1077,7 @@ export function BookingsList({
       <Link
         href="/app/bookings/new"
         className="fixed bottom-8 right-8 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-2xl transition-transform active:scale-95 md:hidden"
-        aria-label="Ny reservasjon"
+        aria-label={t("bookings.new")}
       >
         <Plus className="size-7" />
       </Link>

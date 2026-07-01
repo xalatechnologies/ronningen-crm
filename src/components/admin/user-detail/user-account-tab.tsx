@@ -1,19 +1,20 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminConfirmActionDialog } from "@/components/admin/admin-confirm-action-dialog";
 import { AdminActionButton } from "@/components/admin/admin-action-button";
 import { AdminDataPanel } from "@/components/admin/admin-data-panel";
 import { setPlatformAdmin } from "@/lib/admin/actions/users";
 import type { AdminUserDetail } from "@/lib/admin/queries/users-billing-audit";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-function formatDateTime(iso: string | null): string {
+function formatDateTime(iso: string | null, locale: import("@/i18n/config").Locale): string {
   if (!iso) return "—";
-  return format(new Date(iso), "d. MMM yyyy HH:mm", { locale: nb });
+  return format(new Date(iso), "d. MMM yyyy HH:mm", { locale: getDateFnsLocale(locale) });
 }
 
 export function UserAccountTab({
@@ -23,6 +24,7 @@ export function UserAccountTab({
   user: AdminUserDetail;
   isSelf: boolean;
 }) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const [platformAdminBusy, setPlatformAdminBusy] = useState(false);
   const [confirmRevokeOpen, setConfirmRevokeOpen] = useState(false);
@@ -40,7 +42,7 @@ export function UserAccountTab({
       return;
     }
     toast.success(
-      next ? "Plattformadmin-tilgang gitt" : "Plattformadmin-tilgang fjernet",
+      next ? t("admin.plattformadmin_tilgang_gitt") : t("admin.plattformadmin_tilgang_fjernet"),
     );
     router.refresh();
   }
@@ -56,47 +58,47 @@ export function UserAccountTab({
   return (
     <>
       <div className="flex flex-col gap-6">
-        <AdminDataPanel title="Profil">
+        <AdminDataPanel title={t("admin.profil")}>
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
-              <dt className="app-text-muted">Navn</dt>
+              <dt className="app-text-muted">{t("adminLabels.fields.name")}</dt>
               <dd className="mt-1 font-heading text-app-md font-semibold">
                 {user.fullName ?? "—"}
               </dd>
             </div>
             <div>
-              <dt className="app-text-muted">E-post</dt>
+              <dt className="app-text-muted">{t("admin.e_post")}</dt>
               <dd className="mt-1 font-heading text-app-md font-semibold">
                 {user.email ?? "—"}
               </dd>
             </div>
             <div>
-              <dt className="app-text-muted">Bruker-ID</dt>
+              <dt className="app-text-muted">{t("adminLabels.fields.userId")}</dt>
               <dd className="mt-1 font-mono text-app-sm">{user.id}</dd>
             </div>
             <div>
-              <dt className="app-text-muted">Registrert</dt>
+              <dt className="app-text-muted">{t("adminLabels.fields.registered")}</dt>
               <dd className="mt-1 font-heading text-app-md font-semibold">
-                {formatDateTime(user.createdAt)}
+                {formatDateTime(user.createdAt, locale)}
               </dd>
             </div>
             <div>
-              <dt className="app-text-muted">Sist innlogget</dt>
+              <dt className="app-text-muted">{t("adminLabels.fields.lastLogin")}</dt>
               <dd className="mt-1 font-heading text-app-md font-semibold">
-                {formatDateTime(user.lastSignInAt)}
+                {formatDateTime(user.lastSignInAt, locale)}
               </dd>
             </div>
             <div>
-              <dt className="app-text-muted">Kontostatus</dt>
+              <dt className="app-text-muted">{t("admin.kontostatus")}</dt>
               <dd className="mt-1 font-heading text-app-md font-semibold">
-                {user.isDisabled ? "Deaktivert" : "Aktiv"}
+                {user.isDisabled ? t("admin.deaktivert") : t("admin.aktiv")}
               </dd>
             </div>
           </dl>
         </AdminDataPanel>
 
         <AdminDataPanel
-          title="Plattformadmin"
+          title={t("admin.plattformadmin")}
           action={
             <AdminActionButton
               type="button"
@@ -107,10 +109,10 @@ export function UserAccountTab({
               onClick={() => void togglePlatformAdmin(!user.isPlatformAdmin)}
             >
               {platformAdminBusy
-                ? "Lagrer…"
+                ? t("admin.lagrer")
                 : user.isPlatformAdmin
-                  ? "Fjern plattformadmin"
-                  : "Gi plattformadmin"}
+                  ? t("admin.fjern_plattformadmin")
+                  : t("admin.gi_plattformadmin")}
             </AdminActionButton>
           }
         >
@@ -131,9 +133,9 @@ export function UserAccountTab({
         onOpenChange={(open) => {
           if (!platformAdminBusy) setConfirmRevokeOpen(open);
         }}
-        title="Fjerne egen plattformadmin-tilgang?"
-        description="Du vil miste tilgang til admin-konsollet."
-        confirmLabel="Ja, fjern"
+        title={t("admin.fjerne_egen_plattformadmin_tilgang")}
+        description={t("admin.du_vil_miste_tilgang_til_admin_konsollet")}
+        confirmLabel={t("admin.ja_fjern")}
         confirmVariant="destructive"
         busy={platformAdminBusy}
         onConfirm={() => void applyPlatformAdmin(false)}

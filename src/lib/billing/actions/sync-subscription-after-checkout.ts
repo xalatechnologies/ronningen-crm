@@ -2,12 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 
+import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { isBillingEnabled, isStripeConfigured } from "@/lib/billing/constants";
 import { requireOrganizationOwner } from "@/lib/billing/require-organization-owner";
 import { SYNCABLE_STRIPE_SUBSCRIPTION_STATUSES } from "@/lib/billing/stripe-subscription-statuses";
 import { syncSubscriptionFromStripe } from "@/lib/billing/sync-subscription-from-stripe";
 import { getStripeClient } from "@/lib/billing/stripe";
-import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import { getServerT } from "@/lib/i18n/server-messages";
 import type Stripe from "stripe";
 
 const SYNCABLE_STATUSES = SYNCABLE_STRIPE_SUBSCRIPTION_STATUSES;
@@ -156,5 +157,6 @@ export async function syncSubscriptionAfterCheckout(
     }
   }
 
-  return { ok: false, error: "Ingen Stripe-abonnement funnet ennå." };
+  const t = await getServerT();
+  return { ok: false, error: t("serverErrors.billing.noStripeSubscription") };
 }

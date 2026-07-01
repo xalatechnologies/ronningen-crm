@@ -1,0 +1,108 @@
+export const propertiesNb = {
+  notSelected: "— Ikke valgt —",
+  noVenuesOptional: "Ingen lokaler er registrert ennå.",
+  noVenuesRequired: "Du må registrere minst ett lokale først.",
+  goToSettings: "Gå til",
+  settingsVenues: "Innstillinger → Lokaler",
+  createVenueOptional: " for å opprette et lokale du kan knytte til skjemaet.",
+  createVenueRequired: " for å opprette et lokale.",
+  askAdmin:
+    " Be en administrator med redigeringstilgang registrere lokaler under Innstillinger.",
+  registerVenue: "Registrer lokale",
+  title: "Lokaler",
+  newVenue: "Nytt lokale",
+  editVenue: "Rediger lokale",
+  setupDescription:
+    "Legg til minst ett lokale for å fullføre oppsettet og komme i gang med bookinger.",
+  defaultDescription:
+    "Registrer og administrer lokaler som brukes i bookinger, inventar og finans.",
+  searchPlaceholder: "Søk lokale …",
+  searchAria: "Søk lokaler",
+  loadError: "Kunne ikke laste lokaler: {error}",
+  emptyTitle: "Ingen lokaler registrert",
+  emptyCanManage:
+    "Opprett ditt første lokale for å knytte bookinger, inventar og transaksjoner.",
+  emptyReadOnly:
+    "Be eier eller administrator om å legge inn lokaler.",
+  noSearchResults: "Ingen treff på søket.",
+  showingCount: "Viser {filtered} av {total} lokaler",
+  namePlaceholder: "F.eks. Hovedlokale",
+  typePlaceholder: "Ikke angitt",
+  addressPlaceholder: "Valgfritt",
+  notesPlaceholder: "Kapasitet, parkering, tilgang, …",
+  notSpecified: "Ikke angitt",
+  venueUpdated: "Lokale oppdatert",
+  venueCreated: "Lokale registrert",
+  createFailed: "Kunne ikke opprette lokale",
+  venueDeleted: "Lokale slettet",
+  deleteInUse:
+    "Lokalet er i bruk på bookinger, inventar eller transaksjoner.",
+  setupComplete: "Oppsett fullført — velkommen til dashboardet!",
+  deleteTitle: "Slett lokale?",
+  deleteDescription:
+    "«{name}» fjernes permanent. Dette kan ikke gjøres hvis lokalet er knyttet til bookinger, inventar eller transaksjoner.",
+  confirmDelete: "Ja, slett lokale",
+  editAria: "Rediger {name}",
+  deleteAria: "Slett {name}",
+  types: {
+    selskaplokale: "Selskaplokale",
+    gård: "Gård",
+    møterom: "Møterom",
+    festlokale: "Festlokale",
+    annet: "Annet",
+  },
+} as const;
+
+export const propertiesEn = {
+  notSelected: "— Not selected —",
+  noVenuesOptional: "No venues registered yet.",
+  noVenuesRequired: "You must register at least one venue first.",
+  goToSettings: "Go to",
+  settingsVenues: "Settings → Venues",
+  createVenueOptional: " to create a venue you can link to the form.",
+  createVenueRequired: " to create a venue.",
+  askAdmin:
+    " Ask an administrator with edit access to register venues under Settings.",
+  registerVenue: "Register venue",
+  title: "Venues",
+  newVenue: "New venue",
+  editVenue: "Edit venue",
+  setupDescription:
+    "Add at least one venue to complete setup and start booking.",
+  defaultDescription:
+    "Register and manage venues used in bookings, inventory and finance.",
+  searchPlaceholder: "Search venue …",
+  searchAria: "Search venues",
+  loadError: "Could not load venues: {error}",
+  emptyTitle: "No venues registered",
+  emptyCanManage:
+    "Create your first venue to link bookings, inventory and transactions.",
+  emptyReadOnly: "Ask an owner or administrator to add venues.",
+  noSearchResults: "No search results.",
+  showingCount: "Showing {filtered} of {total} venues",
+  namePlaceholder: "E.g. Main venue",
+  typePlaceholder: "Not specified",
+  addressPlaceholder: "Optional",
+  notesPlaceholder: "Capacity, parking, access, …",
+  notSpecified: "Not specified",
+  venueUpdated: "Venue updated",
+  venueCreated: "Venue registered",
+  createFailed: "Could not create venue",
+  venueDeleted: "Venue deleted",
+  deleteInUse:
+    "The venue is in use on bookings, inventory or transactions.",
+  setupComplete: "Setup complete — welcome to the dashboard!",
+  deleteTitle: "Delete venue?",
+  deleteDescription:
+    "«{name}» will be permanently removed. This cannot be done if the venue is linked to bookings, inventory or transactions.",
+  confirmDelete: "Yes, delete venue",
+  editAria: "Edit {name}",
+  deleteAria: "Delete {name}",
+  types: {
+    selskaplokale: "Event venue",
+    gård: "Farm estate",
+    møterom: "Meeting room",
+    festlokale: "Party venue",
+    annet: "Other",
+  },
+} as const;

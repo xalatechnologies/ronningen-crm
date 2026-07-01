@@ -17,6 +17,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { adminRoutes } from "@/config/admin-routes";
+import { getDateFnsLocale } from "@/i18n/formatters";
+import { getServerTranslation } from "@/i18n/server";
 import { formatAuditActionLabel } from "@/lib/admin/audit-labels";
 import {
   adminOrganizationsHref,
@@ -28,7 +30,6 @@ import { formatNok } from "@/lib/admin/revenue-metrics";
 import { RN_ADMIN_DETAIL_LINK, RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
 import {
   Building2,
   CalendarCheck,
@@ -74,6 +75,7 @@ function OverviewKpiTile({
   value,
   hint,
   href,
+  goToLabel,
   icon: Icon,
   iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
   iconClassName = "size-6 text-primary dark:text-white",
@@ -87,6 +89,7 @@ function OverviewKpiTile({
   iconContainerClassName?: string;
   iconClassName?: string;
   valueClassName?: string;
+  goToLabel: string;
 }) {
   return (
     <Link
@@ -112,13 +115,15 @@ function OverviewKpiTile({
           </p>
         ) : null}
       </div>
-      <span className="sr-only">Gå til {label}</span>
+      <span className="sr-only">{goToLabel}</span>
     </Link>
   );
 }
 
 export default async function AdminOverviewPage() {
+  const { t, locale } = await getServerTranslation();
   const stats = await fetchAdminOverviewStats();
+  const goTo = (label: string) => t("admin.overview_go_to", { label });
   const { revenue } = stats;
   const chartYear = new Date().getFullYear();
   const trialingCount = revenue.trialingSubscriptions;
@@ -130,21 +135,29 @@ export default async function AdminOverviewPage() {
   const mrrHint =
     revenue.mrrNok > 0 ? (
       <span>
-        {formatNok(revenue.mrrNok)} realizert
-        {trialingCount > 0 ? ` · ${trialingCount} i prøve` : ""}
+        {t("admin.overview_mrr_realized", { amount: formatNok(revenue.mrrNok) })}
+        {trialingCount > 0
+          ? t("admin.overview_trialing_suffix", { count: trialingCount })
+          : ""}
       </span>
     ) : trialingCount > 0 ? (
       <span>
-        {trialingCount} i prøve · {activeCount} aktive betalere
+        {t("admin.overview_trialing_active_payers", {
+          trialing: trialingCount,
+          active: activeCount,
+        })}
       </span>
     ) : (
-      "Ingen aktive eller prøvende abonnement"
+      t("admin.ingen_aktive_eller_provende_abonnement")
     );
 
   const orgHint =
     trialingCount > 0
-      ? `${trialingCount} i prøve · ${activeCount} aktive`
-      : `${activeCount} aktive abonnement`;
+      ? t("admin.overview_trialing_active", {
+          trialing: trialingCount,
+          active: activeCount,
+        })
+      : t("admin.overview_active_subscriptions", { count: activeCount });
 
   return (
     <div className="admin-page-workspace admin-overview-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
@@ -159,19 +172,13 @@ export default async function AdminOverviewPage() {
             className="mb-0"
             surface="default"
             compact
-            title="Plattformoversikt"
-            description="SaaS-KPIer, trender og køer på tvers av alle organisasjoner."
+            title={t("admin.plattformoversikt")}
+            description={t("admin.saas_kpier_trender_og_koer_pa_tvers_av_alle_organisasjoner")}
             actions={
               <div className="flex flex-wrap items-center gap-2">
-                <AdminLinkButton href={adminRoutes.revenue}>
-                  Inntekt
-                </AdminLinkButton>
-                <AdminLinkButton href={adminSubscriptionsHref()}>
-                  Abonnement
-                </AdminLinkButton>
-                <AdminLinkButton href={adminOrganizationsHref()}>
-                  Organisasjoner
-                </AdminLinkButton>
+                <AdminLinkButton href={adminRoutes.revenue}>{t("admin.inntekt")}</AdminLinkButton>
+                <AdminLinkButton href={adminSubscriptionsHref()}>{t("admin.abonnement")}</AdminLinkButton>
+                <AdminLinkButton href={adminOrganizationsHref()}>{t("admin.organisasjoner")}</AdminLinkButton>
               </div>
             }
           />
@@ -179,34 +186,37 @@ export default async function AdminOverviewPage() {
 
         <section
           className={cn("border-t border-rn-border-strong/50", sectionPad)}
-          aria-label="Abonnement og inntekt"
+          aria-label={t("admin.abonnement_og_inntekt")}
         >
           <OverviewSectionIntro
-            title="Abonnement og inntekt"
-            description="MRR, churn og konvertering fra prøve til betalt."
+            title={t("admin.abonnement_og_inntekt")}
+            description={t("admin.mrr_churn_og_konvertering_fra_prove_til_betalt")}
           />
           <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <OverviewKpiTile
-              label="Organisasjoner"
+              label={t("admin.organisasjoner")}
               value={stats.organizationCount}
               href={adminOrganizationsHref()}
               hint={orgHint}
+              goToLabel={goTo(t("admin.organisasjoner"))}
               icon={Building2}
             />
             <OverviewKpiTile
-              label="MRR (est.)"
+              label={t("admin.mrr_est")}
               value={formatNok(estimatedMrrNok)}
               href={adminRoutes.revenue}
               hint={mrrHint}
+              goToLabel={goTo(t("admin.mrr_est"))}
               icon={TrendingUp}
               valueClassName={
                 estimatedMrrNok > 0 ? "text-success" : "text-foreground"
               }
             />
             <OverviewKpiTile
-              label="Churn (30 d.)"
+              label={t("admin.churn_30_d")}
               value={`${revenue.churnRate30d}%`}
               href={adminSubscriptionsHref("canceled")}
+              goToLabel={goTo(t("admin.churn_30_d"))}
               icon={TrendingDown}
               iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
               iconClassName="size-6 text-rn-danger-ink"
@@ -215,9 +225,10 @@ export default async function AdminOverviewPage() {
               }
             />
             <OverviewKpiTile
-              label="Prøve → betalt (30 d.)"
+              label={t("admin.prove_betalt_30_d")}
               value={`${revenue.trialConversionRate30d}%`}
               href={adminSubscriptionsHref("trialing")}
+              goToLabel={goTo(t("admin.prove_betalt_30_d"))}
               icon={UserCheck}
             />
           </div>
@@ -225,42 +236,50 @@ export default async function AdminOverviewPage() {
 
         <section
           className={cn("border-t border-rn-border-strong/50", sectionPad)}
-          aria-label="Plattformaktivitet"
+          aria-label={t("admin.plattformaktivitet")}
         >
           <OverviewSectionIntro
-            title="Plattformaktivitet"
-            description="Brukere, bookinger og nye leietakere siste periode."
+            title={t("admin.plattformaktivitet")}
+            description={t("admin.brukere_bookinger_og_nye_leietakere_siste_periode")}
           />
           <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <OverviewKpiTile
-              label="Brukere"
+              label={t("admin.brukere")}
               value={stats.userCount}
               href={adminRoutes.users}
+              goToLabel={goTo(t("admin.brukere"))}
               icon={Users}
             />
             <OverviewKpiTile
-              label="Aktive brukere (30 d.)"
+              label={t("admin.aktive_brukere_30_d")}
               value={stats.activeUsers30d}
               href={adminUsersHref()}
-              hint="Unike innlogginger"
+              hint={t("admin.unike_innlogginger")}
+              goToLabel={goTo(t("admin.aktive_brukere_30_d"))}
               icon={UserCheck}
             />
             <OverviewKpiTile
-              label="Bookinger (30 d.)"
+              label={t("admin.bookinger_30_d")}
               value={stats.bookingsLast30Days}
               href={adminRoutes.revenue}
-              hint={`${stats.inquiriesLast30Days} forespørsler samme periode`}
+              hint={t("admin.overview_inquiries_same_period", {
+                count: stats.inquiriesLast30Days,
+              })}
+              goToLabel={goTo(t("admin.bookinger_30_d"))}
               icon={CalendarCheck}
             />
             <OverviewKpiTile
-              label="Nye leietakere (7 d.)"
+              label={t("admin.nye_leietakere_7_d")}
               value={stats.newOrganizationsLast7Days}
               href={adminSubscriptionsHref("trialing")}
               icon={Building2}
+              goToLabel={goTo(t("admin.nye_leietakere_7_d"))}
               hint={
                 stats.suspendedCount > 0
-                  ? `${stats.suspendedCount} suspendert`
-                  : "Registrert siste 7 dager"
+                  ? t("admin.overview_suspended_count", {
+                      count: stats.suspendedCount,
+                    })
+                  : t("admin.registrert_siste_7_dager")
               }
             />
           </div>
@@ -268,20 +287,23 @@ export default async function AdminOverviewPage() {
 
         <section
           className={cn("border-t border-rn-border-strong/50", sectionPad)}
-          aria-label="Trender"
+          aria-label={t("admin.trender")}
         >
           <OverviewSectionIntro
-            title="Trender"
-            description="Estimert MRR gjennom året og nye leietakere per dag siste uke."
+            title={t("admin.trender")}
+            description={t("admin.estimert_mrr_gjennom_aret_og_nye_leietakere_per_dag_siste_uk")}
           />
           <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-rn-border-strong/50">
             <div className="lg:pr-8">
               <AdminTrendChart
                 className="admin-overview-trend-chart"
                 embedded
-                title="Inntektstrend (est. MRR)"
-                subtitle="Aktive, prøvende og forfalte — ekskl. suspenderte."
-                periodHint={`${chartYear} · ${formatNok(currentMonthMrr)} denne måneden`}
+                title={t("admin.inntektstrend_est_mrr")}
+                subtitle={t("admin.aktive_provende_og_forfalte_ekskl_suspenderte")}
+                periodHint={t("admin.overview_period_hint", {
+                  year: chartYear,
+                  amount: formatNok(currentMonthMrr),
+                })}
                 points={stats.revenueTrend}
                 valueFormat="nok"
               />
@@ -290,9 +312,11 @@ export default async function AdminOverviewPage() {
               <AdminTrendChart
                 className="admin-overview-trend-chart"
                 embedded
-                title="Nye leietakere (7 d.)"
-                subtitle="Organisasjoner registrert per dag."
-                periodHint={`Siste 7 dager · ${stats.newOrganizationsLast7Days} totalt`}
+                title={t("admin.nye_leietakere_7_d")}
+                subtitle={t("admin.organisasjoner_registrert_per_dag")}
+                periodHint={t("admin.overview_last_7_days_total", {
+                  count: stats.newOrganizationsLast7Days,
+                })}
                 points={stats.newTenantsTrend}
               />
             </div>
@@ -301,7 +325,7 @@ export default async function AdminOverviewPage() {
 
         <section
           className="grid border-t border-rn-border-strong/50 lg:grid-cols-2"
-          aria-label="Abonnement og oppfølging"
+          aria-label={t("admin.abonnement_og_oppfolging")}
         >
           <div className="border-b border-rn-border-strong/50 px-4 py-5 sm:px-5 md:px-6 lg:border-r lg:border-b-0 lg:px-8 lg:py-6">
             <AdminSubscriptionStatusPanel embedded statusCounts={stats.statusCounts} />
@@ -309,9 +333,9 @@ export default async function AdminOverviewPage() {
           <div className="px-4 py-5 sm:px-5 md:px-6 lg:px-8 lg:py-6">
             <AdminQueuePanel
               embedded
-              title="Prøveperiode utløper snart"
+              title={t("admin.proveperiode_utloper_snart")}
               items={stats.trialExpiringQueue}
-              emptyLabel="Ingen prøveperioder utløper innen 14 dager."
+              emptyLabel={t("admin.ingen_proveperioder_utloper_innen_14_dager")}
               viewAllHref={adminSubscriptionsHref("trialing")}
             />
           </div>
@@ -319,24 +343,24 @@ export default async function AdminOverviewPage() {
       </div>
 
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <section className={sectionPad} aria-label="Køer som krever handling">
+        <section className={sectionPad} aria-label={t("admin.koer_som_krever_handling")}>
           <OverviewSectionIntro
-            title="Oppfølging"
-            description="Organisasjoner som trenger manuell oppfølging."
+            title={t("admin.oppfolging")}
+            description={t("admin.organisasjoner_som_trenger_manuell_oppfolging")}
           />
           <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
             <AdminQueuePanel
               embedded
-              title="Forfalt betaling"
+              title={t("admin.forfalt_betaling")}
               items={stats.failedPaymentQueue}
-              emptyLabel="Ingen organisasjoner med forfalt status."
+              emptyLabel={t("admin.ingen_organisasjoner_med_forfalt_status")}
               viewAllHref={adminSubscriptionsHref("past_due")}
             />
             <AdminQueuePanel
               embedded
-              title="Suspenderte organisasjoner"
+              title={t("admin.suspenderte_organisasjoner")}
               items={stats.suspendedOrganizations}
-              emptyLabel="Ingen suspenderte organisasjoner."
+              emptyLabel={t("admin.ingen_suspenderte_organisasjoner")}
               viewAllHref={adminOrganizationsHref({ status: "suspended" })}
             />
           </div>
@@ -344,32 +368,28 @@ export default async function AdminOverviewPage() {
       </div>
 
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <section className={sectionPad} aria-label="Nylig aktivitet">
+        <section className={sectionPad} aria-label={t("admin.nylig_aktivitet")}>
           <OverviewSectionIntro
-            title="Nylig aktivitet"
-            description="Siste registreringer og admin-handlinger."
+            title={t("admin.nylig_aktivitet")}
+            description={t("admin.siste_registreringer_og_admin_handlinger")}
           />
           <div className="mt-6 grid grid-cols-1 gap-8 xl:grid-cols-2 xl:gap-10">
             <AdminDataPanel
               embedded
               className="admin-overview-data-panel min-w-0"
-              title="Nylig registrerte organisasjoner"
+              title={t("admin.nylig_registrerte_organisasjoner")}
               action={
-                <AdminLinkButton href={adminOrganizationsHref()}>
-                  Alle organisasjoner
-                </AdminLinkButton>
+                <AdminLinkButton href={adminOrganizationsHref()}>{t("admin.alle_organisasjoner")}</AdminLinkButton>
               }
             >
               <div className="-mx-1 overflow-x-auto sm:mx-0">
                 <Table>
                   <TableHeader className="bg-rn-surface-table-head [&_tr]:border-b-2 [&_tr]:border-rn-border-strong/70">
                     <TableRow>
-                      <TableHead className={tableHeadClass}>Navn</TableHead>
-                      <TableHead className={tableHeadClass}>Status</TableHead>
-                      <TableHead className={cn(tableHeadClass, "hidden sm:table-cell")}>
-                        Plan
-                      </TableHead>
-                      <TableHead className={tableHeadClass}>Opprettet</TableHead>
+                      <TableHead className={tableHeadClass}>{t("admin.overview_name")}</TableHead>
+                      <TableHead className={tableHeadClass}>{t("admin.status")}</TableHead>
+                      <TableHead className={cn(tableHeadClass, "hidden sm:table-cell")}>{t("admin.plan")}</TableHead>
+                      <TableHead className={tableHeadClass}>{t("admin.overview_created")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -398,7 +418,7 @@ export default async function AdminOverviewPage() {
                           )}
                         >
                           {format(new Date(org.createdAt), "d. MMM yyyy", {
-                            locale: nb,
+                            locale: getDateFnsLocale(locale),
                           })}
                         </TableCell>
                       </TableRow>
@@ -412,7 +432,7 @@ export default async function AdminOverviewPage() {
                             "py-8 text-center app-text-muted",
                           )}
                         >
-                          Ingen organisasjoner registrert ennå.
+                          {t("admin.overview_no_orgs_yet")}
                         </TableCell>
                       </TableRow>
                     ) : null}
@@ -424,10 +444,10 @@ export default async function AdminOverviewPage() {
             <AdminDataPanel
               embedded
               className="admin-overview-data-panel min-w-0"
-              title="Siste admin-handlinger"
+              title={t("admin.siste_admin_handlinger")}
               action={
                 <AdminLinkButton href={adminRoutes.audit}>
-                  Full revisjonslogg
+                  {t("admin.overview_full_audit_log")}
                 </AdminLinkButton>
               }
             >
@@ -435,11 +455,11 @@ export default async function AdminOverviewPage() {
                 <Table>
                   <TableHeader className="bg-rn-surface-table-head [&_tr]:border-b-2 [&_tr]:border-rn-border-strong/70">
                     <TableRow>
-                      <TableHead className={tableHeadClass}>Tidspunkt</TableHead>
+                      <TableHead className={tableHeadClass}>{t("admin.overview_timestamp")}</TableHead>
                       <TableHead className={cn(tableHeadClass, "hidden md:table-cell")}>
-                        Admin
+                        {t("admin.overview_admin")}
                       </TableHead>
-                      <TableHead className={tableHeadClass}>Handling</TableHead>
+                      <TableHead className={tableHeadClass}>{t("admin.overview_action")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -452,7 +472,7 @@ export default async function AdminOverviewPage() {
                           )}
                         >
                           {format(new Date(entry.createdAt), "d. MMM HH:mm", {
-                            locale: nb,
+                            locale: getDateFnsLocale(locale),
                           })}
                         </TableCell>
                         <TableCell
@@ -465,7 +485,7 @@ export default async function AdminOverviewPage() {
                         </TableCell>
                         <TableCell className={tableCellClass}>
                           <span className="font-heading text-app-sm font-semibold">
-                            {formatAuditActionLabel(entry.action)}
+                            {formatAuditActionLabel(entry.action, t)}
                           </span>
                           <span className="mt-0.5 block font-mono text-app-xs text-muted-foreground">
                             {entry.targetId ?? entry.targetType}
@@ -482,7 +502,7 @@ export default async function AdminOverviewPage() {
                             "py-8 text-center app-text-muted",
                           )}
                         >
-                          Ingen hendelser ennå.
+                          {t("admin.overview_no_events_yet")}
                         </TableCell>
                       </TableRow>
                     ) : null}

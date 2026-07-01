@@ -2,6 +2,7 @@ import {
   TeamMembersSection,
   type TeamMemberRow,
 } from "@/components/settings/team-members-section";
+import { getServerTranslation } from "@/i18n/server";
 import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
 import { canManageMembers } from "@/lib/organizations/organization-permissions";
 import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-client";
@@ -11,6 +12,7 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export default async function TeamSettingsPage() {
+  const { t } = await getServerTranslation();
   const [supabase, { organizationId, role }] = await Promise.all([
     getCachedServerSupabaseClient(),
     getCachedServerOrganizationContext(),
@@ -35,7 +37,7 @@ export default async function TeamSettingsPage() {
   if (error) {
     return (
       <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive">
-        Kunne ikke laste team: {error.message}
+        {t("appPages.settings.team.loadError", { error: error.message })}
       </div>
     );
   }
@@ -72,9 +74,9 @@ export default async function TeamSettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="app-title">Team</h1>
+        <h1 className="app-title">{t("appPages.settings.team.title")}</h1>
         <p className="mt-2 text-app-base text-muted-foreground">
-          Administrer hvem som har tilgang til organisasjonen og deres roller.
+          {t("appPages.settings.team.description")}
         </p>
       </div>
       <TeamMembersSection members={members} />

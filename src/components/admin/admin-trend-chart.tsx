@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { formatNok } from "@/lib/admin/revenue-metrics";
 import {
   chartBarFillClass,
@@ -66,6 +67,7 @@ export function AdminTrendChart({
   className,
   embedded = false,
 }: AdminTrendChartProps) {
+  const { t } = useTranslation();
   const chartBars = useMemo(() => {
     const max = Math.max(0, ...points.map((p) => p.value));
     const scaleMax = max > 0 ? max : 1;
@@ -97,7 +99,7 @@ export function AdminTrendChart({
     periodHintProp ??
     (points.length === 12
       ? String(new Date().getFullYear())
-      : "Siste 7 dager");
+      : t("admin.siste_7_dager"));
 
   return (
     <section

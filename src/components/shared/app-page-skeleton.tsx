@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslation } from "@/i18n/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
@@ -96,12 +99,14 @@ export function AppPageSkeleton({
 }: {
   variant?: "table" | "dashboard" | "calendar" | "kpi";
 }) {
+  const { t } = useTranslation();
+
   return (
     <div
       className="flex min-h-0 flex-1 flex-col"
       role="status"
       aria-live="polite"
-      aria-label="Laster side"
+      aria-label={t("common.loadingPage")}
     >
       <HeaderSkeleton withToolbar={variant === "table" || variant === "calendar"} />
       {variant === "dashboard" ? (

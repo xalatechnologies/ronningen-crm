@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { logAdminAction } from "@/lib/admin/audit-log";
 import { updateSubscriptionPeriod } from "@/lib/admin/actions/billing";
 import { requirePlatformAdmin } from "@/lib/admin/require-platform-admin";
+import { getServerT } from "@/lib/i18n/server-messages";
 import {
   cancelStripeSubscription,
   getStripeCustomerUrl,
@@ -52,6 +53,7 @@ export async function extendOrganizationTrial(input: {
 }
 
 export async function retrySubscriptionPayment(organizationId: string) {
+  const t = await getServerT();
   const adminUser = await requirePlatformAdmin();
   const admin = createSupabaseAdminClient();
 
@@ -64,7 +66,7 @@ export async function retrySubscriptionPayment(organizationId: string) {
     .maybeSingle();
 
   if (!sub?.provider_subscription_id) {
-    return { ok: false as const, error: "Ingen Stripe-abonnement." };
+    return { ok: false as const, error: t("serverErrors.billing.noStripeSubscriptionShort") };
   }
 
   const result = await retryStripeInvoicePayment(sub.provider_subscription_id);
@@ -137,6 +139,7 @@ export async function cancelOrganizationSubscription(organizationId: string) {
 }
 
 export async function getStripeDashboardUrl(organizationId: string) {
+  const t = await getServerT();
   await requirePlatformAdmin();
   const admin = createSupabaseAdminClient();
 
@@ -149,7 +152,7 @@ export async function getStripeDashboardUrl(organizationId: string) {
     .maybeSingle();
 
   if (!sub?.provider_customer_id) {
-    return { ok: false as const, error: "Ingen Stripe-kunde." };
+    return { ok: false as const, error: t("serverErrors.billing.noStripeCustomerShort") };
   }
 
   return {

@@ -18,6 +18,7 @@ import {
   resolveNewBookingFestTypeStored,
   sortBookingPackagesByCatalogOrder,
   todayLocalYmd,
+  validationMessagesForLocale,
   type BookingAddonCatalogEntry,
   type BookingPackageCatalogEntry,
   type NewBookingFestTypeField,
@@ -31,6 +32,7 @@ import {
 } from "@/lib/bookings/booking-reference";
 import { notifyBookingCreated } from "@/lib/notifications/actions/org-events";
 import { resolveNewBookingPaymentAmounts } from "@/constants/booking-payment-status";
+import { useTranslation } from "@/i18n/client";
 import { parseNokFormValue } from "@/lib/bookings/parse-nok-form-value";
 import { redirectAfterCreate } from "@/lib/navigation/redirect-after-create";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
@@ -74,14 +76,6 @@ function RequiredMark() {
       {" *"}
     </span>
   );
-}
-
-function formatNok(n: number) {
-  return new Intl.NumberFormat("nb-NO", {
-    style: "currency",
-    currency: "NOK",
-    maximumFractionDigits: 0,
-  }).format(n);
 }
 
 function mapInquiryFestToForm(stored: string | null): {
@@ -160,6 +154,7 @@ export function NewBookingForm({
   bookingPackages,
   inquiryPrefill = null,
 }: NewBookingFormProps) {
+  const { t, formatCurrency, locale } = useTranslation();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateBookings, invalidateInquiries } = useTenantDataInvalidation();
@@ -192,8 +187,13 @@ export function NewBookingForm({
   );
 
   const formSchema = useMemo(
-    () => createNewBookingFormSchema(addonCatalog, packageCatalog),
-    [addonCatalog, packageCatalog],
+    () =>
+      createNewBookingFormSchema(
+        validationMessagesForLocale(locale),
+        addonCatalog,
+        packageCatalog,
+      ),
+    [locale, addonCatalog, packageCatalog],
   );
 
   const form = useForm<NewBookingFormFieldValues>({
@@ -293,7 +293,7 @@ export function NewBookingForm({
     if (est != null && est > 0) {
       setValue("packageSource", "custom", { shouldValidate: true });
       setValue("selectedPackageId", "", { shouldValidate: true });
-      setValue("customPackageName", "Avtalt pris (forespørsel)", {
+      setValue("customPackageName", t("bookings.customPackageFromInquiry"), {
         shouldValidate: true,
       });
       setValue("customPackagePrice", est, { shouldValidate: true });
@@ -303,7 +303,7 @@ export function NewBookingForm({
     if (note) {
       setValue("notes", note, { shouldValidate: true });
     }
-  }, [inquiryPrefill, setValue]);
+  }, [inquiryPrefill, setValue, t]);
 
   const estimatedTotal = useMemo(() => {
     const src =
@@ -395,15 +395,15 @@ export function NewBookingForm({
         );
         setValue("bookingReference", next, { shouldValidate: true });
       } catch (err) {
-        toast.error("Kunne ikke generere referanse", {
+        toast.error(t("bookings.form.generateRefFailed"), {
           description:
-            err instanceof Error ? err.message : "Prøv igjen eller skriv inn selv.",
+            err instanceof Error ? err.message : t("bookings.tryAgainOrManual"),
         });
       } finally {
         setIsGeneratingReference(false);
       }
     },
-    [currentOrganizationId, getValues, referenceYear, setValue, supabase],
+    [currentOrganizationId, getValues, referenceYear, setValue, supabase, t],
   );
 
   useEffect(() => {
@@ -420,7 +420,7 @@ export function NewBookingForm({
       orgId = requireOrganizationId(currentOrganizationId);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+        err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
       );
       return;
     }
@@ -434,9 +434,11 @@ export function NewBookingForm({
           referenceYearFromEventDate(data.eventDate),
         );
       } catch (err) {
-        toast.error("Kunne ikke generere referansenummer", {
+        toast.error(t("bookings.form.generateRefNumberFailed"), {
           description:
-            err instanceof Error ? err.message : "Skriv inn referanse manuelt.",
+            err instanceof Error
+              ? err.message
+              : t("bookings.form.enterRefManually"),
         });
         return;
       }
@@ -466,31 +468,50 @@ export function NewBookingForm({
       .filter(Boolean) as string[];
     const customAddOnLabels = data.customAddonLines
       .filter((l) => l.name.trim())
-      .map((l) => `${l.name.trim()} (${formatNok(l.priceNok)})`);
+      .map((l) => `${l.name.trim()} (${formatCurrency(l.priceNok)})`);
     const addOnLabels = [...catalogAddOnLabels, ...customAddOnLabels];
     const packageName =
       data.packageSource === "custom"
         ? data.customPackageName.trim()
         : sortedPackages.find((p) => p.id === data.selectedPackageId)?.name ??
-          "Pakke";
+          t("bookings.form.defaultPackageName");
     const pricingSummary = [
-      `Estimert total: ${formatNok(estimated)}`,
-      `Avtalt total: ${formatNok(total)}`,
-      discountNok > 0 ? `Rabatt (kunde): ${formatNok(discountNok)}` : null,
+      t("bookings.form.pricingSummary.estimated", {
+        amount: formatCurrency(estimated),
+      }),
+      t("bookings.form.pricingSummary.agreed", {
+        amount: formatCurrency(total),
+      }),
+      discountNok > 0
+        ? t("bookings.form.pricingSummary.discount", {
+            amount: formatCurrency(discountNok),
+          })
+        : null,
       total > estimated
-        ? `Oppjustert vs. estimat: ${formatNok(total - estimated)}`
+        ? t("bookings.form.pricingSummary.adjusted", {
+            amount: formatCurrency(total - estimated),
+          })
         : null,
     ]
       .filter(Boolean)
       .join(" · ");
     const parts = [
       pricingSummary,
-      bookingReference ? `Referanse: ${bookingReference}` : null,
+      bookingReference
+        ? t("bookings.form.pricingSummary.reference", { ref: bookingReference })
+        : null,
       data.notes?.trim(),
-      addOnLabels.length ? `Tillegg: ${addOnLabels.join(", ")}` : null,
+      addOnLabels.length
+        ? t("bookings.form.pricingSummary.addons", {
+            list: addOnLabels.join(", "),
+          })
+        : null,
       data.packageSource === "custom"
-        ? `Pakke (egen): ${packageName} · ${formatNok(data.customPackagePrice)}`
-        : `Pakke: ${packageName}`,
+        ? t("bookings.form.pricingSummary.customPackage", {
+            name: packageName,
+            amount: formatCurrency(data.customPackagePrice),
+          })
+        : t("bookings.form.pricingSummary.catalogPackage", { name: packageName }),
     ].filter(Boolean);
     const notesCombined = parts.join("\n");
 
@@ -514,7 +535,7 @@ export function NewBookingForm({
           .update(customerPatch)
           .eq("id", customerId);
         if (custErr) {
-          toast.error("Kunne ikke oppdatere kundefelt", {
+          toast.error(t("bookings.form.updateCustomerFieldsFailed"), {
             description: custErr.message,
           });
           return;
@@ -534,8 +555,8 @@ export function NewBookingForm({
         .single();
 
       if (customerError || !customerRow) {
-        toast.error("Kunne ikke opprette kunde", {
-          description: customerError?.message ?? "Ukjent feil",
+        toast.error(t("bookings.form.createCustomerFailed"), {
+          description: customerError?.message ?? t("bookings.form.unknownError"),
         });
         return;
       }
@@ -569,13 +590,13 @@ export function NewBookingForm({
       .single();
 
     if (bookingError || !bookingRow) {
-      toast.error("Kunne ikke opprette booking", {
-        description: bookingError?.message ?? "Ukjent feil",
+      toast.error(t("bookings.form.createFailed"), {
+        description: bookingError?.message ?? t("bookings.form.unknownError"),
       });
       return;
     }
 
-    toast.success("Booking opprettet", { description: bookingRow.id });
+    toast.success(t("bookings.form.created"), { description: bookingRow.id });
 
     invalidateBookings();
     if (inquiryPrefill?.inquiryId) {
@@ -600,10 +621,9 @@ export function NewBookingForm({
         .is("converted_booking_id", null);
 
       if (convErr) {
-        toast.message(
-          "Booking opprettet, men forespørsel ble ikke koblet automatisk",
-          { description: convErr.message },
-        );
+        toast.message(t("bookings.createdInquiryNotLinked"), {
+          description: convErr.message,
+        });
       }
     }
 
@@ -613,13 +633,34 @@ export function NewBookingForm({
   const catalogPackageBlocked =
     packageSource === "catalog" && sortedPackages.length === 0;
 
+  const noPackagesHintParts = useMemo(() => {
+    const pricingMarker = "\x00PRICING\x00";
+    const customMarker = "\x00CUSTOM\x00";
+    const text = t("bookings.form.noPackagesHint", {
+      pricing: pricingMarker,
+      custom: customMarker,
+    });
+    const [beforePricing, restAfterPricing = ""] = text.split(pricingMarker);
+    const [middle, after = ""] = restAfterPricing.split(customMarker);
+    return { beforePricing, middle, after };
+  }, [t]);
+
+  const noCatalogAddonsHintParts = useMemo(() => {
+    const pricingMarker = "\x00PRICING\x00";
+    const text = t("bookings.form.noCatalogAddons", {
+      pricing: pricingMarker,
+    });
+    const [beforePricing, after = ""] = text.split(pricingMarker);
+    return { beforePricing, after };
+  }, [t]);
+
   return (
     <div className="mx-auto w-full pb-12 md:pb-8">
       <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
         <header className="flex items-center gap-3 border-b-2 border-rn-border-strong bg-card px-3 py-3 sm:gap-4 sm:px-4 md:px-5">
           <Link
             href="/app/bookings"
-            aria-label="Tilbake til bookinger"
+            aria-label={t("bookings.backToBookings")}
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
               "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
@@ -629,16 +670,15 @@ export function NewBookingForm({
           </Link>
           <div className="min-w-0 flex-1">
             <h1 className="app-title sm:text-app-2xl md:text-app-3xl">
-              Ny reservasjon
+              {t("bookings.new")}
             </h1>
             <p className="mt-0.5 text-app-xs leading-snug text-muted-foreground sm:text-app-sm md:text-app-base md:leading-relaxed">
-              Registrer arrangement, kunde og økonomi — felles mønster som øvrige
-              sider.
+              {t("bookings.form.subtitle")}
             </p>
           </div>
           <Link
             href="/app/bookings"
-            aria-label="Lukk og gå til reservasjoner"
+            aria-label={t("bookings.closeGoToBookings")}
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
               "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
@@ -653,10 +693,7 @@ export function NewBookingForm({
             className="border-b-2 border-rn-border-strong bg-success/5 px-4 py-3 text-app-sm text-rn-text-body sm:px-6 md:px-8"
             role="status"
           >
-            Ny reservasjon for eksisterende kunde — navn, telefon og e-post kan ikke
-            endres her når de allerede er registrert. Mangler telefon eller
-            adresse, kan du fylle dem inn nedenfor; de lagres på kunden ved
-            booking.
+            {t("bookings.form.existingCustomerBanner")}
           </div>
         ) : null}
 
@@ -671,11 +708,11 @@ export function NewBookingForm({
         <div className="border-b-2 border-rn-border-strong/40 bg-card px-6 py-4 md:px-8">
           <div className="flex flex-col gap-4">
             <div className="min-w-0 flex-1 space-y-2">
-              <Label className={labelClass}>Referansenummer</Label>
+              <Label className={labelClass}>{t("bookings.form.referenceNumber")}</Label>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
                 <Input
                   className={cn(fieldClass, "font-mono text-app-sm sm:flex-1")}
-                  placeholder="RN-2026-013 eller eget saksnummer"
+                  placeholder={t("bookings.form.referencePlaceholder")}
                   {...register("bookingReference")}
                   aria-invalid={!!errors.bookingReference}
                 />
@@ -693,7 +730,7 @@ export function NewBookingForm({
                     )}
                     aria-hidden
                   />
-                  Generer referanse
+                  {t("bookings.form.generateReference")}
                 </Button>
               </div>
               {errors.bookingReference ? (
@@ -702,8 +739,7 @@ export function NewBookingForm({
                 </p>
               ) : (
                 <p className="text-app-xs text-muted-foreground">
-                  Fylles ut automatisk som RN-{referenceYear}-xxx, eller skriv inn
-                  eget saksnummer.
+                  {t("bookings.form.referenceHint", { year: referenceYear })}
                 </p>
               )}
             </div>
@@ -713,13 +749,13 @@ export function NewBookingForm({
           <div className="mb-6 flex items-center gap-2">
             <User className={cn("size-5", sectionIconWrap)} aria-hidden />
             <h3 className="app-card-title md:text-app-xl">
-              Kundeinformasjon
+              {t("bookings.form.customerInfo")}
             </h3>
           </div>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
             <div className="space-y-2">
               <Label className={labelClass}>
-                Navn
+                {t("common.fields.name")}
                 <RequiredMark />
               </Label>
               <Input
@@ -727,7 +763,7 @@ export function NewBookingForm({
                   fieldClass,
                   existingCustomer && "bg-muted/50",
                 )}
-                placeholder="Ola Nordmann"
+                placeholder={t("bookings.form.namePlaceholder")}
                 readOnly={!!existingCustomer}
                 {...register("customerName")}
                 aria-invalid={!!errors.customerName}
@@ -740,7 +776,7 @@ export function NewBookingForm({
             </div>
             <div className="space-y-2">
               <Label className={labelClass}>
-                Telefon
+                {t("common.fields.phone")}
                 <RequiredMark />
               </Label>
               <Input
@@ -749,7 +785,7 @@ export function NewBookingForm({
                   existingCustomer && existingCustomer.phone?.trim() && "bg-muted/50",
                 )}
                 type="tel"
-                placeholder="+47 000 00 000"
+                placeholder={t("bookings.form.phonePlaceholder")}
                 readOnly={!!existingCustomer && !!existingCustomer.phone?.trim()}
                 {...register("phone")}
                 aria-invalid={!!errors.phone}
@@ -760,7 +796,7 @@ export function NewBookingForm({
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label className={labelClass}>
-                E-post
+                {t("common.fields.email")}
               </Label>
               <Input
                 className={cn(
@@ -768,7 +804,7 @@ export function NewBookingForm({
                   existingCustomer && "bg-muted/50",
                 )}
                 type="email"
-                placeholder="ola@eksempel.no"
+                placeholder={t("bookings.form.emailPlaceholder")}
                 readOnly={!!existingCustomer}
                 {...register("email")}
                 aria-invalid={!!errors.email}
@@ -779,7 +815,7 @@ export function NewBookingForm({
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label className={labelClass}>
-                Adresse
+                {t("common.fields.address")}
               </Label>
               <AddressField
                 name="address"
@@ -791,7 +827,7 @@ export function NewBookingForm({
                     existingCustomer.address?.trim() &&
                     "bg-muted/50",
                 )}
-                placeholder="Gate, postnr og sted"
+                placeholder={t("common.address.placeholder")}
                 format="multiline"
                 variant="textarea"
                 readOnly={
@@ -810,33 +846,33 @@ export function NewBookingForm({
           <div className="mb-6 flex items-center gap-2">
             <Calendar className={cn("size-5", sectionIconWrap)} aria-hidden />
             <h3 className="app-card-title md:text-app-xl">
-              Arrangement
+              {t("bookings.detail.event")}
             </h3>
           </div>
           <div className="flex flex-col gap-5 md:gap-6">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
               <div className="space-y-2">
                 <Label className={labelClass}>
-                  Type
+                  {t("common.fields.type")}
                   <RequiredMark />
                 </Label>
                 <FormSelectField
                   name="festType"
                   control={control}
-                  placeholder="Velg…"
+                  placeholder={t("common.selectPlaceholder")}
                   className={cn(errors.festType && "border-destructive")}
                   options={[
                     ...toStringOptions(NEW_BOOKING_FEST_TYPE_PRESETS),
                     {
                       value: NEW_BOOKING_FEST_TYPE_ANNET,
-                      label: "Annet (eget)",
+                      label: t("bookings.form.festTypeOther"),
                     },
                   ]}
                 />
                 {festType === NEW_BOOKING_FEST_TYPE_ANNET ? (
                   <div className="space-y-2 pt-1">
                     <Label className={labelClass}>
-                      Beskriv type
+                      {t("bookings.form.describeType")}
                       <RequiredMark />
                     </Label>
                     <Input
@@ -844,7 +880,7 @@ export function NewBookingForm({
                         fieldClass,
                         errors.festTypeCustom && "border-destructive",
                       )}
-                      placeholder="F.eks. jubileum, konferanse …"
+                      placeholder={t("bookings.form.festTypeCustomPlaceholder")}
                       {...register("festTypeCustom")}
                     />
                     {errors.festTypeCustom ? (
@@ -862,17 +898,17 @@ export function NewBookingForm({
               </div>
               <div className="space-y-2">
                 <Label className={labelClass}>
-                  Bedrift eller privat
+                  {t("bookings.form.corporateOrPrivate")}
                   <RequiredMark />
                 </Label>
                 <FormSelectField
                   name="eventType"
                   control={control}
-                  placeholder="Velg…"
+                  placeholder={t("common.selectPlaceholder")}
                   className={cn(errors.eventType && "border-destructive")}
                   options={[
-                    { value: "Bedrift", label: "Bedrift" },
-                    { value: "Privat", label: "Privat" },
+                    { value: "Bedrift", label: t("bookings.corporate") },
+                    { value: "Privat", label: t("bookings.private") },
                   ]}
                 />
                 {errors.eventType ? (
@@ -885,18 +921,15 @@ export function NewBookingForm({
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
               <div className="space-y-2 md:col-span-2">
                 <p className="text-app-xs leading-relaxed text-muted-foreground md:text-app-sm">
-                  <span className="font-medium text-foreground">Periode:</span>{" "}
-                  du kan legge inn siste arrangementsdag og valgfri start-/slutttid
-                  (f.eks.{" "}
-                  <span className="whitespace-nowrap tabular-nums">
-                    01.07.2027 17:00 – 04.07.2027 17:00
-                  </span>
-                  ).
+                  {t("bookings.form.periodHint", {
+                    label: t("bookings.form.periodLabel"),
+                    example: "01.07.2027 17:00 – 04.07.2027 17:00",
+                  })}
                 </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="new-booking-event-date" className={labelClass}>
-                  Fra dato
+                  {t("bookings.dateFrom")}
                   <RequiredMark />
                 </Label>
                 <Controller
@@ -928,9 +961,9 @@ export function NewBookingForm({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="new-booking-event-end-date" className={labelClass}>
-                  Til dato{" "}
+                  {t("bookings.detail.toDateOptional")}{" "}
                   <span className="font-normal normal-case text-muted-foreground">
-                    (valgfri)
+                    ({t("common.optional")})
                   </span>
                 </Label>
                 <Controller
@@ -962,9 +995,9 @@ export function NewBookingForm({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="new-booking-start-time" className={labelClass}>
-                  Fra kl.{" "}
+                  {t("common.fromTime")}{" "}
                   <span className="font-normal normal-case text-muted-foreground">
-                    (valgfri)
+                    ({t("common.optional")})
                   </span>
                 </Label>
                 <TimePickerField
@@ -984,9 +1017,9 @@ export function NewBookingForm({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="new-booking-end-time" className={labelClass}>
-                  Til kl.{" "}
+                  {t("common.toTime")}{" "}
                   <span className="font-normal normal-case text-muted-foreground">
-                    (valgfri)
+                    ({t("common.optional")})
                   </span>
                 </Label>
                 <TimePickerField
@@ -1006,7 +1039,7 @@ export function NewBookingForm({
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label className={labelClass}>
-                  Antall gjester
+                  {t("common.guests")}
                   <RequiredMark />
                 </Label>
                 <Input
@@ -1030,13 +1063,13 @@ export function NewBookingForm({
           <div className="mb-6 flex items-center gap-2">
             <Package className={cn("size-5", sectionIconWrap)} aria-hidden />
             <h3 className="app-card-title md:text-app-xl">
-              Pakke og tillegg
+              {t("bookings.form.packageAndAddons")}
             </h3>
           </div>
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
             <div className="space-y-4">
               <Label className={labelClass}>
-                Tjenestepakke
+                {t("bookings.form.servicePackage")}
                 <RequiredMark />
               </Label>
               {sortedPackages.length > 0 ? (
@@ -1047,7 +1080,7 @@ export function NewBookingForm({
                     <div
                       className="flex flex-wrap gap-3"
                       role="group"
-                      aria-label="Pakkekilde"
+                      aria-label={t("bookings.form.packageSourceAria")}
                     >
                       <label
                         className={cn(
@@ -1075,7 +1108,7 @@ export function NewBookingForm({
                           onBlur={field.onBlur}
                           ref={field.ref}
                         />
-                        Fra priskatalog
+                        {t("bookings.form.fromCatalog")}
                       </label>
                       <label
                         className={cn(
@@ -1100,22 +1133,25 @@ export function NewBookingForm({
                           }}
                           onBlur={field.onBlur}
                         />
-                        Egen pakke
+                        {t("bookings.form.customPackage")}
                       </label>
                     </div>
                   )}
                 />
               ) : (
                 <p className="text-app-xs text-rn-text-body">
-                  Ingen aktive pakker i{" "}
+                  {noPackagesHintParts.beforePricing}
                   <Link
                     href="/app/pricing"
                     className="font-semibold text-success underline-offset-2 hover:underline"
                   >
-                    Priser
+                    {t("navigation.pricing")}
                   </Link>
-                  . Legg inn <span className="font-medium">egen pakke</span>{" "}
-                  under (navn og pris).
+                  {noPackagesHintParts.middle}
+                  <span className="font-medium">
+                    {t("bookings.form.customPackageLabel")}
+                  </span>
+                  {noPackagesHintParts.after}
                 </p>
               )}
               {errors.packageSource ? (
@@ -1154,8 +1190,8 @@ export function NewBookingForm({
                           ) : null}
                           <span className="mt-0.5 block text-app-xs font-semibold tabular-nums text-rn-text-slate">
                             {Number(pkg.price) <= 0
-                              ? "Pris etter avtale"
-                              : formatNok(Number(pkg.price))}
+                              ? t("bookings.form.priceOnAgreement")
+                              : formatCurrency(Number(pkg.price))}
                           </span>
                         </div>
                       </label>
@@ -1167,7 +1203,7 @@ export function NewBookingForm({
                 <div className="space-y-3 rounded-md border-2 border-rn-border-strong bg-rn-surface-wash/40 p-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-booking-custom-pkg-name" className={labelClass}>
-                      Pakkenavn (egen)
+                      {t("bookings.form.customPackageName")}
                       <RequiredMark />
                     </Label>
                     <Input
@@ -1176,7 +1212,7 @@ export function NewBookingForm({
                         fieldClass,
                         errors.customPackageName && "border-destructive",
                       )}
-                      placeholder="F.eks. Helgepakke firma"
+                      placeholder={t("bookings.form.customPackageNamePlaceholder")}
                       {...register("customPackageName")}
                       aria-invalid={!!errors.customPackageName}
                     />
@@ -1188,7 +1224,7 @@ export function NewBookingForm({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="new-booking-custom-pkg-price" className={labelClass}>
-                      Pakkepris (NOK)
+                      {t("bookings.form.packagePrice")}
                     </Label>
                     <div className="relative">
                       <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-app-sm font-semibold text-rn-text-slate md:left-4">
@@ -1206,7 +1242,7 @@ export function NewBookingForm({
                       />
                     </div>
                     <p className="text-app-xs text-muted-foreground">
-                      Bruk 0 om pris avtales separat — juster «Avtalt total» under.
+                      {t("bookings.form.packagePriceHint")}
                     </p>
                     {errors.customPackagePrice ? (
                       <p className="text-app-xs text-destructive">
@@ -1223,22 +1259,20 @@ export function NewBookingForm({
               ) : null}
             </div>
             <div className="space-y-4">
-              <Label className={labelClass}>Tillegg</Label>
+              <Label className={labelClass}>{t("bookings.form.addons")}</Label>
               <p className="text-app-xs text-rn-text-body">
-                Velg fra katalog (synkronisert med Priser) og/eller legg inn egne
-                tillegg med navn og pris — uten å opprette dem i Priser først.
+                {t("bookings.form.addonsHint")}
               </p>
               {bookingAddons.length === 0 ? (
                 <p className="rounded-md border border-dashed border-rn-border-strong bg-rn-surface-wash/30 px-3 py-2 text-app-xs text-rn-text-body">
-                  Ingen aktive katalog-tillegg. Bruk seksjonen «Egne tillegg»
-                  under, eller opprett tjenester under{" "}
+                  {noCatalogAddonsHintParts.beforePricing}
                   <Link
                     href="/app/pricing"
                     className="font-semibold text-success underline-offset-2 hover:underline"
                   >
-                    Priser
+                    {t("navigation.pricing")}
                   </Link>
-                  .
+                  {noCatalogAddonsHintParts.after}
                 </p>
               ) : (
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 lg:gap-3">
@@ -1268,7 +1302,7 @@ export function NewBookingForm({
                             {addon.name}
                           </span>
                           <span className="mt-0.5 block text-app-xs tabular-nums text-rn-text-slate">
-                            +{formatNok(addon.price)}
+                            +{formatCurrency(addon.price)}
                           </span>
                         </span>
                       </label>
@@ -1283,7 +1317,7 @@ export function NewBookingForm({
               ) : null}
               <div className="space-y-3 border-t border-rn-border-strong pt-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className={labelClass}>Egne tillegg</span>
+                  <span className={labelClass}>{t("bookings.form.customAddons")}</span>
                   <Button
                     type="button"
                     variant="outline"
@@ -1293,12 +1327,12 @@ export function NewBookingForm({
                     disabled={customAddonFields.length >= 24}
                   >
                     <Plus className="size-4" aria-hidden />
-                    Legg til linje
+                    {t("bookings.form.addLine")}
                   </Button>
                 </div>
                 {customAddonFields.length === 0 ? (
                   <p className="text-app-xs text-muted-foreground">
-                    Ingen egne tillegg — valgfritt.
+                    {t("bookings.form.noCustomAddons")}
                   </p>
                 ) : (
                   <ul className="space-y-3">
@@ -1312,7 +1346,7 @@ export function NewBookingForm({
                             className="text-[11px] font-semibold uppercase tracking-wider text-rn-text-slate"
                             htmlFor={`custom-addon-name-${field.id}`}
                           >
-                            Navn
+                            {t("common.fields.name")}
                           </Label>
                           <Input
                             id={`custom-addon-name-${field.id}`}
@@ -1321,7 +1355,7 @@ export function NewBookingForm({
                               errors.customAddonLines?.[index]?.name &&
                                 "border-destructive",
                             )}
-                            placeholder="F.eks. Ekstra servering søndag"
+                            placeholder={t("bookings.extraServingPlaceholder")}
                             {...register(`customAddonLines.${index}.name`)}
                             aria-invalid={!!errors.customAddonLines?.[index]?.name}
                           />
@@ -1336,7 +1370,7 @@ export function NewBookingForm({
                             className="text-[11px] font-semibold uppercase tracking-wider text-rn-text-slate"
                             htmlFor={`custom-addon-price-${field.id}`}
                           >
-                            Pris (NOK)
+                            {t("bookings.form.priceNok")}
                           </Label>
                           <PriceInput
                             id={`custom-addon-price-${field.id}`}
@@ -1365,7 +1399,7 @@ export function NewBookingForm({
                           size="sm"
                           className="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
                           onClick={() => removeCustomAddon(index)}
-                          aria-label="Fjern tilleggslinje"
+                          aria-label={t("bookings.form.removeAddonLine")}
                         >
                           <Trash2 className="size-4" />
                         </Button>
@@ -1381,9 +1415,9 @@ export function NewBookingForm({
         <div className="bg-card p-6 md:p-8">
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-x-6 md:gap-y-5">
             <div className="space-y-2">
-              <Label className={labelClass}>Betalt depositum (NOK)</Label>
+              <Label className={labelClass}>{t("bookings.form.depositPaid")}</Label>
               <p className="min-h-10 text-app-xs leading-snug text-muted-foreground md:min-h-11">
-                Valgfritt. Trekkes fra avtalt total ved lagring.
+                {t("bookings.form.depositHint")}
               </p>
               <div className="relative">
                 <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-app-sm font-semibold text-rn-text-slate md:left-4">
@@ -1404,10 +1438,9 @@ export function NewBookingForm({
             </div>
 
             <div className="space-y-2">
-              <Label className={labelClass}>Estimert totalpris</Label>
+              <Label className={labelClass}>{t("bookings.form.estimatedTotal")}</Label>
               <p className="min-h-10 text-app-xs leading-snug text-muted-foreground md:min-h-11">
-                Beregnet fra pakke (katalog eller egen), valgte katalogtillegg og
-                egne tilleggslinjer (referanse).
+                {t("bookings.form.estimatedHint")}
               </p>
               <div
                 className={cn(
@@ -1416,14 +1449,14 @@ export function NewBookingForm({
                 )}
                 aria-live="polite"
               >
-                {formatNok(estimatedTotal)}
+                {formatCurrency(estimatedTotal)}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className={labelClass}>Gjenstående beløp</Label>
+              <Label className={labelClass}>{t("bookings.form.remainingAmount")}</Label>
               <p className="min-h-10 text-app-xs leading-snug text-muted-foreground md:min-h-11">
-                Avtalt totalpris minus betalt depositum.
+                {t("bookings.form.remainingHint")}
               </p>
               <div
                 className={cn(
@@ -1432,18 +1465,17 @@ export function NewBookingForm({
                 )}
                 aria-live="polite"
               >
-                {formatNok(remainingAfterDeposit)}
+                {formatCurrency(remainingAfterDeposit)}
               </div>
             </div>
 
             <div className="space-y-2">
               <Label className={labelClass}>
-                Avtalt totalpris (kunde)
+                {t("bookings.form.agreedTotalCustomer")}
                 <RequiredMark />
               </Label>
               <p className="min-h-10 text-app-xs leading-snug text-muted-foreground md:min-h-11">
-                Sett egen pris ved behov; synkes med estimat til du endrer den
-                selv.
+                {t("bookings.form.agreedHint")}
               </p>
               <div className="relative">
                 <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-app-sm font-semibold text-rn-text-slate md:left-4">
@@ -1465,22 +1497,28 @@ export function NewBookingForm({
                   className="text-app-sm font-semibold text-success"
                   aria-live="polite"
                 >
-                  Rabatt for kunden: {formatNok(customerDiscountNok)}
+                  {t("bookings.form.customerDiscount", {
+                    amount: formatCurrency(customerDiscountNok),
+                  })}
                   {discountPercent > 0
-                    ? ` (${discountPercent} % under estimat)`
+                    ? t("bookings.form.discountPercent", {
+                        percent: discountPercent,
+                      })
                     : null}
                 </p>
               ) : null}
               {aboveEstimateNok > 0 ? (
                 <p className="text-app-sm text-muted-foreground" aria-live="polite">
-                  {formatNok(aboveEstimateNok)} over estimat.
+                  {t("bookings.form.aboveEstimate", {
+                    amount: formatCurrency(aboveEstimateNok),
+                  })}
                 </p>
               ) : null}
             </div>
           </div>
           <div className="mt-8 space-y-2 md:mt-10">
             <Label className={labelClass}>
-              Notater
+              {t("common.fields.notes")}
             </Label>
             <Textarea
               className={cn(
@@ -1488,7 +1526,7 @@ export function NewBookingForm({
                 "h-auto min-h-44 resize-y py-3.5 md:min-h-52 md:py-4",
                 errors.notes && "border-destructive",
               )}
-              placeholder="Kosthold, særskilte ønsker, osv."
+              placeholder={t("bookings.notesPlaceholder")}
               rows={7}
               {...register("notes")}
               aria-invalid={!!errors.notes}
@@ -1507,7 +1545,7 @@ export function NewBookingForm({
               "inline-flex items-center justify-center border-2 border-rn-border-strong font-heading font-bold",
             )}
           >
-            Avbryt
+            {t("common.actions.cancel")}
           </Link>
           <Button
             type="submit"
@@ -1515,7 +1553,7 @@ export function NewBookingForm({
             size="cta"
             disabled={isSubmitting || catalogPackageBlocked}
           >
-            {isSubmitting ? "Lagrer…" : "Lagre booking"}
+            {isSubmitting ? t("bookings.saving") : t("bookings.form.saveBooking")}
           </Button>
         </div>
       </form>

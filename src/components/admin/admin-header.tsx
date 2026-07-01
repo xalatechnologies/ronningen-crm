@@ -1,5 +1,6 @@
 "use client";
 
+import { LanguageSwitcher } from "@/components/language/language-switcher";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
 import { AdminSearchShortcut } from "@/components/admin/admin-search-shortcut";
@@ -13,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useTranslation } from "@/i18n/client";
 import { signOutToLogin } from "@/lib/auth/sign-out";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -73,6 +75,7 @@ function HeaderAvatarOrInitials({
 }
 
 export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: number }) {
+  const { t } = useTranslation();
   const { user, loading } = useAuthUser();
   const supabase = useSupabase();
 
@@ -86,7 +89,7 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
   const displayName = useMemo(() => {
     const name = user?.user_metadata?.full_name;
     if (typeof name === "string" && name.trim()) return name.trim();
-    return user?.email ?? "Innlogget";
+    return user?.email ?? t("common.account.loggedIn");
   }, [user]);
 
   async function signOut() {
@@ -115,7 +118,7 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
             "disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-muted/30",
           )}
           disabled={loading}
-          aria-label="Konto og utlogging"
+          aria-label={t("common.account.menuAria")}
         >
           {avatarUrl ? (
             <HeaderAvatarOrInitials
@@ -156,13 +159,16 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
               className="px-3 py-2.5 font-heading text-app-md md:px-3.5 md:py-3"
               render={<Link href="/app" />}
             >
-              Gå til app
+              {t("common.account.goToApp")}
             </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-2 bg-border" />
+            <LanguageSwitcher variant="menu" />
+            <DropdownMenuSeparator className="my-2 bg-border" />
             <DropdownMenuItem
               className="px-3 py-2.5 font-heading text-app-md font-bold md:px-3.5 md:py-3"
               onSelect={() => void signOut()}
             >
-              Logg ut
+              {t("common.account.logout")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>

@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import { getDefaultT } from "@/lib/i18n/default-messages";
 
 import { sendEmail } from "@/lib/notifications/email-client";
 import {
@@ -187,13 +188,15 @@ export async function broadcastCampaign(
     .eq("id", campaignId)
     .maybeSingle();
 
+  const t = getDefaultT();
+
   if (campaignError) throw campaignError;
-  if (!campaign) throw new Error("Kampanje ikke funnet");
+  if (!campaign) throw new Error(t("serverErrors.admin.campaignNotFound"));
   if (campaign.status !== "active") {
-    throw new Error("Kampanjen må være aktiv for utsending");
+    throw new Error(t("serverErrors.admin.campaignMustBeActiveForSend"));
   }
   if (!campaign.template_key) {
-    throw new Error("Kampanjen mangler mal");
+    throw new Error(t("serverErrors.admin.campaignMissingTemplate"));
   }
 
   const recipients = await listEligibleRecipients();
@@ -227,6 +230,8 @@ export async function sendWelcomeNotification(input: {
   userId: string;
   organizationName: string;
 }): Promise<SendNotificationResult> {
+  const t = getDefaultT();
+
   return sendNotificationToUser({
     userId: input.userId,
     templateKey: "welcome",
@@ -234,7 +239,7 @@ export async function sendWelcomeNotification(input: {
     contextKey: "welcome",
     eventKey: "platform.welcome",
     actionUrl: buildBillingActionUrl(),
-    actionLabel: "Fullfør betaling",
+    actionLabel: t("serverErrors.billing.completePayment"),
   });
 }
 
@@ -243,6 +248,7 @@ export async function sendPaymentFailedNotifications(input: {
   organizationName: string;
   invoiceId: string;
 }): Promise<BroadcastResult> {
+  const t = getDefaultT();
   const admin = createSupabaseAdminClient();
   const owners = await listOrganizationOwnerRecipients(input.organizationId);
   const result: BroadcastResult = { sent: 0, failed: 0, skipped: 0 };
@@ -261,7 +267,7 @@ export async function sendPaymentFailedNotifications(input: {
       eventKey: "billing.payment_failed",
       priority: "high",
       actionUrl: buildBillingActionUrl(),
-      actionLabel: "Gå til fakturering",
+      actionLabel: t("serverErrors.billing.goToBilling"),
     });
 
     if (sendResult.skipped) result.skipped += 1;
@@ -286,7 +292,7 @@ export async function sendPaymentFailedNotifications(input: {
         eventKey: "billing.payment_failed",
         priority: "high",
         actionUrl: buildBillingActionUrl(),
-        actionLabel: "Gå til fakturering",
+        actionLabel: t("serverErrors.billing.goToBilling"),
       });
       if (sendResult.skipped) result.skipped += 1;
       else if (sendResult.ok) result.sent += 1;
@@ -298,6 +304,7 @@ export async function sendPaymentFailedNotifications(input: {
 }
 
 export async function sendTrialReminders(): Promise<BroadcastResult> {
+  const t = getDefaultT();
   const admin = createSupabaseAdminClient();
   const now = new Date();
   const inThreeDays = new Date(now);
@@ -345,7 +352,7 @@ export async function sendTrialReminders(): Promise<BroadcastResult> {
         organizationId: sub.organization_id,
         eventKey: "billing.trial_reminder",
         actionUrl: buildBillingActionUrl(),
-        actionLabel: "Gå til fakturering",
+        actionLabel: t("serverErrors.billing.goToBilling"),
       });
 
       if (sendResult.skipped) result.skipped += 1;

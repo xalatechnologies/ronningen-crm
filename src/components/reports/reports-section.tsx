@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { Button } from "@/components/ui/button";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
@@ -23,14 +24,6 @@ import type {
   ReportsModuleKpis,
   ReportsSectionProps,
 } from "./types";
-
-function formatNok(n: number) {
-  return new Intl.NumberFormat("nb-NO", {
-    style: "currency",
-    currency: "NOK",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
 
 function formatPct(n: number | null, digits = 1) {
   if (n == null) return null;
@@ -70,6 +63,7 @@ function TrendBadge({
   pct: number | null;
   focusMonth: number | null;
 }) {
+  const { t } = useTranslation();
   if (pct == null) return null;
   return (
     <div
@@ -85,7 +79,7 @@ function TrendBadge({
       )}
       <span>
         {formatPct(pct)}{" "}
-        {focusMonth != null ? "mot samme periode i fjor" : "vs. fjorår"}
+        {focusMonth != null ? t("reports.vsSamePeriodLastYear") : t("reports.vsLastYear")}
       </span>
     </div>
   );
@@ -117,6 +111,7 @@ function OkonomiSection({
   focusMonth: number | null;
   reportsPeriodLabel: string;
 }) {
+  const { t, formatCurrency, locale } = useTranslation();
   const isEmpty =
     revenue.fakturertNok === 0 &&
     finance.incomeNok === 0 &&
@@ -126,38 +121,40 @@ function OkonomiSection({
     <section
       id="okonomi"
       className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
-      aria-label="Økonomi"
+      aria-label={t("reports.economy.aria")}
     >
       <ReportsSectionHeader
-        title="Økonomi"
-        description="Fakturert omsetning og betaling fra reservasjoner i valgt periode. Resultat er fra registrerte finanstransaksjoner."
+        title={t("reports.economy.title")}
+        description={t("reports.economy.description")}
       />
       {isEmpty ? (
         <div className="mt-4 rounded-md border border-rn-border-strong/60 bg-muted/20 px-4 py-3 text-app-sm text-muted-foreground">
-          Ingen økonomidata i {reportsPeriodLabel}.{" "}
+          {t("reports.economy.empty", { period: reportsPeriodLabel })}{" "}
           <Link
             href="/app/bookings/new"
             className="font-semibold text-success underline-offset-2 hover:underline"
           >
-            Opprett reservasjon
+            {t("reports.economy.createReservation")}
           </Link>
         </div>
       ) : null}
       <div className={cn(KPI_GRID, "mt-5")}>
         <ReportsKpiTile
-          label="Fakturert"
-          value={formatNok(revenue.fakturertNok)}
+          label={t("reports.economy.invoiced")}
+          value={formatCurrency(revenue.fakturertNok)}
           valueClassName="text-success"
         >
           <p className="reports-kpi-caption mt-3 tabular-nums">
-            Reservasjoner {formatNok(revenue.bookingFakturertNok)} · Overnatting{" "}
-            {formatNok(revenue.accommodationFakturertNok)}
+            {t("reports.economy.reservationsSplit", {
+              bookings: formatCurrency(revenue.bookingFakturertNok),
+              accommodation: formatCurrency(revenue.accommodationFakturertNok),
+            })}
           </p>
           <TrendBadge pct={revenue.revenueTrendPct} focusMonth={focusMonth} />
         </ReportsKpiTile>
         <ReportsKpiTile
-          label="Innbetalt"
-          value={formatNok(revenue.totalPaid)}
+          label={t("reports.economy.paid")}
+          value={formatCurrency(revenue.totalPaid)}
           valueClassName="text-success"
         >
           <div className="mt-4 h-1.5 w-full rounded-full border border-rn-border-strong/30 bg-muted/40">
@@ -170,14 +167,17 @@ function OkonomiSection({
           </div>
         </ReportsKpiTile>
         <ReportsKpiTile
-          label="Ubetalt"
-          value={formatNok(revenue.totalUnpaid)}
+          label={t("reports.economy.unpaid")}
+          value={formatCurrency(revenue.totalUnpaid)}
           valueClassName="text-destructive"
         >
           {revenue.fakturertNok > 0 ? (
             <p className="reports-kpi-caption mt-3 font-medium tabular-nums">
-              {(revenue.unpaidShareOfBooked * 100).toFixed(1).replace(".", ",")} %
-              av fakturert
+              {t("reports.economy.percentOfInvoiced", {
+                percent: (revenue.unpaidShareOfBooked * 100)
+                  .toFixed(1)
+                  .replace(".", locale === "nb" ? "," : "."),
+              })}
             </p>
           ) : null}
           {revenue.totalUnpaid > 0 ? (
@@ -185,19 +185,19 @@ function OkonomiSection({
               href="/app/invoices"
               className="reports-inline-link mt-2 inline-flex text-success underline-offset-2 hover:underline"
             >
-              Fakturaer →
+              {t("reports.economy.invoicesLink")}
             </Link>
           ) : null}
         </ReportsKpiTile>
         <ReportsKpiTile
-          label="Resultat"
-          value={formatNok(finance.netNok)}
+          label={t("reports.economy.result")}
+          value={formatCurrency(finance.netNok)}
           valueClassName={
             finance.netNok >= 0 ? "text-success" : "text-destructive"
           }
         >
           <p className="reports-kpi-caption mt-3">
-            Transaksjoner i perioden — ikke samme som fakturert
+            {t("reports.economy.resultNote")}
           </p>
         </ReportsKpiTile>
       </div>
@@ -212,6 +212,7 @@ function PipelineSection({
   bookings: ReportsModuleKpis["bookings"];
   inquiries: ReportsModuleKpis["inquiries"];
 }) {
+  const { t, formatCurrency } = useTranslation();
   const isEmpty =
     bookings.bookingCount === 0 &&
     inquiries.openCount === 0 &&
@@ -221,19 +222,19 @@ function PipelineSection({
     <section
       id="pipeline"
       className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
-      aria-label="Pipeline"
+      aria-label={t("reports.pipeline.aria")}
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <ReportsSectionHeader
-          title="Pipeline"
-          description="Bookinger og forespørsler i valgt periode."
+          title={t("reports.pipeline.title")}
+          description={t("reports.pipeline.description")}
         />
         <div className="flex shrink-0 flex-wrap gap-3 text-app-sm font-semibold">
           <Link
             href="/app/bookings"
             className="text-success underline-offset-2 hover:underline"
           >
-            Reservasjoner
+            {t("reports.pipeline.reservations")}
           </Link>
           <span className="text-muted-foreground/50" aria-hidden>
             ·
@@ -242,41 +243,48 @@ function PipelineSection({
             href="/app/inquiries"
             className="text-success underline-offset-2 hover:underline"
           >
-            Forespørsler
+            {t("reports.pipeline.inquiries")}
           </Link>
         </div>
       </div>
       {isEmpty ? (
         <div className="mt-4 rounded-md border border-rn-border-strong/60 bg-muted/20 px-4 py-3 text-app-sm text-muted-foreground">
-          Ingen pipeline-aktivitet i perioden.
+          {t("reports.pipeline.empty")}
         </div>
       ) : null}
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
         <ReportsKpiTile
-          label="Bookinger"
+          label={t("reports.pipeline.bookings")}
           value={bookings.bookingCount}
           valueClassName="text-success"
         >
           <p className="reports-kpi-caption-strong mt-3">
             <span className="text-emerald-600">
-              {bookings.confirmedBookingCount} bekreftet
+              {t("reports.pipeline.confirmed", {
+                count: bookings.confirmedBookingCount,
+              })}
             </span>
             {" · "}
             <span className="text-amber-700 dark:text-amber-400">
-              {bookings.pendingBookingCount} venter
-            </span>
-          </p>
-        </ReportsKpiTile>
-        <ReportsKpiTile label="Åpne forespørsler" value={inquiries.openCount}>
-          <p className="reports-kpi-caption mt-3">
-            Estimert{" "}
-            <span className="font-semibold tabular-nums text-foreground">
-              {formatNok(inquiries.estimatedNok)}
+              {t("reports.pipeline.pending", {
+                count: bookings.pendingBookingCount,
+              })}
             </span>
           </p>
         </ReportsKpiTile>
         <ReportsKpiTile
-          label="Konvertering"
+          label={t("reports.openInquiries")}
+          value={inquiries.openCount}
+        >
+          <p className="reports-kpi-caption mt-3">
+            {t("reports.pipeline.estimated")}{" "}
+            <span className="font-semibold tabular-nums text-foreground">
+              {formatCurrency(inquiries.estimatedNok)}
+            </span>
+          </p>
+        </ReportsKpiTile>
+        <ReportsKpiTile
+          label={t("reports.pipeline.conversion")}
           value={
             inquiries.conversionRatePct != null
               ? `${inquiries.conversionRatePct.toFixed(0)} %`
@@ -289,59 +297,67 @@ function PipelineSection({
 }
 
 function InventarSection({ facility }: { facility: ReportsFacilityStats }) {
+  const { t, formatCurrency } = useTranslation();
   const isEmpty = facility.assetRowCount === 0;
 
   return (
     <section
       id="inventar"
       className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
-      aria-label="Inventar"
+      aria-label={t("reports.inventory.aria")}
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <ReportsSectionHeader
-          title="Inventar"
-          description="Total verdi og tilstand i inventarregisteret per i dag."
+          title={t("reports.inventory.title")}
+          description={t("reports.inventory.description")}
         />
         <Link
           href="/app/assets"
           className="shrink-0 text-app-sm font-semibold text-success underline-offset-2 hover:underline"
         >
-          Inventar →
+          {t("reports.inventory.link")}
         </Link>
       </div>
       {isEmpty ? (
         <div className="mt-4 rounded-md border border-rn-border-strong/60 bg-muted/20 px-4 py-3 text-app-sm text-muted-foreground">
-          Ingen inventar registrert ennå.{" "}
+          {t("reports.inventory.empty")}{" "}
           <Link
             href="/app/assets"
             className="font-semibold text-success underline-offset-2 hover:underline"
           >
-            Legg til inventar
+            {t("reports.inventory.addInventory")}
           </Link>
         </div>
       ) : (
         <div className={cn(KPI_GRID, "mt-5")}>
           <ReportsKpiTile
-            label="Inventar total"
-            value={formatNok(facility.assetTotalValueNok)}
+            label={t("reports.inventory.total")}
+            value={formatCurrency(facility.assetTotalValueNok)}
             valueClassName="text-success"
           >
             <p className="reports-kpi-caption mt-3 tabular-nums">
               {facility.assetRowCount}{" "}
-              {facility.assetRowCount === 1 ? "registrering" : "registreringer"}{" "}
+              {facility.assetRowCount === 1
+                ? t("reports.inventory.registrationSingular")
+                : t("reports.inventory.registrationPlural")}{" "}
               · {facility.assetTotalUnits}{" "}
-              {facility.assetTotalUnits === 1 ? "enhet" : "enheter"}
+              {facility.assetTotalUnits === 1
+                ? t("reports.inventory.unitSingular")
+                : t("reports.inventory.unitPlural")}
             </p>
           </ReportsKpiTile>
           <ReportsKpiTile
-            label="I drift"
+            label={t("reports.inventory.operational")}
             value={facility.assetOperationalCount}
           />
           <ReportsKpiTile
-            label="Vedlikehold"
+            label={t("reports.inventory.maintenance")}
             value={facility.assetMaintenanceCount}
           />
-          <ReportsKpiTile label="Bytte" value={facility.assetReplaceCount} />
+          <ReportsKpiTile
+            label={t("reports.inventory.replace")}
+            value={facility.assetReplaceCount}
+          />
         </div>
       )}
     </section>
@@ -357,6 +373,7 @@ function ReportsDetailsCollapsible({
   facility: ReportsFacilityStats;
   focusMonth: number | null;
 }) {
+  const { t, formatCurrency } = useTranslation();
   const [open, setOpen] = useState(false);
   const { finance, invoices, inquiries, accommodation } = kpis;
   const showDriftAlert =
@@ -365,7 +382,7 @@ function ReportsDetailsCollapsible({
   return (
     <section
       className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
-      aria-label="Detaljer"
+      aria-label={t("reports.details.aria")}
     >
       <Button
         type="button"
@@ -375,10 +392,10 @@ function ReportsDetailsCollapsible({
         onClick={() => setOpen((v) => !v)}
       >
         <span>
-          <span className="app-section-title block">Vis detaljer</span>
+          <span className="app-section-title block">{t("reports.details.showTitle")}</span>
           <span className="mt-1 block text-app-sm font-normal text-muted-foreground">
-            Finans, fakturaer, forespørsler, overnatting
-            {showDriftAlert ? " og inventar-varsel" : ""}
+            {t("reports.details.showDescription")}
+            {showDriftAlert ? t("reports.details.showDescriptionWithAlert") : ""}
           </span>
         </span>
         <ChevronDown
@@ -394,19 +411,19 @@ function ReportsDetailsCollapsible({
         <div className="mt-6 space-y-8">
           <div>
             <h3 className="mb-4 text-app-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Finans
+              {t("reports.details.finance")}
             </h3>
             <div className={KPI_GRID}>
               <ReportsKpiTile
-                label="Inntekt"
-                value={formatNok(finance.incomeNok)}
+                label={t("reports.details.income")}
+                value={formatCurrency(finance.incomeNok)}
                 valueClassName="text-success"
               >
                 <TrendBadge pct={finance.incomeTrendPct} focusMonth={focusMonth} />
               </ReportsKpiTile>
               <ReportsKpiTile
-                label="Utgift"
-                value={formatNok(finance.expenseNok)}
+                label={t("reports.details.expense")}
+                value={formatCurrency(finance.expenseNok)}
                 valueClassName="text-destructive"
               >
                 <TrendBadge pct={finance.expenseTrendPct} focusMonth={focusMonth} />
@@ -416,19 +433,19 @@ function ReportsDetailsCollapsible({
 
           <div>
             <h3 className="mb-4 text-app-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Fakturaer
+              {t("reports.details.invoices")}
             </h3>
             <p className="mb-4 text-app-sm text-muted-foreground">
-              Gjelder alle aktive reservasjoner per i dag.
+              {t("reports.details.invoicesNote")}
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
               <ReportsKpiTile
-                label="Utestående totalt"
-                value={formatNok(invoices.outstandingNok)}
+                label={t("reports.outstandingTotal")}
+                value={formatCurrency(invoices.outstandingNok)}
                 valueClassName="text-destructive"
               />
               <ReportsKpiTile
-                label="Forfalt ubetalt"
+                label={t("reports.details.overdueUnpaid")}
                 value={invoices.overdueUnpaidCount}
                 valueClassName={
                   invoices.overdueUnpaidCount > 0
@@ -438,8 +455,13 @@ function ReportsDetailsCollapsible({
               >
                 <p className="reports-kpi-caption mt-2">
                   {invoices.overdueUnpaidCount === 0
-                    ? "Ingen forfalte bookinger"
-                    : `${invoices.overdueUnpaidCount} booking${invoices.overdueUnpaidCount !== 1 ? "er" : ""} etter arrangementsdato`}
+                    ? t("reports.details.noOverdue")
+                    : t(
+                        invoices.overdueUnpaidCount === 1
+                          ? "reports.details.overdueBookings"
+                          : "reports.details.overdueBookingsPlural",
+                        { count: invoices.overdueUnpaidCount },
+                      )}
                 </p>
               </ReportsKpiTile>
             </div>
@@ -447,16 +469,16 @@ function ReportsDetailsCollapsible({
 
           <div>
             <h3 className="mb-4 text-app-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Forespørsler
+              {t("reports.details.inquiries")}
             </h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
               <ReportsKpiTile
-                label="Konverterte"
+                label={t("reports.details.converted")}
                 value={inquiries.convertedCount}
                 valueClassName="text-success"
               />
               <ReportsKpiTile
-                label="Tapte"
+                label={t("reports.details.lost")}
                 value={inquiries.lostCount}
                 valueClassName="text-destructive"
               />
@@ -465,16 +487,16 @@ function ReportsDetailsCollapsible({
 
           <div>
             <h3 className="mb-4 text-app-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Overnatting
+              {t("reports.details.accommodation")}
             </h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
               <ReportsKpiTile
-                label="Reservasjoner"
+                label={t("reports.details.reservations")}
                 value={accommodation.reservationCount}
               />
               <ReportsKpiTile
-                label="Fakturert"
-                value={formatNok(accommodation.fakturertNok)}
+                label={t("reports.economy.invoiced")}
+                value={formatCurrency(accommodation.fakturertNok)}
               />
             </div>
           </div>
@@ -483,13 +505,13 @@ function ReportsDetailsCollapsible({
             <div>
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-app-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  Inventar-varsel
+                  {t("reports.details.inventoryAlert")}
                 </h3>
                 <Link
                   href="/app/assets"
                   className="text-app-sm font-semibold text-success underline-offset-2 hover:underline"
                 >
-                  Gå til inventar →
+                  {t("reports.details.goToInventory")}
                 </Link>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
@@ -500,7 +522,7 @@ function ReportsDetailsCollapsible({
                         className="size-4 text-amber-700 dark:text-amber-400"
                         aria-hidden
                       />
-                      Vedlikehold
+                      {t("reports.inventory.maintenance")}
                     </span>
                   }
                   value={facility.assetMaintenanceCount}
@@ -513,7 +535,7 @@ function ReportsDetailsCollapsible({
                         className="size-4 text-destructive"
                         aria-hidden
                       />
-                      Skal byttes
+                      {t("reports.details.needsReplacement")}
                     </span>
                   }
                   value={facility.assetReplaceCount}
@@ -529,36 +551,37 @@ function ReportsDetailsCollapsible({
 }
 
 function ReportsModuleFooter() {
+  const { t } = useTranslation();
   return (
     <div className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6">
       <p className="text-app-sm text-muted-foreground">
-        Se også:{" "}
+        {t("reports.footer.seeAlso")}{" "}
         <Link
           href="/app/finance"
           className="font-medium text-success underline-offset-2 hover:underline"
         >
-          Finans
+          {t("reports.footer.finance")}
         </Link>
         {" · "}
         <Link
           href="/app/customers?tab=partners"
           className="font-medium text-success underline-offset-2 hover:underline"
         >
-          Partnere
+          {t("reports.footer.partners")}
         </Link>
         {" · "}
         <Link
           href="/app/assets"
           className="font-medium text-success underline-offset-2 hover:underline"
         >
-          Inventar
+          {t("reports.footer.inventory")}
         </Link>
         {" · "}
         <Link
           href="/app/pricing"
           className="font-medium text-success underline-offset-2 hover:underline"
         >
-          Priser
+          {t("reports.footer.pricing")}
         </Link>
       </p>
     </div>
@@ -598,6 +621,7 @@ function FestTypeBreakdownRow({
   row: FestTypeBreakdown;
   index: number;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="relative pt-2">
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
@@ -613,7 +637,10 @@ function FestTypeBreakdownRow({
           <span className="text-foreground">{row.count}</span>
           <span className="reports-breakdown-stats-meta text-muted-foreground">
             {" "}
-            {row.count === 1 ? "booking" : "bookinger"} · {row.pct.toFixed(0)}%
+            {row.count === 1
+              ? t("reports.breakdown.bookingSingular")
+              : t("reports.breakdown.bookingPlural")}{" "}
+            · {row.pct.toFixed(0)}%
           </span>
         </span>
       </div>
@@ -642,6 +669,7 @@ function BreakdownRow({
   row: EventTypeBreakdown;
   index: number;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="relative pt-2">
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
@@ -657,7 +685,10 @@ function BreakdownRow({
           <span className="text-foreground">{row.count}</span>
           <span className="reports-breakdown-stats-meta text-muted-foreground">
             {" "}
-            {row.count === 1 ? "booking" : "bookinger"} · {row.pct.toFixed(0)}%
+            {row.count === 1
+              ? t("reports.breakdown.bookingSingular")
+              : t("reports.breakdown.bookingPlural")}{" "}
+            · {row.pct.toFixed(0)}%
           </span>
         </span>
       </div>
@@ -692,6 +723,7 @@ export function ReportsSection({
   loadError,
   hasRegisteredActivity,
 }: ReportsSectionProps) {
+  const { t, locale } = useTranslation();
   const paddedCard = (extra?: string) => cn("p-6", RN_CARD_SHELL, extra);
 
   const { revenue, bookings, inquiries, finance } = kpis;
@@ -703,7 +735,7 @@ export function ReportsSection({
           <AppPageHeader
             className="mb-0"
             surface="default"
-            title="Rapporter"
+            title={t("reports.title")}
             actions={
               <Suspense
                 fallback={
@@ -729,7 +761,7 @@ export function ReportsSection({
                 href="#diagram"
                 className="font-medium text-success underline-offset-2 hover:underline"
               >
-                Hopp til diagram
+                {t("reports.jumpToChart")}
               </a>
             </p>
           ) : null}
@@ -741,7 +773,7 @@ export function ReportsSection({
             role="alert"
           >
             <div className="reports-load-error rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive">
-              Kunne ikke laste data: {loadError}
+              {t("reports.loadError", { error: loadError })}
             </div>
           </div>
         ) : null}
@@ -750,22 +782,22 @@ export function ReportsSection({
           <div className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6">
             <div className="rounded-md border border-rn-border-strong/60 bg-muted/20 px-4 py-4 text-app-sm text-muted-foreground">
               <p className="font-medium text-foreground">
-                Ingen registrert aktivitet ennå.
+                {t("reports.noActivityTitle")}
               </p>
               <p className="mt-2">
-                Tall oppdateres når du registrerer{" "}
+                {t("reports.noActivityDescription")}{" "}
                 <Link
                   href="/app/bookings/new"
                   className="font-semibold text-success underline-offset-2 hover:underline"
                 >
-                  reservasjoner
+                  {t("reports.reservationsLink")}
                 </Link>{" "}
-                eller{" "}
+                {locale === "nb" ? "eller" : "or"}{" "}
                 <Link
                   href="/app/finance"
                   className="font-semibold text-success underline-offset-2 hover:underline"
                 >
-                  finans
+                  {t("reports.financeLink")}
                 </Link>
                 .
               </p>
@@ -802,12 +834,12 @@ export function ReportsSection({
         />
 
         <section className={paddedCard("p-7 md:p-8")}>
-          <h2 className="app-section-title mb-8">Privat og bedrift</h2>
+          <h2 className="app-section-title mb-8">{t("reports.breakdown.privateCorporate")}</h2>
           {bookings.bookingCount === 0 ? (
             <p className="reports-empty-hint">
               {focusMonth != null
-                ? "Ingen bookinger med arrangement i denne måneden."
-                : "Ingen aktive bookinger å vise i perioden."}
+                ? t("reports.noBookingsMonth")
+                : t("reports.noActiveBookings")}
             </p>
           ) : (
             <div className="flex flex-col gap-8 md:gap-10">
@@ -817,7 +849,7 @@ export function ReportsSection({
               {festTypeBreakdown.length > 0 ? (
                 <div className="border-t border-rn-border-strong/40 pt-8">
                   <h3 className="mb-6 text-app-base font-bold tracking-tight text-foreground">
-                    Arrangementstyper
+                    {t("reports.breakdown.eventTypes")}
                   </h3>
                   <div className="flex flex-col gap-8">
                     {festTypeBreakdown.map((row, i) => (

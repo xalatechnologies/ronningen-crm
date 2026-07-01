@@ -12,18 +12,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatNotificationCategory } from "@/lib/notifications/notification-events";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/i18n/client";
 import { useNotifications } from "@/providers/notification-provider";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
+import type { Locale } from "@/i18n/config";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-function formatWhen(iso: string): string {
-  return format(new Date(iso), "d. MMM HH:mm", { locale: nb });
+function formatWhen(iso: string, locale: Locale): string {
+  return format(new Date(iso), "d. MMM HH:mm", { locale: getDateFnsLocale(locale) });
 }
 
 export function NotificationBell() {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const { scopedNotifications, unreadCount, markRead, loading } =
     useNotifications();
@@ -40,8 +43,8 @@ export function NotificationBell() {
         )}
         aria-label={
           unreadCount > 0
-            ? `Varsler, ${unreadCount} uleste`
-            : "Varsler"
+            ? t("notifications.bell.unreadAria", { count: unreadCount })
+            : t("notifications.inbox.title")
         }
         disabled={loading}
       >
@@ -59,12 +62,12 @@ export function NotificationBell() {
       >
         <DropdownMenuGroup>
           <DropdownMenuLabel className="px-2 py-1.5 font-heading text-app-sm font-semibold">
-            Varsler
+            {t("notifications.inbox.title")}
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="my-1 bg-border" />
           {preview.length === 0 ? (
             <p className="px-3 py-4 text-center text-app-sm text-muted-foreground">
-              Ingen varsler ennå.
+              {t("notifications.bell.empty")}
             </p>
           ) : (
             preview.map((notification) => (
@@ -100,8 +103,8 @@ export function NotificationBell() {
                   {notification.body}
                 </span>
                 <span className="text-app-xs text-muted-foreground">
-                  {formatNotificationCategory(notification.category)} ·{" "}
-                  {formatWhen(notification.created_at)}
+                  {formatNotificationCategory(notification.category, t)} ·{" "}
+                  {formatWhen(notification.created_at, locale)}
                 </span>
               </DropdownMenuItem>
             ))
@@ -111,7 +114,7 @@ export function NotificationBell() {
             className="justify-center px-3 py-2 font-heading text-app-sm font-semibold text-success"
             render={<Link href="/app/notifications" />}
           >
-            Se alle varsler
+            {t("notifications.bell.viewAll")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

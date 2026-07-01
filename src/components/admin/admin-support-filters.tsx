@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import type { AdminSupportFilter } from "@/lib/admin/dashboard-links";
 import type { AdminSupportTicket } from "@/lib/admin/queries/support";
 import {
@@ -9,18 +10,18 @@ import {
   AdminSegmentFilterSearch,
   adminSegmentFilterButtonClass,
 } from "@/components/admin/admin-segment-filter-bar";
+import type { Translator } from "@/i18n/types";
 
 export type { AdminSupportFilter };
 
-export const ADMIN_SUPPORT_FILTER_OPTIONS: {
-  value: AdminSupportFilter;
-  label: string;
-}[] = [
-  { value: "all", label: "Alle" },
-  { value: "open", label: "Åpne" },
-  { value: "waiting", label: "Venter" },
-  { value: "resolved", label: "Løst" },
-];
+export function getAdminSupportFilterOptions(t: Translator) {
+  return [
+    { value: "all" as const, label: t("admin.alle") },
+    { value: "open" as const, label: t("admin.apne") },
+    { value: "waiting" as const, label: t("admin.venter") },
+    { value: "resolved" as const, label: t("admin.lost") },
+  ];
+}
 
 export function computeAdminSupportFilterCounts(
   tickets: AdminSupportTicket[],
@@ -98,6 +99,8 @@ export function AdminSupportFilterBar({
   counts,
   embedded = false,
 }: AdminSupportFilterBarProps) {
+  const { t } = useTranslation();
+  const filterOptions = getAdminSupportFilterOptions(t);
   return (
     <AdminSegmentFilterBar
       className={
@@ -109,14 +112,14 @@ export function AdminSupportFilterBar({
       <AdminSegmentFilterSearch
         value={search}
         onChange={onSearchChange}
-        placeholder="Søk organisasjon, slug eller emne…"
-        aria-label="Søk support-saker"
+        placeholder={t("admin.sok_organisasjon_slug_eller_emne")}
+        aria-label={t("admin.sok_support_saker")}
       />
 
       <AdminSegmentFilterDivider />
 
-      <AdminSegmentFilterControls aria-label="Filtrer support-saker">
-        {ADMIN_SUPPORT_FILTER_OPTIONS.map((option) => {
+      <AdminSegmentFilterControls aria-label={t("admin.filtrer_support_saker")}>
+        {filterOptions.map((option) => {
           const count = counts[option.value];
           const active = filter === option.value;
           return (

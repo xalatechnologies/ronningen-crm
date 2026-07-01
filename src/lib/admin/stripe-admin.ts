@@ -1,5 +1,6 @@
 import { isStripeConfigured } from "@/lib/billing/constants";
 import { getStripeClient } from "@/lib/billing/stripe";
+import { getServerTranslation } from "@/i18n/server";
 
 export function getStripeCustomerUrl(customerId: string): string {
   return `https://dashboard.stripe.com/customers/${customerId}`;
@@ -8,8 +9,9 @@ export function getStripeCustomerUrl(customerId: string): string {
 export async function retryStripeInvoicePayment(
   providerSubscriptionId: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { t } = await getServerTranslation();
   if (!isStripeConfigured()) {
-    return { ok: false, error: "Stripe er ikke konfigurert." };
+    return { ok: false, error: "Stripe is not configured." };
   }
 
   try {
@@ -30,7 +32,7 @@ export async function retryStripeInvoicePayment(
 
     const invoice = invoices.data[0];
     if (!invoice) {
-      return { ok: false, error: "Ingen åpen faktura funnet." };
+      return { ok: false, error: t("serverErrors.admin.noOpenInvoice") };
     }
 
     await stripe.invoices.pay(invoice.id);

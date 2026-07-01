@@ -1,4 +1,5 @@
 import type { BookingInquiryStatus } from "@/lib/validations";
+import type { Translator, TranslationKey } from "@/i18n/types";
 
 export type InquiryListRow = {
   id: string;
@@ -37,11 +38,17 @@ export function isActiveInquiry(
   return row.status !== "converted" && !row.convertedBookingId;
 }
 
-export const INQUIRY_STATUS_LABELS: Record<BookingInquiryStatus, string> = {
-  new: "Ny",
-  contacted: "Kontaktet",
-  quote_sent: "Tilbud sendt",
-  awaiting_customer: "Venter på svar",
-  converted: "Konvertert til reservasjon",
-  lost: "Tapt",
-};
+export function inquiryStatusLabel(
+  status: BookingInquiryStatus,
+  t: Translator,
+): string {
+  const keyMap: Record<BookingInquiryStatus, TranslationKey> = {
+    new: "statuses.new",
+    contacted: "statuses.contacted",
+    quote_sent: "statuses.quoteSent",
+    awaiting_customer: "statuses.awaitingCustomer",
+    converted: "statuses.converted",
+    lost: "statuses.lost",
+  };
+  return t(keyMap[status]);
+}

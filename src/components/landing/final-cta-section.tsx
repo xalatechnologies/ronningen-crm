@@ -1,9 +1,12 @@
-import { FINAL_CTA, LANDING_ROUTES } from "@/components/landing/landing-content";
+"use client";
+
+import { LANDING_ROUTES } from "@/components/landing/landing-content";
 import {
   LANDING_CONTAINER,
   LANDING_SECTION_X,
 } from "@/components/landing/landing-layout";
 import { buttonVariants } from "@/components/ui/button";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -18,6 +21,8 @@ const secondaryCtaClass = cn(
 );
 
 export function FinalCtaSection() {
+  const { t } = useTranslation();
+
   return (
     <section
       aria-labelledby="landing-final-cta-title"
@@ -37,18 +42,18 @@ export function FinalCtaSection() {
             id="landing-final-cta-title"
             className="font-heading text-2xl font-bold tracking-tight text-white md:text-3xl"
           >
-            {FINAL_CTA.title}
+            {t("landing.finalCta.title")}
           </h2>
           <p className="text-base leading-relaxed text-primary-light md:text-lg">
-            {FINAL_CTA.text}
+            {t("landing.finalCta.text")}
           </p>
         </div>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:justify-center">
           <Link href={LANDING_ROUTES.register} className={primaryCtaClass}>
-            {FINAL_CTA.primaryCta}
+            {t("landing.finalCta.primaryCta")}
           </Link>
           <Link href={LANDING_ROUTES.login} className={secondaryCtaClass}>
-            {FINAL_CTA.secondaryCta}
+            {t("landing.finalCta.secondaryCta")}
           </Link>
         </div>
       </div>

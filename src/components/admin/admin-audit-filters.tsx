@@ -1,7 +1,8 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import {
-  ADMIN_AUDIT_CATEGORY_OPTIONS,
+  getAdminAuditCategoryOptions,
   type AdminAuditCategory,
 } from "@/lib/admin/audit-categories";
 import {
@@ -31,6 +32,8 @@ export function AdminAuditFilterBar({
   counts,
   embedded = false,
 }: AdminAuditFilterBarProps) {
+  const { t } = useTranslation();
+  const categoryOptions = getAdminAuditCategoryOptions(t);
   return (
     <AdminSegmentFilterBar
       className={
@@ -42,14 +45,14 @@ export function AdminAuditFilterBar({
       <AdminSegmentFilterSearch
         value={search}
         onChange={onSearchChange}
-        placeholder="Søk admin, handling, mål-ID…"
-        aria-label="Søk revisjonslogg"
+        placeholder={t("admin.sok_admin_handling_mal_id")}
+        aria-label={t("admin.sok_revisjonslogg")}
       />
 
       <AdminSegmentFilterDivider />
 
-      <AdminSegmentFilterControls aria-label="Filtrer revisjonslogg etter kategori">
-        {ADMIN_AUDIT_CATEGORY_OPTIONS.map((option) => {
+      <AdminSegmentFilterControls aria-label={t("admin.filtrer_revisjonslogg_etter_kategori")}>
+        {categoryOptions.map((option) => {
           const count = counts[option.value];
           const active = category === option.value;
           return (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AppPageSkeleton } from "@/components/shared/app-page-skeleton";
 import { useDashboardQuery } from "@/hooks/use-tenant-page-queries";
 import { consumeBillingActivatedToast } from "@/lib/billing/billing-checkout-return";
@@ -16,13 +17,14 @@ const DashboardHome = dynamic(
 );
 
 export function DashboardPageClient() {
+  const { t } = useTranslation();
   const { data, isPending } = useDashboardQuery();
 
   useEffect(() => {
     if (consumeBillingActivatedToast()) {
-      toast.success("Abonnement aktivert. Velkommen!");
+      toast.success(t("appPages.dashboard.subscriptionActivated"));
     }
-  }, []);
+  }, [t]);
 
   if (isPending && !data) return <AppPageSkeleton variant="dashboard" />;
   if (!data) return null;

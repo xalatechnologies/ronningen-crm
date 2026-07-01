@@ -8,6 +8,7 @@ import {
   isSupportTicketCategory,
   type SupportTicketCategory,
 } from "@/lib/support/labels";
+import { getServerT } from "@/lib/i18n/server-messages";
 import { requireOrgMember } from "@/lib/support/require-org-member";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -26,14 +27,15 @@ export async function createOrgSupportTicket(input: {
   category: SupportTicketCategory;
 }) {
   const { userId, orgId } = await requireOrgMember();
+  const t = await getServerT();
   const subject = input.subject.trim();
   const body = input.body.trim();
 
   if (subject.length < 3) {
-    return { ok: false as const, error: "Emne må være minst 3 tegn." };
+    return { ok: false as const, error: t("serverErrors.admin.subjectMinLength") };
   }
   if (body.length < 3) {
-    return { ok: false as const, error: "Melding må være minst 3 tegn." };
+    return { ok: false as const, error: t("serverErrors.admin.messageMinLength") };
   }
   if (!isSupportTicketCategory(input.category)) {
     return { ok: false as const, error: "Ugyldig kategori." };
@@ -79,10 +81,11 @@ export async function replyToOrgSupportTicket(input: {
   body: string;
 }) {
   const { userId, orgId } = await requireOrgMember();
+  const t = await getServerT();
   const body = input.body.trim();
 
   if (body.length < 3) {
-    return { ok: false as const, error: "Melding må være minst 3 tegn." };
+    return { ok: false as const, error: t("serverErrors.admin.messageMinLength") };
   }
 
   const supabase = await createServerSupabaseClient();

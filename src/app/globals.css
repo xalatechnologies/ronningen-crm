@@ -823,7 +823,7 @@
   }
 
   /**
-   * Fakturaer — større typografi (samme mønster som Finans / Priser).
+   * Fakturaer — samme typografi som Reservasjoner (liste).
    */
   .invoices-page-workspace .app-title {
     font-size: calc(24px * var(--app-type-scale));
@@ -849,12 +849,6 @@
     line-height: 1.45;
   }
 
-  @media (min-width: 768px) {
-    .invoices-page-workspace .invoices-row-caption {
-      font-size: calc(15px * var(--app-read-type-scale));
-    }
-  }
-
   .invoices-page-workspace .invoices-row-pill {
     font-size: calc(13px * var(--app-type-scale));
   }
@@ -878,34 +872,28 @@
   }
 
   .invoices-page-workspace .invoices-due-date {
-    font-size: var(--font-size-base);
-    line-height: 1.3;
+    font-size: calc(15px * var(--app-read-type-scale));
+    line-height: 1.45;
   }
 
   .invoices-page-workspace .invoices-rest-amount-mobile {
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-    font-size: calc(17px * var(--app-type-scale));
+    font-size: calc(17px * var(--app-read-type-scale));
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.45;
     font-variant-numeric: tabular-nums;
   }
 
   .invoices-page-workspace .invoices-rest-amount {
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-    font-size: calc(24px * var(--app-type-scale));
-    line-height: 1.15;
-    letter-spacing: -0.02em;
+    font-size: calc(17px * var(--app-read-type-scale));
+    font-weight: 700;
+    line-height: 1.45;
     font-variant-numeric: tabular-nums;
   }
 
-  @media (min-width: 768px) {
-    .invoices-page-workspace .invoices-rest-amount {
-      font-size: calc(28px * var(--app-type-scale));
-    }
-  }
-
   .invoices-page-workspace .invoices-payment-major {
-    font-size: var(--font-size-base);
+    font-size: calc(17px * var(--app-read-type-scale));
     font-variant-numeric: tabular-nums;
   }
 
@@ -933,12 +921,12 @@
   }
 
   .invoices-page-workspace .invoices-filter-empty-title {
-    font-size: calc(15px * var(--app-type-scale));
+    font-size: calc(19px * var(--app-type-scale));
   }
 
   .invoices-page-workspace .invoices-filter-empty-hint {
-    font-size: calc(14px * var(--app-read-type-scale));
-    line-height: 1.5;
+    font-size: calc(15px * var(--app-read-type-scale));
+    line-height: 1.55;
   }
 
   .invoices-page-workspace .invoices-load-error {

@@ -1,13 +1,10 @@
+"use client";
+
+import { useTranslation } from "@/i18n/client";
 import { AdminStatusBadge } from "@/components/admin/admin-badges";
+import { tenantAccessLabel } from "@/lib/admin/subscription-labels";
 import { resolveTenantAccess } from "@/lib/subscriptions/subscription-utils";
 import { cn } from "@/lib/utils";
-
-const ACCESS_LABELS: Record<string, string> = {
-  full: "Full tilgang",
-  warning: "Advarsel (forfalt)",
-  billing_only: "Kun fakturering",
-  suspended: "Suspendert",
-};
 
 export function AdminAccessBadge({
   isSuspended,
@@ -22,6 +19,7 @@ export function AdminAccessBadge({
   billingEnabled?: boolean;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const access = resolveTenantAccess(
     {
       is_suspended: isSuspended,
@@ -39,7 +37,7 @@ export function AdminAccessBadge({
           className,
         )}
       >
-        {ACCESS_LABELS.suspended}
+        {tenantAccessLabel("suspended", t)}
       </span>
     );
   }
@@ -48,7 +46,7 @@ export function AdminAccessBadge({
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       <AdminStatusBadge status={subscriptionStatus} />
       <span className="text-app-xs font-medium text-muted-foreground md:text-app-sm">
-        {ACCESS_LABELS[access] ?? access}
+        {tenantAccessLabel(access, t)}
       </span>
     </div>
   );

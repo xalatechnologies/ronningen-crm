@@ -1,3 +1,6 @@
+import type { Translator } from "@/i18n/types";
+import type { TranslationKey } from "@/i18n/types";
+
 export const BOOKING_PAYMENT_STATUS_VALUES = [
   "unpaid",
   "partial",
@@ -10,6 +13,15 @@ export const BOOKING_PAYMENT_STATUS_VALUES = [
 export type BookingPaymentStatus =
   (typeof BOOKING_PAYMENT_STATUS_VALUES)[number];
 
+export function bookingPaymentStatusLabel(
+  status: BookingPaymentStatus,
+  t: Translator,
+): string {
+  const key = `bookings.paymentStatus.${status}` as TranslationKey;
+  return t(key);
+}
+
+/** @deprecated Use bookingPaymentStatusLabel(status, t) */
 export const BOOKING_PAYMENT_STATUS_LABELS: Record<
   BookingPaymentStatus,
   string

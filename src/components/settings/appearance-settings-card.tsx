@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Label } from "@/components/ui/label";
 import {
@@ -11,13 +12,10 @@ import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
 import { Palette } from "lucide-react";
 
-const densityLabels: Record<DisplayDensity, string> = {
-  compact: "Kompakt",
-  comfortable: "Normal",
-  spacious: "Romslig",
-};
+
 
 export function AppearanceSettingsCard() {
+  const { t } = useTranslation();
   const displayDensity = useAppStore((s) => s.displayDensity);
   const setDisplayDensity = useAppStore((s) => s.setDisplayDensity);
 
@@ -29,10 +27,10 @@ export function AppearanceSettingsCard() {
         </div>
         <div>
           <h2 className="font-heading text-lg font-semibold text-foreground md:text-xl">
-            Utseende
+            {t("settings.appearance.title")}
           </h2>
           <p className="mt-1 text-app-sm text-muted-foreground">
-            Tilpass fargetema og visningstetthet i appen.
+            {t("settings.appearance.description")}
           </p>
         </div>
       </div>
@@ -40,19 +38,19 @@ export function AppearanceSettingsCard() {
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="space-y-3">
           <Label className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Fargetema
+            {t("common.theme.label")}
           </Label>
           <ThemeToggle />
         </div>
 
         <div className="space-y-3">
           <Label className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Visningstetthet
+            {t("settings.appearance.densityLabel")}
           </Label>
           <div
             className="flex flex-wrap gap-1 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment p-1"
             role="radiogroup"
-            aria-label="Velg visningstetthet"
+            aria-label={t("settings.appearance.densityAria")}
           >
             {(Object.keys(displayDensities) as DisplayDensity[]).map((key) => {
               const active = displayDensity === key;
@@ -71,7 +69,7 @@ export function AppearanceSettingsCard() {
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {densityLabels[key]}
+                  {t(`settings.appearance.density.${key}`)}
                 </button>
               );
             })}

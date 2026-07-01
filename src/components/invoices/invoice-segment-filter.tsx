@@ -1,6 +1,8 @@
 "use client";
 
 import type { UnpaidInvoiceRow } from "@/components/invoices/types";
+import { useTranslation } from "@/i18n/client";
+import type { TranslationKey } from "@/i18n/types";
 import {
   INVOICE_FILTER_SPECS,
   countInvoiceFilter,
@@ -9,6 +11,24 @@ import {
 import { RN_TEXT_SEGMENT } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { CalendarClock, Scale } from "lucide-react";
+
+const FILTER_LABEL_KEYS: Record<InvoiceRowFilter, TranslationKey> = {
+  all: "invoices.filters.all",
+  overdue: "invoices.filters.overdue",
+  unpaid: "invoices.filters.unpaid",
+  partial: "invoices.filters.partial",
+  upcoming: "invoices.filters.upcoming",
+  inkasso: "invoices.filters.inkasso",
+};
+
+const FILTER_TITLE_KEYS: Record<InvoiceRowFilter, TranslationKey> = {
+  all: "invoices.filters.allTitle",
+  overdue: "invoices.filters.overdueTitle",
+  unpaid: "invoices.filters.unpaidTitle",
+  partial: "invoices.filters.partialTitle",
+  upcoming: "invoices.filters.upcomingTitle",
+  inkasso: "invoices.filters.inkassoTitle",
+};
 
 function segmentActiveClass(id: InvoiceRowFilter): string {
   switch (id) {
@@ -42,10 +62,12 @@ export function InvoiceSegmentFilter({
   onFilterChange: (next: InvoiceRowFilter) => void;
   className?: string;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div
       role="toolbar"
-      aria-label="Filtrer utestående fakturaer etter status"
+      aria-label={t("invoices.filterAria")}
       className={cn(
         "flex flex-wrap items-center gap-2 md:gap-2.5",
         className,
@@ -60,12 +82,14 @@ export function InvoiceSegmentFilter({
         const active = filter === spec.id;
         const isInk = spec.id === "inkasso";
         const isAll = spec.id === "all";
+        const label = t(FILTER_LABEL_KEYS[spec.id]);
+        const title = t(FILTER_TITLE_KEYS[spec.id]);
 
         return (
           <button
             key={spec.id}
             type="button"
-            title={spec.title}
+            title={title}
             aria-pressed={active ? "true" : "false"}
             onClick={() => onFilterChange(spec.id)}
             className={cn(
@@ -100,7 +124,7 @@ export function InvoiceSegmentFilter({
             >
               {count}
             </span>
-            <span className="font-semibold tracking-wide">{spec.label}</span>
+            <span className="font-semibold tracking-wide">{label}</span>
           </button>
         );
       })}

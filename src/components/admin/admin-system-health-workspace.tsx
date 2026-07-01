@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminLinkButton } from "@/components/admin/admin-action-button";
 import {
   AdminHealthStatusBadge,
@@ -21,7 +22,7 @@ import { adminSettingsHref } from "@/lib/admin/settings-links";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import {
   Activity,
   CheckCircle2,
@@ -59,6 +60,7 @@ function HealthKpiTile({
   iconClassName?: string;
   valueClassName?: string;
 }) {
+  const { t } = useTranslation();
   const content = (
     <>
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -86,7 +88,7 @@ function HealthKpiTile({
         )}
       >
         {content}
-        <span className="sr-only">Gå til {label}</span>
+        <span className="sr-only">{t("admin.overview_go_to", { label })}</span>
       </Link>
     );
   }
@@ -154,6 +156,7 @@ export function AdminSystemHealthWorkspace({
 }: {
   data: SystemHealthOverview;
 }) {
+  const { t, locale } = useTranslation();
   const componentHint =
     data.summary.warning + data.summary.critical > 0
       ? `${data.summary.warning} advarsel${data.summary.warning !== 1 ? "er" : ""}${
@@ -161,17 +164,17 @@ export function AdminSystemHealthWorkspace({
             ? ` · ${data.summary.critical} kritisk`
             : ""
         }`
-      : "Alle komponenter rapporterer OK";
+      : t("admin.alle_komponenter_rapporterer_ok");
 
   const supportCaption =
     data.openSupportCount === 0
-      ? "Ingen åpne saker"
-      : "Krever oppfølging";
+      ? t("admin.ingen_apne_saker")
+      : t("admin.krever_oppfolging");
 
   const webhookCaption =
     data.lastWebhookHoursAgo == null
-      ? "Ingen webhooks registrert"
-      : "Siste mottatte Stripe-hendelse";
+      ? t("admin.ingen_webhooks_registrert")
+      : t("admin.siste_mottatte_stripe_hendelse");
 
   const overallIconContainer =
     data.overallStatus === "critical"
@@ -195,32 +198,32 @@ export function AdminSystemHealthWorkspace({
             className="mb-0"
             surface="default"
             compact
-            title="Systemhelse"
-            description="Overvåkning av infrastruktur, bakgrunnsjobber og operative signaler."
+            title={t("admin.systemhelse")}
+            description={t("admin.overvakning_av_infrastruktur_bakgrunnsjobber_og_operative_si")}
             actions={
-              <AdminLinkButton href={adminSettingsHref("integrations")}>
-                Integrasjoner
-              </AdminLinkButton>
+              <AdminLinkButton href={adminSettingsHref("integrations")}>{t("admin.integrasjoner")}</AdminLinkButton>
             }
           />
         </div>
 
         <section
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
-          aria-label="Nøkkeltall"
+          aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <HealthKpiTile
-              label="Samlet status"
-              value={overallStatusLabel(data.overallStatus)}
-              caption={`${data.summary.total} overvåkede komponenter`}
+              label={t("admin.samlet_status")}
+              value={overallStatusLabel(data.overallStatus, t)}
+              caption={t("admin.overview_monitored_components", {
+                count: data.summary.total,
+              })}
               icon={Activity}
               iconContainerClassName={overallIconContainer}
               iconClassName={overallIconClass}
               valueClassName={overallStatusValueClass(data.overallStatus)}
             />
             <HealthKpiTile
-              label="Komponenter OK"
+              label={t("admin.komponenter_ok")}
               value={`${data.summary.healthy}/${data.summary.total}`}
               caption={componentHint}
               icon={CheckCircle2}
@@ -231,7 +234,7 @@ export function AdminSystemHealthWorkspace({
               }
             />
             <HealthKpiTile
-              label="Åpne support-saker"
+              label={t("admin.apne_support_saker")}
               value={data.openSupportCount}
               caption={supportCaption}
               icon={LifeBuoy}
@@ -243,7 +246,7 @@ export function AdminSystemHealthWorkspace({
               href={adminSupportHref("open")}
             />
             <HealthKpiTile
-              label="Siste Stripe-webhook"
+              label={t("admin.siste_stripe_webhook")}
               value={formatWebhookKpi(data.lastWebhookHoursAgo)}
               caption={webhookCaption}
               icon={Webhook}
@@ -254,8 +257,8 @@ export function AdminSystemHealthWorkspace({
 
         <section className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8">
           <SectionIntro
-            title="Infrastruktur"
-            description="Tilstand for database, autentisering, betaling og planlagte jobber."
+            title={t("admin.infrastruktur")}
+            description={t("admin.tilstand_for_database_autentisering_betaling_og_planlagte_jo")}
           />
           <div className="mt-5 grid gap-4 sm:grid-cols-2 sm:gap-5">
             {data.components.map((component) => (
@@ -270,8 +273,8 @@ export function AdminSystemHealthWorkspace({
 
       <section className="flex flex-col gap-8">
         <SectionIntro
-          title="Krever oppmerksomhet"
-          description="Operative køer som kan trenge oppfølging."
+          title={t("admin.krever_oppmerksomhet")}
+          description={t("admin.operative_koer_som_kan_trenge_oppfolging")}
         />
         <div
           className={
@@ -281,22 +284,22 @@ export function AdminSystemHealthWorkspace({
           }
         >
           <AdminQueuePanel
-            title="Åpne support-saker"
+            title={t("admin.apne_support_saker")}
             items={data.openSupportQueue}
-            emptyLabel="Ingen åpne support-saker."
+            emptyLabel={t("admin.ingen_apne_support_saker")}
             viewAllHref={adminSupportHref("open")}
           />
           <AdminQueuePanel
-            title="Forfalt betaling"
+            title={t("admin.forfalt_betaling")}
             items={data.failedPaymentQueue}
-            emptyLabel="Ingen organisasjoner med forfalt status."
+            emptyLabel={t("admin.ingen_organisasjoner_med_forfalt_status")}
             viewAllHref={adminSubscriptionsHref("past_due")}
           />
           {data.failedJobQueue.length > 0 ? (
             <AdminQueuePanel
-              title="Feilede bakgrunnsjobber (7 d.)"
+              title={t("admin.feilede_bakgrunnsjobber_7_d")}
               items={data.failedJobQueue}
-              emptyLabel="Ingen feilede jobber."
+              emptyLabel={t("admin.ingen_feilede_jobber")}
               viewAllHref={adminRoutes.systemHealth}
             />
           ) : null}
@@ -306,8 +309,8 @@ export function AdminSystemHealthWorkspace({
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section className="px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8">
           <SectionIntro
-            title="Hendelseslogg"
-            description="Siste Stripe-webhooks og bakgrunnsjobber."
+            title={t("admin.hendelseslogg")}
+            description={t("admin.siste_stripe_webhooks_og_bakgrunnsjobber")}
           />
         </section>
 
@@ -315,15 +318,15 @@ export function AdminSystemHealthWorkspace({
           <div className="border-rn-border-strong/50 lg:border-r">
             <div className="flex items-center gap-2 border-b-2 border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8 md:py-5">
               <Server className="size-5 text-primary dark:text-white" aria-hidden />
-              <h3 className="app-section-title">Stripe-webhooks</h3>
+              <h3 className="app-section-title">{t("adminLabels.sections.stripeWebhooks")}</h3>
             </div>
             <div className="app-table -mx-px max-w-full overflow-x-auto overscroll-x-contain">
               <table className="w-full min-w-[320px] text-left text-app-base">
                 <thead>
                   <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                    <th className={tableHeadClass}>Hendelse</th>
-                    <th className={tableHeadClass}>Type</th>
-                    <th className={tableHeadClass}>Tidspunkt</th>
+                    <th className={tableHeadClass}>{t("adminLabels.fields.event")}</th>
+                    <th className={tableHeadClass}>{t("adminLabels.fields.type")}</th>
+                    <th className={tableHeadClass}>{t("adminLabels.fields.timestamp")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-rn-border-strong/50">
@@ -339,9 +342,9 @@ export function AdminSystemHealthWorkspace({
                       <td className={cn(tableCellClass, "text-muted-foreground")}>
                         {event.processedAt
                           ? format(new Date(event.processedAt), "d. MMM yyyy HH:mm", {
-                              locale: nb,
+                              locale: getDateFnsLocale(locale),
                             })
-                          : "Venter"}
+                          : t("admin.venter")}
                       </td>
                     </tr>
                   ))}
@@ -349,7 +352,7 @@ export function AdminSystemHealthWorkspace({
                     <tr>
                       <td colSpan={3}>
                         <div className="px-6 py-12 text-center app-text-muted md:px-8">
-                          Ingen webhooks registrert.
+                          {t("adminLabels.empty.noWebhooks")}
                         </div>
                       </td>
                     </tr>
@@ -362,15 +365,15 @@ export function AdminSystemHealthWorkspace({
           <div>
             <div className="flex items-center gap-2 border-b-2 border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8 md:py-5">
               <Activity className="size-5 text-primary dark:text-white" aria-hidden />
-              <h3 className="app-section-title">Bakgrunnsjobber</h3>
+              <h3 className="app-section-title">{t("adminLabels.sections.backgroundJobs")}</h3>
             </div>
             <div className="app-table -mx-px max-w-full overflow-x-auto overscroll-x-contain">
               <table className="w-full min-w-[320px] text-left text-app-base">
                 <thead>
                   <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                    <th className={tableHeadClass}>Jobb</th>
-                    <th className={tableHeadClass}>Status</th>
-                    <th className={tableHeadClass}>Fullført</th>
+                    <th className={tableHeadClass}>{t("adminLabels.fields.job")}</th>
+                    <th className={tableHeadClass}>{t("admin.status")}</th>
+                    <th className={tableHeadClass}>{t("adminLabels.fields.completed")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-rn-border-strong/50">
@@ -391,9 +394,9 @@ export function AdminSystemHealthWorkspace({
                       <td className={cn(tableCellClass, "text-muted-foreground")}>
                         {run.finishedAt
                           ? format(new Date(run.finishedAt), "d. MMM yyyy HH:mm", {
-                              locale: nb,
+                              locale: getDateFnsLocale(locale),
                             })
-                          : "Pågår"}
+                          : t("admin.pagar")}
                       </td>
                     </tr>
                   ))}
@@ -401,7 +404,7 @@ export function AdminSystemHealthWorkspace({
                     <tr>
                       <td colSpan={3}>
                         <div className="px-6 py-12 text-center app-text-muted md:px-8">
-                          Ingen jobbkjøringer registrert ennå.
+                          {t("adminLabels.empty.noJobRuns")}
                         </div>
                       </td>
                     </tr>
@@ -417,9 +420,7 @@ export function AdminSystemHealthWorkspace({
           <Link
             href={adminSettingsHref("integrations")}
             className="font-semibold text-success hover:underline"
-          >
-            Plattforminnstillinger
-          </Link>
+          >{t("admin.plattforminnstillinger")}</Link>
           . Live komponentstatus og hendelseslogg oppdateres ved sideinnlasting.
         </p>
       </div>

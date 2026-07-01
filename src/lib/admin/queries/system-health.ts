@@ -1,3 +1,5 @@
+import { getServerTranslation } from "@/i18n/server";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import { adminRoutes } from "@/config/admin-routes";
 import {
   buildCronHealthComponent,
@@ -10,7 +12,7 @@ import { buildFailedPaymentQueue } from "@/lib/admin/trend-data";
 import type { AdminQueueItem } from "@/lib/admin/types";
 import { isBillingEnabled } from "@/lib/billing/constants";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import type { Translator } from "@/i18n/types";
 
 export type { HealthStatus } from "@/lib/admin/platform-integration-status";
 
@@ -71,28 +73,29 @@ function summarizeComponents(components: SystemHealthComponent[]) {
   };
 }
 
-function metadataSummary(metadata: unknown): string | null {
+function metadataSummary(metadata: unknown, t: Translator): string | null {
   if (!metadata || typeof metadata !== "object") return null;
   const record = metadata as Record<string, unknown>;
   const parts: string[] = [];
   if (typeof record.expiredLocalTrials === "number") {
-    parts.push(`${record.expiredLocalTrials} utløpte prøver`);
+    parts.push(t("serverErrors.admin.expiredTrials", { count: record.expiredLocalTrials }));
   }
   if (typeof record.stripeResynced === "number" && record.stripeResynced > 0) {
-    parts.push(`${record.stripeResynced} Stripe-synk`);
+    parts.push(t("admin.system_health_stripe_resync", { count: record.stripeResynced }));
   }
   if (typeof record.pastDueResynced === "number" && record.pastDueResynced > 0) {
-    parts.push(`${record.pastDueResynced} forfalt-synk`);
+    parts.push(t("admin.system_health_past_due_resync", { count: record.pastDueResynced }));
   }
   if (typeof record.error === "string") return record.error;
   if (Array.isArray(record.errors) && record.errors.length > 0) {
-    parts.push(`${record.errors.length} advarsler`);
+    parts.push(t("admin.system_health_warnings_count", { count: record.errors.length }));
   }
   return parts.length > 0 ? parts.join(" · ") : null;
 }
 
 async function probeDatabase(
   admin: ReturnType<typeof createSupabaseAdminClient>,
+  t: Translator,
 ): Promise<SystemHealthComponent> {
   const dbStart = Date.now();
   const { error } = await admin.from("organizations").select("id").limit(1);
@@ -102,21 +105,22 @@ async function probeDatabase(
     id: "database",
     label: "Database",
     status: error ? "critical" : dbMs > 2000 ? "warning" : "healthy",
-    detail: error ? error.message : `Responstid ${dbMs} ms`,
+    detail: error ? error.message : t("admin.system_health_response_time", { ms: dbMs }),
     href: adminRoutes.settings,
   };
 }
 
 async function probeAuth(
   admin: ReturnType<typeof createSupabaseAdminClient>,
+  t: Translator,
 ): Promise<SystemHealthComponent> {
   const { error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1 });
 
   return {
     id: "auth",
-    label: "Autentisering",
+    label: t("admin.system_health_auth_label"),
     status: error ? "critical" : "healthy",
-    detail: error ? error.message : "Supabase Auth tilgjengelig",
+    detail: error ? error.message : t("admin.system_health_auth_ok"),
     href: adminRoutes.settings,
   };
 }
@@ -127,6 +131,8 @@ export {
 } from "@/lib/admin/platform-integration-status";
 
 export async function fetchAdminSystemHealthOverview(): Promise<SystemHealthOverview> {
+  const { t, locale } = await getServerTranslation();
+  const dateLocale = getDateFnsLocale(locale);
   const admin = createSupabaseAdminClient();
   const billingOn = isBillingEnabled();
 
@@ -141,8 +147,8 @@ export async function fetchAdminSystemHealthOverview(): Promise<SystemHealthOver
     { data: orgs },
     { data: lastBillingJob },
   ] = await Promise.all([
-    probeDatabase(admin),
-    probeAuth(admin),
+    probeDatabase(admin, t),
+    probeAuth(admin, t),
     admin
       .from("stripe_webhook_events")
       .select("event_id, event_type, processed_at")
@@ -192,8 +198,8 @@ export async function fetchAdminSystemHealthOverview(): Promise<SystemHealthOver
     ? (Date.now() - new Date(lastWebhookAt).getTime()) / (1000 * 60 * 60)
     : null;
 
-  const stripe = buildStripeHealthComponent(lastWebhookAt);
-  const cron = buildCronHealthComponent(lastBillingJob ?? null);
+  const stripe = buildStripeHealthComponent(lastWebhookAt, t);
+  const cron = buildCronHealthComponent(lastBillingJob ?? null, t);
   const components = [database, auth, stripe, cron];
   const overallStatus = computeOverallStatus(components);
 
@@ -205,7 +211,7 @@ export async function fetchAdminSystemHealthOverview(): Promise<SystemHealthOver
     label: orgById.get(t.organization_id) ?? t.organization_id,
     sublabel: t.subject,
     href: adminRoutes.organizationDetail(t.organization_id),
-    meta: format(new Date(t.updated_at), "d. MMM yyyy", { locale: nb }),
+    meta: format(new Date(t.updated_at), "d. MMM yyyy", { locale: dateLocale }),
   }));
 
   const failedPaymentQueue = buildFailedPaymentQueue(orgs ?? [], 6);
@@ -213,11 +219,11 @@ export async function fetchAdminSystemHealthOverview(): Promise<SystemHealthOver
   const failedJobQueue: AdminQueueItem[] = (failedJobs ?? []).map((job) => ({
     id: job.id,
     label: job.job_name,
-    sublabel: metadataSummary(job.metadata) ?? undefined,
+    sublabel: metadataSummary(job.metadata, t) ?? undefined,
     href: adminRoutes.systemHealth,
     meta: job.finished_at
-      ? format(new Date(job.finished_at), "d. MMM yyyy HH:mm", { locale: nb })
-      : format(new Date(job.started_at), "d. MMM yyyy HH:mm", { locale: nb }),
+      ? format(new Date(job.finished_at), "d. MMM yyyy HH:mm", { locale: dateLocale })
+      : format(new Date(job.started_at), "d. MMM yyyy HH:mm", { locale: dateLocale }),
   }));
 
   return {
@@ -238,7 +244,7 @@ export async function fetchAdminSystemHealthOverview(): Promise<SystemHealthOver
       status: j.status,
       startedAt: j.started_at,
       finishedAt: j.finished_at,
-      metadataSummary: metadataSummary(j.metadata),
+      metadataSummary: metadataSummary(j.metadata, t),
     })),
     lastWebhookHoursAgo: billingOn ? lastWebhookHoursAgo : null,
     summary: summarizeComponents(components),

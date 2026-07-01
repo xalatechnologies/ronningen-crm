@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import {
   AdminUserFilterBar,
   computeAdminUserFilterCounts,
@@ -11,11 +12,12 @@ import {
 import { AdminTableDetailLink } from "@/components/admin/admin-table-detail-link";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { adminRoutes } from "@/config/admin-routes";
+import type { Translator } from "@/i18n/types";
 import type { AdminUserRow } from "@/lib/admin/queries/users-billing-audit";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import {
   ShieldCheck,
   UserRound,
@@ -84,22 +86,22 @@ function UsersKpiTile({
   );
 }
 
-function userStatus(user: AdminUserRow): {
+function userStatus(user: AdminUserRow, t: Translator): {
   label: string;
   className: string;
 } {
   if (user.isDisabled) {
-    return { label: "Deaktivert", className: "font-semibold text-destructive" };
+    return { label: t("admin.deaktivert"), className: "font-semibold text-destructive" };
   }
   if (isInactiveUser(user)) {
-    return { label: "Inaktiv", className: "font-semibold text-muted-foreground" };
+    return { label: t("admin.inaktiv"), className: "font-semibold text-muted-foreground" };
   }
-  return { label: "Aktiv", className: "font-semibold text-success" };
+  return { label: t("admin.aktiv"), className: "font-semibold text-success" };
 }
 
-function orgSubtitle(user: AdminUserRow): string | undefined {
+function orgSubtitle(user: AdminUserRow, t: Translator): string | undefined {
   const primaryOrg = user.organizations[0];
-  if (!primaryOrg) return "Ingen organisasjon";
+  if (!primaryOrg) return t("admin.ingen_organisasjon");
   if (user.organizationCount > 1) {
     return `${primaryOrg.name} +${user.organizationCount - 1}`;
   }
@@ -117,6 +119,7 @@ export function AdminUsersWorkspace({
   initialFilter = "all",
   initialSearch = "",
 }: AdminUsersWorkspaceProps) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [filter, setFilter] = useState<AdminUserFilter>(initialFilter);
@@ -169,20 +172,22 @@ export function AdminUsersWorkspace({
             className="mb-0"
             surface="default"
             compact
-            title="Brukere"
-            description="Oversikt over registrerte brukere, plattformadministratorer og organisasjonstilhørighet."
+            title={t("admin.brukere")}
+            description={t("admin.oversikt_over_registrerte_brukere_plattformadministratorer_o")}
           />
         </div>
 
         <section
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
-          aria-label="Nøkkeltall"
+          aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <UsersKpiTile
-              label="Totalt"
+              label={t("admin.totalt")}
               value={overview.total}
-              caption={`${overview.withOrganization} med organisasjon`}
+              caption={t("admin.users_with_organization", {
+                count: overview.withOrganization,
+              })}
               icon={Users}
               active={filter === "all" && !search.trim()}
               onClick={() => {
@@ -191,29 +196,29 @@ export function AdminUsersWorkspace({
               }}
             />
             <UsersKpiTile
-              label="Plattformadmin"
+              label={t("admin.plattformadmin")}
               value={overview.platformAdmins}
-              caption="Super-administratorer"
+              caption={t("admin.super_administratorer")}
               icon={ShieldCheck}
               active={filter === "platform_admin"}
               onClick={() => updateFilter("platform_admin")}
             />
             <UsersKpiTile
-              label="Uten org"
+              label={t("admin.uten_org")}
               value={noOrgCount}
               caption={
                 noOrgCount === 0
-                  ? "Alle brukere tilhører en org"
-                  : "Uten organisasjonstilhørighet"
+                  ? t("admin.alle_brukere_tilhorer_en_org")
+                  : t("admin.uten_organisasjonstilhorighet")
               }
               icon={UserRound}
               active={filter === "no_org"}
               onClick={() => updateFilter("no_org")}
             />
             <UsersKpiTile
-              label="Inaktive"
+              label={t("admin.inaktive")}
               value={overview.inactive}
-              caption="90+ dager uten innlogging"
+              caption={t("admin.inactive_no_sign_in_90d")}
               icon={UserRoundX}
               iconContainerClassName="rounded-md bg-muted/60 p-2"
               iconClassName="size-6 text-muted-foreground"
@@ -241,18 +246,18 @@ export function AdminUsersWorkspace({
           <table className="w-full min-w-[52rem] text-left text-app-base">
             <thead>
               <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                <th className={tableHeadClass}>Navn</th>
-                <th className={tableHeadClass}>E-post</th>
-                <th className={tableHeadClass}>Status</th>
-                <th className={tableHeadClass}>Sist innlogget</th>
-                <th className={cn(tableHeadClass, "text-right")}>Organisasjoner</th>
-                <th className={tableHeadClass}>Plattformadmin</th>
-                <th className={tableHeadClass}>Registrert</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.name")}</th>
+                <th className={tableHeadClass}>{t("admin.e_post")}</th>
+                <th className={tableHeadClass}>{t("admin.status")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.lastLogin")}</th>
+                <th className={cn(tableHeadClass, "text-right")}>{t("admin.organisasjoner")}</th>
+                <th className={tableHeadClass}>{t("admin.plattformadmin")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.registered")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-rn-border-strong/50">
               {filtered.map((user) => {
-                const status = userStatus(user);
+                const status = userStatus(user, t);
 
                 return (
                   <tr
@@ -266,7 +271,7 @@ export function AdminUsersWorkspace({
                       <AdminTableDetailLink
                         href={adminRoutes.userDetail(user.id)}
                         title={user.fullName ?? "—"}
-                        subtitle={orgSubtitle(user)}
+                        subtitle={orgSubtitle(user, t)}
                       />
                     </td>
                     <td className={cn(tableCellClass, "max-w-[11rem] truncate text-muted-foreground sm:max-w-xs md:max-w-md")}>
@@ -280,23 +285,23 @@ export function AdminUsersWorkspace({
                     <td className={cn(tableCellClass, "text-muted-foreground")}>
                       {user.lastSignInAt
                         ? format(new Date(user.lastSignInAt), "d. MMM yyyy", {
-                            locale: nb,
+                            locale: getDateFnsLocale(locale),
                           })
-                        : "Aldri"}
+                        : t("admin.aldri")}
                     </td>
                     <td className={cn(tableCellClass, "text-right tabular-nums")}>
                       {user.organizationCount}
                     </td>
                     <td className={tableCellClass}>
                       {user.isPlatformAdmin ? (
-                        <span className="font-semibold text-success">Ja</span>
+                        <span className="font-semibold text-success">{t("adminLabels.fields.yes")}</span>
                       ) : (
-                        <span className="text-muted-foreground">Nei</span>
+                        <span className="text-muted-foreground">{t("adminLabels.fields.no")}</span>
                       )}
                     </td>
                     <td className={cn(tableCellClass, "text-muted-foreground")}>
                       {format(new Date(user.createdAt), "d. MMM yyyy", {
-                        locale: nb,
+                        locale: getDateFnsLocale(locale),
                       })}
                     </td>
                   </tr>
@@ -308,13 +313,13 @@ export function AdminUsersWorkspace({
                     <div className="space-y-3 px-6 py-16 text-center sm:px-10 sm:py-20 md:px-8">
                       <p className="font-heading text-lg font-bold tracking-tight text-rn-text-heading">
                         {users.length === 0
-                          ? "Ingen brukere ennå"
-                          : "Ingen treff i listen"}
+                          ? t("admin.ingen_brukere_enna")
+                          : t("admin.ingen_treff_i_listen")}
                       </p>
                       <p className="mx-auto max-w-lg text-muted-foreground">
                         {users.length === 0
-                          ? "Registrerte brukere vises her."
-                          : "Juster søket eller bytt filter. Nullstill ved å velge «Alle» og tømme søkefeltet."}
+                          ? t("admin.registrerte_brukere_vises_her")
+                          : t("admin.juster_soket_eller_bytt_filter_nullstill_ved_a_velge_alle_og")}
                       </p>
                     </div>
                   </td>
@@ -326,13 +331,15 @@ export function AdminUsersWorkspace({
 
         <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
           <p className="app-text-secondary">
-            Viser {filtered.length} av {users.length} brukere
+            {t("admin.viser_av_brukere", {
+              shown: filtered.length,
+              total: users.length,
+            })}
           </p>
         </div>
 
         <p className="border-t border-rn-border-strong/50 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
-          Inaktive brukere har ikke logget inn på over 90 dager, eller har aldri
-          logget inn. Deaktiverte kontoer kan gjenåpnes fra brukerdetaljer.
+          {t("admin.inaktive_brukere_hint")}
         </p>
       </div>
     </div>

@@ -1,9 +1,11 @@
 import { AppInitScripts } from "@/components/app-init-scripts";
 import { DisplayDensitySync } from "@/components/providers/display-density-sync";
 import { Toaster } from "@/components/ui/sonner";
-import { APP_DESCRIPTION, APP_NAME } from "@/config/app";
+import { APP_NAME } from "@/config/app";
 import { displayStorageKey } from "@/config/display";
 import { themeStorageKey } from "@/config/theme";
+import { I18nProvider } from "@/i18n/client";
+import { getServerLocale, getServerTranslation } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/providers/auth-provider";
 import { QueryProvider } from "@/providers/query-provider";
@@ -20,19 +22,24 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: APP_NAME,
-  description: APP_DESCRIPTION,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerTranslation();
+  return {
+    title: APP_NAME,
+    description: t("common.app.description"),
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const initialLocale = await getServerLocale();
+
   return (
     <html
-      lang="en"
+      lang={initialLocale}
       data-density="spacious"
       data-theme="light"
       data-scroll-behavior="smooth"
@@ -52,9 +59,11 @@ export default function RootLayout({
           <AuthProvider>
             <QueryProvider>
               <ThemeProvider>
-                <DisplayDensitySync />
-                {children}
-                <Toaster />
+                <I18nProvider initialLocale={initialLocale}>
+                  <DisplayDensitySync />
+                  {children}
+                  <Toaster />
+                </I18nProvider>
               </ThemeProvider>
             </QueryProvider>
           </AuthProvider>

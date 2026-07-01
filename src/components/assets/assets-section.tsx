@@ -36,7 +36,7 @@ import {
   assetRowInsuranceIsCovered,
   assetStatusBucket,
 } from "@/lib/asset-status-bucket";
-import { assetFormSchema, type AssetFormInput } from "@/lib/validations";
+import { assetFormSchema, type AssetFormInput, ASSET_CONDITION_PRESET_VALUES, ASSET_INSURANCE_PRESET_VALUES } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
@@ -61,6 +61,8 @@ import {
   Wind,
 } from "lucide-react";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
+import { useTranslation } from "@/i18n/client";
+import type { Translator } from "@/i18n/types";
 import {
   useCallback,
   useId,
@@ -88,12 +90,40 @@ export type AssetsSectionProps = {
 
 const PAGE_SIZE = 20;
 
-const STATUS_QUICK_FILTERS: { id: "all" | AssetStatusBucket; label: string }[] = [
-  { id: "all", label: "Alle" },
-  { id: "operational", label: "I drift" },
-  { id: "maintenance", label: "Vedlikehold" },
-  { id: "replace", label: "Bytte" },
-];
+const STATUS_FILTER_IDS = ["all", "operational", "maintenance", "replace"] as const;
+
+const CONDITION_PRESET_VALUES = ASSET_CONDITION_PRESET_VALUES;
+
+const INSURANCE_PRESET_VALUES = ASSET_INSURANCE_PRESET_VALUES;
+
+function statusFilterLabel(
+  id: (typeof STATUS_FILTER_IDS)[number],
+  t: Translator,
+): string {
+  return t(`assets.status.${id}`);
+}
+
+function conditionPresetOptions(t: Translator) {
+  return (
+    Object.entries(CONDITION_PRESET_VALUES) as Array<
+      [keyof typeof CONDITION_PRESET_VALUES, string]
+    >
+  ).map(([key, value]) => ({
+    value,
+    label: t(`assets.conditions.${key}`),
+  }));
+}
+
+function insurancePresetOptions(t: Translator) {
+  return (
+    Object.entries(INSURANCE_PRESET_VALUES) as Array<
+      [keyof typeof INSURANCE_PRESET_VALUES, string]
+    >
+  ).map(([key, value]) => ({
+    value,
+    label: t(`assets.insurance.${key}`),
+  }));
+}
 
 const ICONS = [Package, Armchair, Wind, Coffee, Snowflake, Box] as const;
 
@@ -103,54 +133,35 @@ function assetIconForName(name: string) {
   return ICONS[h % ICONS.length]!;
 }
 
-function formatNok(n: number) {
-  return new Intl.NumberFormat("nb-NO", {
-    style: "currency",
-    currency: "NOK",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function conditionPillClass(condition: string | null) {
-  const b = assetStatusBucket(condition);
-  if (b === "operational")
-    return "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200";
-  if (b === "maintenance")
-    return "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200";
-  return "bg-destructive/15 text-destructive";
-}
-
-function insurancePresentation(status: string | null): {
+function insurancePresentation(
+  status: string | null,
+  t: Translator,
+): {
   safeLabel: string;
   tone: "ok" | "warn" | "bad";
 } {
   const bucket = assetInsuranceBucket(status);
   if (bucket === "covered") {
-    return { safeLabel: "Forsikret", tone: "ok" };
+    return { safeLabel: t("assets.insurance.covered"), tone: "ok" };
   }
   if (bucket === "excluded") {
-    return { safeLabel: "Ikke forsikret", tone: "bad" };
+    return { safeLabel: t("assets.insurance.excluded"), tone: "bad" };
   }
   if (bucket === "unknown") {
-    return { safeLabel: "Ukjent", tone: "warn" };
+    return { safeLabel: t("assets.insurance.unknown"), tone: "warn" };
   }
   const raw = (status ?? "").replaceAll("\u00a0", " ").trim();
-  return { safeLabel: raw || "Ukjent", tone: "warn" };
+  return { safeLabel: raw || t("assets.insurance.unknown"), tone: "warn" };
 }
 
-function csvEscape(s: string) {
-  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
-
-function downloadAssetsCsv(rows: AssetListItem[]) {
+function downloadAssetsCsv(rows: AssetListItem[], t: Translator) {
   const headers = [
-    "Navn",
-    "Lokale",
-    "Antall",
-    "Verdi (NOK)",
-    "Tilstand",
-    "Forsikring",
+    t("assets.csv.name"),
+    t("assets.csv.venue"),
+    t("assets.csv.quantity"),
+    t("assets.csv.value"),
+    t("assets.csv.condition"),
+    t("assets.csv.insurance"),
   ];
   const lines = rows.map((a) =>
     [
@@ -169,23 +180,26 @@ function downloadAssetsCsv(rows: AssetListItem[]) {
   const url = URL.createObjectURL(blob);
   const el = document.createElement("a");
   el.href = url;
-  el.download = `inventar-${new Date().toISOString().slice(0, 10)}.csv`;
+  el.download = t("assets.csv.filename", {
+    date: new Date().toISOString().slice(0, 10),
+  });
   el.click();
   URL.revokeObjectURL(url);
 }
 
-const CONDITION_PRESETS = [
-  { value: "Utmerket", label: "Utmerket" },
-  { value: "God", label: "God" },
-  { value: "Akseptabel", label: "Akseptabel / vedlikehold" },
-  { value: "Dårlig — byttes", label: "Dårlig — skal byttes" },
-];
+function csvEscape(s: string) {
+  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
 
-const INSURANCE_PRESETS = [
-  { value: "Forsikret", label: "Forsikret" },
-  { value: "Ikke forsikret", label: "Ikke forsikret" },
-  { value: "Ukjent", label: "Ukjent" },
-];
+function conditionPillClass(condition: string | null) {
+  const b = assetStatusBucket(condition);
+  if (b === "operational")
+    return "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200";
+  if (b === "maintenance")
+    return "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200";
+  return "bg-destructive/15 text-destructive";
+}
 
 function AssetFormFields({
   properties,
@@ -199,6 +213,7 @@ function AssetFormFields({
   suggestedPropertyId?: string;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateAssets } = useTenantDataInvalidation();
@@ -219,8 +234,8 @@ function AssetFormFields({
       name: row?.name ?? "",
       quantity: row?.quantity ?? 1,
       value: row?.value ?? 0,
-      condition: row?.condition ?? "God",
-      insuranceStatus: row?.insurance_status ?? "Ukjent",
+      condition: row?.condition ?? CONDITION_PRESET_VALUES.good,
+      insuranceStatus: row?.insurance_status ?? INSURANCE_PRESET_VALUES.unknown,
     },
   });
 
@@ -232,20 +247,28 @@ function AssetFormFields({
   const idInsurance = useId();
 
   const conditionOptions = useMemo(() => {
+    const presets = conditionPresetOptions(t);
     const c = row?.condition?.trim();
-    if (c && !CONDITION_PRESETS.some((p) => p.value === c)) {
-      return [{ value: c, label: `${c} (lagret)` }, ...CONDITION_PRESETS];
+    if (c && !presets.some((p) => p.value === c)) {
+      return [
+        { value: c, label: `${c} ${t("assets.savedSuffix")}` },
+        ...presets,
+      ];
     }
-    return CONDITION_PRESETS;
-  }, [row?.condition]);
+    return presets;
+  }, [row?.condition, t]);
 
   const insuranceOptions = useMemo(() => {
+    const presets = insurancePresetOptions(t);
     const c = row?.insurance_status?.trim();
-    if (c && !INSURANCE_PRESETS.some((p) => p.value === c)) {
-      return [{ value: c, label: `${c} (lagret)` }, ...INSURANCE_PRESETS];
+    if (c && !presets.some((p) => p.value === c)) {
+      return [
+        { value: c, label: `${c} ${t("assets.savedSuffix")}` },
+        ...presets,
+      ];
     }
-    return INSURANCE_PRESETS;
-  }, [row?.insurance_status]);
+    return presets;
+  }, [row?.insurance_status, t]);
 
   const { register, control, handleSubmit, formState, setValue, watch } = form;
   const { isSubmitting } = formState;
@@ -268,19 +291,19 @@ function AssetFormFields({
         .update(payload)
         .eq("id", row.id);
       if (error) {
-        toast.error("Kunne ikke oppdatere inventarpost", {
+        toast.error(t("assets.toasts.updateFailed"), {
           description: error.message,
         });
         return;
       }
-      toast.success("Inventarpost oppdatert");
+      toast.success(t("assets.toasts.updated"));
     } else {
       let orgId: string;
       try {
         orgId = requireOrganizationId(currentOrganizationId);
       } catch (err) {
         toast.error(
-          err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+          err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
         );
         return;
       }
@@ -290,18 +313,18 @@ function AssetFormFields({
         organization_id: orgId,
       });
       if (error) {
-        toast.error("Kunne ikke opprette inventarpost", {
+        toast.error(t("assets.toasts.createFailed"), {
           description: error.message,
         });
         return;
       }
-      toast.success("Inventarpost opprettet");
+      toast.success(t("assets.toasts.created"));
     }
     onClose();
     invalidateAssets();
   }
 
-  const title = isEdit ? "Rediger inventarpost" : "Ny inventarpost";
+  const title = isEdit ? t("assets.editTitle") : t("assets.newTitle");
 
   return (
     <>
@@ -310,9 +333,7 @@ function AssetFormFields({
           {title}
         </DialogTitle>
         <DialogDescription className="sr-only">
-          {isEdit
-            ? "Skjema for å oppdatere inventarpost."
-            : "Skjema for å registrere ny inventarpost."}
+          {isEdit ? t("assets.editFormAria") : t("assets.newFormAria")}
         </DialogDescription>
       </DialogHeader>
       <form
@@ -325,7 +346,7 @@ function AssetFormFields({
               htmlFor={idProperty}
               className="text-sm font-semibold text-foreground"
             >
-              Lokale
+              {t("finance.filterVenue")}
             </Label>
             <PropertySelectField
               name="propertyId"
@@ -341,7 +362,7 @@ function AssetFormFields({
           </div>
           <div className="space-y-2">
             <Label htmlFor={idName} className="text-sm font-semibold text-foreground">
-              Navn
+              {t("common.fields.name")}
             </Label>
             <Input
               id={idName}
@@ -361,7 +382,7 @@ function AssetFormFields({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor={idQty} className="text-sm font-semibold text-foreground">
-                Antall
+                {t("assets.tableQuantity")}
               </Label>
               <Input
                 id={idQty}
@@ -387,7 +408,7 @@ function AssetFormFields({
             </div>
             <div className="space-y-2">
               <Label htmlFor={idValue} className="text-sm font-semibold text-foreground">
-                Verdi{" "}
+                {t("assets.tableValue")}{" "}
                 <span className="font-normal text-muted-foreground">(NOK)</span>
               </Label>
               <PriceInput
@@ -418,11 +439,11 @@ function AssetFormFields({
                 htmlFor={idCondition}
                 className="text-sm font-semibold text-foreground"
               >
-                Tilstand
+                {t("assets.tableCondition")}
               </Label>
               <FormSelect
                 id={idCondition}
-                aria-label="Tilstand"
+                aria-label={t("assets.conditionAria")}
                 value={conditionVal ?? ""}
                 onValueChange={(v) => setValue("condition", v)}
                 options={conditionOptions}
@@ -433,11 +454,11 @@ function AssetFormFields({
                 htmlFor={idInsurance}
                 className="text-sm font-semibold text-foreground"
               >
-                Forsikring
+                {t("assets.tableInsurance")}
               </Label>
               <FormSelect
                 id={idInsurance}
-                aria-label="Forsikringsstatus"
+                aria-label={t("assets.insuranceAria")}
                 value={insuranceVal ?? ""}
                 onValueChange={(v) => setValue("insuranceStatus", v)}
                 options={insuranceOptions}
@@ -455,7 +476,7 @@ function AssetFormFields({
             onClick={onClose}
             disabled={isSubmitting}
           >
-            Avbryt
+            {t("common.actions.cancel")}
           </Button>
           <Button
             type="submit"
@@ -465,10 +486,10 @@ function AssetFormFields({
             className="disabled:opacity-60"
           >
             {isSubmitting
-              ? "Lagrer …"
+              ? t("common.saving")
               : isEdit
-                ? "Lagre"
-                : "Opprett inventarpost"}
+                ? t("common.actions.save")
+                : t("assets.createItem")}
           </Button>
         </DialogFooter>
       </form>
@@ -482,6 +503,7 @@ export function AssetsSection({
   loadError,
   canManageAssets: canEdit,
 }: AssetsSectionProps) {
+  const { t, formatCurrency } = useTranslation();
   const supabase = useSupabase();
   const { invalidateAssets } = useTenantDataInvalidation();
 
@@ -589,10 +611,10 @@ export function AssetsSection({
         .delete()
         .eq("id", deleteTarget.id);
       if (error) {
-        toast.error("Kunne ikke slette", { description: error.message });
+        toast.error(t("assets.toasts.deleteFailed"), { description: error.message });
         return;
       }
-      toast.success("Inventarpost slettet");
+      toast.success(t("assets.toasts.deleted"));
       setDeleteTarget(null);
       invalidateAssets();
     } finally {
@@ -613,7 +635,7 @@ export function AssetsSection({
           <AppPageHeader
             className="mb-0 gap-3 md:gap-4"
             surface="default"
-            title="Inventar"
+            title={t("assets.title")}
             actions={
               <Button
                 type="button"
@@ -621,15 +643,15 @@ export function AssetsSection({
                 disabled={!canEdit || properties.length === 0}
                 title={
                   !canEdit
-                    ? "Krever eier- eller administrator-tilgang"
+                    ? t("assets.requiresAccess")
                     : properties.length === 0
-                      ? "Legg til lokaler først"
+                      ? t("assets.addVenuesFirst")
                       : undefined
                 }
                 className={cn(buttonVariants({ variant: "success", size: "cta" }))}
               >
                 <Plus className="size-5" aria-hidden />
-                Ny inventarpost
+                {t("assets.newItem")}
               </Button>
             }
           />
@@ -641,7 +663,7 @@ export function AssetsSection({
             role="alert"
           >
             <div className="assets-load-error rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive">
-              Kunne ikke laste data: {loadError}
+              {t("assets.loadError", { error: loadError })}
             </div>
           </div>
         ) : null}
@@ -652,14 +674,14 @@ export function AssetsSection({
             role="status"
           >
             <div className="assets-setup-hint rounded-md border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-amber-950 dark:text-amber-50">
-              Det finnes ingen lokaler ennå. Inventar må knyttes til et lokale —{" "}
+              {t("assets.noVenuesHint")}{" "}
               <Link
                 href="/app/settings/lokaler"
                 className="font-semibold text-amber-950 underline underline-offset-2 dark:text-amber-50"
               >
-                registrer lokaler under Innstillinger
+                {t("assets.registerVenuesLink")}
               </Link>{" "}
-              før du legger til inventar.
+              {t("assets.beforeAddingAssets")}
             </div>
           </div>
         ) : null}
@@ -667,60 +689,64 @@ export function AssetsSection({
         {!loadError && properties.length > 0 && assets.length > 0 ? (
           <section
             className="assets-kpi-summary border-t border-rn-border-strong/50 px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 lg:px-8"
-            aria-label="Sammendrag inventar"
+            aria-label={t("assets.kpiAria")}
           >
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12 xl:gap-16">
               <div className="min-w-0 shrink-0 lg:max-w-md">
-                <p className="assets-kpi-label">Inventar total</p>
+                <p className="assets-kpi-label">{t("assets.kpiTotal")}</p>
                 <p className="assets-kpi-value mt-2 font-heading text-success">
-                  {formatNok(stats.totalValue)}
+                  {formatCurrency(stats.totalValue)}
                 </p>
                 <p className="assets-kpi-caption mt-3 text-muted-foreground">
                   {stats.rowCount}{" "}
-                  {stats.rowCount === 1 ? "registrering" : "registreringer"} ·{" "}
-                  {stats.totalUnits}{" "}
-                  {stats.totalUnits === 1 ? "enhet" : "enheter"}
+                  {stats.rowCount === 1
+                    ? t("assets.registrationWord")
+                    : t("assets.registrationsWord")}{" "}
+                  · {stats.totalUnits}{" "}
+                  {stats.totalUnits === 1
+                    ? t("assets.unitWord")
+                    : t("assets.unitsWord")}
                 </p>
               </div>
               <dl className="grid min-w-0 flex-1 grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-5 lg:gap-4 xl:gap-5">
                 <div className={assetsKpiStatTileClass}>
-                  <dt className="assets-stat-label">I drift</dt>
+                  <dt className="assets-stat-label">{t("assets.statusOperational")}</dt>
                   <dd className="assets-stat-value font-heading text-foreground">
                     {stats.counts.operational}
                   </dd>
                 </div>
                 <div className={assetsKpiStatTileClass}>
-                  <dt className="assets-stat-label">Vedlikehold</dt>
+                  <dt className="assets-stat-label">{t("assets.statusMaintenance")}</dt>
                   <dd className="assets-stat-value font-heading text-foreground">
                     {stats.counts.maintenance}
                   </dd>
                 </div>
                 <div className={assetsKpiStatTileClass}>
-                  <dt className="assets-stat-label">Bytte</dt>
+                  <dt className="assets-stat-label">{t("assets.statusReplace")}</dt>
                   <dd className="assets-stat-value font-heading text-foreground">
                     {stats.counts.replace}
                   </dd>
                 </div>
                 <div className={assetsKpiStatTileClass}>
-                  <dt className="assets-stat-label">Forsikret verdi</dt>
+                  <dt className="assets-stat-label">{t("assets.insuredValue")}</dt>
                   <dd className="assets-stat-value font-heading text-foreground">
-                    {formatNok(stats.insuredValue)}
+                    {formatCurrency(stats.insuredValue)}
                   </dd>
                 </div>
                 <div className={assetsKpiStatTileClass}>
-                  <dt className="assets-stat-label">Uforsikret verdi</dt>
+                  <dt className="assets-stat-label">{t("assets.uninsuredValue")}</dt>
                   <dd className="assets-stat-value font-heading text-foreground">
-                    {formatNok(stats.uninsuredValue)}
+                    {formatCurrency(stats.uninsuredValue)}
                   </dd>
                 </div>
               </dl>
             </div>
             {hasActiveFilters ? (
               <p className="assets-filter-hint mt-8 border-t border-rn-border-strong/60 pt-6 text-muted-foreground">
-                <span className="font-medium text-foreground">Filtrert:</span>{" "}
-                {formatNok(filteredStats.totalValue)} · {filteredStats.totalUnits}{" "}
-                enheter ({filtered.length}{" "}
-                {filtered.length === 1 ? "linje" : "linjer"})
+                <span className="font-medium text-foreground">{t("assets.filteredLabel")}</span>{" "}
+                {formatCurrency(filteredStats.totalValue)} · {filteredStats.totalUnits}{" "}
+                {t("assets.unitsWord")} ({filtered.length}{" "}
+                {filtered.length === 1 ? t("assets.lineWord") : t("assets.linesWord")})
               </p>
             ) : null}
           </section>
@@ -733,12 +759,12 @@ export function AssetsSection({
               <div className="flex shrink-0 items-center pr-1">
                 {assets.length === 0 ? (
                   <span className="assets-toolbar-meta text-muted-foreground whitespace-nowrap">
-                    Ingen data
+                    {t("assets.noData")}
                   </span>
                 ) : (
                   <span
                     className="assets-toolbar-meta tabular-nums text-muted-foreground whitespace-nowrap"
-                    title="Synlige av totalt antall linjer"
+                    title={t("assets.visibleOfTotal")}
                   >
                     {filtered.length}/{assets.length}
                   </span>
@@ -757,10 +783,10 @@ export function AssetsSection({
                   setQuery(e.target.value);
                   setPage(1);
                 }}
-                placeholder="Søk …"
-                title="Søk i navn, lokale, tilstand eller forsikring"
+                placeholder={t("assets.searchPlaceholder")}
+                title={t("assets.searchTitle")}
                 className="assets-search-input h-12 min-h-12 w-full min-w-[10rem] rounded-md border-2 border-rn-border-strong bg-background pl-12 focus-visible:border-success focus-visible:ring-success/25 md:h-14 md:min-h-14 md:pl-14"
-                aria-label="Søk i inventar"
+                aria-label={t("assets.searchAria")}
               />
             </div>
 
@@ -775,9 +801,9 @@ export function AssetsSection({
                   setPropertyId(v);
                   setPage(1);
                 }}
-                aria-label="Filtrer etter lokale"
+                aria-label={t("assets.filterVenueAria")}
                 className="assets-filter-select h-12 min-h-12 rounded-md py-0 pl-12 md:h-14 md:min-h-14 md:pl-14"
-                placeholder="Alle lokaler"
+                placeholder={t("assets.allVenues")}
                 options={toIdNameOptions(properties)}
               />
             </div>
@@ -793,11 +819,11 @@ export function AssetsSection({
                   setStatusFilter(v as "all" | AssetStatusBucket);
                   setPage(1);
                 }}
-                aria-label="Filtrer etter tilstand"
+                aria-label={t("assets.filterConditionAria")}
                 className="assets-filter-select h-12 min-h-12 rounded-md py-0 pl-12 md:h-14 md:min-h-14 md:pl-14"
-                options={STATUS_QUICK_FILTERS.map((opt) => ({
-                  value: opt.id,
-                  label: opt.label,
+                options={STATUS_FILTER_IDS.map((id) => ({
+                  value: id,
+                  label: statusFilterLabel(id, t),
                 }))}
               />
             </div>
@@ -808,9 +834,9 @@ export function AssetsSection({
                 variant="outline"
                 className="assets-toolbar-btn h-12 min-h-12 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong px-3 font-semibold sm:px-4 md:h-14 md:min-h-14 md:px-5"
                 disabled={filtered.length === 0}
-                onClick={() => downloadAssetsCsv(filtered)}
-                aria-label="Last ned synlige rader som CSV"
-                title="Last ned synlige rader som CSV"
+                onClick={() => downloadAssetsCsv(filtered, t)}
+                aria-label={t("assets.downloadCsvAria")}
+                title={t("assets.downloadCsvTitle")}
               >
                 <Download className="size-4 shrink-0 sm:size-5" aria-hidden />
                 CSV
@@ -822,12 +848,12 @@ export function AssetsSection({
                 disabled={!hasActiveFilters}
                 title={
                   hasActiveFilters
-                    ? "Fjern søk, lokalefilter og tilstandsfilter"
-                    : "Ingen aktive filtre"
+                    ? t("assets.clearFilters")
+                    : t("assets.noActiveFilters")
                 }
                 onClick={resetFilters}
               >
-                Nullstill
+                {t("assets.reset")}
               </Button>
             </div>
           </div>
@@ -844,24 +870,27 @@ export function AssetsSection({
             <p className="assets-empty-hint max-w-sm text-muted-foreground">
               {assets.length === 0 ? (
                 <>
-                  Ingen inventar i registeret ennå.
+                  {t("assets.emptyNoAssets")}
                   {canEdit && properties.length > 0 ? (
                     <>
                       {" "}
-                      Bruk <span className="font-medium text-foreground">Ny inventarpost</span>{" "}
-                      over for å legge til inventar.
+                      {t("assets.emptyUseNewItem")}{" "}
+                      <span className="font-medium text-foreground">
+                        {t("assets.newItem")}
+                      </span>{" "}
+                      {t("assets.emptyUseNewItemSuffix")}
                     </>
                   ) : null}
                 </>
               ) : (
                 <>
-                  Ingen rader samsvarer med filter eller søk.{" "}
+                  {t("assets.emptyNoMatch")}{" "}
                   <button
                     type="button"
                     className="font-semibold text-success underline underline-offset-2"
                     onClick={resetFilters}
                   >
-                    Nullstill filtre
+                    {t("assets.resetFilters")}
                   </button>
                 </>
               )}
@@ -871,17 +900,17 @@ export function AssetsSection({
           <Table className="min-w-[920px]">
             <TableHeader>
               <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
-                <TableHead className={assetsTableHeadClass}>Navn</TableHead>
-                <TableHead className={assetsTableHeadClass}>Lokale</TableHead>
+                <TableHead className={assetsTableHeadClass}>{t("common.fields.name")}</TableHead>
+                <TableHead className={assetsTableHeadClass}>{t("finance.filterVenue")}</TableHead>
                 <TableHead
                   className={cn(assetsTableHeadClass, "text-center")}
                 >
-                  Antall
+                  {t("assets.tableQuantity")}
                 </TableHead>
-                <TableHead className={assetsTableHeadClass}>Verdi</TableHead>
-                <TableHead className={assetsTableHeadClass}>Tilstand</TableHead>
+                <TableHead className={assetsTableHeadClass}>{t("assets.tableValue")}</TableHead>
+                <TableHead className={assetsTableHeadClass}>{t("assets.tableCondition")}</TableHead>
                 <TableHead className={assetsTableHeadClass}>
-                  Forsikring
+                  {t("assets.tableInsurance")}
                 </TableHead>
                 <TableHead
                   className={cn(
@@ -889,14 +918,14 @@ export function AssetsSection({
                     assetsTableHeadClass,
                   )}
                 >
-                  <span className="sr-only">Rediger eller slett</span>
+                  <span className="sr-only">{t("assets.editOrDelete")}</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {pageRows.map((a) => {
                 const Icon = assetIconForName(a.name);
-                const ins = insurancePresentation(a.insurance_status);
+                const ins = insurancePresentation(a.insurance_status, t);
                 return (
                   <TableRow
                     key={a.id}
@@ -942,7 +971,7 @@ export function AssetsSection({
                         "assets-row-value text-success",
                       )}
                     >
-                      {formatNok(Number(a.value))}
+                      {formatCurrency(Number(a.value))}
                     </TableCell>
                     <TableCell className={assetsTableCellClass}>
                       <span
@@ -951,7 +980,7 @@ export function AssetsSection({
                           conditionPillClass(a.condition),
                         )}
                       >
-                        {a.condition?.trim() || "Ikke satt"}
+                        {a.condition?.trim() || t("assets.conditionNotSet")}
                       </span>
                     </TableCell>
                     <TableCell className={assetsTableCellClass}>
@@ -988,7 +1017,7 @@ export function AssetsSection({
                           size="icon-sm"
                           disabled={!canEdit}
                           className="size-10 shrink-0 rounded-md text-muted-foreground hover:text-foreground disabled:opacity-40"
-                          aria-label={`Rediger ${a.name}`}
+                          aria-label={t("assets.editAria", { name: a.name })}
                           onClick={() => setDialog({ open: true, row: a })}
                         >
                           <Pencil className="size-5" aria-hidden />
@@ -999,7 +1028,7 @@ export function AssetsSection({
                           size="icon-sm"
                           disabled={!canEdit}
                           className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10 disabled:opacity-40"
-                          aria-label={`Slett ${a.name}`}
+                          aria-label={t("assets.deleteAria", { name: a.name })}
                           onClick={() =>
                             setDeleteTarget({ id: a.id, name: a.name })
                           }
@@ -1018,14 +1047,13 @@ export function AssetsSection({
         {filtered.length > 0 ? (
           <div className="assets-page-footer flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
             <span>
-              Viser {pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0}–
-              {Math.min(currentPage * PAGE_SIZE, filtered.length)} av{" "}
-              {filtered.length}
+              {t("assets.footerShowing", {
+                from: pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0,
+                to: Math.min(currentPage * PAGE_SIZE, filtered.length),
+                total: filtered.length,
+              })}
               {statusFilter !== "all"
-                ? ` · ${
-                    STATUS_QUICK_FILTERS.find((o) => o.id === statusFilter)
-                      ?.label ?? statusFilter
-                  }`
+                ? ` · ${statusFilterLabel(statusFilter, t)}`
                 : null}
             </span>
             <div className="flex flex-wrap items-center gap-2">
@@ -1037,10 +1065,13 @@ export function AssetsSection({
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
                 <ChevronLeft className="size-5" aria-hidden />
-                Forrige
+                {t("assets.footerPrev")}
               </Button>
               <span className="flex items-center px-2 tabular-nums">
-                Side {currentPage} / {totalPages}
+                {t("assets.footerPageOf", {
+                  current: currentPage,
+                  total: totalPages,
+                })}
               </span>
               <Button
                 type="button"
@@ -1049,7 +1080,7 @@ export function AssetsSection({
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
-                Neste
+                {t("common.actions.next")}
                 <ChevronRight className="size-5" aria-hidden />
               </Button>
             </div>
@@ -1084,12 +1115,11 @@ export function AssetsSection({
               <>
                 <DialogHeader>
                   <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading md:text-2xl">
-                    Kan ikke legge til inventarpost
+                    {t("assets.cannotAddTitle")}
                   </DialogTitle>
                 </DialogHeader>
                 <p className="text-sm text-muted-foreground md:text-base">
-                  Du må ha minst ett lokale registrert før inventar kan knyttes til
-                  eiendom.
+                  {t("assets.cannotAddDescription")}
                 </p>
                 <DialogFooter>
                   <Button
@@ -1098,7 +1128,7 @@ export function AssetsSection({
                     className="h-12 rounded-md border-2 border-rn-border-strong px-6 text-base font-semibold"
                     onClick={() => setDialog({ open: false, row: null })}
                   >
-                    Lukk
+                    {t("common.actions.close")}
                   </Button>
                 </DialogFooter>
               </>
@@ -1112,13 +1142,13 @@ export function AssetsSection({
         onOpenChange={(open) => {
           if (!open) setDeleteTarget(null);
         }}
-        title="Slette inventarpost?"
+        title={t("assets.delete.title")}
         description={
           deleteTarget
-            ? `«${deleteTarget.name}» fjernes permanent. Dette kan ikke angres.`
+            ? t("assets.delete.description", { name: deleteTarget.name })
             : null
         }
-        confirmLabel="Ja, slett"
+        confirmLabel={t("assets.delete.confirm")}
         busy={deleteBusy}
         onConfirm={confirmDeleteAsset}
       />

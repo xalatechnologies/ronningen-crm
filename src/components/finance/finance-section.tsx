@@ -53,6 +53,7 @@ import {
   Pencil,
   Plus,
   PlusCircle,
+  RotateCcw,
   Tag,
   Trash2,
   TrendingDown,
@@ -61,6 +62,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
+import { useTranslation } from "@/i18n/client";
+import type { Translator } from "@/i18n/types";
 import { useCallback, useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
@@ -84,17 +87,21 @@ export type FinanceSectionProps = {
 
 const PAGE_SIZE = 20;
 
-const CATEGORY_SUGGESTIONS = [
-  "Inntekt",
-  "Leie",
-  "Depositum",
-  "Parkering",
-  "Vedlikehold",
-  "Skatt",
-  "Forsikring",
-  "Honorar",
-  "Annet",
-];
+const FINANCE_CATEGORY_IDS = [
+  "income",
+  "rent",
+  "deposit",
+  "parking",
+  "maintenance",
+  "tax",
+  "insurance",
+  "fee",
+  "other",
+] as const;
+
+function financeCategorySuggestions(t: Translator): string[] {
+  return FINANCE_CATEGORY_IDS.map((id) => t(`finance.categories.${id}`));
+}
 
 /** Calendar date in local timezone (avoids UTC drift from toISOString). */
 function toLocalYmd(d: Date) {
@@ -157,20 +164,8 @@ function previousPeriodBounds(from: string, to: string) {
   return { prevStart, prevEnd };
 }
 
-function formatNok(n: number) {
-  return new Intl.NumberFormat("nb-NO", {
-    style: "currency",
-    currency: "NOK",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function formatDisplayDate(iso: string) {
-  return new Intl.DateTimeFormat("nb-NO", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(`${iso}T12:00:00`));
+function formatDisplayDate(iso: string, formatDate: (date: Date | string) => string) {
+  return formatDate(`${iso}T12:00:00`);
 }
 
 function sumType(rows: TransactionListItem[], income: boolean) {
@@ -211,14 +206,14 @@ function csvEscape(s: string) {
   return s;
 }
 
-function downloadTransactionsCsv(rows: TransactionListItem[]) {
+function downloadTransactionsCsv(rows: TransactionListItem[], t: Translator) {
   const headers = [
-    "Dato",
-    "Lokale",
-    "Beskrivelse",
-    "Kategori",
-    "Type",
-    "Beløp",
+    t("finance.csv.date"),
+    t("finance.csv.venue"),
+    t("finance.csv.description"),
+    t("finance.csv.category"),
+    t("finance.csv.type"),
+    t("finance.csv.amount"),
   ];
   const lines = rows.map((r) =>
     [
@@ -226,7 +221,7 @@ function downloadTransactionsCsv(rows: TransactionListItem[]) {
       r.propertyName ?? "",
       r.description ?? "",
       r.category,
-      rowIsIncome(r.type) ? "inntekt" : "utgift",
+      rowIsIncome(r.type) ? t("finance.csv.income") : t("finance.csv.expense"),
       String(r.amount),
     ].map(csvEscape).join(","),
   );
@@ -237,7 +232,9 @@ function downloadTransactionsCsv(rows: TransactionListItem[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `transaksjoner-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = t("finance.csv.filename", {
+    date: new Date().toISOString().slice(0, 10),
+  });
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -245,6 +242,7 @@ function downloadTransactionsCsv(rows: TransactionListItem[]) {
 function transactionFormDefaults(
   properties: { id: string; name: string }[],
   existing: TransactionListItem | null,
+  t: Translator,
 ): TransactionFormInput {
   if (existing) {
     return {
@@ -259,7 +257,7 @@ function transactionFormDefaults(
   return {
     propertyId: properties[0]?.id ?? "",
     type: "income",
-    category: "Inntekt",
+    category: t("finance.categories.income"),
     description: "",
     amount: 0,
     transactionDate: toLocalYmd(new Date()),
@@ -280,17 +278,22 @@ function TransactionFormInner({
     propertyId: string;
   }) => void;
 }) {
+  const { t } = useTranslation();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateFinance } = useTenantDataInvalidation();
   const isEdit = existing != null;
   const formFieldId = isEdit ? `tx-form-${existing.id}` : "tx-form-new";
+  const categorySuggestions = useMemo(
+    () => financeCategorySuggestions(t),
+    [t],
+  );
 
   const form = useForm<TransactionFormInput>({
     resolver: zodResolver(
       transactionFormSchema,
     ) as Resolver<TransactionFormInput>,
-    defaultValues: transactionFormDefaults(properties, existing ?? null),
+    defaultValues: transactionFormDefaults(properties, existing ?? null, t),
   });
 
   const { register, control, handleSubmit, formState, setValue, watch } = form;
@@ -314,19 +317,19 @@ function TransactionFormInner({
         .update(payload)
         .eq("id", existing.id);
       if (error) {
-        toast.error("Kunne ikke oppdatere transaksjon", {
+        toast.error(t("finance.toasts.updateFailed"), {
           description: error.message,
         });
         return;
       }
-      toast.success("Transaksjon oppdatert");
+      toast.success(t("finance.toasts.updated"));
     } else {
       let orgId: string;
       try {
         orgId = requireOrganizationId(currentOrganizationId);
       } catch (err) {
         toast.error(
-          err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+          err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
         );
         return;
       }
@@ -336,12 +339,12 @@ function TransactionFormInner({
         organization_id: orgId,
       });
       if (error) {
-        toast.error("Kunne ikke registrere transaksjon", {
+        toast.error(t("finance.toasts.createFailed"), {
           description: error.message,
         });
         return;
       }
-      toast.success("Transaksjon lagret");
+      toast.success(t("finance.toasts.created"));
     }
 
     onSaved?.({
@@ -357,12 +360,10 @@ function TransactionFormInner({
       <div className="shrink-0 border-b border-rn-border-strong/50 px-5 pb-4 pt-5 pr-12 sm:px-8 sm:pt-6 sm:pb-5 sm:pr-14">
         <DialogHeader className="gap-2 text-left">
           <DialogTitle className="font-heading text-2xl font-bold tracking-tight text-rn-text-heading">
-            {isEdit ? "Rediger transaksjon" : "Ny transaksjon"}
+            {isEdit ? t("finance.editTransaction") : t("finance.newTransaction")}
           </DialogTitle>
           <DialogDescription className="text-base leading-relaxed text-muted-foreground">
-            {isEdit
-              ? "Oppdater beløp, kategori eller dato. Endringen vises i transaksjonstabellen og påvirker summer i valgt periode."
-              : "Registrer en inntekt eller utgift knyttet til valgt lokale. Beløpet bør stemme med bank eller kvittering."}
+            {isEdit ? t("finance.editDescription") : t("finance.newDescription")}
           </DialogDescription>
         </DialogHeader>
       </div>
@@ -374,7 +375,7 @@ function TransactionFormInner({
         <div className={cn(RN_MODAL_SCROLL_BODY, "space-y-6 px-5 py-6 sm:space-y-7 sm:px-8 sm:py-7")}>
           <div className="space-y-2">
             <Label className={txDialogFieldLabel} htmlFor={`tx-property-${formFieldId}`}>
-              Lokale
+              {t("finance.filterVenue")}
             </Label>
             <div className="relative">
               {properties.length > 0 ? (
@@ -399,11 +400,11 @@ function TransactionFormInner({
           </div>
 
           <div className="space-y-2">
-            <span className={cn(txDialogFieldLabel, "block")}>Type</span>
+            <span className={cn(txDialogFieldLabel, "block")}>{t("common.fields.type")}</span>
             <div
               className={cn(RN_SEGMENT_CONTROL, "flex w-full gap-1.5 p-1.5")}
               role="group"
-              aria-label="Type transaksjon"
+              aria-label={t("finance.transactionTypeAria")}
             >
               <input
                 type="radio"
@@ -422,7 +423,7 @@ function TransactionFormInner({
                 )}
               >
                 <TrendingUp className="size-5 shrink-0" aria-hidden />
-                Inntekt
+                {t("finance.income")}
               </label>
               <input
                 type="radio"
@@ -441,7 +442,7 @@ function TransactionFormInner({
                 )}
               >
                 <TrendingDown className="size-5 shrink-0" aria-hidden />
-                Utgift
+                {t("finance.expense")}
               </label>
             </div>
           </div>
@@ -449,7 +450,7 @@ function TransactionFormInner({
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-5">
             <div className="space-y-2 sm:col-span-1">
               <Label className={txDialogFieldLabel} htmlFor={`tx-cat-${formFieldId}`}>
-                Kategori
+                {t("common.category")}
               </Label>
               <div className="relative">
                 <Tag
@@ -460,9 +461,9 @@ function TransactionFormInner({
                   name="category"
                   control={control}
                   id={`tx-cat-${formFieldId}`}
-                  suggestions={CATEGORY_SUGGESTIONS}
-                  placeholder="Velg eller skriv inn"
-                  aria-label="Kategori for transaksjonen"
+                  suggestions={categorySuggestions}
+                  placeholder={t("finance.categoryPlaceholder")}
+                  aria-label={t("finance.categoryAria")}
                   className="w-full"
                   inputClassName="h-12 rounded-md border-2 border-rn-border-strong pl-12 text-base md:text-base focus-visible:border-success focus-visible:ring-success/25"
                 />
@@ -476,7 +477,7 @@ function TransactionFormInner({
 
             <div className="space-y-2 sm:col-span-1">
               <Label className={txDialogFieldLabel} htmlFor={`tx-amt-${formFieldId}`}>
-                Beløp (NOK)
+                {t("finance.amountNok")}
               </Label>
               <div className="relative">
                 <Wallet
@@ -502,8 +503,8 @@ function TransactionFormInner({
               ) : (
                 <p className="text-xs text-muted-foreground">
                   {txType === "expense"
-                    ? "Utgift reduserer resultat i perioden."
-                    : "Inntekt øker resultat i perioden."}
+                    ? t("finance.expenseReducesResult")
+                    : t("finance.incomeIncreasesResult")}
                 </p>
               )}
             </div>
@@ -514,11 +515,14 @@ function TransactionFormInner({
               className={txDialogFieldLabel}
               htmlFor={`tx-desc-${formFieldId}`}
             >
-              Beskrivelse <span className="font-normal normal-case">(valgfritt)</span>
+              {t("common.fields.description")}{" "}
+              <span className="font-normal normal-case">
+                {t("finance.descriptionOptional")}
+              </span>
             </Label>
             <Input
               className="h-12 rounded-md border-2 border-rn-border-strong text-base md:text-base focus-visible:border-success focus-visible:ring-success/25"
-              placeholder="F.eks. Leie mai, reparasjon kjøkken"
+              placeholder={t("finance.descriptionPlaceholder")}
               {...register("description")}
               id={`tx-desc-${formFieldId}`}
             />
@@ -526,7 +530,7 @@ function TransactionFormInner({
 
           <div className="space-y-2">
             <Label className={txDialogFieldLabel} htmlFor={`tx-date-${formFieldId}`}>
-              Transaksjonsdato
+              {t("finance.transactionDate")}
             </Label>
             <DatePickerField
               id={`tx-date-${formFieldId}`}
@@ -567,7 +571,7 @@ function TransactionFormInner({
             className="w-full border-2 border-rn-border-strong sm:w-auto"
             onClick={onClose}
           >
-            Avbryt
+            {t("common.actions.cancel")}
           </Button>
           <Button
             type="submit"
@@ -575,7 +579,7 @@ function TransactionFormInner({
             size="cta"
             className="w-full sm:w-auto"
           >
-            {isEdit ? "Oppdater" : "Lagre transaksjon"}
+            {isEdit ? t("common.actions.update") : t("finance.saveTransaction")}
           </Button>
         </DialogFooter>
       </form>
@@ -583,12 +587,16 @@ function TransactionFormInner({
   );
 }
 
+const financeToolbarControlClass =
+  "box-border h-12 min-h-12 max-h-12 shrink-0 py-0 md:h-14 md:min-h-14 md:max-h-14";
+
 export function FinanceSection({
   transactions,
   properties,
   loadError,
   canManageTransactions,
 }: FinanceSectionProps) {
+  const { t, formatCurrency, formatDate } = useTranslation();
   const supabase = useSupabase();
   const { invalidateFinance } = useTenantDataInvalidation();
   const [range, setRange] = useState({ from: "", to: "" });
@@ -618,6 +626,15 @@ export function FinanceSection({
   }, []);
   const setDateTo = useCallback((to: string) => {
     setRange((r) => ({ ...r, to }));
+    setPage(1);
+  }, []);
+
+  const hasActiveFilters =
+    propertyId !== "" || range.from !== "" || range.to !== "";
+
+  const resetFilters = useCallback(() => {
+    setRange({ from: "", to: "" });
+    setPropertyId("");
     setPage(1);
   }, []);
 
@@ -698,13 +715,13 @@ export function FinanceSection({
         .eq("id", row.id);
 
       if (error) {
-        toast.error("Kunne ikke slette transaksjon", {
+        toast.error(t("finance.toasts.deleteFailed"), {
           description: error.message,
         });
         return;
       }
 
-      toast.success("Transaksjon slettet");
+      toast.success(t("finance.toasts.deleted"));
       setDeleteTarget(null);
       setEditRow((cur) => (cur?.id === row.id ? null : cur));
       invalidateFinance();
@@ -724,12 +741,12 @@ export function FinanceSection({
           className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
           role="alert"
         >
-          Kunne ikke laste data: {loadError}
+          {t("finance.loadError", { error: loadError })}
         </div>
       ) : null}
       <AppPageHeader
         className="mb-0"
-        title="Finans"
+        title={t("finance.title")}
         actions={
           properties.length === 0 && canManageTransactions ? (
             <Button
@@ -738,7 +755,7 @@ export function FinanceSection({
               className={cn(buttonVariants({ variant: "success", size: "cta" }))}
             >
               <Plus className="size-5" aria-hidden />
-              Legg til lokale
+              {t("finance.addVenue")}
             </Button>
           ) : (
             <Button
@@ -747,82 +764,104 @@ export function FinanceSection({
               disabled={!canManageTransactions || properties.length === 0}
               title={
                 !canManageTransactions
-                  ? "Krever eier-, admin- eller regnskapstilgang"
+                  ? t("finance.requiresAccess")
                   : properties.length === 0
-                    ? "Legg til lokaler først"
+                    ? t("finance.addVenuesFirst")
                     : undefined
               }
               className={cn(buttonVariants({ variant: "success", size: "cta" }))}
             >
               <Plus className="size-5" aria-hidden />
-              Ny transaksjon
+              {t("finance.newTransaction")}
             </Button>
           )
         }
         toolbar={
           <>
-            <section className="flex flex-wrap items-end gap-4 md:gap-5">
-                <div className="min-w-[200px] flex-1 space-y-2">
-                  <Label className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase">
-                    Lokale
-                  </Label>
-                  <FormSelect
-                    value={propertyId}
-                    onValueChange={(v) => {
-                      setPropertyId(v);
-                      setPage(1);
-                    }}
-                    aria-label="Filtrer transaksjoner etter lokale"
-                    className="finance-filter-control h-12 min-h-12 bg-card md:h-14 md:min-h-14"
-                    placeholder="Alle lokaler"
-                    options={toIdNameOptions(properties)}
-                  />
-                </div>
-                <div className="min-w-[160px] flex-1 space-y-2">
-                  <Label
-                    htmlFor="finance-filter-from"
-                    className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase"
-                  >
-                    Fra dato
-                  </Label>
-                  <DatePickerField
-                    id="finance-filter-from"
-                    value={range.from}
-                    onChange={setDateFrom}
-                    maxYmd={range.to || undefined}
-                    variant="toolbar"
-                    className="finance-date-input h-12 min-h-12 md:h-14 md:min-h-14"
-                  />
-                </div>
-                <div className="min-w-[160px] flex-1 space-y-2">
-                  <Label
-                    htmlFor="finance-filter-to"
-                    className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase"
-                  >
-                    Til dato
-                  </Label>
-                  <DatePickerField
-                    id="finance-filter-to"
-                    value={range.to}
-                    onChange={setDateTo}
-                    minYmd={range.from || undefined}
-                    variant="toolbar"
-                    className="finance-date-input h-12 min-h-12 md:h-14 md:min-h-14"
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-12 min-h-12 gap-2 rounded-md border-2 border-rn-border-strong px-5 text-base font-semibold md:h-14 md:min-h-14"
-                  onClick={() => {
-                    setRange(defaultMonthRange());
-                    setPropertyId("");
+            <section className="grid w-full min-w-max grid-cols-[minmax(12rem,1fr)_10.5rem_10.5rem_auto] gap-x-4 gap-y-2 md:gap-x-5">
+                <Label className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase">
+                  {t("finance.filterVenue")}
+                </Label>
+                <Label
+                  htmlFor="finance-filter-from"
+                  className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase"
+                >
+                  {t("finance.fromDate")}
+                </Label>
+                <Label
+                  htmlFor="finance-filter-to"
+                  className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase"
+                >
+                  {t("finance.toDate")}
+                </Label>
+                <span
+                  className="finance-filter-label invisible font-semibold tracking-wider uppercase select-none"
+                  aria-hidden
+                >
+                  &nbsp;
+                </span>
+
+                <FormSelect
+                  value={propertyId}
+                  onValueChange={(v) => {
+                    setPropertyId(v);
                     setPage(1);
                   }}
-                >
-                  <Filter className="size-5" aria-hidden />
-                  Denne måneden
-                </Button>
+                  aria-label={t("finance.filterVenueAria")}
+                  className={cn(
+                    "finance-filter-control bg-card",
+                    financeToolbarControlClass,
+                  )}
+                  placeholder={t("finance.allVenues")}
+                  options={toIdNameOptions(properties)}
+                />
+                <DatePickerField
+                  id="finance-filter-from"
+                  value={range.from}
+                  onChange={setDateFrom}
+                  maxYmd={range.to || undefined}
+                  variant="toolbar"
+                  className={cn("finance-date-input", financeToolbarControlClass)}
+                />
+                <DatePickerField
+                  id="finance-filter-to"
+                  value={range.to}
+                  onChange={setDateTo}
+                  minYmd={range.from || undefined}
+                  variant="toolbar"
+                  className={cn("finance-date-input", financeToolbarControlClass)}
+                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      "gap-2 rounded-md border-2 border-rn-border-strong px-5 text-base font-semibold",
+                      financeToolbarControlClass,
+                    )}
+                    onClick={() => {
+                      setRange(defaultMonthRange());
+                      setPropertyId("");
+                      setPage(1);
+                    }}
+                  >
+                    <Filter className="size-5" aria-hidden />
+                    {t("finance.thisMonth")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!hasActiveFilters}
+                    className={cn(
+                      "gap-2 rounded-md border-2 border-rn-border-strong px-5 text-base font-semibold",
+                      financeToolbarControlClass,
+                    )}
+                    onClick={resetFilters}
+                  >
+                    <RotateCcw className="size-5" aria-hidden />
+                    {t("finance.resetFilters")}
+                  </Button>
+                </div>
               </section>
 
             {!loadError && properties.length === 0 ? (
@@ -831,12 +870,12 @@ export function FinanceSection({
                 role="status"
               >
                 <div className="rounded-md border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-50">
-                  Ingen lokaler er registrert. Uten lokale kan du ikke knytte transaksjoner.{" "}
+                  {t("finance.noVenuesHint")}{" "}
                   <Link
                     href="/app/settings/lokaler"
                     className="font-semibold text-amber-950 underline underline-offset-2 dark:text-amber-50"
                   >
-                    Registrer lokaler under Innstillinger
+                    {t("finance.registerVenuesLink")}
                   </Link>
                   .
                 </div>
@@ -846,21 +885,20 @@ export function FinanceSection({
             {range.from && range.to && range.from > range.to ? (
               <div className="mt-6 border-t border-rn-border-strong/50 pt-4">
                 <p className="finance-range-hint text-muted-foreground">
-                  «Til dato» er før «fra dato» — vi viser likevel alle transaksjoner mellom
-                  disse datoene.
+                  {t("finance.rangeHint")}
                 </p>
               </div>
             ) : null}
 
             <section
               className="mt-6 border-t border-rn-border-strong/50 pt-6 sm:pt-8"
-              aria-label="Nøkkeltall finans"
+              aria-label={t("finance.kpiAria")}
             >
               <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3">
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
                 <span className="finance-kpi-label text-muted-foreground">
-                  Inntekter
+                  {t("finance.kpiIncome")}
                 </span>
                 <TrendingUp
                   className="size-9 rounded-md bg-success/15 p-2 text-success dark:bg-white/10 dark:!text-white md:size-10"
@@ -868,7 +906,7 @@ export function FinanceSection({
                 />
               </div>
               <p className="finance-kpi-value text-success">
-                {formatNok(income)}
+                {formatCurrency(income)}
               </p>
               {comparison.dIncome != null ? (
                 <p
@@ -882,7 +920,9 @@ export function FinanceSection({
                   ) : (
                     <ArrowDownRight className="size-4 md:size-5" aria-hidden />
                   )}
-                  {Math.abs(comparison.dIncome).toFixed(1)}% vs. forrige periode
+                  {t("finance.vsPreviousPeriod", {
+                    percent: Math.abs(comparison.dIncome).toFixed(1),
+                  })}
                 </p>
               ) : (
                 <p className="finance-kpi-caption mt-3 text-muted-foreground">
@@ -894,7 +934,7 @@ export function FinanceSection({
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
                 <span className="finance-kpi-label text-muted-foreground">
-                  Utgifter
+                  {t("finance.kpiExpense")}
                 </span>
                 <TrendingDown
                   className="size-9 rounded-md bg-destructive/15 p-2 text-destructive md:size-10"
@@ -902,7 +942,7 @@ export function FinanceSection({
                 />
               </div>
               <p className="finance-kpi-value text-rn-text-heading">
-                {formatNok(expense)}
+                {formatCurrency(expense)}
               </p>
               {comparison.dExpense != null ? (
                 <p
@@ -916,7 +956,9 @@ export function FinanceSection({
                   ) : (
                     <ArrowUpRight className="size-4 md:size-5" aria-hidden />
                   )}
-                  {Math.abs(comparison.dExpense).toFixed(1)}% vs. forrige periode
+                  {t("finance.vsPreviousPeriod", {
+                    percent: Math.abs(comparison.dExpense).toFixed(1),
+                  })}
                 </p>
               ) : (
                 <p className="finance-kpi-caption mt-3 text-muted-foreground">
@@ -928,7 +970,7 @@ export function FinanceSection({
             <div className="flex flex-col justify-between rounded-md border-2 border-rn-accent-border bg-success p-6 text-white shadow-rn-hero-success">
               <div className="mb-3 flex items-start justify-between">
                 <span className="finance-kpi-label text-white/80">
-                  Resultat
+                  {t("finance.kpiResult")}
                 </span>
                 <Wallet
                   className="size-9 rounded-md bg-white/10 p-2 text-primary-light md:size-10"
@@ -942,15 +984,15 @@ export function FinanceSection({
                 )}
               >
                 {net >= 0 ? "+" : ""}
-                {formatNok(net)}
+                {formatCurrency(net)}
               </p>
               {margin != null ? (
                 <p className="finance-kpi-caption mt-3 font-semibold text-primary-light">
-                  Netto margin: {margin.toFixed(1)} %
+                  {t("finance.netMargin", { percent: margin.toFixed(1) })}
                 </p>
               ) : (
                 <p className="finance-kpi-caption mt-3 font-semibold text-white/80">
-                  Ingen inntekt i perioden
+                  {t("finance.noIncomeInPeriod")}
                 </p>
               )}
             </div>
@@ -960,16 +1002,16 @@ export function FinanceSection({
             <div className="mt-6 border-t border-rn-border-strong/50 pt-6 sm:pt-8">
               <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong pb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:pb-6">
                 <h2 className="finance-transactions-title app-section-title">
-                  Transaksjoner
+                  {t("finance.transactions")}
                 </h2>
                 <div className="flex gap-2">
             <Button
               type="button"
               variant="outline"
               className="size-12 shrink-0 rounded-md border-2 border-rn-border-strong"
-              onClick={() => downloadTransactionsCsv(filtered)}
+              onClick={() => downloadTransactionsCsv(filtered, t)}
               disabled={filtered.length === 0}
-              aria-label="Last ned CSV"
+              aria-label={t("finance.downloadCsvAria")}
             >
               <Download className="size-5" aria-hidden />
             </Button>
@@ -978,44 +1020,44 @@ export function FinanceSection({
 
         {filtered.length === 0 ? (
           <div className="finance-empty-hint space-y-3 p-8 text-center text-muted-foreground md:p-10">
-            <p>Ingen transaksjoner i valgt periode.</p>
+            <p>{t("finance.emptyPeriod")}</p>
             {properties.length === 0 ? (
               <p>
                 <Link
                   href="/app/settings/lokaler"
                   className="font-semibold text-success underline underline-offset-2"
                 >
-                  Registrer lokaler under Innstillinger
+                  {t("finance.emptyRegisterVenues")}
                 </Link>{" "}
-                før du kan legge inn transaksjoner.
+                {t("finance.emptyBeforeTransactions")}
               </p>
             ) : canManageTransactions ? (
-              <p>Bruk «Ny transaksjon» over for å registrere første post.</p>
+              <p>{t("finance.emptyUseNewTransaction")}</p>
             ) : (
-              <p>Kontakt administrator hvis transaksjoner mangler.</p>
+              <p>{t("finance.emptyContactAdmin")}</p>
             )}
           </div>
         ) : (
           <Table className="min-w-[720px]">
             <TableHeader>
               <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
-                <TableHead className={financeTableHeadClass}>Dato</TableHead>
+                <TableHead className={financeTableHeadClass}>{t("finance.tableDate")}</TableHead>
                 <TableHead className={financeTableHeadClass}>
-                  Beskrivelse
+                  {t("finance.tableDescription")}
                 </TableHead>
-                <TableHead className={financeTableHeadClass}>Lokale</TableHead>
+                <TableHead className={financeTableHeadClass}>{t("finance.tableVenue")}</TableHead>
                 <TableHead className={financeTableHeadClass}>
-                  Kategori
+                  {t("finance.tableCategory")}
                 </TableHead>
-                <TableHead className={financeTableHeadClass}>Type</TableHead>
+                <TableHead className={financeTableHeadClass}>{t("finance.tableType")}</TableHead>
                 <TableHead
                   className={cn(financeTableHeadClass, "text-right")}
                 >
-                  Beløp
+                  {t("finance.tableAmount")}
                 </TableHead>
                 {canManageTransactions ? (
                   <TableHead className="min-w-[5.5rem] px-3 py-4 text-right sm:min-w-28 md:py-5">
-                    <span className="sr-only">Rediger eller slett</span>
+                    <span className="sr-only">{t("finance.editOrDelete")}</span>
                   </TableHead>
                 ) : null}
               </TableRow>
@@ -1035,7 +1077,7 @@ export function FinanceSection({
                         "finance-row-date",
                       )}
                     >
-                      {formatDisplayDate(r.transaction_date)}
+                      {formatDisplayDate(r.transaction_date, formatDate)}
                     </TableCell>
                     <TableCell
                       className={cn(
@@ -1079,7 +1121,7 @@ export function FinanceSection({
                         ) : (
                           <MinusCircle className="size-4 shrink-0 md:size-5" aria-hidden />
                         )}
-                        {inc ? "Inntekt" : "Utgift"}
+                        {inc ? t("finance.income") : t("finance.expense")}
                       </div>
                     </TableCell>
                     <TableCell
@@ -1091,7 +1133,7 @@ export function FinanceSection({
                     >
                       <span className="tabular-nums">
                         {inc ? "+" : "−"}
-                        {formatNok(Number(r.amount))}
+                        {formatCurrency(Number(r.amount))}
                       </span>
                     </TableCell>
                     {canManageTransactions ? (
@@ -1102,7 +1144,9 @@ export function FinanceSection({
                             variant="ghost"
                             size="icon-sm"
                             className="size-10 shrink-0 rounded-md text-muted-foreground hover:text-foreground"
-                            aria-label={`Rediger transaksjon ${formatDisplayDate(r.transaction_date)}`}
+                            aria-label={t("finance.editTransactionAria", {
+                              date: formatDisplayDate(r.transaction_date, formatDate),
+                            })}
                             onClick={() => setEditRow(r)}
                           >
                             <Pencil className="size-5" aria-hidden />
@@ -1112,7 +1156,9 @@ export function FinanceSection({
                             variant="ghost"
                             size="icon-sm"
                             className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10"
-                            aria-label={`Slett transaksjon ${formatDisplayDate(r.transaction_date)}`}
+                            aria-label={t("finance.deleteTransactionAria", {
+                              date: formatDisplayDate(r.transaction_date, formatDate),
+                            })}
                             onClick={() => setDeleteTarget(r)}
                           >
                             <Trash2 className="size-5" aria-hidden />
@@ -1130,9 +1176,11 @@ export function FinanceSection({
         {filtered.length > 0 ? (
           <div className="finance-page-footer flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
             <span>
-              Viser {pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0}–
-              {Math.min(currentPage * PAGE_SIZE, filtered.length)} av{" "}
-              {filtered.length}
+              {t("finance.footerShowing", {
+                from: pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0,
+                to: Math.min(currentPage * PAGE_SIZE, filtered.length),
+                total: filtered.length,
+              })}
             </span>
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -1143,10 +1191,13 @@ export function FinanceSection({
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
                 <ChevronLeft className="size-5" aria-hidden />
-                Forrige
+                {t("finance.footerPrev")}
               </Button>
               <span className="flex items-center px-2 tabular-nums">
-                Side {currentPage} / {totalPages}
+                {t("finance.footerPageOf", {
+                  current: currentPage,
+                  total: totalPages,
+                })}
               </span>
               <Button
                 type="button"
@@ -1155,7 +1206,7 @@ export function FinanceSection({
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
-                Neste
+                {t("common.actions.next")}
                 <ChevronRight className="size-5" aria-hidden />
               </Button>
             </div>
@@ -1226,13 +1277,13 @@ export function FinanceSection({
             <>
               <DialogHeader className="text-left">
                 <DialogTitle className="app-card-title">
-                  Slette transaksjon?
+                  {t("finance.delete.title")}
                 </DialogTitle>
                 <DialogDescription className="text-app-base leading-relaxed text-muted-foreground">
-                  {formatDisplayDate(deleteTarget.transaction_date)} ·{" "}
-                  {deleteTarget.description?.trim() || "Uten beskrivelse"} ·{" "}
+                  {formatDisplayDate(deleteTarget.transaction_date, formatDate)} ·{" "}
+                  {deleteTarget.description?.trim() || t("finance.delete.noDescription")} ·{" "}
                   {rowIsIncome(deleteTarget.type) ? "+" : "−"}
-                  {formatNok(Number(deleteTarget.amount))}. Dette kan ikke angres.
+                  {formatCurrency(Number(deleteTarget.amount))}. {t("finance.delete.cannotUndo")}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -1244,7 +1295,7 @@ export function FinanceSection({
                   disabled={deleteBusy}
                   onClick={() => setDeleteTarget(null)}
                 >
-                  Avbryt
+                  {t("common.actions.cancel")}
                 </Button>
                 <Button
                   type="button"
@@ -1253,7 +1304,7 @@ export function FinanceSection({
                   className="w-full border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700 sm:w-auto"
                   onClick={() => void confirmDeleteTransaction()}
                 >
-                  {deleteBusy ? "Sletter…" : "Ja, slett"}
+                  {deleteBusy ? t("common.deleting") : t("finance.delete.confirm")}
                 </Button>
               </DialogFooter>
             </>

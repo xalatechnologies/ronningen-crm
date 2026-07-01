@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import {
   AdminActionButton,
   AdminLinkButton,
@@ -28,14 +29,14 @@ import type {
 } from "@/lib/admin/queries/support";
 import {
   SUPPORT_SETTABLE_STATUSES,
-  SUPPORT_STATUS_LABELS,
+  supportStatusLabel,
   type SupportTicketStatus,
 } from "@/lib/admin/support-labels";
-import { SUPPORT_CATEGORY_LABELS } from "@/lib/support/labels";
+import { supportCategoryLabel } from "@/lib/support/labels";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import {
   CheckCircle2,
   ChevronDown,
@@ -48,11 +49,6 @@ import type { LucideIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
-const STATUS_OPTIONS = SUPPORT_SETTABLE_STATUSES.map((value) => ({
-  value,
-  label: SUPPORT_STATUS_LABELS[value],
-}));
 
 const kpiTileClass =
   "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
@@ -130,7 +126,16 @@ function SupportStatusSelect({
   ticket: AdminSupportTicket;
   onUpdated: () => void;
 }) {
+  const { t, locale } = useTranslation();
   const [busy, setBusy] = useState(false);
+  const statusOptions = useMemo(
+    () =>
+      SUPPORT_SETTABLE_STATUSES.map((value) => ({
+        value,
+        label: supportStatusLabel(value, t),
+      })),
+    [t],
+  );
 
   async function handleChange(nextStatus: string) {
     if (!nextStatus || nextStatus === ticket.status) return;
@@ -143,11 +148,11 @@ function SupportStatusSelect({
     setBusy(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke oppdatere status", { description: result.error });
+      toast.error(t("admin.kunne_ikke_oppdatere_status"), { description: result.error });
       return;
     }
 
-    toast.success("Status oppdatert");
+    toast.success(t("admin.status_oppdatert"));
     onUpdated();
   }
 
@@ -155,7 +160,7 @@ function SupportStatusSelect({
     <FormSelect
       value={ticket.status}
       onValueChange={(value) => void handleChange(value)}
-      options={STATUS_OPTIONS}
+      options={statusOptions}
       disabled={busy}
       className="admin-table-select min-w-[8.5rem]"
       aria-label={`Endre status for ${ticket.subject}`}
@@ -163,10 +168,13 @@ function SupportStatusSelect({
   );
 }
 
-function noteLabel(note: AdminSupportTicket["notes"][number]): string {
-  if (note.isInternal) return "Intern notat";
-  if (note.authorIsPlatformAdmin) return "Plattformsupport";
-  return note.authorName ?? "Kunde";
+function noteLabel(
+  note: AdminSupportTicket["notes"][number],
+  t: ReturnType<typeof useTranslation>["t"],
+): string {
+  if (note.isInternal) return t("admin.internt_notat");
+  if (note.authorIsPlatformAdmin) return t("admin.plattformsupport");
+  return note.authorName ?? t("admin.kunde");
 }
 
 function SupportNoteThread({
@@ -176,6 +184,7 @@ function SupportNoteThread({
   ticket: AdminSupportTicket;
   onUpdated: () => void;
 }) {
+  const { t, locale } = useTranslation();
   const [body, setBody] = useState("");
   const [isInternal, setIsInternal] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -193,20 +202,20 @@ function SupportNoteThread({
     setBusy(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke lagre notat", { description: result.error });
+      toast.error(t("admin.kunne_ikke_lagre_notat"), { description: result.error });
       return;
     }
 
     setBody("");
     setIsInternal(false);
-    toast.success(isInternal ? "Internt notat lagt til" : "Svar sendt til kunde");
+    toast.success(isInternal ? t("admin.internt_notat_lagt_til") : t("admin.svar_sendt_til_kunde"));
     onUpdated();
   }
 
   return (
     <div className="space-y-4 py-2">
       {ticket.notes.length === 0 ? (
-        <p className="app-text-muted">Ingen meldinger ennå.</p>
+        <p className="app-text-muted">{t("adminLabels.empty.noMessages")}</p>
       ) : (
         <ul className="space-y-3">
           {ticket.notes.map((note) => (
@@ -223,9 +232,9 @@ function SupportNoteThread({
             >
               <p className="whitespace-pre-wrap text-app-sm">{note.body}</p>
               <p className="mt-2 text-app-xs text-muted-foreground">
-                {noteLabel(note)} ·{" "}
+                {noteLabel(note, t)} ·{" "}
                 {format(new Date(note.createdAt), "d. MMM yyyy HH:mm", {
-                  locale: nb,
+                  locale: getDateFnsLocale(locale),
                 })}
               </p>
             </li>
@@ -236,7 +245,7 @@ function SupportNoteThread({
       <form onSubmit={(event) => void handleSubmit(event)} className="space-y-3">
         <div className="space-y-2">
           <Label htmlFor={`note-${ticket.id}`}>
-            {isInternal ? "Internt notat" : "Svar til kunde"}
+            {isInternal ? t("admin.internt_notat") : t("admin.svar_til_kunde")}
           </Label>
           <textarea
             id={`note-${ticket.id}`}
@@ -246,8 +255,8 @@ function SupportNoteThread({
             className="w-full rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-4 py-3 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
             placeholder={
               isInternal
-                ? "Intern oppfølging, ikke synlig for kunden…"
-                : "Svar som kunden kan lese…"
+                ? t("admin.intern_oppfolging_ikke_synlig_for_kunden")
+                : t("admin.svar_som_kunden_kan_lese")
             }
           />
         </div>
@@ -261,7 +270,7 @@ function SupportNoteThread({
           Intern notat (ikke synlig for kunde)
         </label>
         <AdminActionButton type="submit" disabled={busy || body.trim().length < 3}>
-          {busy ? "Lagrer…" : isInternal ? "Legg til internt notat" : "Send svar"}
+          {busy ? t("admin.lagrer") : isInternal ? t("admin.legg_til_internt_notat") : t("admin.send_svar")}
         </AdminActionButton>
       </form>
     </div>
@@ -277,6 +286,7 @@ function CreateSupportTicketForm({
   onCreated: () => void;
   onCancel: () => void;
 }) {
+  const { t, locale } = useTranslation();
   const [organizationId, setOrganizationId] = useState("");
   const [subject, setSubject] = useState("");
   const [busy, setBusy] = useState(false);
@@ -293,11 +303,11 @@ function CreateSupportTicketForm({
     setBusy(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke opprette sak", { description: result.error });
+      toast.error(t("admin.kunne_ikke_opprette_sak"), { description: result.error });
       return;
     }
 
-    toast.success("Support-sak opprettet");
+    toast.success(t("admin.support_sak_opprettet"));
     setOrganizationId("");
     setSubject("");
     onCreated();
@@ -308,27 +318,27 @@ function CreateSupportTicketForm({
       onSubmit={(event) => void handleSubmit(event)}
       className="space-y-4 rounded-md border-2 border-rn-border-strong bg-muted/15 p-4 sm:p-5"
     >
-      <h3 className="app-section-title">Opprett support-sak</h3>
+      <h3 className="app-section-title">{t("adminLabels.sections.createSupportTicket")}</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="support-org">Organisasjon</Label>
+          <Label htmlFor="support-org">{t("adminLabels.fields.organization")}</Label>
           <FormSelect
             id="support-org"
             value={organizationId}
             onValueChange={setOrganizationId}
             options={toIdNameOptions(orgOptions)}
-            placeholder="Velg organisasjon"
-            aria-label="Organisasjon for support-sak"
+            placeholder={t("admin.velg_organisasjon")}
+            aria-label={t("admin.organisasjon_for_support_sak")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="support-subject">Emne</Label>
+          <Label htmlFor="support-subject">{t("adminLabels.fields.subject")}</Label>
           <input
             id="support-subject"
             type="text"
             value={subject}
             onChange={(event) => setSubject(event.target.value)}
-            placeholder="Kort beskrivelse av saken"
+            placeholder={t("admin.kort_beskrivelse_av_saken")}
             className="box-border min-h-11 w-full rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-4 py-2.5 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
           />
         </div>
@@ -338,10 +348,10 @@ function CreateSupportTicketForm({
           type="submit"
           disabled={busy || !organizationId || subject.trim().length < 3}
         >
-          {busy ? "Oppretter…" : "Opprett sak"}
+          {busy ? t("admin.oppretter") : t("admin.opprett_sak")}
         </AdminActionButton>
         <AdminActionButton type="button" variant="outline" onClick={onCancel}>
-          Avbryt
+          {t("common.actions.cancel")}
         </AdminActionButton>
       </div>
     </form>
@@ -357,6 +367,7 @@ export function AdminSupportWorkspace({
   initialFilter?: AdminSupportFilter;
   initialSearch?: string;
 }) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [filter, setFilter] = useState<AdminSupportFilter>(initialFilter);
@@ -425,20 +436,20 @@ export function AdminSupportWorkspace({
 
   const openCaption =
     overview.open === 0
-      ? "Ingen åpne saker akkurat nå"
-      : "Krever oppfølging";
+      ? t("admin.ingen_apne_saker_akkurat_na")
+      : t("admin.krever_oppfolging");
 
   const waitingCaption =
     overview.waiting === 0
-      ? "Ingen saker venter på svar"
-      : "Venter på kunde eller intern";
+      ? t("admin.ingen_saker_venter_pa_svar")
+      : t("admin.venter_pa_kunde_eller_intern");
 
   return (
     <div className="admin-page-workspace admin-support-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
       <AdminQueuePanel
-        title="Åpne saker"
+        title={t("admin.apne_saker")}
         items={data.openQueue}
-        emptyLabel="Ingen åpne support-saker."
+        emptyLabel={t("admin.ingen_apne_support_saker")}
         onViewAll={showOpenTickets}
       />
 
@@ -448,14 +459,14 @@ export function AdminSupportWorkspace({
             className="mb-0"
             surface="default"
             compact
-            title="Support"
-            description="Support-saker og intern oppfølging per organisasjon."
+            title={t("admin.support")}
+            description={t("admin.support_saker_og_intern_oppfolging_per_organisasjon")}
             actions={
               <AdminActionButton
                 type="button"
                 onClick={() => setShowCreate((open) => !open)}
               >
-                {showCreate ? "Lukk skjema" : "Opprett sak"}
+                {showCreate ? t("admin.lukk_skjema") : t("admin.opprett_sak")}
               </AdminActionButton>
             }
           />
@@ -463,13 +474,13 @@ export function AdminSupportWorkspace({
 
         <section
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
-          aria-label="Nøkkeltall"
+          aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <SupportKpiTile
-              label="Totalt"
+              label={t("admin.totalt")}
               value={overview.total}
-              caption="Alle support-saker"
+              caption={t("admin.alle_support_saker")}
               icon={LifeBuoy}
               active={filter === "all" && !search.trim()}
               onClick={() => {
@@ -478,7 +489,7 @@ export function AdminSupportWorkspace({
               }}
             />
             <SupportKpiTile
-              label="Åpne"
+              label={t("admin.apne")}
               value={overview.open}
               caption={openCaption}
               icon={Inbox}
@@ -491,7 +502,7 @@ export function AdminSupportWorkspace({
               onClick={() => updateFilter("open")}
             />
             <SupportKpiTile
-              label="Venter"
+              label={t("admin.venter")}
               value={overview.waiting}
               caption={waitingCaption}
               icon={Clock}
@@ -506,9 +517,9 @@ export function AdminSupportWorkspace({
               onClick={() => updateFilter("waiting")}
             />
             <SupportKpiTile
-              label="Løst"
+              label={t("admin.lost")}
               value={overview.resolved}
-              caption="Avsluttede saker"
+              caption={t("admin.avsluttede_saker")}
               icon={CheckCircle2}
               active={filter === "resolved"}
               onClick={() => updateFilter("resolved")}
@@ -548,13 +559,13 @@ export function AdminSupportWorkspace({
             <thead>
               <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
                 <th className={cn(tableHeadClass, "w-10")} />
-                <th className={tableHeadClass}>Organisasjon</th>
-                <th className={tableHeadClass}>Emne</th>
-                <th className={tableHeadClass}>Status</th>
-                <th className={cn(tableHeadClass, "text-right")}>Notater</th>
-                <th className={tableHeadClass}>Opprettet</th>
-                <th className={tableHeadClass}>Oppdatert</th>
-                <th className={tableHeadClass}>Handlinger</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.organization")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.subject")}</th>
+                <th className={tableHeadClass}>{t("admin.status")}</th>
+                <th className={cn(tableHeadClass, "text-right")}>{t("adminLabels.fields.notes")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.created")}</th>
+                <th className={tableHeadClass}>{t("admin.oppdatert")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.actions.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-rn-border-strong/50">
@@ -577,7 +588,7 @@ export function AdminSupportWorkspace({
                           className="inline-flex size-8 items-center justify-center rounded-md border-2 border-rn-border-strong text-muted-foreground transition-colors hover:bg-muted/40"
                           aria-expanded={expanded}
                           aria-label={
-                            expanded ? "Skjul notater" : "Vis notater"
+                            expanded ? t("admin.skjul_notater") : t("admin.vis_notater")
                           }
                         >
                           {expanded ? (
@@ -597,7 +608,7 @@ export function AdminSupportWorkspace({
                       <td className={cn(tableCellClass, "max-w-[16rem]")}>
                         <span className="font-medium">{ticket.subject}</span>
                         <p className="mt-1 text-app-xs text-muted-foreground">
-                          {SUPPORT_CATEGORY_LABELS[ticket.category]}
+                          {supportCategoryLabel(ticket.category, t)}
                           {ticket.ticketSource === "tenant"
                             ? " · Fra kunde"
                             : ticket.ticketSource === "admin"
@@ -622,19 +633,19 @@ export function AdminSupportWorkspace({
                       </td>
                       <td className={cn(tableCellClass, "text-muted-foreground")}>
                         {format(new Date(ticket.createdAt), "d. MMM yyyy", {
-                          locale: nb,
+                          locale: getDateFnsLocale(locale),
                         })}
                       </td>
                       <td className={cn(tableCellClass, "text-muted-foreground")}>
                         {format(new Date(ticket.updatedAt), "d. MMM yyyy HH:mm", {
-                          locale: nb,
+                          locale: getDateFnsLocale(locale),
                         })}
                       </td>
                       <td className={tableCellClass}>
                         <AdminLinkButton
                           href={adminRoutes.organizationDetail(ticket.organizationId)}
                         >
-                          Organisasjon
+                          {t("adminLabels.fields.organization")}
                         </AdminLinkButton>
                       </td>
                     </tr>
@@ -654,13 +665,13 @@ export function AdminSupportWorkspace({
                     <div className="space-y-3 px-6 py-16 text-center sm:px-10 sm:py-20 md:px-8">
                       <p className="font-heading text-lg font-bold tracking-tight text-rn-text-heading">
                         {data.tickets.length === 0
-                          ? "Ingen support-saker ennå"
-                          : "Ingen treff i listen"}
+                          ? t("admin.ingen_support_saker_enna")
+                          : t("admin.ingen_treff_i_listen")}
                       </p>
                       <p className="mx-auto max-w-lg text-muted-foreground">
                         {data.tickets.length === 0
-                          ? "Opprett en sak for å starte oppfølging."
-                          : "Juster søket eller bytt filter. Nullstill ved å velge «Totalt» og tømme søkefeltet."}
+                          ? t("admin.opprett_en_sak_for_a_starte_oppfolging")
+                          : t("admin.juster_soket_eller_bytt_filter_nullstill_ved_a_velge_totalt_")}
                       </p>
                     </div>
                   </td>
@@ -672,14 +683,15 @@ export function AdminSupportWorkspace({
 
         <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
           <p className="app-text-secondary">
-            Viser {filtered.length} av {data.tickets.length} saker
+            {t("admin.viser_av_saker", {
+              shown: filtered.length,
+              total: data.tickets.length,
+            })}
           </p>
         </div>
 
         <p className="border-t border-rn-border-strong/50 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
-          Kunder ser offentlige svar i Innstillinger → Support. Interne notater
-          og frie organisasjonsnotater finnes under organisasjonsdetaljer →
-          Support.
+          {t("admin.support_workspace_footer")}
         </p>
       </div>
     </div>

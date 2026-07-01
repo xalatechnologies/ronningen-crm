@@ -4,35 +4,12 @@ import {
   chartBarFillClass,
   chartEmptyBarClass,
 } from "@/lib/charts/chart-theme";
+import { useTranslation } from "@/i18n/client";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
 
 import type { MonthlyRevenuePoint } from "./types";
-
-function formatNok(n: number) {
-  return new Intl.NumberFormat("nb-NO", {
-    style: "currency",
-    currency: "NOK",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function formatNokChartAxis(n: number) {
-  if (n === 0) return "0";
-  if (n >= 1_000_000) {
-    const m = n / 1_000_000;
-    const s = m >= 10 ? m.toFixed(0) : m.toFixed(1).replace(".", ",");
-    return `${s} mill.`;
-  }
-  if (n >= 1000) {
-    const k = n / 1000;
-    const s =
-      k >= 100 ? k.toFixed(0) : k >= 10 ? k.toFixed(0) : k.toFixed(1).replace(".", ",");
-    return `${s} k`;
-  }
-  return formatNok(n);
-}
 
 export type ReportsMonthlyChartProps = {
   monthlyRevenue: MonthlyRevenuePoint[];
@@ -47,6 +24,24 @@ export function ReportsMonthlyChart({
   focusMonth,
   reportsPeriodLabel,
 }: ReportsMonthlyChartProps) {
+  const { t, formatCurrency } = useTranslation();
+
+  function formatNokChartAxis(n: number) {
+    if (n === 0) return "0";
+    if (n >= 1_000_000) {
+      const m = n / 1_000_000;
+      const s = m >= 10 ? m.toFixed(0) : m.toFixed(1).replace(".", ",");
+      return t("dashboard.chartAxisMillions", { value: s });
+    }
+    if (n >= 1000) {
+      const k = n / 1000;
+      const s =
+        k >= 100 ? k.toFixed(0) : k >= 10 ? k.toFixed(0) : k.toFixed(1).replace(".", ",");
+      return t("dashboard.chartAxisThousands", { value: s });
+    }
+    return formatCurrency(n);
+  }
+
   const chartBars = useMemo(() => {
     const max = Math.max(0, ...monthlyRevenue.map((m) => m.amount));
     const scaleMax = max > 0 ? max : 1;
@@ -83,12 +78,14 @@ export function ReportsMonthlyChart({
   }, [monthlyRevenue]);
 
   const periodBadge =
-    focusMonth != null ? reportsPeriodLabel : `${reportYear} · kalenderår`;
+    focusMonth != null
+      ? reportsPeriodLabel
+      : t("reports.calendarYear", { year: reportYear });
 
   const chartAriaLabel =
     focusMonth != null
-      ? `Stolpediagram for fakturert omsetning i ${reportsPeriodLabel}.`
-      : `Stolpediagram for fakturert omsetning per måned i ${reportYear}. Beløp vises over hver stolpe.`;
+      ? t("reports.chartAriaMonth", { period: reportsPeriodLabel })
+      : t("reports.chartAria", { year: reportYear });
 
   const allZero = totalFakturert === 0;
 
@@ -96,10 +93,9 @@ export function ReportsMonthlyChart({
     <div className={cn("overflow-hidden lg:col-span-2", RN_CARD_SHELL)}>
       <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:gap-4 md:px-6 md:py-6">
         <div>
-          <h2 className="app-section-title">Månedlig omsetning</h2>
+          <h2 className="app-section-title">{t("reports.monthlyRevenue")}</h2>
           <p className="mt-1 text-app-sm text-muted-foreground">
-            Fakturert fra reservasjoner og overnatting etter arrangements- og
-            innsjekksdato.
+            {t("reports.subtitle")}
           </p>
         </div>
         <span className="inline-flex shrink-0 items-center rounded-full border border-rn-border-strong/60 bg-muted/30 px-3 py-1.5 text-app-xs font-semibold tabular-nums text-foreground sm:text-app-sm">
@@ -111,17 +107,17 @@ export function ReportsMonthlyChart({
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-app-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Totalt i perioden
+              {t("reports.totalInPeriod")}
             </p>
             <p className="mt-1 text-2xl font-bold tabular-nums tracking-tight text-success md:text-3xl">
-              {formatNok(totalFakturert)}
+              {formatCurrency(totalFakturert)}
             </p>
           </div>
           {!allZero && peak && peak.amount > 0 ? (
             <p className="text-app-sm text-muted-foreground">
-              Høyeste måned:{" "}
+              {t("reports.highestMonth")}{" "}
               <span className="font-semibold text-foreground">
-                {peak.label} · {formatNok(peak.amount)}
+                {peak.label} · {formatCurrency(peak.amount)}
               </span>
             </p>
           ) : null}
@@ -129,11 +125,11 @@ export function ReportsMonthlyChart({
 
         {allZero ? (
           <div className="flex min-h-[13rem] flex-col items-center justify-center rounded-md border border-dashed border-rn-border-strong/50 bg-muted/15 px-4 py-10 text-center">
-            <p className="font-medium text-foreground">Ingen omsetning å vise</p>
+            <p className="font-medium text-foreground">{t("reports.noRevenue")}</p>
             <p className="mt-2 max-w-sm text-app-sm text-muted-foreground">
               {focusMonth != null
-                ? `Ingen fakturert omsetning registrert i ${reportsPeriodLabel}.`
-                : `Ingen fakturert omsetning registrert i ${reportYear} ennå.`}
+                ? t("reports.noRevenuePeriod", { period: reportsPeriodLabel })
+                : t("reports.noRevenueYear", { year: reportYear })}
             </p>
           </div>
         ) : (
@@ -159,7 +155,7 @@ export function ReportsMonthlyChart({
                           ? "text-foreground"
                           : "text-muted-foreground",
                       )}
-                      title={`${bar.label}: ${formatNok(bar.amount)}`}
+                      title={`${bar.label}: ${formatCurrency(bar.amount)}`}
                     >
                       {formatNokChartAxis(bar.amount)}
                     </span>
@@ -171,12 +167,12 @@ export function ReportsMonthlyChart({
                             chartBarFillClass(bar.highlight),
                           )}
                           style={{ height: `${bar.heightPct}%` }}
-                          title={`${bar.label}: ${formatNok(bar.amount)}`}
+                          title={`${bar.label}: ${formatCurrency(bar.amount)}`}
                         />
                       ) : (
                         <div
                           className={chartEmptyBarClass()}
-                          title={`${bar.label}: ${formatNok(bar.amount)}`}
+                          title={`${bar.label}: ${formatCurrency(bar.amount)}`}
                           aria-hidden
                         />
                       )}

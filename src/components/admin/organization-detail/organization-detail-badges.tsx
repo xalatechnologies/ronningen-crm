@@ -1,15 +1,15 @@
+"use client";
+
+import { useTranslation } from "@/i18n/client";
 import { HEALTH_SCORE_LABELS } from "@/lib/admin/health-score";
-import { SUBSCRIPTION_PLAN_LABELS, SUBSCRIPTION_STATUS_LABELS } from "@/lib/admin/subscription-labels";
+import {
+  subscriptionPlanLabel,
+  subscriptionStatusLabel,
+  tenantAccessLabel,
+} from "@/lib/admin/subscription-labels";
 import type { HealthScoreResult } from "@/lib/admin/types";
 import { resolveTenantAccess } from "@/lib/subscriptions/subscription-utils";
 import { cn } from "@/lib/utils";
-
-const ACCESS_LABELS: Record<string, string> = {
-  full: "Full tilgang",
-  warning: "Advarsel (forfalt)",
-  billing_only: "Kun fakturering",
-  suspended: "Suspendert",
-};
 
 const HEALTH_DOT: Record<HealthScoreResult["tier"], string> = {
   healthy: "org-detail-badge-dot--healthy",
@@ -30,6 +30,7 @@ export function OrganizationDetailHealthBadge({
 }: {
   health: HealthScoreResult;
 }) {
+  const { t } = useTranslation();
   return (
     <span className="org-detail-badge">
       <span
@@ -52,6 +53,7 @@ export function OrganizationDetailAccessBadge({
   providerSubscriptionId?: string | null;
   billingEnabled?: boolean;
 }) {
+  const { t } = useTranslation();
   const access = resolveTenantAccess(
     {
       is_suspended: isSuspended,
@@ -68,14 +70,13 @@ export function OrganizationDetailAccessBadge({
           className="org-detail-badge-dot org-detail-badge-dot--critical"
           aria-hidden
         />
-        {ACCESS_LABELS.suspended}
+        {tenantAccessLabel("suspended", t)}
       </span>
     );
   }
 
-  const statusLabel =
-    SUBSCRIPTION_STATUS_LABELS[subscriptionStatus] ?? subscriptionStatus;
-  const accessLabel = ACCESS_LABELS[access] ?? access;
+  const statusLabel = subscriptionStatusLabel(subscriptionStatus, t);
+  const accessLabel = tenantAccessLabel(access, t);
   const combined =
     accessLabel === statusLabel
       ? accessLabel
@@ -96,9 +97,10 @@ export function OrganizationDetailAccessBadge({
 }
 
 export function OrganizationDetailPlanBadge({ plan }: { plan: string }) {
+  const { t } = useTranslation();
   return (
     <span className="org-detail-badge">
-      {SUBSCRIPTION_PLAN_LABELS[plan] ?? plan}
+      {subscriptionPlanLabel(plan, t)}
     </span>
   );
 }

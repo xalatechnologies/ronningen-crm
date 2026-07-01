@@ -6,16 +6,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { APP_NAME } from "@/config/app";
+import { useTranslation } from "@/i18n/client";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
-import { registerSchema, type RegisterInput } from "@/lib/validations";
+import {
+  createRegisterSchema,
+  type RegisterInput,
+  validationMessagesForLocale,
+} from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 
 export default function RegisterPage() {
+  const { t, locale } = useTranslation();
   const [formError, setFormError] = useState<string | null>(null);
+  const registerSchema = useMemo(
+    () => createRegisterSchema(validationMessagesForLocale(locale)),
+    [locale],
+  );
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -42,7 +52,7 @@ export default function RegisterPage() {
     } | null;
 
     if (!response.ok) {
-      setFormError(payload?.error ?? "Registrering feilet. Prøv igjen.");
+      setFormError(payload?.error ?? t("auth.pages.registerFailed"));
       return;
     }
 
@@ -69,10 +79,10 @@ export default function RegisterPage() {
               <AuthBrandMark />
               <div className="min-w-0 flex-1 space-y-2">
                 <CardTitle className="app-title md:text-app-3xl">
-                  Opprett konto
+                  {t("auth.createAccount")}
                 </CardTitle>
                 <p className="text-app-sm leading-relaxed text-muted-foreground md:text-app-base">
-                  Registrer deg for å bruke {APP_NAME}.
+                  {t("auth.pages.registerTagline", { appName: APP_NAME })}
                 </p>
               </div>
             </div>
@@ -86,12 +96,12 @@ export default function RegisterPage() {
             >
               <div className="space-y-2">
                 <Label htmlFor="fullName" className={labelClass}>
-                  Navn
+                  {t("auth.fullName")}
                 </Label>
                 <Input
                   id="fullName"
                   autoComplete="name"
-                  placeholder="For- og etternavn"
+                  placeholder={t("auth.pages.namePlaceholder")}
                   className={fieldClass}
                   {...form.register("fullName")}
                 />
@@ -103,7 +113,7 @@ export default function RegisterPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className={labelClass}>
-                  E-post
+                  {t("auth.email")}
                 </Label>
                 <Input
                   id="email"
@@ -121,7 +131,7 @@ export default function RegisterPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className={labelClass}>
-                  Passord
+                  {t("auth.password")}
                 </Label>
                 <Input
                   id="password"
@@ -138,7 +148,7 @@ export default function RegisterPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className={labelClass}>
-                  Bekreft passord
+                  {t("auth.confirmPassword")}
                 </Label>
                 <Input
                   id="confirmPassword"
@@ -165,13 +175,13 @@ export default function RegisterPage() {
                   disabled={form.formState.isSubmitting}
                   className="w-full"
                 >
-                {form.formState.isSubmitting ? "Oppretter …" : "Opprett konto"}
+                {form.formState.isSubmitting ? t("common.actions.loading") : t("auth.createAccount")}
               </Button>
             </form>
 
             <div className="border-t-2 border-rn-border-strong/50 pt-6">
               <p className="text-app-base text-muted-foreground">
-                Har du allerede en konto?{" "}
+                {t("auth.hasAccount")}{" "}
                 <Link
                   href="/auth/login"
                   className="font-semibold text-success underline decoration-success/40 underline-offset-4 transition-colors hover:text-success/90"

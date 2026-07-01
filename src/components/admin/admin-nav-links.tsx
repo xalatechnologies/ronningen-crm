@@ -2,6 +2,8 @@
 
 import { ADMIN_NAV_ICONS } from "@/config/admin-nav-icons";
 import { adminNavigationGroups, adminRoutes } from "@/config/admin-routes";
+import { useTranslation } from "@/i18n/client";
+import { adminNavGroupLabel, adminNavLabel } from "@/lib/navigation/nav-labels";
 import { RN_NAV_LINK_ACTIVE, RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -48,6 +50,7 @@ export function AdminNavLinks({
   onNavigate?: () => void;
   supportOpenCount?: number;
 }) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const hydrated = useHydrated();
 
@@ -56,7 +59,7 @@ export function AdminNavLinks({
       {adminNavigationGroups.map((group) => (
         <div key={group.label} className="flex flex-col gap-1">
           <p className="admin-nav-section-label px-2.5 pt-1 pb-0.5 md:px-3">
-            {group.label}
+            {adminNavGroupLabel(group.label, t)}
           </p>
           {group.items.map((item) => {
             const active = hydrated && isActive(pathname, item.href);
@@ -80,7 +83,7 @@ export function AdminNavLinks({
                 aria-current={active ? "page" : undefined}
                 aria-label={
                   badgeCount > 0
-                    ? `${item.label}, ${badgeCount} åpne henvendelser`
+                    ? t("adminNav.openTicketsAria", { count: badgeCount })
                     : undefined
                 }
               >
@@ -91,7 +94,7 @@ export function AdminNavLinks({
                   )}
                   aria-hidden
                 />
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                <span className="min-w-0 flex-1 truncate">{adminNavLabel(item.segment, t)}</span>
                 <AdminNavBadge count={badgeCount} />
               </Link>
             );

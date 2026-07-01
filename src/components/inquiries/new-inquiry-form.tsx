@@ -2,6 +2,7 @@
 
 import { InquiryFormBody } from "@/components/inquiries/inquiry-form-body";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { useTranslation } from "@/i18n/client";
 import {
   bookingInquiryFormSchema,
   type BookingInquiryFormInput,
@@ -61,6 +62,7 @@ export function NewInquiryForm({
   canManageInquiries,
   initialCustomerId,
 }: NewInquiryFormProps) {
+  const { t } = useTranslation();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateInquiries } = useTenantDataInvalidation();
@@ -99,7 +101,7 @@ export function NewInquiryForm({
       orgId = requireOrganizationId(currentOrganizationId);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+        err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
       );
       return;
     }
@@ -118,8 +120,8 @@ export function NewInquiryForm({
         .select("id")
         .single();
       if (custErr || !custRow) {
-        toast.error("Kunne ikke opprette kunde", {
-          description: custErr?.message ?? "Ukjent feil",
+        toast.error(t("inquiries.form.createCustomerFailed"), {
+          description: custErr?.message ?? t("inquiries.form.unknownError"),
         });
         return;
       }
@@ -149,8 +151,8 @@ export function NewInquiryForm({
       .single();
 
     if (error || !inquiryRow) {
-      toast.error("Kunne ikke opprette forespørsel", {
-        description: error?.message ?? "Ukjent feil",
+      toast.error(t("inquiries.createFailed"), {
+        description: error?.message ?? t("inquiries.form.unknownError"),
       });
       return;
     }
@@ -161,7 +163,7 @@ export function NewInquiryForm({
     });
 
     invalidateInquiries();
-    toast.success("Forespørsel registrert");
+    toast.success(t("inquiries.registered"));
     redirectAfterCreate(router, "/app/inquiries");
   }
 
@@ -174,13 +176,13 @@ export function NewInquiryForm({
           )}
         >
           <p className="text-rn-text-body">
-            Du har ikke tilgang til å registrere forespørsler.
+            {t("inquiries.form.noAccess")}
           </p>
           <Link
             href="/app/inquiries"
             className={cn(buttonVariants({ variant: "outline", size: "default" }), "inline-flex")}
           >
-            Tilbake til forespørsler
+            {t("inquiries.backToInquiries")}
           </Link>
         </div>
       </div>
@@ -193,7 +195,7 @@ export function NewInquiryForm({
         <header className="flex items-center gap-3 border-b-2 border-rn-border-strong bg-card px-3 py-3 sm:gap-4 sm:px-4 md:px-5">
           <Link
             href="/app/inquiries"
-            aria-label="Tilbake til forespørsler"
+            aria-label={t("inquiries.backToInquiries")}
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
               "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
@@ -203,16 +205,15 @@ export function NewInquiryForm({
           </Link>
           <div className="min-w-0 flex-1">
             <h1 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading sm:text-2xl md:text-3xl">
-              Ny forespørsel
+              {t("inquiries.new")}
             </h1>
             <p className="mt-0.5 text-xs leading-snug text-muted-foreground sm:text-sm md:text-base md:leading-relaxed">
-              Registrer en henvendelse før booking er bekreftet — samme mønster
-              som ny booking.
+              {t("inquiries.form.subtitle")}
             </p>
           </div>
           <Link
             href="/app/inquiries"
-            aria-label="Lukk og gå til forespørsler"
+            aria-label={t("inquiries.closeGoToInquiries")}
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
               "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
@@ -243,10 +244,10 @@ export function NewInquiryForm({
                 "inline-flex items-center justify-center border-2 border-rn-border-strong font-heading font-bold",
               )}
             >
-              Avbryt
+              {t("common.actions.cancel")}
             </Link>
             <Button type="submit" variant="success" size="cta" disabled={isSubmitting}>
-              {isSubmitting ? "Registrerer …" : "Registrer forespørsel"}
+              {isSubmitting ? t("inquiries.registering") : t("inquiries.register")}
             </Button>
           </div>
         </form>

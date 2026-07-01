@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminLinkButton } from "@/components/admin/admin-action-button";
 import {
   AdminPlanBadge,
@@ -60,6 +61,7 @@ function RevenueKpiTile({
   iconClassName?: string;
   valueClassName?: string;
 }) {
+  const { t } = useTranslation();
   const content = (
     <>
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -87,7 +89,7 @@ function RevenueKpiTile({
         )}
       >
         {content}
-        <span className="sr-only">Gå til {label}</span>
+        <span className="sr-only">{t("admin.overview_go_to", { label })}</span>
       </Link>
     );
   }
@@ -115,6 +117,7 @@ export function AdminRevenueWorkspace({
 }: {
   data: AdminRevenueOverview;
 }) {
+  const { t } = useTranslation();
   const metrics = data.metrics;
   const monthOverMonth = formatMonthOverMonth(
     data.revenueThisMonthNok,
@@ -123,13 +126,18 @@ export function AdminRevenueWorkspace({
 
   const mrrCaption =
     metrics.mrrNok === 0 && metrics.trialingSubscriptions > 0
-      ? `${metrics.trialingSubscriptions} i prøve · pot. ${formatNok(metrics.potentialMrrNok)}`
-      : `${metrics.activeSubscriptions} aktive abonnement`;
+      ? t("admin.overview_revenue_trialing_potential", {
+          count: metrics.trialingSubscriptions,
+          amount: formatNok(metrics.potentialMrrNok),
+        })
+      : t("admin.overview_active_subscriptions", {
+          count: metrics.activeSubscriptions,
+        });
 
   const momCaption =
     data.revenueLastMonthNok > 0
       ? `${formatNok(data.revenueThisMonthNok)} vs ${formatNok(data.revenueLastMonthNok)}`
-      : "Ingen sammenligning forrige måned";
+      : t("admin.ingen_sammenligning_forrige_maned");
 
   return (
     <div className="admin-page-workspace admin-revenue-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
@@ -139,34 +147,34 @@ export function AdminRevenueWorkspace({
             className="mb-0"
             surface="default"
             compact
-            title="Inntekt"
-            description="Finansiell oversikt på tvers av alle leietakere."
+            title={t("admin.inntekt")}
+            description={t("admin.finansiell_oversikt_pa_tvers_av_alle_leietakere")}
           />
         </div>
 
         <section className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8">
           <SectionIntro
-            title="SaaS-abonnement"
-            description="Plattformabonnement og estimert MRR basert på aktive leietakere."
+            title={t("admin.saas_abonnement")}
+            description={t("admin.plattformabonnement_og_estimert_mrr_basert_pa_aktive_leietak")}
           />
           <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <RevenueKpiTile
-              label="MRR (estimat)"
+              label={t("admin.mrr_estimat")}
               value={formatNok(metrics.mrrNok)}
               caption={mrrCaption}
               icon={TrendingUp}
               href={adminSubscriptionsHref("active")}
             />
             <RevenueKpiTile
-              label="ARR (estimat)"
+              label={t("admin.arr_estimat")}
               value={formatNok(metrics.arrNok)}
-              caption="MRR × 12"
+              caption={t("admin.mrr_12")}
               icon={CalendarDays}
             />
             <RevenueKpiTile
-              label="Churn (30 d.)"
+              label={t("admin.churn_30_d")}
               value={`${metrics.churnRate30d}%`}
-              caption="Avsluttede abonnement siste 30 dager"
+              caption={t("admin.avsluttede_abonnement_siste_30_dager")}
               icon={TrendingDown}
               iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
               iconClassName="size-6 text-rn-danger-ink"
@@ -176,9 +184,9 @@ export function AdminRevenueWorkspace({
               href={adminSubscriptionsHref("canceled")}
             />
             <RevenueKpiTile
-              label="Prøve → betalt (30 d.)"
+              label={t("admin.prove_betalt_30_d")}
               value={`${metrics.trialConversionRate30d}%`}
-              caption="Konverterte prøveperioder"
+              caption={t("admin.konverterte_proveperioder")}
               icon={RefreshCw}
               href={adminSubscriptionsHref("trialing")}
             />
@@ -190,7 +198,7 @@ export function AdminRevenueWorkspace({
             <AdminTrendChart
               className="admin-overview-trend-chart"
               embedded
-              title="MRR-trend (12 mnd.)"
+              title={t("admin.mrr_trend_12_mnd")}
               points={data.revenueTrend}
               valueFormat="nok"
             />
@@ -211,26 +219,26 @@ export function AdminRevenueWorkspace({
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section className="px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8">
           <SectionIntro
-            title="Booking-inntekt (leietaker)"
-            description="Omsetning registrert i bookinger på tvers av leietakere — ikke plattformfakturering."
+            title={t("admin.booking_inntekt_leietaker")}
+            description={t("admin.omsetning_registrert_i_bookinger_pa_tvers_av_leietakere_ikke")}
           />
           <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <RevenueKpiTile
-              label="Inntekt denne måneden"
+              label={t("admin.inntekt_denne_maneden")}
               value={formatNok(data.revenueThisMonthNok)}
-              caption="Basert på arrangementsdato"
+              caption={t("admin.basert_pa_arrangementsdato")}
               icon={Wallet}
             />
             <RevenueKpiTile
-              label="Inntekt forrige måned"
+              label={t("admin.inntekt_forrige_maned")}
               value={formatNok(data.revenueLastMonthNok)}
-              caption="Fullført forrige kalendermåned"
+              caption={t("admin.fullfort_forrige_kalendermaned")}
               icon={CreditCard}
             />
             <RevenueKpiTile
-              label="Utestående (bookinger)"
+              label={t("admin.utestaende_bookinger")}
               value={formatNok(data.outstandingNok)}
-              caption="Gjenstående beløp i aktive bookinger"
+              caption={t("admin.gjenstaende_belop_i_aktive_bookinger")}
               icon={TrendingDown}
               iconContainerClassName="rounded-md bg-amber-500/10 p-2"
               iconClassName="size-6 text-amber-800 dark:text-amber-300"
@@ -241,7 +249,7 @@ export function AdminRevenueWorkspace({
               }
             />
             <RevenueKpiTile
-              label="Måned-over-måned"
+              label={t("admin.maned_over_maned")}
               value={monthOverMonth}
               caption={momCaption}
               icon={ArrowUpRight}
@@ -253,7 +261,7 @@ export function AdminRevenueWorkspace({
           <AdminTrendChart
             className="admin-overview-trend-chart"
             embedded
-            title="Booking-inntekt per måned (12 mnd.)"
+            title={t("admin.booking_inntekt_per_maned_12_mnd")}
             points={data.bookingRevenueTrend}
             valueFormat="nok"
           />
@@ -262,24 +270,24 @@ export function AdminRevenueWorkspace({
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <AdminQueuePanel
-          title="Forfalt betaling"
+          title={t("admin.forfalt_betaling")}
           items={data.failedPaymentQueue}
-          emptyLabel="Ingen organisasjoner med forfalt status."
+          emptyLabel={t("admin.ingen_organisasjoner_med_forfalt_status")}
           viewAllHref={adminSubscriptionsHref("past_due")}
         />
         <AdminQueuePanel
-          title="Prøveperiode utløper snart"
+          title={t("admin.proveperiode_utloper_snart")}
           items={data.trialExpiringQueue}
-          emptyLabel="Ingen prøveperioder utløper innen 14 dager."
+          emptyLabel={t("admin.ingen_proveperioder_utloper_innen_14_dager")}
           viewAllHref={adminSubscriptionsHref("trialing")}
         />
       </div>
 
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8 md:py-5">
-          <h2 className="app-section-title">Aktive abonnement (MRR)</h2>
+          <h2 className="app-section-title">{t("adminLabels.sections.activeSubscriptionsMrr")}</h2>
           <AdminLinkButton href={adminSubscriptionsHref("active")}>
-            Alle aktive
+            {t("adminLabels.actions.activeAll")}
           </AdminLinkButton>
         </div>
 
@@ -287,11 +295,11 @@ export function AdminRevenueWorkspace({
           <table className="w-full min-w-[45rem] text-left text-app-base">
             <thead>
               <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                <th className={tableHeadClass}>Organisasjon</th>
-                <th className={tableHeadClass}>Plan</th>
-                <th className={tableHeadClass}>Status</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.organization")}</th>
+                <th className={tableHeadClass}>{t("admin.plan")}</th>
+                <th className={tableHeadClass}>{t("admin.status")}</th>
                 <th className={cn(tableHeadClass, "text-right")}>MRR</th>
-                <th className={cn(tableHeadClass, "text-right")}>Medlemmer</th>
+                <th className={cn(tableHeadClass, "text-right")}>{t("admin.medlemmer")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-rn-border-strong/50">
@@ -326,7 +334,7 @@ export function AdminRevenueWorkspace({
                   <td colSpan={5}>
                     <div className="space-y-3 px-6 py-16 text-center sm:px-10 sm:py-20 md:px-8">
                       <p className="font-heading text-lg font-bold tracking-tight text-rn-text-heading">
-                        Ingen aktive abonnement med MRR akkurat nå
+                        {t("adminLabels.empty.noActiveMrr")}
                       </p>
                       {metrics.trialingSubscriptions > 0 ? (
                         <p className="app-text-secondary">
@@ -340,8 +348,7 @@ export function AdminRevenueWorkspace({
                         </p>
                       ) : (
                         <p className="mx-auto max-w-lg text-muted-foreground">
-                          MRR vises når organisasjoner har aktive betalte
-                          abonnement.
+                          {t("admin.mrr_vises_nar_aktive_betalt")}
                         </p>
                       )}
                     </div>
@@ -353,8 +360,7 @@ export function AdminRevenueWorkspace({
         </div>
 
         <p className="border-t border-rn-border-strong/50 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
-          SaaS-MRR baseres på aktive abonnement til listepris. Booking-inntekt er
-          omsetning registrert av leietakere, ikke plattformfakturering.
+          {t("admin.saas_mrr_footnote")}
         </p>
       </div>
     </div>

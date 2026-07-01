@@ -1,3 +1,6 @@
+import type { Translator } from "@/i18n/types";
+import type { TranslationKey } from "@/i18n/types";
+
 export type SupportTicketStatus = "open" | "waiting" | "resolved";
 
 export type SupportTicketCategory =
@@ -7,24 +10,51 @@ export type SupportTicketCategory =
   | "feature"
   | "other";
 
+export function supportStatusLabel(
+  status: SupportTicketStatus,
+  t: Translator,
+): string {
+  const key = `support.status.${status}` as TranslationKey;
+  return t(key);
+}
+
+export function supportStatusDescription(
+  status: SupportTicketStatus,
+  t: Translator,
+): string {
+  const key = `support.statusDescription.${status}` as TranslationKey;
+  return t(key);
+}
+
+export function supportCategoryLabel(
+  category: SupportTicketCategory,
+  t: Translator,
+): string {
+  const key = `support.category.${category}` as TranslationKey;
+  return t(key);
+}
+
+/** @deprecated Use supportStatusLabel(status, t) */
 export const SUPPORT_STATUS_LABELS: Record<SupportTicketStatus, string> = {
-  open: "Åpen",
-  waiting: "Venter",
-  resolved: "Løst",
+  open: "",
+  waiting: "",
+  resolved: "",
 };
 
+/** @deprecated Use supportStatusDescription(status, t) */
 export const SUPPORT_STATUS_DESCRIPTIONS: Record<SupportTicketStatus, string> = {
-  open: "Saken er mottatt og under behandling.",
-  waiting: "Vi venter på svar fra deg.",
-  resolved: "Saken er lukket.",
+  open: "",
+  waiting: "",
+  resolved: "",
 };
 
+/** @deprecated Use supportCategoryLabel(category, t) */
 export const SUPPORT_CATEGORY_LABELS: Record<SupportTicketCategory, string> = {
-  bug: "Feil",
-  billing: "Fakturering",
-  access: "Tilgang",
-  feature: "Ønske",
-  other: "Annet",
+  bug: "",
+  billing: "",
+  access: "",
+  feature: "",
+  other: "",
 };
 
 export const SUPPORT_SETTABLE_STATUSES: SupportTicketStatus[] = [

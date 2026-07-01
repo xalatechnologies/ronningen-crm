@@ -11,17 +11,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/use-theme";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { ChevronDown, Monitor, Moon, Sun } from "lucide-react";
 
-const options: {
+const themeOptions: {
   value: ThemePreference;
-  label: string;
+  labelKey: "common.theme.light" | "common.theme.dark" | "common.theme.system";
   icon: typeof Sun;
 }[] = [
-  { value: "light", label: "Lys", icon: Sun },
-  { value: "dark", label: "Mørk", icon: Moon },
-  { value: "system", label: "System", icon: Monitor },
+  { value: "light", labelKey: "common.theme.light", icon: Sun },
+  { value: "dark", labelKey: "common.theme.dark", icon: Moon },
+  { value: "system", labelKey: "common.theme.system", icon: Monitor },
 ];
 
 type ThemeToggleProps = {
@@ -35,6 +36,12 @@ export function ThemeToggle({
   className,
 }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
+
+  const options = themeOptions.map((opt) => ({
+    ...opt,
+    label: t(opt.labelKey),
+  }));
 
   if (variant === "header") {
     const current =
@@ -50,7 +57,7 @@ export function ThemeToggle({
             "data-popup-open:bg-muted/30",
             className,
           )}
-          aria-label={`Fargetema: ${current.label}`}
+          aria-label={`${t("common.theme.label")}: ${current.label}`}
           title={current.label}
         >
           <CurrentIcon className="size-4 shrink-0 text-foreground" aria-hidden />
@@ -66,7 +73,7 @@ export function ThemeToggle({
         >
           <DropdownMenuGroup>
             <DropdownMenuLabel className="px-2 py-1.5 font-heading text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Fargetema
+              {t("common.theme.label")}
             </DropdownMenuLabel>
             <DropdownMenuRadioGroup
               value={theme}
@@ -97,10 +104,10 @@ export function ThemeToggle({
       <div
         className={cn("px-3 py-2 md:px-3.5", className)}
         role="radiogroup"
-        aria-label="Velg fargetema"
+        aria-label={t("common.theme.chooseAria")}
       >
         <p className="mb-2 font-heading text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Fargetema
+          {t("common.theme.label")}
         </p>
         <div className="flex gap-1 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment p-1">
           {options.map(({ value, label, icon: Icon }) => {
@@ -137,7 +144,7 @@ export function ThemeToggle({
         className,
       )}
       role="radiogroup"
-      aria-label="Velg fargetema"
+      aria-label={t("common.theme.chooseAria")}
     >
       {options.map(({ value, label, icon: Icon }) => {
         const active = theme === value;

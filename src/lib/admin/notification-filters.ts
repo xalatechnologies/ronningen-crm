@@ -3,6 +3,7 @@ import type {
   AdminNotificationCampaign,
   AdminNotificationDelivery,
 } from "@/lib/admin/queries/notifications";
+import type { Translator, TranslationKey } from "@/i18n/types";
 
 export type AdminNotificationView = "templates" | "campaigns" | "deliveries";
 
@@ -15,35 +16,49 @@ export type AdminDeliveryFilter =
   | "opened"
   | "failed";
 
-export const ADMIN_NOTIFICATION_VIEW_OPTIONS: {
-  value: AdminNotificationView;
-  label: string;
-}[] = [
-  { value: "templates", label: "Maler" },
-  { value: "campaigns", label: "Kampanjer" },
-  { value: "deliveries", label: "Leveringer" },
-];
+const VIEW_LABEL_KEYS: Record<AdminNotificationView, TranslationKey> = {
+  templates: "admin.notification_view_templates",
+  campaigns: "admin.notification_view_campaigns",
+  deliveries: "admin.notification_view_deliveries",
+};
 
-export const ADMIN_CAMPAIGN_FILTER_OPTIONS: {
-  value: AdminCampaignFilter;
-  label: string;
-}[] = [
-  { value: "all", label: "Alle" },
-  { value: "draft", label: "Utkast" },
-  { value: "active", label: "Aktiv" },
-  { value: "paused", label: "Pauset" },
-];
+const CAMPAIGN_FILTER_KEYS: Record<AdminCampaignFilter, TranslationKey> = {
+  all: "admin.alle",
+  draft: "admin.notification_campaign_draft",
+  active: "admin.notification_campaign_active",
+  paused: "admin.notification_campaign_paused",
+};
 
-export const ADMIN_DELIVERY_FILTER_OPTIONS: {
-  value: AdminDeliveryFilter;
-  label: string;
-}[] = [
-  { value: "all", label: "Alle" },
-  { value: "sent", label: "Sendt" },
-  { value: "delivered", label: "Levert" },
-  { value: "opened", label: "Åpnet" },
-  { value: "failed", label: "Feilet" },
-];
+const DELIVERY_FILTER_KEYS: Record<AdminDeliveryFilter, TranslationKey> = {
+  all: "admin.alle",
+  sent: "admin.notification_delivery_sent",
+  delivered: "admin.notification_delivery_delivered",
+  opened: "admin.notification_delivery_opened",
+  failed: "admin.notification_delivery_failed",
+};
+
+export function adminNotificationViewOptions(t: Translator) {
+  return (["templates", "campaigns", "deliveries"] as const).map((value) => ({
+    value,
+    label: t(VIEW_LABEL_KEYS[value]),
+  }));
+}
+
+export function adminCampaignFilterOptions(t: Translator) {
+  return (["all", "draft", "active", "paused"] as const).map((value) => ({
+    value,
+    label: t(CAMPAIGN_FILTER_KEYS[value]),
+  }));
+}
+
+export function adminDeliveryFilterOptions(t: Translator) {
+  return (
+    ["all", "sent", "delivered", "opened", "failed"] as const
+  ).map((value) => ({
+    value,
+    label: t(DELIVERY_FILTER_KEYS[value]),
+  }));
+}
 
 export type AdminNotificationOverviewStats = {
   templateCount: number;

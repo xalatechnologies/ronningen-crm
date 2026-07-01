@@ -1,7 +1,8 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import {
-  ORGANIZATION_DETAIL_TABS,
+  getOrganizationDetailTabs,
   type OrganizationDetailTabId,
 } from "@/components/admin/organization-detail/tabs";
 import { cn } from "@/lib/utils";
@@ -13,13 +14,14 @@ export function OrganizationDetailTabBar({
   activeTab: OrganizationDetailTabId;
   onTabChange: (tab: OrganizationDetailTabId) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       className="org-detail-tab-bar"
       role="tablist"
-      aria-label="Organisasjonsdetaljer"
+      aria-label={t("admin.organisasjonsdetaljer")}
     >
-      {ORGANIZATION_DETAIL_TABS.map((tab) => {
+      {getOrganizationDetailTabs(t).map((tab) => {
         const active = activeTab === tab.id;
         return (
           <button

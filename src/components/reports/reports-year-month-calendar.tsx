@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
@@ -36,8 +37,9 @@ const monthSelectTriggerClass = cn(
 function formatMonthTriggerLabel(
   monthValue: string,
   monthNames: string[],
+  wholeYearLabel: string,
 ): string {
-  if (monthValue === MONTH_ALL) return "Hele året";
+  if (monthValue === MONTH_ALL) return wholeYearLabel;
   const idx = Number.parseInt(monthValue, 10) - 1;
   const name = monthNames[idx];
   if (!name) return monthValue;
@@ -51,16 +53,18 @@ export function ReportsYearMonthCalendar({
   reportYear: number;
   calendarYearMax: number;
 }) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const monthNames = useMemo(() => {
-    const fmt = new Intl.DateTimeFormat("nb-NO", { month: "long" });
+    const intlLocale = locale === "nb" ? "nb-NO" : "en-GB";
+    const fmt = new Intl.DateTimeFormat(intlLocale, { month: "long" });
     return Array.from({ length: 12 }, (_, i) =>
       fmt.format(new Date(2020, i, 1)),
     );
-  }, []);
+  }, [locale]);
 
   const yearOptions = useMemo(() => {
     const list: number[] = [];
@@ -112,16 +116,18 @@ export function ReportsYearMonthCalendar({
     [pushParams, searchParams],
   );
 
+  const wholeYearLabel = t("calendar.wholeYear");
+
   const monthTriggerLabel = useMemo(
-    () => formatMonthTriggerLabel(monthSelectValue, monthNames),
-    [monthSelectValue, monthNames],
+    () => formatMonthTriggerLabel(monthSelectValue, monthNames, wholeYearLabel),
+    [monthSelectValue, monthNames, wholeYearLabel],
   );
 
   return (
     <div className="flex w-full flex-row flex-wrap items-center justify-end gap-2 sm:ml-auto sm:w-auto sm:shrink-0 md:gap-3">
       <Select value={String(reportYear)} onValueChange={onYearChange}>
         <SelectTrigger
-          aria-label="Velg år for rapport"
+          aria-label={t("calendar.selectYearReport")}
           size="default"
           className={cn(yearSelectTriggerClass, "tabular-nums")}
         >
@@ -145,7 +151,7 @@ export function ReportsYearMonthCalendar({
 
       <Select value={monthSelectValue} onValueChange={onMonthChange}>
         <SelectTrigger
-          aria-label="Velg måned for rapport"
+          aria-label={t("calendar.selectMonthReport")}
           size="default"
           className={monthSelectTriggerClass}
         >
@@ -159,7 +165,7 @@ export function ReportsYearMonthCalendar({
             value={MONTH_ALL}
             className="reports-filter-item py-2.5 font-heading font-semibold"
           >
-            Hele året
+            {wholeYearLabel}
           </SelectItem>
           {monthNames.map((name, i) => (
             <SelectItem

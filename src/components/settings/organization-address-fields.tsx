@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AddressField } from "@/components/forms/address-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +26,7 @@ export function OrganizationAddressFields({
   labelClass,
   fieldClass,
 }: OrganizationAddressFieldsProps) {
+  const { t } = useTranslation();
   return (
     <>
       <div className="space-y-2">
@@ -46,7 +48,7 @@ export function OrganizationAddressFields({
         <Input
           id="org-addr2"
           className={fieldClass}
-          placeholder="Valgfritt"
+          placeholder={t("common.actions.optional")}
           autoComplete="address-line2"
           {...register("addressLine2")}
         />

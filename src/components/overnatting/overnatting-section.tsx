@@ -1,11 +1,13 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AccommodationMonthCalendar } from "@/components/overnatting/accommodation-month-calendar";
 import type {
   AccommodationReservationRow,
   AccommodationUnitRow,
 } from "@/components/overnatting/types";
-import { ACCOMMODATION_RESERVATION_LABELS } from "@/components/overnatting/types";
+import { statusLabel } from "@/lib/navigation/nav-labels";
+import type { AccommodationReservationStatus } from "@/lib/validations";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
@@ -66,6 +68,7 @@ import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
+import { enGB } from "date-fns/locale/en-GB";
 import { nb } from "date-fns/locale/nb";
 import { BedDouble, Building2, Calendar, Plus, RotateCcw, Search, Users, ArrowDownRight, ArrowUpRight, TrendingUp, Wallet } from "lucide-react";
 import Link from "next/link";
@@ -118,22 +121,6 @@ function matchesAccommodationDateRange(
 const dialogSectionTitleClass =
   "text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground";
 
-function formatNok(n: number) {
-  return `${new Intl.NumberFormat("nb-NO").format(Math.round(n))} NOK`;
-}
-
-function formatNokCompact(n: number) {
-  const formatted = new Intl.NumberFormat("nb-NO").format(Math.round(n));
-  return (
-    <>
-      <span className="tracking-tight">{formatted}</span>{" "}
-      <span className="text-app-lg font-medium tracking-normal opacity-70 md:text-app-2xl">
-        NOK
-      </span>
-    </>
-  );
-}
-
 function ymNow(): string {
   const t = new Date();
   const y = t.getFullYear();
@@ -157,6 +144,8 @@ type RawRes = {
   accommodation_units: { name: string } | null;
 };
 
+const UNKNOWN_CUSTOMER = "__unknown__";
+
 function mapReservations(data: unknown): AccommodationReservationRow[] {
   return (
     (data as RawRes[] | null | undefined)?.map((r) => {
@@ -168,7 +157,7 @@ function mapReservations(data: unknown): AccommodationReservationRow[] {
         unitId: r.unit_id,
         unitName: r.accommodation_units?.name ?? "—",
         customerId: r.customer_id,
-        customerName: r.customers?.name?.trim() || "Ukjent",
+        customerName: r.customers?.name?.trim() || UNKNOWN_CUSTOMER,
         checkInDate: r.check_in_date.slice(0, 10),
         checkOutDate: r.check_out_date.slice(0, 10),
         checkInTime:
@@ -211,6 +200,8 @@ export function OvernattingSection({
   loadError,
   skipInitialReservationFetch = false,
 }: OvernattingSectionProps) {
+  const { t, formatCurrency, locale } = useTranslation();
+  const dateLocale = locale === "nb" ? nb : enGB;
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateOvernatting } = useTenantDataInvalidation();
@@ -296,7 +287,7 @@ export function OvernattingSection({
       .gt("check_out_date", beforeFetch);
     setLoadingRes(false);
     if (error) {
-      toast.error("Kunne ikke hente reservasjoner", {
+      toast.error(t("overnatting.fetchFailed"), {
         description: error.message,
       });
       return;
@@ -338,8 +329,8 @@ export function OvernattingSection({
   const monthLabel = useMemo(() => {
     const f = monthFirstDayYm(monthYm);
     if (!f) return monthYm;
-    return format(new Date(`${f}T12:00:00`), "MMMM yyyy", { locale: nb });
-  }, [monthYm]);
+    return format(new Date(`${f}T12:00:00`), "MMMM yyyy", { locale: dateLocale });
+  }, [monthYm, dateLocale]);
 
   function openNewUnit() {
     setEditingUnit(null);
@@ -383,19 +374,19 @@ export function OvernattingSection({
         .update(payload)
         .eq("id", editingUnit.id);
       if (error) {
-        toast.error("Kunne ikke oppdatere enhet", {
+        toast.error(t("overnatting.updateUnitFailed"), {
           description: error.message,
         });
         return;
       }
-      toast.success("Enhet oppdatert");
+      toast.success(t("overnatting.unitUpdated"));
     } else {
       let orgId: string;
       try {
         orgId = requireOrganizationId(currentOrganizationId);
       } catch (err) {
         toast.error(
-          err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+          err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
         );
         return;
       }
@@ -405,12 +396,12 @@ export function OvernattingSection({
         organization_id: orgId,
       });
       if (error) {
-        toast.error("Kunne ikke opprette enhet", {
+        toast.error(t("overnatting.createUnitFailed"), {
           description: error.message,
         });
         return;
       }
-      toast.success("Enhet opprettet");
+      toast.success(t("overnatting.unitCreated"));
     }
     setUnitDialogOpen(false);
     invalidateOvernatting();
@@ -425,10 +416,10 @@ export function OvernattingSection({
         .delete()
         .eq("id", deleteUnitTarget.id);
       if (error) {
-        toast.error("Kunne ikke slette", { description: error.message });
+        toast.error(t("common.toasts.deleteFailed"), { description: error.message });
         return;
       }
-      toast.success("Enhet slettet");
+      toast.success(t("overnatting.unitDeleted"));
       setDeleteUnitTarget(null);
       invalidateOvernatting();
     } finally {
@@ -472,10 +463,10 @@ export function OvernattingSection({
       })
       .eq("id", editingRes.id);
     if (error) {
-      toast.error("Kunne ikke lagre", { description: error.message });
+      toast.error(t("overnatting.saveFailed"), { description: error.message });
       return;
     }
-    toast.success("Reservasjon oppdatert");
+    toast.success(t("overnatting.reservationUpdated"));
     setEditResOpen(false);
     void fetchReservations();
     invalidateOvernatting();
@@ -490,10 +481,10 @@ export function OvernattingSection({
         .delete()
         .eq("id", editingRes.id);
       if (error) {
-        toast.error("Kunne ikke slette", { description: error.message });
+        toast.error(t("common.toasts.deleteFailed"), { description: error.message });
         return;
       }
-      toast.success("Reservasjon slettet");
+      toast.success(t("overnatting.reservationDeleted"));
       setDeleteResConfirmOpen(false);
       setEditResOpen(false);
       setEditingRes(null);
@@ -582,7 +573,7 @@ export function OvernattingSection({
           <AppPageHeader
             className="mb-0 gap-3 md:gap-4"
             surface="default"
-            title="Overnatting"
+            title={t("overnatting.title")}
             actionsClassName="justify-end"
             actions={
               <div className="flex flex-wrap items-center justify-end gap-2">
@@ -595,7 +586,7 @@ export function OvernattingSection({
                     )}
                   >
                     <Plus className="size-5" aria-hidden />
-                    Ny reservasjon
+                    {t("overnatting.new")}
                   </Link>
                 ) : null}
                 {canManage ? (
@@ -607,7 +598,7 @@ export function OvernattingSection({
                     onClick={openNewUnit}
                   >
                     <BedDouble className="size-5" aria-hidden />
-                    Ny enhet
+                    {t("overnatting.newUnit")}
                   </Button>
                 ) : null}
                 {!loadError ? (
@@ -620,7 +611,7 @@ export function OvernattingSection({
                     onClick={() => setCalendarOpen((v) => !v)}
                   >
                     <Calendar className="size-5 shrink-0" aria-hidden />
-                    {calendarOpen ? "Skjul kalender" : "Vis månedskalender"}
+                    {calendarOpen ? t("overnatting.hideCalendar") : t("overnatting.showCalendar")}
                   </Button>
                 ) : null}
               </div>
@@ -634,7 +625,7 @@ export function OvernattingSection({
             role="alert"
           >
             <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive">
-              Kunne ikke laste enheter: {loadError}
+              {t("overnatting.loadError", { error: loadError })}
             </div>
           </div>
         ) : null}
@@ -644,15 +635,15 @@ export function OvernattingSection({
             <div
               className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2"
               role="toolbar"
-              aria-label="Tilgjengelighet og fargeforklaring"
+              aria-label={t("overnatting.availabilityLegend")}
             >
               <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  Tilgjengelighet
+                  {t("overnatting.availability")}
                 </span>
                 {loadingRes ? (
                   <span className="text-app-xs font-medium text-muted-foreground">
-                    Oppdaterer …
+                    {t("overnatting.updating")}
                   </span>
                 ) : null}
               </div>
@@ -662,21 +653,21 @@ export function OvernattingSection({
                     className="size-2.5 shrink-0 rounded-full bg-emerald-500/90 ring-2 ring-emerald-500/25 shadow-sm dark:bg-emerald-400"
                     aria-hidden
                   />
-                  Bekreftet
+                  {statusLabel("confirmed", t)}
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-rn-border-strong/50 bg-card px-3 py-1.5 text-app-xs font-medium text-rn-text-body shadow-sm">
                   <span
                     className="size-2.5 shrink-0 rounded-full bg-amber-500/90 ring-2 ring-amber-500/25 shadow-sm dark:bg-amber-400"
                     aria-hidden
                   />
-                  Tentativ
+                  {statusLabel("tentative", t)}
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-rn-border-strong/50 bg-card px-3 py-1.5 text-app-xs font-medium text-rn-text-body shadow-sm">
                   <span
                     className="size-2.5 shrink-0 rounded-full bg-rose-500/90 ring-2 ring-rose-500/25 shadow-sm dark:bg-rose-400"
                     aria-hidden
                   />
-                  Avbestilt / tomt
+                  {t("overnatting.cancelledEmpty")}
                 </span>
               </div>
             </div>
@@ -696,25 +687,25 @@ export function OvernattingSection({
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  Overnatting
+                  {t("overnatting.title")}
                 </p>
                 <h3 className="mt-1 font-heading text-app-lg font-bold tracking-tight text-rn-text-heading md:text-app-xl">
-                  Enheter
+                  {t("overnatting.units")}
                 </h3>
                 <p className="mt-1 max-w-xl text-app-sm leading-snug text-muted-foreground">
                   {sortedUnits.length}{" "}
-                  {sortedUnits.length === 1 ? "enhet" : "enheter"} tilgjengelig
-                  for reservasjon.
-                  {canManage
-                    ? " Administrer navn, kapasitet og lokale under."
-                    : null}
+                  {sortedUnits.length === 1
+                    ? t("overnatting.unitSingular")
+                    : t("overnatting.unitPlural")}{" "}
+                  {t("overnatting.unitsAvailableSuffix")}
+                  {canManage ? t("overnatting.manageUnitsHint") : null}
                 </p>
               </div>
             </div>
 
             <ul
               className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-              aria-label="Liste over overnattingsenheter"
+              aria-label={t("overnatting.unitsListAria")}
             >
               {sortedUnits.map((u) => (
                 <li key={u.id}>
@@ -749,7 +740,7 @@ export function OvernattingSection({
                                 : "border-muted-foreground/30 bg-muted text-muted-foreground",
                             )}
                           >
-                            {u.active ? "Aktiv" : "Inaktiv"}
+                            {u.active ? t("statuses.active") : t("statuses.inactive")}
                           </span>
                         </div>
                         <div className="mt-2.5 flex flex-col gap-1.5 text-app-xs text-muted-foreground">
@@ -759,8 +750,7 @@ export function OvernattingSection({
                               aria-hidden
                             />
                             <span>
-                              Maks <span className="tabular-nums">{u.maxGuests}</span>{" "}
-                              gjester
+                              {t("overnatting.maxGuests", { count: u.maxGuests })}
                             </span>
                           </span>
                           {u.propertyName ? (
@@ -791,7 +781,7 @@ export function OvernattingSection({
                           className="border-2 border-rn-border-strong/70 font-semibold"
                           onClick={() => openEditUnit(u)}
                         >
-                          Rediger
+                          {t("common.actions.edit")}
                         </Button>
                         <Button
                           type="button"
@@ -800,7 +790,7 @@ export function OvernattingSection({
                           className="font-semibold"
                           onClick={() => setDeleteUnitTarget(u)}
                         >
-                          Slett
+                          {t("common.actions.delete")}
                         </Button>
                       </div>
                     ) : null}
@@ -814,18 +804,18 @@ export function OvernattingSection({
         {!loadError ? (
           <div className="border-t-2 border-rn-border-strong px-4 py-6 sm:px-5 lg:px-6">
             <h2 className="font-heading text-app-lg font-bold capitalize text-rn-text-heading md:text-app-xl">
-              Reservasjoner · {monthLabel}
+              {t("overnatting.reservationsMonth", { month: monthLabel })}
             </h2>
 
             <section
               className="overnatting-list-filters mt-4"
-              aria-label="Filtrer reservasjoner"
+              aria-label={t("overnatting.filterReservationsAria")}
             >
               <div className="flex min-w-0 flex-col gap-4">
                 <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-end xl:gap-5">
                   <div className="relative min-w-0 w-full xl:max-w-md 2xl:max-w-xl">
                     <Label htmlFor={`${rid}-res-search`} className={filterEyebrowClass}>
-                      Søk
+                      {t("common.actions.search")}
                     </Label>
                     <Search
                       className="pointer-events-none absolute top-[calc(50%+0.625rem)] left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
@@ -833,9 +823,9 @@ export function OvernattingSection({
                     />
                     <Input
                       id={`${rid}-res-search`}
-                      aria-label="Søk blant reservasjoner"
+                      aria-label={t("overnatting.searchAria")}
                       className="overnatting-list-search h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-                      placeholder="Kunde, enhet eller notat …"
+                      placeholder={t("overnatting.searchPlaceholder")}
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       autoComplete="off"
@@ -843,30 +833,30 @@ export function OvernattingSection({
                   </div>
 
                   <div className="min-w-0 w-full flex-1">
-                    <p className={filterEyebrowClass}>Status</p>
+                    <p className={filterEyebrowClass}>{t("common.fields.status")}</p>
                     <div
                       className="grid min-w-0 w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3"
                       role="group"
-                      aria-label="Filtrer etter status"
+                      aria-label={t("overnatting.filterStatusAria")}
                     >
                       {(
                         [
-                          ["all", "Alle", filterCounts.all, null],
+                          ["all", t("common.actions.all"), filterCounts.all, null],
                           [
                             "confirmed",
-                            ACCOMMODATION_RESERVATION_LABELS.confirmed,
+                            statusLabel("confirmed", t),
                             filterCounts.confirmed,
                             "emerald",
                           ],
                           [
                             "tentative",
-                            ACCOMMODATION_RESERVATION_LABELS.tentative,
+                            statusLabel("tentative", t),
                             filterCounts.tentative,
                             "amber",
                           ],
                           [
                             "cancelled",
-                            ACCOMMODATION_RESERVATION_LABELS.cancelled,
+                            statusLabel("cancelled", t),
                             filterCounts.cancelled,
                             "rose",
                           ],
@@ -919,21 +909,21 @@ export function OvernattingSection({
                 <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
                   <div className="min-w-0">
                     <Label htmlFor={`${rid}-res-unit`} className={filterEyebrowClass}>
-                      Enhet
+                      {t("overnatting.tableUnit")}
                     </Label>
                     <FormSelect
                       id={`${rid}-res-unit`}
                       value={unitFilter}
                       onValueChange={setUnitFilter}
-                      aria-label="Filtrer etter enhet"
+                      aria-label={t("overnatting.filterUnitAria")}
                       className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
-                      placeholder="Alle enheter"
+                      placeholder={t("overnatting.allUnits")}
                       options={toIdNameOptions(sortedUnits)}
                     />
                   </div>
                   <div className="min-w-0">
                     <Label htmlFor={`${rid}-res-from`} className={filterEyebrowClass}>
-                      Fra dato
+                      {t("overnatting.dateFrom")}
                     </Label>
                     <DatePickerField
                       id={`${rid}-res-from`}
@@ -946,7 +936,7 @@ export function OvernattingSection({
                   </div>
                   <div className="min-w-0">
                     <Label htmlFor={`${rid}-res-to`} className={filterEyebrowClass}>
-                      Til dato
+                      {t("overnatting.dateTo")}
                     </Label>
                     <DatePickerField
                       id={`${rid}-res-to`}
@@ -966,7 +956,7 @@ export function OvernattingSection({
                       onClick={resetFilters}
                     >
                       <RotateCcw className="size-4 shrink-0" aria-hidden />
-                      Nullstill filter
+                      {t("overnatting.resetFilters")}
                     </Button>
                   </div>
                 </div>
@@ -977,13 +967,15 @@ export function OvernattingSection({
               <Table className="min-w-[720px]">
                 <TableHeader>
                   <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
-                    <TableHead>Kunde</TableHead>
-                    <TableHead>Enhet</TableHead>
-                    <TableHead>Ankomst</TableHead>
-                    <TableHead>Avreise</TableHead>
-                    <TableHead>Gjester</TableHead>
-                    <TableHead>Status</TableHead>
-                    {canManage ? <TableHead className="text-right">Handlinger</TableHead> : null}
+                    <TableHead>{t("overnatting.tableCustomer")}</TableHead>
+                    <TableHead>{t("overnatting.tableUnit")}</TableHead>
+                    <TableHead>{t("overnatting.tableArrival")}</TableHead>
+                    <TableHead>{t("overnatting.tableDeparture")}</TableHead>
+                    <TableHead>{t("overnatting.tableGuests")}</TableHead>
+                    <TableHead>{t("common.fields.status")}</TableHead>
+                    {canManage ? (
+                      <TableHead className="text-right">{t("overnatting.tableActions")}</TableHead>
+                    ) : null}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -994,28 +986,32 @@ export function OvernattingSection({
                         className="text-rn-text-body"
                       >
                         {resInMonth.length === 0
-                          ? "Ingen reservasjoner i valgt måned."
+                          ? t("overnatting.emptyMonth")
                           : hasActiveFilters
-                            ? "Ingen treff med søk eller filter."
-                            : "Ingen reservasjoner i valgt måned."}
+                            ? t("overnatting.emptyFiltered")
+                            : t("overnatting.emptyMonth")}
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredReservations.map((r) => (
                       <TableRow key={r.id}>
-                        <TableCell className={APP_TABLE_CELL_PRIMARY}>{r.customerName}</TableCell>
+                        <TableCell className={APP_TABLE_CELL_PRIMARY}>
+                          {r.customerName === UNKNOWN_CUSTOMER
+                            ? t("overnatting.unknownCustomer")
+                            : r.customerName}
+                        </TableCell>
                         <TableCell className={APP_TABLE_CELL_BODY}>{r.unitName}</TableCell>
                         <TableCell className={APP_TABLE_CELL_DATE}>
-                          {formatAppDateFromParts(r.checkInDate, r.checkInTime)}
+                          {formatAppDateFromParts(r.checkInDate, r.checkInTime, locale)}
                         </TableCell>
                         <TableCell className={APP_TABLE_CELL_DATE}>
-                          {formatAppDateFromParts(r.checkOutDate, r.checkOutTime)}
+                          {formatAppDateFromParts(r.checkOutDate, r.checkOutTime, locale)}
                         </TableCell>
                         <TableCell className={cn(APP_TABLE_CELL_BODY, "tabular-nums")}>
                           {r.guestCount}
                         </TableCell>
                         <TableCell className={APP_TABLE_CELL_BODY}>
-                          {ACCOMMODATION_RESERVATION_LABELS[r.status]}
+                          {statusLabel(r.status, t)}
                         </TableCell>
                         {canManage ? (
                           <TableCell className="text-right">
@@ -1025,7 +1021,7 @@ export function OvernattingSection({
                               size="sm"
                               onClick={() => openEditRes(r)}
                             >
-                              Rediger
+                              {t("common.actions.edit")}
                             </Button>
                           </TableCell>
                         ) : null}
@@ -1047,19 +1043,18 @@ export function OvernattingSection({
                 <TrendingUp className="size-6 md:size-7" aria-hidden />
               </div>
               <h2 className="font-heading text-app-xl font-bold leading-snug text-white md:text-app-2xl">
-                Månedlig omsetning
+                {t("overnatting.monthlyRevenue")}
               </h2>
               <p className="mt-3 text-app-sm leading-relaxed text-white/90 md:text-app-base">
-                Registrert på reservasjoner i{" "}
-                <span className="font-semibold text-white">
-                  {quickStats.monthLabel}
-                </span>
-                . Sammenlignes med {quickStats.prevMonthLabel}.
+                {t("overnatting.revenueDescription", {
+                  month: quickStats.monthLabel,
+                  prevMonth: quickStats.prevMonthLabel,
+                })}
               </p>
             </div>
             <div className="mt-10 min-w-0">
-              <div className="break-words text-app-3xl font-black leading-none tracking-tight md:text-app-3xl [&_span:last-child]:text-app-lg [&_span:last-child]:font-semibold [&_span:last-child]:opacity-85 md:[&_span:last-child]:text-app-2xl">
-                {formatNokCompact(quickStats.currentMonthRevenue)}
+              <div className="break-words text-app-3xl font-black leading-none tracking-tight md:text-app-3xl">
+                {formatCurrency(quickStats.currentMonthRevenue)}
               </div>
               {quickStats.monthOverMonthPct != null ? (
                 <div
@@ -1074,20 +1069,21 @@ export function OvernattingSection({
                     <ArrowDownRight className="size-4 shrink-0 md:size-5" aria-hidden />
                   )}
                   <span>
-                    {trendPositive ? "+" : ""}
-                    {quickStats.monthOverMonthPct
-                      .toFixed(1)
-                      .replace(".", ",")}
-                    % fra forrige måned
+                    {t("overnatting.percentFromPrevMonth", {
+                      sign: trendPositive ? "+" : "",
+                      percent: quickStats.monthOverMonthPct
+                        .toFixed(1)
+                        .replace(".", locale === "nb" ? "," : "."),
+                    })}
                   </span>
                 </div>
               ) : (
                 <p className="mt-4 text-app-sm font-medium text-white/75 md:text-app-base">
-                  Ingen sammenligning mot forrige måned (manglende grunnlag).
+                  {t("overnatting.noComparison")}
                 </p>
               )}
               <p className="mt-3 text-app-sm text-white/70">
-                Forrige måned: {formatNok(quickStats.prevMonthRevenue)}
+                {t("overnatting.prevMonth")}: {formatCurrency(quickStats.prevMonthRevenue)}
               </p>
             </div>
           </div>
@@ -1103,24 +1099,24 @@ export function OvernattingSection({
               <div className="grid grid-cols-1 gap-4">
                 <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
                   <p className="mb-3 text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-app-sm">
-                    Beléggingsgrad
+                    {t("overnatting.occupancyRate")}
                   </p>
                   <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
                     {quickStats.occupancyPct}%
                   </p>
                   <p className="mt-3 text-app-base leading-snug text-muted-foreground md:text-app-lg">
-                    Andel enhetsnetter som er reservert i måneden.
+                    {t("overnatting.occupancyDescription")}
                   </p>
                 </div>
                 <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
                   <p className="mb-3 text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-app-sm">
-                    Snitt gjester
+                    {t("overnatting.avgGuests")}
                   </p>
                   <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
                     {quickStats.avgGuestsActive ?? "—"}
                   </p>
                   <p className="mt-3 text-app-base text-muted-foreground md:text-app-lg">
-                    Per reservasjon.
+                    {t("overnatting.perReservation")}
                   </p>
                 </div>
               </div>
@@ -1131,16 +1127,16 @@ export function OvernattingSection({
                   {quickStats.monthLabel}
                 </p>
                 <p className="mt-3 dashboard-kpi-value text-success dark:!text-white md:text-app-3xl">
-                  {formatNok(quickStats.currentMonthRevenue)}
+                  {formatCurrency(quickStats.currentMonthRevenue)}
                 </p>
               </div>
               <div className="mt-8 space-y-3 border-t-2 border-success/20 pt-5">
                 <div className="flex justify-between text-app-base md:text-app-lg">
                   <span className="font-medium text-rn-text-body">
-                    Forrige måned
+                    {t("overnatting.prevMonth")}
                   </span>
                   <span className="font-bold tabular-nums text-rn-text-heading">
-                    {formatNok(quickStats.prevMonthRevenue)}
+                    {formatCurrency(quickStats.prevMonthRevenue)}
                   </span>
                 </div>
                 <div className="h-2.5 overflow-hidden rounded-full border border-rn-border-strong/40 bg-muted">
@@ -1167,7 +1163,7 @@ export function OvernattingSection({
         <DialogContent className="max-w-lg border-2 border-rn-border-strong" showCloseButton>
           <DialogHeader>
             <DialogTitle className="font-heading">
-              {editingUnit ? "Rediger enhet" : "Ny enhet"}
+              {editingUnit ? t("overnatting.editUnit") : t("overnatting.newUnitTitle")}
             </DialogTitle>
           </DialogHeader>
           <form
@@ -1179,7 +1175,7 @@ export function OvernattingSection({
           >
             <div className="space-y-2">
               <Label className={labelClass} htmlFor={`${rid}-uname`}>
-                Navn
+                {t("common.fields.name")}
               </Label>
               <Input
                 id={`${rid}-uname`}
@@ -1194,7 +1190,7 @@ export function OvernattingSection({
             </div>
             <div className="space-y-2">
               <Label className={labelClass} htmlFor={`${rid}-p`}>
-                Lokale (valgfritt)
+                {t("overnatting.propertyOptional")}
               </Label>
               <PropertySelectField
                 name="propertyId"
@@ -1202,14 +1198,14 @@ export function OvernattingSection({
                 id={`${rid}-p`}
                 className={cn(fieldClass, "font-medium")}
                 optional
-                placeholder="— Ingen kobling —"
+                placeholder={t("overnatting.noPropertyLink")}
                 properties={properties}
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label className={labelClass} htmlFor={`${rid}-mg`}>
-                  Maks gjester
+                  {t("overnatting.maxGuestsLabel")}
                 </Label>
                 <Input
                   id={`${rid}-mg`}
@@ -1226,7 +1222,7 @@ export function OvernattingSection({
               </div>
               <div className="space-y-2">
                 <Label className={labelClass} htmlFor={`${rid}-so`}>
-                  Sortering
+                  {t("overnatting.sortOrder")}
                 </Label>
                 <Input
                   id={`${rid}-so`}
@@ -1239,7 +1235,7 @@ export function OvernattingSection({
             </div>
             <div className="space-y-2">
               <Label className={labelClass} htmlFor={`${rid}-unote`}>
-                Notat
+                {t("common.fields.notes")}
               </Label>
               <Textarea
                 id={`${rid}-unote`}
@@ -1254,7 +1250,7 @@ export function OvernattingSection({
                 className="size-4 rounded border-2 border-rn-border-strong"
                 {...unitForm.register("active")}
               />
-              Aktiv (synlig for booking)
+              {t("overnatting.activeForBooking")}
             </label>
             <DialogFooter className="gap-2 sm:gap-3">
               <Button
@@ -1262,10 +1258,10 @@ export function OvernattingSection({
                 variant="outline"
                 onClick={() => setUnitDialogOpen(false)}
               >
-                Avbryt
+                {t("common.actions.cancel")}
               </Button>
               <Button type="submit" variant="success">
-                Lagre
+                {t("common.actions.save")}
               </Button>
             </DialogFooter>
           </form>
@@ -1283,7 +1279,7 @@ export function OvernattingSection({
         >
           <DialogHeader className="shrink-0 border-b border-rn-border-strong/50 px-6 pb-4 pt-6 sm:px-8">
             <DialogTitle className="font-heading text-app-lg md:text-app-xl">
-              Rediger reservasjon
+              {t("overnatting.editReservation")}
             </DialogTitle>
           </DialogHeader>
           {editingRes ? (
@@ -1296,15 +1292,17 @@ export function OvernattingSection({
             >
               <div className={cn(RN_MODAL_SCROLL_BODY, "space-y-5 px-6 py-5 sm:px-8")}>
                 <div className="rounded-md border border-rn-border-strong/45 bg-muted/25 px-3.5 py-3">
-                  <p className={dialogSectionTitleClass}>Kunde</p>
+                  <p className={dialogSectionTitleClass}>{t("overnatting.customerSection")}</p>
                   <p className="mt-1 font-heading text-app-base font-semibold text-rn-text-heading">
-                    {editingRes.customerName}
+                    {editingRes.customerName === UNKNOWN_CUSTOMER
+                      ? t("overnatting.unknownCustomer")
+                      : editingRes.customerName}
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <Label className={labelClass} htmlFor={`${rid}-erun`}>
-                    Enhet
+                    {t("overnatting.tableUnit")}
                   </Label>
                   <FormSelectField
                     name="unitId"
@@ -1313,7 +1311,10 @@ export function OvernattingSection({
                     className={cn(fieldClass, "font-medium")}
                     options={sortedUnits.map((u) => ({
                       value: u.id,
-                      label: `${u.name} (maks ${u.maxGuests} gjester)`,
+                      label: t("overnatting.unitMaxGuests", {
+                        name: u.name,
+                        count: u.maxGuests,
+                      }),
                     }))}
                   />
                   {editResForm.formState.errors.unitId ? (
@@ -1325,16 +1326,15 @@ export function OvernattingSection({
 
                 <div className="space-y-3 rounded-md border-2 border-rn-border-strong/40 bg-rn-surface-wash/25 p-4 sm:p-5">
                   <div className="space-y-1">
-                    <p className={dialogSectionTitleClass}>Tidspunkt</p>
+                    <p className={dialogSectionTitleClass}>{t("overnatting.timeSection")}</p>
                     <p className="text-app-xs leading-snug text-muted-foreground">
-                      Datoer styrer netter i kalenderen. Klokkeslett er valgfritt og vises i
-                      listen.
+                      {t("overnatting.timeSectionHint")}
                     </p>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label className={labelClass} htmlFor={`${rid}-ercid`}>
-                        Ankomst
+                        {t("overnatting.tableArrival")}
                       </Label>
                       <Controller
                         name="checkInDate"
@@ -1357,7 +1357,7 @@ export function OvernattingSection({
                     </div>
                     <div className="space-y-2">
                       <Label className={labelClass} htmlFor={`${rid}-ercod`}>
-                        Avreise
+                        {t("overnatting.tableDeparture")}
                       </Label>
                       <Controller
                         name="checkOutDate"
@@ -1380,9 +1380,9 @@ export function OvernattingSection({
                     </div>
                     <div className="space-y-2">
                       <Label className={labelClass} htmlFor={`${rid}-ercit`}>
-                        Innsjekk{" "}
+                        {t("overnatting.checkIn")}{" "}
                         <span className="font-normal normal-case text-muted-foreground">
-                          (valgfritt)
+                          {t("overnatting.optional")}
                         </span>
                       </Label>
                       <Input
@@ -1400,9 +1400,9 @@ export function OvernattingSection({
                     </div>
                     <div className="space-y-2">
                       <Label className={labelClass} htmlFor={`${rid}-ercot`}>
-                        Utsjekk{" "}
+                        {t("overnatting.checkOut")}{" "}
                         <span className="font-normal normal-case text-muted-foreground">
-                          (valgfritt)
+                          {t("overnatting.optional")}
                         </span>
                       </Label>
                       <Input
@@ -1424,7 +1424,7 @@ export function OvernattingSection({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label className={labelClass} htmlFor={`${rid}-rg`}>
-                      Gjester
+                      {t("overnatting.tableGuests")}
                     </Label>
                     <Input
                       id={`${rid}-rg`}
@@ -1441,7 +1441,7 @@ export function OvernattingSection({
                   </div>
                   <div className="space-y-2">
                     <Label className={labelClass} htmlFor={`${rid}-rst`}>
-                      Status
+                      {t("common.fields.status")}
                     </Label>
                     <FormSelectField
                       name="status"
@@ -1450,10 +1450,7 @@ export function OvernattingSection({
                       className={cn(fieldClass, "font-medium")}
                       options={toStringOptions(
                         ACCOMMODATION_RESERVATION_STATUSES,
-                        (s) =>
-                          ACCOMMODATION_RESERVATION_LABELS[
-                            s as keyof typeof ACCOMMODATION_RESERVATION_LABELS
-                          ],
+                        (s) => statusLabel(s as AccommodationReservationStatus, t),
                       )}
                     />
                   </div>
@@ -1461,9 +1458,9 @@ export function OvernattingSection({
 
                 <div className="space-y-2">
                   <Label className={labelClass} htmlFor={`${rid}-rp`}>
-                    Totalpris{" "}
+                    {t("overnatting.totalPriceOptional")}{" "}
                     <span className="font-normal normal-case text-muted-foreground">
-                      (valgfritt)
+                      {t("overnatting.optional")}
                     </span>
                   </Label>
                   <PriceInput
@@ -1481,7 +1478,7 @@ export function OvernattingSection({
 
                 <div className="space-y-2">
                   <Label className={labelClass} htmlFor={`${rid}-rn`}>
-                    Notat
+                    {t("common.fields.notes")}
                   </Label>
                   <Textarea
                     id={`${rid}-rn`}
@@ -1504,7 +1501,7 @@ export function OvernattingSection({
                   className="w-full sm:w-auto"
                   onClick={() => setDeleteResConfirmOpen(true)}
                 >
-                  Slett reservasjon
+                  {t("overnatting.deleteReservation")}
                 </Button>
                 <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-end sm:gap-3">
                   <Button
@@ -1513,14 +1510,14 @@ export function OvernattingSection({
                     className="w-full sm:w-auto"
                     onClick={() => setEditResOpen(false)}
                   >
-                    Avbryt
+                    {t("common.actions.cancel")}
                   </Button>
                   <Button
                     type="submit"
                     variant="success"
                     className="w-full sm:w-auto"
                   >
-                    Lagre
+                    {t("common.actions.save")}
                   </Button>
                 </div>
               </DialogFooter>
@@ -1534,13 +1531,13 @@ export function OvernattingSection({
         onOpenChange={(open) => {
           if (!open) setDeleteUnitTarget(null);
         }}
-        title="Slette enhet?"
+        title={t("overnatting.deleteUnitTitle")}
         description={
           deleteUnitTarget
-            ? `«${deleteUnitTarget.name}» fjernes permanent. Enheten kan ikke slettes hvis den har reservasjoner.`
+            ? t("overnatting.deleteUnitDescription", { name: deleteUnitTarget.name })
             : null
         }
-        confirmLabel="Ja, slett enhet"
+        confirmLabel={t("overnatting.confirmDeleteUnit")}
         busy={deleteBusy}
         onConfirm={confirmDeleteUnit}
       />
@@ -1548,13 +1545,18 @@ export function OvernattingSection({
       <ConfirmDeleteDialog
         open={deleteResConfirmOpen}
         onOpenChange={setDeleteResConfirmOpen}
-        title="Slette reservasjon?"
+        title={t("overnatting.deleteReservationTitle")}
         description={
           editingRes
-            ? `Reservasjonen for ${editingRes.customerName} slettes permanent. Dette kan ikke angres.`
+            ? t("overnatting.deleteReservationDescription", {
+                customer:
+                  editingRes.customerName === UNKNOWN_CUSTOMER
+                    ? t("overnatting.unknownCustomer")
+                    : editingRes.customerName,
+              })
             : null
         }
-        confirmLabel="Ja, slett reservasjon"
+        confirmLabel={t("overnatting.confirmDeleteReservation")}
         busy={deleteBusy}
         onConfirm={confirmDeleteReservation}
       />

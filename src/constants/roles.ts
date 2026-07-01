@@ -10,15 +10,6 @@ export type UserRole = (typeof USER_ROLES)[number];
 
 export const DEFAULT_USER_ROLE: UserRole = "viewer";
 
-/** Short labels for the app shell / header. */
-export const ROLE_DISPLAY_LABELS: Record<UserRole, string> = {
-  owner: "Hovedeier",
-  admin: "Administrator",
-  manager: "Leder",
-  accountant: "Regnskap",
-  viewer: "Lesertilgang",
-};
-
 export const SUBSCRIPTION_STATUSES = [
   "active",
   "trialing",

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { getDefaultT } from "@/lib/i18n/default-messages";
 import type { Database } from "@/types/database.types";
 
 export type DeleteCustomerResult =
@@ -15,6 +16,7 @@ export async function deleteCustomerWithClient(
   organizationId: string,
   customerId: string,
 ): Promise<DeleteCustomerResult> {
+  const t = getDefaultT();
   const [bookings, inquiries, accommodation] = await Promise.all([
     supabase
       .from("bookings")
@@ -50,14 +52,23 @@ export async function deleteCustomerWithClient(
   if (bookingCount > 0) {
     return {
       ok: false,
-      error: `Kunden har ${bookingCount} ${bookingCount === 1 ? "reservasjon" : "reservasjoner"}. Slett eller flytt dem først.`,
+      error: t("serverErrors.customers.hasBookings", {
+        count: bookingCount,
+        bookingWord:
+          bookingCount === 1
+            ? t("serverErrors.customers.bookingSingular")
+            : t("serverErrors.customers.bookingPlural"),
+      }),
     };
   }
 
   if (accommodationCount > 0) {
     return {
       ok: false,
-      error: `Kunden har ${accommodationCount} overnattingsreservasjon${accommodationCount === 1 ? "" : "er"}. Slett dem først under Overnatting.`,
+      error: t("serverErrors.customers.hasAccommodation", {
+        count: accommodationCount,
+        pluralSuffix: accommodationCount === 1 ? "" : "er",
+      }),
     };
   }
 

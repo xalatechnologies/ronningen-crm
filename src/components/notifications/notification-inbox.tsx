@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FormSelect } from "@/components/ui/form-select";
-import { formatNotificationCategory } from "@/lib/notifications/notification-events";
+import { useTranslation } from "@/i18n/client";
 import type { NotificationCategory } from "@/lib/notifications/notification-events";
 import {
   filterByCategory,
@@ -22,6 +22,7 @@ import { RN_CARD_SHELL, RN_SEGMENT_CONTROL, RN_TEXT_SEGMENT } from "@/lib/rn-ui"
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/providers/notification-provider";
 import { format, formatDistanceToNow } from "date-fns";
+import { enGB } from "date-fns/locale/en-GB";
 import { nb } from "date-fns/locale/nb";
 import {
   Bell,
@@ -33,25 +34,21 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import type { TranslationKey } from "@/i18n/types";
 
-const CATEGORY_OPTIONS: { value: NotificationCategory | "all"; label: string }[] =
-  [
-    { value: "all", label: "Alle kategorier" },
-    { value: "platform", label: "Plattform" },
-    { value: "billing", label: "Abonnement" },
-    { value: "booking", label: "Reservasjon" },
-    { value: "inquiry", label: "Forespørsel" },
-    { value: "accommodation", label: "Overnatting" },
-    { value: "team", label: "Team" },
-    { value: "support", label: "Support" },
-  ];
-
-function formatWhen(iso: string): string {
-  const date = new Date(iso);
-  const relative = formatDistanceToNow(date, { addSuffix: true, locale: nb });
-  const absolute = format(date, "d. MMM yyyy, HH:mm", { locale: nb });
-  return `${relative} · ${absolute}`;
-}
+const CATEGORY_KEYS: Record<
+  NotificationCategory | "all",
+  TranslationKey | "notifications.inbox.allCategories"
+> = {
+  all: "notifications.inbox.allCategories",
+  platform: "notifications.inbox.categories.platform",
+  billing: "notifications.inbox.categories.billing",
+  booking: "notifications.inbox.categories.booking",
+  inquiry: "notifications.inbox.categories.inquiry",
+  accommodation: "notifications.inbox.categories.accommodation",
+  team: "notifications.inbox.categories.team",
+  support: "notifications.inbox.categories.support",
+};
 
 function categoryBadgeClass(category: string): string {
   switch (category) {
@@ -96,15 +93,18 @@ function NotificationEmptyState({
   readFilter: UserNotificationFilter;
   categoryFilter: NotificationCategory | "all";
 }) {
+  const { t } = useTranslation();
   const filteredEmpty = hasNotifications;
-  const title = filteredEmpty ? "Ingen treff" : "Ingen varsler";
+  const title = filteredEmpty
+    ? t("notifications.inbox.noResults")
+    : t("notifications.inbox.empty");
   const description = filteredEmpty
     ? readFilter === "unread"
-      ? "Du har ingen uleste varsler med valgte filtre."
+      ? t("notifications.inbox.emptyUnread")
       : categoryFilter !== "all"
-        ? "Prøv en annen kategori eller vis alle varsler."
-        : "Ingen varsler matcher filtrene dine."
-    : "Nye meldinger fra plattformen og organisasjonen vises her.";
+        ? t("notifications.inbox.emptyCategory")
+        : t("notifications.inbox.emptyFiltered")
+    : t("notifications.inbox.emptyDefault");
 
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
@@ -126,6 +126,7 @@ function NotificationEmptyState({
 }
 
 export function NotificationInbox() {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const { scopedNotifications, markRead, markAllRead, deleteNotification, loading } =
     useNotifications();
@@ -133,6 +134,19 @@ export function NotificationInbox() {
   const [categoryFilter, setCategoryFilter] = useState<
     NotificationCategory | "all"
   >("all");
+
+  const dateFnsLocale = locale === "nb" ? nb : enGB;
+
+  const categoryOptions = useMemo(
+    () =>
+      (Object.keys(CATEGORY_KEYS) as Array<NotificationCategory | "all">).map(
+        (value) => ({
+          value,
+          label: t(CATEGORY_KEYS[value]),
+        }),
+      ),
+    [t],
+  );
 
   const unreadTotal = useMemo(
     () => scopedNotifications.filter((n) => !n.read_at).length,
@@ -147,11 +161,26 @@ export function NotificationInbox() {
 
   const hasUnread = unreadTotal > 0;
 
+  function formatWhen(iso: string): string {
+    const date = new Date(iso);
+    const relative = formatDistanceToNow(date, {
+      addSuffix: true,
+      locale: dateFnsLocale,
+    });
+    const absolute = format(date, "d. MMM yyyy, HH:mm", { locale: dateFnsLocale });
+    return `${relative} · ${absolute}`;
+  }
+
+  function categoryLabel(category: string): string {
+    const key = CATEGORY_KEYS[category as NotificationCategory];
+    return key ? t(key) : category;
+  }
+
   return (
     <div className="flex min-w-0 flex-col gap-6">
       <AppPageHeader
-        title="Varsler"
-        description="Meldinger fra plattformen og din organisasjon. Viktige varsler vises også som popup i appen."
+        title={t("notifications.inbox.title")}
+        description={t("notifications.inbox.description")}
         surface="card"
         actions={
           <Button
@@ -161,7 +190,7 @@ export function NotificationInbox() {
             onClick={() => void markAllRead()}
           >
             <CheckCheck className="size-4" aria-hidden />
-            Merk alle som lest
+            {t("notifications.inbox.markAllRead")}
           </Button>
         }
         toolbar={
@@ -172,12 +201,12 @@ export function NotificationInbox() {
                 "inline-flex w-full max-w-md gap-1.5 p-1.5",
               )}
               role="group"
-              aria-label="Filtrer etter lesestatus"
+              aria-label={t("notifications.inbox.filterReadAria")}
             >
               {(
                 [
-                  { value: "all" as const, label: "Alle" },
-                  { value: "unread" as const, label: "Uleste" },
+                  { value: "all" as const, label: t("notifications.inbox.all") },
+                  { value: "unread" as const, label: t("notifications.inbox.unread") },
                 ] as const
               ).map((option) => {
                 const active = readFilter === option.value;
@@ -215,8 +244,8 @@ export function NotificationInbox() {
                 onValueChange={(value) =>
                   setCategoryFilter(value as NotificationCategory | "all")
                 }
-                options={CATEGORY_OPTIONS}
-                aria-label="Filtrer etter kategori"
+                options={categoryOptions}
+                aria-label={t("notifications.inbox.filterCategoryAria")}
                 className="min-h-10"
               />
             </div>
@@ -229,14 +258,22 @@ export function NotificationInbox() {
         <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
           <p className="text-app-sm text-muted-foreground">
             {loading
-              ? "Laster …"
+              ? t("notifications.inbox.loading")
               : filtered.length === 0
-                ? "0 varsler"
-                : `${filtered.length} varsel${filtered.length === 1 ? "" : "er"}`}
+                ? t("notifications.inbox.countZero")
+                : filtered.length === 1
+                  ? t("notifications.inbox.countSingular", {
+                      count: filtered.length,
+                    })
+                  : t("notifications.inbox.countPlural", {
+                      count: filtered.length,
+                    })}
           </p>
           {hasUnread ? (
             <Badge variant="outline" className="border-success/40 text-success">
-              {unreadTotal} ulest{unreadTotal === 1 ? "" : "e"}
+              {unreadTotal === 1
+                ? t("notifications.inbox.unreadSingular", { count: unreadTotal })
+                : t("notifications.inbox.unreadPlural", { count: unreadTotal })}
             </Badge>
           ) : null}
         </div>
@@ -289,7 +326,7 @@ export function NotificationInbox() {
                           categoryBadgeClass(notification.category),
                         )}
                       >
-                        {formatNotificationCategory(notification.category)}
+                        {categoryLabel(notification.category)}
                       </Badge>
                     </div>
 
@@ -313,7 +350,7 @@ export function NotificationInbox() {
                         }}
                       >
                         <ExternalLink className="size-3.5" aria-hidden />
-                        {notification.action_label ?? "Åpne"}
+                        {notification.action_label ?? t("notifications.inbox.open")}
                       </Button>
                     ) : null}
                   </div>
@@ -325,7 +362,7 @@ export function NotificationInbox() {
                         "hover:bg-muted/50 hover:text-foreground focus-visible:ring-2 focus-visible:ring-success/35",
                         "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 data-popup-open:opacity-100",
                       )}
-                      aria-label="Handlinger for varsel"
+                      aria-label={t("notifications.inbox.actionsAria")}
                     >
                       <MoreHorizontal className="size-4" aria-hidden />
                     </DropdownMenuTrigger>
@@ -335,7 +372,7 @@ export function NotificationInbox() {
                           onSelect={() => void markRead(notification.id)}
                         >
                           <CheckCheck className="size-4" aria-hidden />
-                          Merk som lest
+                          {t("notifications.inbox.markRead")}
                         </DropdownMenuItem>
                       ) : null}
                       {notification.action_url ? (
@@ -346,7 +383,7 @@ export function NotificationInbox() {
                           }}
                         >
                           <ExternalLink className="size-4" aria-hidden />
-                          {notification.action_label ?? "Åpne"}
+                          {notification.action_label ?? t("notifications.inbox.open")}
                         </DropdownMenuItem>
                       ) : null}
                       {(isUnread || notification.action_url) ? (
@@ -357,7 +394,7 @@ export function NotificationInbox() {
                         onSelect={() => void deleteNotification(notification.id)}
                       >
                         <Trash2 className="size-4" aria-hidden />
-                        Slett
+                        {t("notifications.inbox.delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

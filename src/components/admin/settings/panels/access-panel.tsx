@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslation } from "@/i18n/client";
 import { AdminDataPanel } from "@/components/admin/admin-data-panel";
 import { AdminTableDetailLink } from "@/components/admin/admin-table-detail-link";
 import {
@@ -16,14 +19,15 @@ export function AccessPanel({
 }: {
   settings: AdminSettingsOverview;
 }) {
+  const { t } = useTranslation();
   const { platformAdmins } = settings;
 
   return (
-    <AdminDataPanel title="Plattformadministratorer">
+    <AdminDataPanel title={t("admin.plattformadministratorer")}>
       <Table className="admin-ops-table">
         <TableHeader>
           <TableRow>
-            <TableHead>Bruker</TableHead>
+            <TableHead>{t("admin.bruker")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -43,7 +47,7 @@ export function AccessPanel({
           {platformAdmins.length === 0 ? (
             <TableRow>
               <TableCell className="py-8 text-center app-text-muted">
-                Ingen plattformadministratorer funnet.
+                {t("adminLabels.empty.noPlatformAdmins")}
               </TableCell>
             </TableRow>
           ) : null}

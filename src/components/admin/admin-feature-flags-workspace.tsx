@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminConfirmActionDialog } from "@/components/admin/admin-confirm-action-dialog";
 import {
   AdminFeatureFlagFilterBar,
@@ -14,7 +15,7 @@ import {
 } from "@/lib/admin/dashboard-links";
 import {
   computeFeatureFlagFilterCounts,
-  FEATURE_FLAG_STATUS_LABELS,
+  featureFlagStatusLabel,
   matchesFeatureFlagFilter,
   resolveFeatureFlagStatus,
   type FeatureFlagStatus,
@@ -26,7 +27,7 @@ import type {
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import {
   ChevronDown,
   ChevronRight,
@@ -121,6 +122,7 @@ function statusBadgeClass(status: FeatureFlagStatus): string {
 }
 
 function FeatureFlagStatusBadge({ flag }: { flag: AdminFeatureFlag }) {
+  const { t } = useTranslation();
   const status = resolveFeatureFlagStatus(flag);
   return (
     <span
@@ -129,7 +131,7 @@ function FeatureFlagStatusBadge({ flag }: { flag: AdminFeatureFlag }) {
         statusBadgeClass(status),
       )}
     >
-      {FEATURE_FLAG_STATUS_LABELS[status]}
+      {featureFlagStatusLabel(status, t)}
     </span>
   );
 }
@@ -151,6 +153,7 @@ export function AdminFeatureFlagsWorkspace({
   initialFilter = "all",
   initialSearch = "",
 }: AdminFeatureFlagsWorkspaceProps) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [filter, setFilter] = useState<AdminFeatureFlagFilter>(initialFilter);
@@ -209,11 +212,11 @@ export function AdminFeatureFlagsWorkspace({
     setConfirmToggle(null);
 
     if (!result.ok) {
-      toast.error("Kunne ikke oppdatere flagg", { description: result.error });
+      toast.error(t("admin.kunne_ikke_oppdatere_flagg"), { description: result.error });
       return;
     }
 
-    toast.success("Funksjonsflagg oppdatert");
+    toast.success(t("admin.funksjonsflagg_oppdatert"));
     router.refresh();
   }
 
@@ -229,20 +232,20 @@ export function AdminFeatureFlagsWorkspace({
             className="mb-0"
             surface="default"
             compact
-            title="Funksjonsflagg"
-            description="Kontrollert utrulling av plattformfunksjoner."
+            title={t("admin.funksjonsflagg")}
+            description={t("admin.kontrollert_utrulling_av_plattformfunksjoner")}
           />
         </div>
 
         <section
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
-          aria-label="Nøkkeltall"
+          aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <FeatureFlagsKpiTile
-              label="Totalt"
+              label={t("admin.totalt")}
               value={stats.total}
-              caption="Registrerte funksjonsflagg"
+              caption={t("admin.registrerte_funksjonsflagg")}
               icon={Flag}
               active={filter === "all" && !search.trim()}
               onClick={() => {
@@ -251,17 +254,17 @@ export function AdminFeatureFlagsWorkspace({
               }}
             />
             <FeatureFlagsKpiTile
-              label="Aktive globalt"
+              label={t("admin.aktive_globalt")}
               value={stats.activeGlobal}
-              caption="Slått på for alle organisasjoner"
+              caption={t("admin.slatt_pa_for_alle_organisasjoner")}
               icon={Settings2}
               active={filter === "active"}
               onClick={() => updateFilter("active")}
             />
             <FeatureFlagsKpiTile
-              label="Gradvis utrulling"
+              label={t("admin.gradvis_utrulling")}
               value={stats.partialRollout}
-              caption="Delvis aktivert via prosent"
+              caption={t("admin.delvis_aktivert_via_prosent")}
               icon={Percent}
               iconContainerClassName="rounded-md bg-amber-500/10 p-2"
               iconClassName="size-6 text-amber-800 dark:text-amber-300"
@@ -274,9 +277,9 @@ export function AdminFeatureFlagsWorkspace({
               onClick={() => updateFilter("rollout")}
             />
             <FeatureFlagsKpiTile
-              label="Org-unntak"
+              label={t("admin.org_unntak")}
               value={stats.overrideTotal}
-              caption="Organisasjonsspesifikke overstyringer"
+              caption={t("admin.organisasjonsspesifikke_overstyringer")}
               icon={Layers}
             />
           </div>
@@ -298,11 +301,11 @@ export function AdminFeatureFlagsWorkspace({
             <thead>
               <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
                 <th className={cn(tableHeadClass, "w-10")} />
-                <th className={tableHeadClass}>Nøkkel</th>
-                <th className={tableHeadClass}>Beskrivelse</th>
-                <th className={tableHeadClass}>Status</th>
-                <th className={tableHeadClass}>Utrulling</th>
-                <th className={tableHeadClass}>Sist endret</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.key")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.description")}</th>
+                <th className={tableHeadClass}>{t("admin.status")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.rollout")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.lastChanged")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-rn-border-strong/50">
@@ -324,7 +327,7 @@ export function AdminFeatureFlagsWorkspace({
                           }
                           className="inline-flex size-8 items-center justify-center rounded-md border-2 border-rn-border-strong text-muted-foreground transition-colors hover:bg-muted/40"
                           aria-expanded={expanded ? "true" : "false"}
-                          aria-label={expanded ? "Skjul detaljer" : "Vis detaljer"}
+                          aria-label={expanded ? t("admin.skjul_detaljer") : t("admin.vis_detaljer")}
                         >
                           {expanded ? (
                             <ChevronDown className="size-4" />
@@ -340,7 +343,7 @@ export function AdminFeatureFlagsWorkspace({
                         <p>{flag.description}</p>
                         {showEnvHint ? (
                           <p className="mt-1 text-app-xs text-amber-700 dark:text-amber-300">
-                            Env-fallback aktiv
+                            {t("admin.env_fallback_aktiv")}
                           </p>
                         ) : null}
                       </td>
@@ -364,7 +367,7 @@ export function AdminFeatureFlagsWorkspace({
                       </td>
                       <td className={cn(tableCellClass, "text-muted-foreground")}>
                         {format(new Date(flag.updatedAt), "d. MMM yyyy HH:mm", {
-                          locale: nb,
+                          locale: getDateFnsLocale(locale),
                         })}
                       </td>
                     </tr>
@@ -392,11 +395,10 @@ export function AdminFeatureFlagsWorkspace({
                   <td colSpan={6}>
                     <div className="space-y-3 px-6 py-16 text-center sm:px-10 sm:py-20 md:px-8">
                       <p className="font-heading text-lg font-bold tracking-tight text-rn-text-heading">
-                        Ingen flagg i dette filteret
+                        {t("adminLabels.empty.noFlagsInFilter")}
                       </p>
                       <p className="mx-auto max-w-lg text-muted-foreground">
-                        Juster søket eller bytt filter. Nullstill ved å velge
-                        «Alle» og tømme søkefeltet.
+                        {t("admin.juster_soket_eller_bytt_filter_nullstill_ved_a_velge_alle_og")}
                       </p>
                     </div>
                   </td>
@@ -408,12 +410,15 @@ export function AdminFeatureFlagsWorkspace({
 
         <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
           <p className="app-text-secondary">
-            Viser {filtered.length} av {flags.length} flagg
+            {t("admin.viser_av_flagg", {
+              shown: filtered.length,
+              total: flags.length,
+            })}
           </p>
         </div>
 
         <p className="border-t border-rn-border-strong/50 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
-          Endringer logges i{" "}
+          {t("admin.feature_flags_changes_logged_prefix")}{" "}
           <Link
             href={adminAuditHref({
               category: "platform",
@@ -421,10 +426,9 @@ export function AdminFeatureFlagsWorkspace({
             })}
             className="font-semibold text-success hover:underline"
           >
-            revisjonsloggen
+            {t("admin.revisjonslogg")}
           </Link>
-          . Gradvis utrulling gjelder per organisasjon basert på stabil hash —
-          ikke alle org får funksjonen før prosenten når 100 %.
+          {t("admin.feature_flags_changes_logged_suffix")}
         </p>
       </div>
 
@@ -435,8 +439,8 @@ export function AdminFeatureFlagsWorkspace({
         }}
         title={
           confirmToggle?.enabled
-            ? "Aktiver globalt?"
-            : "Deaktiver globalt?"
+            ? t("admin.aktiver_globalt_2")
+            : t("admin.deaktiver_globalt_2")
         }
         description={
           confirmFlag ? (
@@ -453,10 +457,10 @@ export function AdminFeatureFlagsWorkspace({
               )}
             </>
           ) : (
-            "Bekreft endring av funksjonsflagg."
+            t("admin.bekreft_endring_av_funksjonsflagg")
           )
         }
-        confirmLabel={confirmToggle?.enabled ? "Aktiver" : "Deaktiver"}
+        confirmLabel={confirmToggle?.enabled ? t("admin.aktiver") : t("admin.deaktiver")}
         confirmVariant={confirmToggle?.enabled ? "default" : "destructive"}
         busy={busyKey !== null}
         onConfirm={() => void handleConfirmGlobalToggle()}

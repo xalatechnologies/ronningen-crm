@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -7,7 +8,7 @@ import { toast } from "sonner";
 
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { Button } from "@/components/ui/button";
-import { BILLING_PLANS, getBillingPlan } from "@/config/billing-plans";
+import { BILLING_PLANS, billingPlanFeatureLabel, getBillingPlan } from "@/config/billing-plans";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { createCheckoutSession } from "@/lib/billing/actions/create-checkout-session";
 import { createPortalSession } from "@/lib/billing/actions/create-portal-session";
@@ -26,7 +27,8 @@ import {
   SAAS_MONTHLY_PRICE_NOK,
   SAAS_TRIAL_DAYS,
 } from "@/lib/billing/constants";
-import { SUBSCRIPTION_STATUS_LABELS } from "@/lib/admin/subscription-labels";
+import { statusLabel } from "@/lib/navigation/nav-labels";
+import type { Translator } from "@/i18n/types";
 import {
   isTrialPeriodExpired,
   trialDaysLeft,
@@ -35,7 +37,8 @@ import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { enGB } from "date-fns/locale/en-GB";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import { Check, ExternalLink, FlaskConical } from "lucide-react";
 
 type SubscriptionRow = {
@@ -61,7 +64,8 @@ function SubscriptionStatusBadge({
   status: string;
   className?: string;
 }) {
-  const label = SUBSCRIPTION_STATUS_LABELS[status] ?? status;
+  const { t, locale } = useTranslation();
+  const label = statusLabel(status, t);
   const tone =
     status === "active"
       ? "border-success/40 bg-success/10 text-success"
@@ -86,10 +90,13 @@ function SubscriptionStatusBadge({
   );
 }
 
-function BillingSettingsSkeleton({ label = "Laster fakturering" }: { label?: string }) {
+function BillingSettingsSkeleton({ label }: { label?: string }) {
+  const { t, locale } = useTranslation();
+  const resolved = label ?? t("organizations.loadingBilling");
+
   return (
-    <div className="flex flex-col gap-6" aria-busy="true" aria-label={label}>
-      <p className="text-app-sm font-medium text-muted-foreground">{label}…</p>
+    <div className="flex flex-col gap-6" aria-busy="true" aria-label={resolved}>
+      <p className="text-app-sm font-medium text-muted-foreground">{resolved}…</p>
       <div className={cn(RN_CARD_SHELL, "h-28 animate-pulse bg-muted/20")} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,320px)]">
         <div className={cn(RN_CARD_SHELL, "h-64 animate-pulse bg-muted/20")} />
@@ -99,51 +106,54 @@ function BillingSettingsSkeleton({ label = "Laster fakturering" }: { label?: str
   );
 }
 
-function resolveAttentionMessage(input: {
-  billingOn: boolean;
-  status: string;
-  trialExpired: boolean;
-  showCheckout: boolean;
-  offerCheckout: boolean;
-  hasStripeSubscription: boolean;
-  isOwner: boolean;
-  daysLeft: number | null;
-}): AttentionMessage | null {
+function resolveAttentionMessage(
+  input: {
+    billingOn: boolean;
+    status: string;
+    trialExpired: boolean;
+    showCheckout: boolean;
+    offerCheckout: boolean;
+    hasStripeSubscription: boolean;
+    isOwner: boolean;
+    daysLeft: number | null;
+  },
+  t: Translator,
+): AttentionMessage | null {
   if (!input.billingOn) {
     return {
       tone: "info",
-      title: "Fakturering er ikke aktivert",
-      body: "Kontakt support for å endre eller aktivere abonnement i dette miljøet.",
+      title: t("billing.attention.billingDisabledTitle"),
+      body: t("billing.attention.billingDisabledBody"),
     };
   }
 
   if (input.trialExpired) {
     return {
       tone: "destructive",
-      title: "Prøveperioden er over",
+      title: t("billing.attention.trialExpiredTitle"),
       body: input.isOwner
-        ? "Fullfør betaling for å gjenopprette tilgang til appen."
-        : "Organisasjonseieren må fullføre betaling for å gjenopprette tilgang.",
+        ? t("billing.attention.trialExpiredOwner")
+        : t("billing.attention.trialExpiredMember"),
     };
   }
 
   if (input.status === "past_due") {
     return {
       tone: "destructive",
-      title: "Betalingen mislyktes",
+      title: t("billing.attention.pastDueTitle"),
       body: input.isOwner
-        ? "Oppdater betalingskortet i Stripe for å gjenopprette full tilgang."
-        : "Organisasjonseieren må oppdatere betalingskortet.",
+        ? t("billing.attention.pastDueOwner")
+        : t("billing.attention.pastDueMember"),
     };
   }
 
   if (input.status === "incomplete") {
     return {
       tone: "warning",
-      title: "Abonnementet er ikke aktivert",
+      title: t("billing.attention.incompleteTitle"),
       body: input.isOwner
-        ? "Fullfør betaling for å aktivere abonnementet og få tilgang til appen."
-        : "Organisasjonseieren må fullføre betaling for å aktivere abonnementet.",
+        ? t("billing.attention.incompleteOwner")
+        : t("billing.attention.incompleteMember"),
     };
   }
 
@@ -154,32 +164,32 @@ function resolveAttentionMessage(input: {
   ) {
     const daysLabel =
       input.daysLeft != null && input.daysLeft >= 0
-        ? `${input.daysLeft} ${input.daysLeft === 1 ? "dag" : "dager"}`
+        ? `${input.daysLeft} ${input.daysLeft === 1 ? t("billing.attention.daySingular") : t("billing.attention.dayPlural")}`
         : null;
     const endingSoon = input.daysLeft != null && input.daysLeft <= 7;
 
     return {
       tone: endingSoon ? "warning" : "info",
       title: endingSoon
-        ? "Prøveperioden utløper snart"
-        : "Gratis prøveperiode",
+        ? t("billing.attention.trialEndingTitle")
+        : t("billing.attention.trialActiveTitle"),
       body: input.isOwner
         ? daysLabel
-          ? `Du har ${daysLabel} igjen av prøveperioden. Legg til betaling når du er klar for å fortsette etter prøven.`
-          : "Du er i prøveperiode. Legg til betaling når du er klar for å fortsette etter prøven."
+          ? t("billing.attention.trialOwnerWithDays", { days: daysLabel })
+          : t("billing.attention.trialOwner")
         : daysLabel
-          ? `Organisasjonen har ${daysLabel} igjen av prøveperioden. Eieren kan legge til betaling under Fakturering.`
-          : "Organisasjonen er i prøveperiode. Eieren kan legge til betaling under Fakturering.",
+          ? t("billing.attention.trialMemberWithDays", { days: daysLabel })
+          : t("billing.attention.trialMember"),
     };
   }
 
   if (input.status === "canceled") {
     return {
       tone: "info",
-      title: "Abonnementet er avsluttet",
+      title: t("billing.attention.canceledTitle"),
       body: input.isOwner
-        ? "Start et nytt abonnement for å få tilgang igjen."
-        : "Organisasjonseieren kan starte et nytt abonnement.",
+        ? t("billing.attention.canceledOwner")
+        : t("billing.attention.canceledMember"),
     };
   }
 
@@ -205,6 +215,8 @@ export function BillingSettingsPanel({
   billingModeLabel: string;
   isOwner: boolean;
 }) {
+  const { t, formatCurrency, locale } = useTranslation();
+  const dateLocale = getDateFnsLocale(locale);
   const router = useRouter();
   const supabase = useSupabase();
   const { currentOrganization, currentOrganizationId, loading, refreshOrganizations } =
@@ -237,7 +249,7 @@ export function BillingSettingsPanel({
     if (checkout === "canceled") {
       if (!checkoutHandledRef.current) {
         checkoutHandledRef.current = true;
-        toast.message("Betaling avbrutt. Fullfør for å få tilgang til appen.");
+        toast.message(t("billing.checkoutCanceled"));
       }
       clearBillingCheckoutParams();
       return;
@@ -264,9 +276,7 @@ export function BillingSettingsPanel({
         return;
       }
 
-      toast.error(
-        "Betalingen er registrert, men vi kunne ikke oppdatere abonnementet ennå. Prøv «Oppdater status» eller vent et øyeblikk.",
-      );
+      toast.error(t("billing.syncFailed"));
       checkoutHandledRef.current = false;
       clearBillingCheckoutParams();
 
@@ -331,7 +341,7 @@ export function BillingSettingsPanel({
       return;
     }
 
-    toast.success("Abonnement oppdatert.");
+    toast.success(t("billing.subscriptionUpdated"));
     await refreshOrganizations();
     await reloadSubscription(currentOrganizationId);
     clearBillingCheckoutParams();
@@ -369,7 +379,9 @@ export function BillingSettingsPanel({
   if (subLoading || checkoutSyncing || (loading && !currentOrganization)) {
     return (
       <BillingSettingsSkeleton
-        label={checkoutSyncing ? "Aktiverer abonnement" : "Laster fakturering"}
+        label={
+          checkoutSyncing ? t("billing.activating") : t("billing.loading")
+        }
       />
     );
   }
@@ -382,10 +394,8 @@ export function BillingSettingsPanel({
           "px-6 py-8 text-center text-muted-foreground",
         )}
       >
-        <p className="font-medium text-foreground">Ingen aktiv organisasjon</p>
-        <p className="mt-2 text-app-sm">
-          Opprett en organisasjon før du kan administrere abonnement.
-        </p>
+        <p className="font-medium text-foreground">{t("billing.noActiveOrg")}</p>
+        <p className="mt-2 text-app-sm">{t("billing.createOrgFirst")}</p>
       </div>
     );
   }
@@ -437,25 +447,28 @@ export function BillingSettingsPanel({
     status,
   });
 
-  const attention = resolveAttentionMessage({
-    billingOn,
-    status,
-    trialExpired,
-    showCheckout,
-    offerCheckout,
-    hasStripeSubscription,
-    isOwner,
-    daysLeft,
-  });
+  const attention = resolveAttentionMessage(
+    {
+      billingOn,
+      status,
+      trialExpired,
+      showCheckout,
+      offerCheckout,
+      hasStripeSubscription,
+      isOwner,
+      daysLeft,
+    },
+    t,
+  );
 
   const showCheckoutCta = showCheckout || offerCheckout;
 
   const primaryCtaLabel =
     status === "incomplete" || trialExpired
-      ? "Fullfør betaling"
+      ? t("billing.completePayment")
       : offerCheckout
-        ? "Legg til betaling"
-        : "Start abonnement";
+        ? t("billing.addPayment")
+        : t("billing.startSubscription");
 
   return (
     <div className="flex flex-col gap-6">
@@ -463,14 +476,10 @@ export function BillingSettingsPanel({
         surface="card"
         compact
         className="mb-0"
-        title="Fakturering"
+        title={t("billing.title")}
         description={
           <>
-            Abonnement og betaling for{" "}
-            <span className="font-medium text-foreground">
-              {currentOrganization.name}
-            </span>
-            .
+            {t("billing.description", { name: currentOrganization.name })}
           </>
         }
         actions={
@@ -505,15 +514,15 @@ export function BillingSettingsPanel({
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-rn-border-strong/50 pb-5">
             <div>
               <h2 className="font-heading text-lg font-semibold text-foreground md:text-xl">
-                Abonnement
+                {t("billing.subscription")}
               </h2>
               <p className="mt-1 text-app-sm text-muted-foreground">
-                Betaling og faktureringsperiode administreres via Stripe.
+                {t("billing.subscriptionDescription")}
               </p>
             </div>
             {billingOn && hasStripeSubscription ? (
               <span className="text-app-xs font-medium text-muted-foreground">
-                Stripe-koblet
+                {t("billing.stripeLinked")}
               </span>
             ) : null}
           </div>
@@ -521,7 +530,7 @@ export function BillingSettingsPanel({
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Nåværende status
+                {t("billing.currentStatus")}
               </dt>
               <dd className="mt-1.5">
                 <SubscriptionStatusBadge status={status} />
@@ -529,11 +538,11 @@ export function BillingSettingsPanel({
             </div>
             <div>
               <dt className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Faktureringsperiode
+                {t("billing.billingPeriod")}
               </dt>
               <dd className="mt-1.5 text-app-sm font-medium text-foreground">
                 {periodEnd
-                  ? format(periodEnd, "d. MMMM yyyy", { locale: nb })
+                  ? format(periodEnd, "d. MMMM yyyy", { locale: dateLocale })
                   : "—"}
               </dd>
             </div>
@@ -547,7 +556,7 @@ export function BillingSettingsPanel({
                 disabled={actionLoading || checkoutSyncing}
                 onClick={() => void handleCheckout()}
               >
-                {actionLoading ? "Åpner betaling…" : primaryCtaLabel}
+                {actionLoading ? t("billing.openingPayment") : primaryCtaLabel}
               </Button>
             ) : null}
 
@@ -561,8 +570,8 @@ export function BillingSettingsPanel({
                 onClick={() => void handleRefreshStatus()}
               >
                 {checkoutSyncing || actionLoading
-                  ? "Oppdaterer status…"
-                  : "Oppdater status"}
+                  ? t("billing.refreshingStatus")
+                  : t("billing.refreshStatus")}
               </Button>
             ) : null}
 
@@ -579,15 +588,14 @@ export function BillingSettingsPanel({
                 disabled={actionLoading}
                 onClick={() => void handlePortal()}
               >
-                Administrer i Stripe
+                {t("billing.manageInStripe")}
                 <ExternalLink data-icon="inline-end" aria-hidden />
               </Button>
             ) : null}
 
             {billingOn && (showCheckout || showPortal) && !isOwner ? (
               <p className="rounded-md border border-rn-border-strong/60 bg-muted/25 px-4 py-3 text-app-sm text-muted-foreground">
-                Kun organisasjonseieren kan starte, fullføre eller administrere
-                abonnementet.
+                {t("billing.ownerOnly")}
               </p>
             ) : null}
 
@@ -597,16 +605,15 @@ export function BillingSettingsPanel({
                   href="/app/settings/support"
                   className="font-semibold text-success hover:underline"
                 >
-                  Kontakt support
+                  {t("billing.contactSupportChange")}
                 </Link>{" "}
-                for å endre abonnement.
+                {t("billing.contactSupportSuffix")}
               </p>
             ) : null}
 
             {billingOn && !showCheckout && !showPortal && isOwner && !attention ? (
               <p className="text-app-sm text-muted-foreground">
-                Abonnementet er aktivt. Bruk Stripe-portalen for å oppdatere
-                betalingskort eller se fakturaer.
+                {t("billing.activeHint")}
               </p>
             ) : null}
           </div>
@@ -624,20 +631,19 @@ export function BillingSettingsPanel({
         <aside className={cn(RN_CARD_SHELL, "flex flex-col gap-5 p-5 md:p-6")}>
           <div>
             <p className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Inkludert i planen
+              {t("billing.includedInPlan")}
             </p>
             <h2 className="mt-1 font-heading text-xl font-semibold text-foreground">
               {plan.name}
             </h2>
             <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
-              {SAAS_MONTHLY_PRICE_NOK.toLocaleString("nb-NO")}{" "}
+              {formatCurrency(SAAS_MONTHLY_PRICE_NOK)}{" "}
               <span className="text-base font-medium text-muted-foreground">
-                kr/mnd
+                {t("billing.perMonth")}
               </span>
             </p>
             <p className="mt-2 text-app-sm leading-relaxed text-muted-foreground">
-              {SAAS_TRIAL_DAYS} dagers gratis prøveperiode ved oppstart. Første
-              trekk skjer når prøven er over.
+              {t("billing.trialNote", { days: SAAS_TRIAL_DAYS })}
             </p>
           </div>
 
@@ -651,7 +657,7 @@ export function BillingSettingsPanel({
                   className="mt-0.5 size-4 shrink-0 text-success"
                   aria-hidden
                 />
-                {feature}
+                {billingPlanFeatureLabel(feature, t)}
               </li>
             ))}
           </ul>

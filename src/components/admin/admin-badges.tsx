@@ -1,11 +1,14 @@
+"use client";
+
 import {
-  SUBSCRIPTION_PLAN_LABELS,
-  SUBSCRIPTION_STATUS_LABELS,
+  subscriptionPlanLabel,
+  subscriptionStatusLabel,
 } from "@/lib/admin/subscription-labels";
 import {
-  SUPPORT_STATUS_LABELS,
+  supportStatusLabel,
   type SupportTicketStatus,
 } from "@/lib/admin/support-labels";
+import { useTranslation } from "@/i18n/client";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -18,7 +21,8 @@ export function AdminStatusBadge({
   status: string;
   className?: string;
 }) {
-  const label = SUBSCRIPTION_STATUS_LABELS[status] ?? status;
+  const { t } = useTranslation();
+  const label = subscriptionStatusLabel(status, t);
   const tone =
     status === "active"
       ? "border-success/40 bg-success/10 text-success dark:!text-white"
@@ -48,8 +52,12 @@ export function AdminSupportStatusBadge({
   status: SupportTicketStatus | string;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const key = status as SupportTicketStatus;
-  const label = SUPPORT_STATUS_LABELS[key] ?? status;
+  const label =
+    key === "open" || key === "waiting" || key === "resolved"
+      ? supportStatusLabel(key, t)
+      : status;
   const tone =
     status === "open"
       ? "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300"
@@ -77,6 +85,7 @@ export function AdminPlanBadge({
   plan: string;
   className?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <span
       className={cn(
@@ -84,7 +93,7 @@ export function AdminPlanBadge({
         className,
       )}
     >
-      {SUBSCRIPTION_PLAN_LABELS[plan] ?? plan}
+      {subscriptionPlanLabel(plan, t)}
     </span>
   );
 }
@@ -100,6 +109,7 @@ export function AdminStatCard({
   hint?: ReactNode;
   href?: string;
 }) {
+  const { t } = useTranslation();
   const body = (
     <>
       <p className="dashboard-kpi-label">{label}</p>
@@ -121,7 +131,9 @@ export function AdminStatCard({
     return (
       <Link href={href} className={className}>
         {body}
-        <span className="sr-only">Gå til {label}</span>
+        <span className="sr-only">
+          {t("common.actions.view")} {label}
+        </span>
       </Link>
     );
   }

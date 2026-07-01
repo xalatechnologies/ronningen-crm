@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from "@/i18n/client";
 import {
   formInputToOrganizationUpdate,
   mapOrganizationToInvoiceIssuer,
@@ -76,6 +77,7 @@ export function OrganizationProfileForm({
   organization: OrganizationProfileRow;
   setupMode?: boolean;
 }) {
+  const { t } = useTranslation();
   const supabase = useSupabase();
   const router = useRouter();
   const { currentOrganizationId, refreshOrganizations } =
@@ -113,7 +115,7 @@ export function OrganizationProfileForm({
       orgId = requireOrganizationId(currentOrganizationId);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+        err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
       );
       return;
     }
@@ -124,11 +126,11 @@ export function OrganizationProfileForm({
       .eq("id", orgId);
 
     if (error) {
-      toast.error("Kunne ikke lagre", { description: error.message });
+      toast.error(t("common.toasts.saveFailed"), { description: error.message });
       return;
     }
 
-    toast.success("Organisasjonsprofil lagret");
+    toast.success(t("settings.orgProfile.orgSaved"));
     await refreshOrganizations();
     router.refresh();
 
@@ -145,7 +147,7 @@ export function OrganizationProfileForm({
       ) {
         router.push(TENANT_SETUP_LOKALER_PATH);
       } else {
-        toast.message("Fyll ut org.nr., adresse og kontakt for å gå videre.");
+        toast.message(t("settings.fillOrgToContinue"));
       }
     }
   }
@@ -168,12 +170,12 @@ export function OrganizationProfileForm({
       >
         <FormSection
           icon={Building2}
-          title="Identitet"
-          description="Navn og logo som vises utad."
+          title={t("settings.orgProfile.identity")}
+          description={t("settings.orgProfile.identityDescription")}
         >
           <div className="space-y-2">
             <Label className={labelClass} htmlFor="org-name">
-              Visningsnavn
+              {t("settings.orgProfile.displayName")}
             </Label>
             <Input id="org-name" className={fieldClass} {...register("name")} />
             {errors.name ? (
@@ -184,18 +186,18 @@ export function OrganizationProfileForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label className={labelClass} htmlFor="org-legal">
-                Juridisk navn
+                {t("settings.orgProfile.legalName")}
               </Label>
               <Input
                 id="org-legal"
                 className={fieldClass}
-                placeholder="Valgfritt"
+                placeholder={t("common.actions.optional")}
                 {...register("legalName")}
               />
             </div>
             <div className="space-y-2">
               <Label className={labelClass} htmlFor="org-no">
-                Org.nr.
+                {t("settings.orgProfile.orgNumber")}
               </Label>
               <Input id="org-no" className={fieldClass} {...register("orgNumber")} />
             </div>
@@ -203,14 +205,14 @@ export function OrganizationProfileForm({
 
           <div className="space-y-2">
             <Label className={labelClass} htmlFor="org-tagline">
-              Slagord / undertittel
+              {t("settings.orgProfile.tagline")}
             </Label>
             <Input id="org-tagline" className={fieldClass} {...register("tagline")} />
           </div>
 
           <div className="space-y-2">
             <Label className={labelClass} htmlFor="org-logo">
-              Logo-URL
+              {t("settings.orgProfile.logoUrl")}
             </Label>
             <Input id="org-logo" className={fieldClass} {...register("logoUrl")} />
             {errors.logoUrl ? (
@@ -221,8 +223,8 @@ export function OrganizationProfileForm({
 
         <FormSection
           icon={MapPin}
-          title="Adresse"
-          description="Postadresse på fakturaer og dokumenter."
+          title={t("settings.orgProfile.address")}
+          description={t("settings.orgAddressDescription")}
         >
           <OrganizationAddressFields
             register={register}
@@ -235,13 +237,13 @@ export function OrganizationProfileForm({
 
         <FormSection
           icon={Phone}
-          title="Kontakt"
-          description="Hvordan kunder kan nå dere."
+          title={t("settings.orgProfile.contact")}
+          description={t("settings.contactDescription")}
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label className={labelClass} htmlFor="org-email">
-                E-post
+                {t("common.fields.email")}
               </Label>
               <Input
                 id="org-email"
@@ -257,7 +259,7 @@ export function OrganizationProfileForm({
             </div>
             <div className="space-y-2">
               <Label className={labelClass} htmlFor="org-phone">
-                Telefon
+                {t("common.fields.phone")}
               </Label>
               <Input id="org-phone" className={fieldClass} {...register("contactPhone")} />
             </div>
@@ -266,23 +268,23 @@ export function OrganizationProfileForm({
 
         <FormSection
           icon={CreditCard}
-          title="Betaling"
-          description="Kontonummer og betalingsinstruksjoner på faktura."
+          title={t("settings.orgProfile.payment")}
+          description={t("settings.paymentDescription")}
         >
           <div className="space-y-2">
             <Label className={labelClass} htmlFor="org-bank">
-              Kontonummer
+              {t("settings.orgProfile.bankAccount")}
             </Label>
             <Input id="org-bank" className={fieldClass} {...register("bankAccount")} />
           </div>
           <div className="space-y-2">
             <Label className={labelClass} htmlFor="org-pay">
-              Betalingsinstruksjoner
+              {t("settings.orgProfile.paymentInstructions")}
             </Label>
             <Textarea
               id="org-pay"
               rows={4}
-              placeholder="KID, forfallsinfo m.m."
+              placeholder={t("settings.orgProfile.paymentInstructionsPlaceholder")}
               className="rounded-md border-2 border-rn-border-strong bg-background p-3 text-base focus-visible:border-success focus-visible:ring-success/25"
               {...register("paymentInstructions")}
             />
@@ -303,10 +305,10 @@ export function OrganizationProfileForm({
             className="w-full sm:w-auto"
           >
             {isSubmitting
-              ? "Lagrer…"
+              ? t("common.saving")
               : setupMode
-                ? "Lagre og fortsett til lokaler"
-                : "Lagre organisasjon"}
+                ? t("settings.orgProfile.saveAndContinue")
+                : t("settings.orgProfile.saveOrganization")}
           </Button>
         </div>
       </form>
@@ -323,17 +325,17 @@ export function OrganizationProfileForm({
           </div>
           <div>
             <h2 className="font-heading text-base font-semibold text-foreground md:text-lg">
-              Forhåndsvisning
+              {t("settings.orgProfile.preview")}
             </h2>
             <p className="mt-0.5 text-app-sm text-muted-foreground">
-              Slik vises utsteder på faktura.
+              {t("settings.orgProfile.previewDescription")}
             </p>
           </div>
         </div>
 
         <div data-theme="light" className="rounded-md border-2 border-zinc-900 bg-white p-5 text-sm text-zinc-800 shadow-sm">
           <p className="font-heading text-xl font-bold text-zinc-950">
-            {preview.name || "Visningsnavn"}
+            {preview.name || t("settings.orgProfile.displayNameFallback")}
           </p>
           {preview.tagline ? (
             <p className="mt-1 font-medium text-emerald-800">{preview.tagline}</p>
@@ -341,7 +343,11 @@ export function OrganizationProfileForm({
           {preview.subtitle ? (
             <p className="mt-2 text-zinc-600">{preview.subtitle}</p>
           ) : null}
-          {preview.orgNo ? <p className="mt-2">Org.nr {preview.orgNo}</p> : null}
+          {preview.orgNo ? (
+            <p className="mt-2">
+              {t("invoices.orgNumberPrefix", { number: preview.orgNo })}
+            </p>
+          ) : null}
           {preview.addressLines.length > 0 ? (
             <div className="mt-2">
               {preview.addressLines.map((line) => (
@@ -349,14 +355,20 @@ export function OrganizationProfileForm({
               ))}
             </div>
           ) : (
-            <p className="mt-2 text-zinc-400">Adresse ikke fylt ut</p>
+            <p className="mt-2 text-zinc-400">
+              {t("settings.orgProfile.addressNotFilled")}
+            </p>
           )}
           {preview.contactEmail ? (
-            <p className="mt-2">E-post: {preview.contactEmail}</p>
+            <p className="mt-2">
+              {t("invoices.emailPrefix", { email: preview.contactEmail })}
+            </p>
           ) : null}
-          {preview.contactPhone ? <p>Tlf. {preview.contactPhone}</p> : null}
+          {preview.contactPhone ? (
+            <p>{t("invoices.phonePrefix", { phone: preview.contactPhone })}</p>
+          ) : null}
           <p className="mt-4 whitespace-pre-line border-t border-zinc-200 pt-3 text-zinc-700">
-            {preview.bankInfo || "Kontoinfo vises her"}
+            {preview.bankInfo || t("settings.orgProfile.bankInfoFallback")}
           </p>
         </div>
       </aside>

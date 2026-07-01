@@ -3,7 +3,7 @@
 import { InquiryDetailSheet } from "@/components/inquiries/inquiry-detail-sheet";
 import { InquiriesFollowUpMonthCalendar } from "@/components/inquiries/inquiries-follow-up-calendar";
 import {
-  INQUIRY_STATUS_LABELS,
+  inquiryStatusLabel,
   isActiveInquiry,
   type InquiryListRow,
 } from "@/components/inquiries/types";
@@ -32,8 +32,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/i18n/client";
 import { formatAppDateTime } from "@/lib/format-datetime";
-import { formatBookingListDateLabel } from "@/lib/booking-period";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
   APP_TABLE_CELL_BODY,
@@ -69,23 +69,11 @@ const inquiriesTableCellDateClass = cn(
   "inquiries-list-row-meta",
 );
 
-function formatInquiryPreferredDate(row: InquiryListRow): string {
-  if (!row.preferredEventDateIso) return "—";
-  return formatBookingListDateLabel({
-    eventDateIso: row.preferredEventDateIso,
-    eventEndDateIso: row.preferredEventEndDateIso,
-    eventStartTime: null,
-    eventEndTime: null,
-  });
-}
-
-function formatInquiryListDate(iso: string): string {
-  return new Intl.DateTimeFormat("nb-NO", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(`${iso.slice(0, 10)}T12:00:00`));
-}
+const listDateOptions: Intl.DateTimeFormatOptions = {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+};
 
 type InquiryStatusFilter = "all" | Exclude<BookingInquiryStatus, "converted">;
 
@@ -156,6 +144,7 @@ export function InquiriesSection({
   canManageInquiries,
   loadError,
 }: InquiriesSectionProps) {
+  const { t, locale, formatDate } = useTranslation();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<InquiryStatusFilter>("all");
   const [dueOnly, setDueOnly] = useState(false);
@@ -165,6 +154,27 @@ export function InquiriesSection({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showCalendarView, setShowCalendarView] = useState(false);
   const [page, setPage] = useState(1);
+
+  function formatInquiryPreferredDate(row: InquiryListRow): string {
+    if (!row.preferredEventDateIso) return "—";
+    const start = row.preferredEventDateIso.slice(0, 10);
+    const startLabel = formatDate(`${start}T12:00:00`, listDateOptions);
+    const end = row.preferredEventEndDateIso?.slice(0, 10);
+    if (end && end !== start) {
+      return `${startLabel} – ${formatDate(`${end}T12:00:00`, listDateOptions)}`;
+    }
+    return startLabel;
+  }
+
+  function formatInquiryListDate(iso: string): string {
+    return formatDate(`${iso.slice(0, 10)}T12:00:00`, listDateOptions);
+  }
+
+  function inquiryWord(count: number): string {
+    return count === 1
+      ? t("inquiries.inquirySingular")
+      : t("inquiries.inquiryPlural");
+  }
 
   useEffect(() => {
     setPage(1);
@@ -207,13 +217,13 @@ export function InquiriesSection({
     (statusFilter !== "all" ? 1 : 0) + (dueOnly ? 1 : 0);
 
   const filterButtonLabel = useMemo(() => {
-    if (statusFilter !== "all" && dueOnly) return "Filter aktiv";
+    if (statusFilter !== "all" && dueOnly) return t("inquiries.filterActive");
     if (statusFilter !== "all") {
-      return INQUIRY_STATUS_LABELS[statusFilter];
+      return inquiryStatusLabel(statusFilter, t);
     }
-    if (dueOnly) return "Forfalt oppfølging";
-    return "Filter";
-  }, [statusFilter, dueOnly]);
+    if (dueOnly) return t("inquiries.overdueFollowUp");
+    return t("common.actions.filter");
+  }, [statusFilter, dueOnly, t]);
 
   const filtered = useMemo(() => {
     return activeInquiries.filter((row) => {
@@ -255,6 +265,11 @@ export function InquiriesSection({
     setSheetOpen(true);
   }
 
+  const footerExtra =
+    filtered.length !== activeInquiries.length
+      ? t("inquiries.footer.extraMatches", { total: activeInquiries.length })
+      : ` ${inquiryWord(filtered.length)}`;
+
   return (
     <div className="inquiries-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
@@ -262,7 +277,7 @@ export function InquiriesSection({
           <AppPageHeader
             className="mb-0 gap-3 md:gap-4"
             surface="default"
-            title="Forespørsler"
+            title={t("inquiries.title")}
             actions={
               <div className="flex flex-wrap items-center justify-end gap-2">
                 {!loadError ? (
@@ -275,7 +290,9 @@ export function InquiriesSection({
                     onClick={() => setShowCalendarView((v) => !v)}
                   >
                     <Calendar className="size-5 shrink-0" aria-hidden />
-                    {showCalendarView ? "Vis liste" : "Oppfølgingskalender"}
+                    {showCalendarView
+                      ? t("inquiries.showList")
+                      : t("inquiries.followUpCalendar")}
                   </Button>
                 ) : null}
                 {canManageInquiries ? (
@@ -287,7 +304,7 @@ export function InquiriesSection({
                     )}
                   >
                     <Plus className="size-5" aria-hidden />
-                    Ny forespørsel
+                    {t("inquiries.new")}
                   </Link>
                 ) : null}
               </div>
@@ -301,7 +318,7 @@ export function InquiriesSection({
             role="alert"
           >
             <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive">
-              Kunne ikke laste data: {loadError}
+              {t("inquiries.loadError", { error: loadError })}
             </div>
           </div>
         ) : null}
@@ -309,7 +326,7 @@ export function InquiriesSection({
         {!loadError ? (
           <section
             className="border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6"
-            aria-label="Søk og filtrer forespørsler"
+            aria-label={t("inquiries.searchFilterAria")}
           >
             <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
               <div className="relative min-w-0 flex-1">
@@ -319,10 +336,10 @@ export function InquiriesSection({
                 />
                 <Input
                   id="inquiries-search"
-                  aria-label="Søk blant forespørsler"
+                  aria-label={t("inquiries.searchAria")}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Kunde, telefon, lokale eller type …"
+                  placeholder={t("inquiries.searchPlaceholder")}
                   autoComplete="off"
                   className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
                 />
@@ -331,7 +348,7 @@ export function InquiriesSection({
               <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 lg:ml-auto">
                 <div className="w-full shrink-0 sm:w-40 md:w-44">
                   <label htmlFor="inquiries-date-from" className="sr-only">
-                    Fra dato
+                    {t("inquiries.dateFrom")}
                   </label>
                   <DatePickerField
                     id="inquiries-date-from"
@@ -344,7 +361,7 @@ export function InquiriesSection({
                 </div>
                 <div className="w-full shrink-0 sm:w-40 md:w-44">
                   <label htmlFor="inquiries-date-to" className="sr-only">
-                    Til dato
+                    {t("inquiries.dateTo")}
                   </label>
                   <DatePickerField
                     id="inquiries-date-to"
@@ -363,7 +380,7 @@ export function InquiriesSection({
                       menuFilterCount > 0 &&
                         "border-success/50 bg-success/5 text-foreground",
                     )}
-                    aria-label="Åpne filtermeny"
+                    aria-label={t("inquiries.openFilterMenu")}
                   >
                     <ListFilter className="size-4 shrink-0" aria-hidden />
                     <span>{filterButtonLabel}</span>
@@ -381,7 +398,7 @@ export function InquiriesSection({
                   >
                     <DropdownMenuGroup>
                       <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Status
+                        {t("common.fields.status")}
                       </DropdownMenuLabel>
                       <DropdownMenuRadioGroup
                         value={statusFilter}
@@ -406,8 +423,8 @@ export function InquiriesSection({
                             className="font-medium"
                           >
                             {key === "all"
-                              ? "Alle"
-                              : INQUIRY_STATUS_LABELS[key]}
+                              ? t("common.actions.all")
+                              : inquiryStatusLabel(key, t)}
                             <DropdownMenuShortcut>
                               {filterCounts[key]}
                             </DropdownMenuShortcut>
@@ -423,7 +440,7 @@ export function InquiriesSection({
                       onCheckedChange={(checked) => setDueOnly(checked === true)}
                       className="font-medium"
                     >
-                      Forfalt oppfølging
+                      {t("inquiries.overdueFollowUp")}
                       <DropdownMenuShortcut>{overdueCount}</DropdownMenuShortcut>
                     </DropdownMenuCheckboxItem>
 
@@ -435,7 +452,7 @@ export function InquiriesSection({
                           className="font-medium"
                           onSelect={() => resetFilters()}
                         >
-                          Nullstill filter
+                          {t("inquiries.resetFilters")}
                         </DropdownMenuItem>
                       </>
                     ) : null}
@@ -446,8 +463,11 @@ export function InquiriesSection({
 
             {hasActiveFilters ? (
               <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
-                Viser {filtered.length} av {activeInquiries.length}{" "}
-                {activeInquiries.length === 1 ? "forespørsel" : "forespørsler"}
+                {t("inquiries.showingCount", {
+                  shown: filtered.length,
+                  total: activeInquiries.length,
+                  label: inquiryWord(activeInquiries.length),
+                })}
               </p>
             ) : null}
           </section>
@@ -460,8 +480,8 @@ export function InquiriesSection({
             </div>
             <p className="max-w-sm text-muted-foreground">
               {activeInquiries.length === 0
-                ? "Ingen forespørsler ennå. Bruk «Ny forespørsel» for å registrere første henvendelse."
-                : "Ingen rader samsvarer med filter eller søk."}
+                ? t("inquiries.emptyNone")
+                : t("inquiries.emptyFiltered")}
             </p>
           </div>
         ) : null}
@@ -480,16 +500,24 @@ export function InquiriesSection({
               <TableHeader>
                 <TableRow className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
                   <TableHead className={cn(inquiriesTableHeadClass, "pl-6 md:pl-8")}>
-                    Kunde
+                    {t("inquiries.tableCustomer")}
                   </TableHead>
-                  <TableHead className={inquiriesTableHeadClass}>Lokale</TableHead>
-                  <TableHead className={inquiriesTableHeadClass}>Ønsket dato</TableHead>
-                  <TableHead className={inquiriesTableHeadClass}>Status</TableHead>
-                  <TableHead className={inquiriesTableHeadClass}>Neste oppfølging</TableHead>
+                  <TableHead className={inquiriesTableHeadClass}>
+                    {t("inquiries.tableVenue")}
+                  </TableHead>
+                  <TableHead className={inquiriesTableHeadClass}>
+                    {t("inquiries.tablePreferredDate")}
+                  </TableHead>
+                  <TableHead className={inquiriesTableHeadClass}>
+                    {t("common.fields.status")}
+                  </TableHead>
+                  <TableHead className={inquiriesTableHeadClass}>
+                    {t("inquiries.tableNextFollowUp")}
+                  </TableHead>
                   <TableHead
                     className={cn(inquiriesTableHeadClass, "pr-6 text-right md:pr-8")}
                   >
-                    Oppdatert
+                    {t("inquiries.tableUpdated")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -499,7 +527,7 @@ export function InquiriesSection({
                     key={row.id}
                     className="group cursor-pointer border-rn-border-strong/40 hover:bg-rn-surface-row-hover"
                     onClick={() => openRow(row)}
-                    aria-label={`Åpne forespørsel: ${row.customerName}`}
+                    aria-label={t("inquiries.openAria", { name: row.customerName })}
                   >
                     <TableCell className={inquiriesTableCellPrimaryClass}>
                       {row.customerName}
@@ -517,12 +545,12 @@ export function InquiriesSection({
                           statusBadgeClass(row.status),
                         )}
                       >
-                        {INQUIRY_STATUS_LABELS[row.status]}
+                        {inquiryStatusLabel(row.status, t)}
                       </span>
                     </TableCell>
                     <TableCell className={inquiriesTableCellDateClass}>
                       {row.nextFollowUpAtIso
-                        ? formatAppDateTime(row.nextFollowUpAtIso)
+                        ? formatAppDateTime(row.nextFollowUpAtIso, locale)
                         : "—"}
                     </TableCell>
                     <TableCell
@@ -545,17 +573,15 @@ export function InquiriesSection({
             {filtered.length > TENANT_LIST_PAGE_SIZE ? (
               <div className="flex flex-col items-stretch justify-between gap-4 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
                 <span className="text-app-sm font-medium text-rn-footer-text md:text-app-base">
-                  Viser {(currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1}–
-                  {Math.min(
-                    currentPage * TENANT_LIST_PAGE_SIZE,
-                    filtered.length,
-                  )}{" "}
-                  av {filtered.length}
-                  {filtered.length !== activeInquiries.length
-                    ? ` treff (${activeInquiries.length} totalt)`
-                    : filtered.length === 1
-                      ? " forespørsel"
-                      : " forespørsler"}
+                  {t("inquiries.footer.showingRange", {
+                    from: (currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1,
+                    to: Math.min(
+                      currentPage * TENANT_LIST_PAGE_SIZE,
+                      filtered.length,
+                    ),
+                    filtered: filtered.length,
+                    extra: footerExtra,
+                  })}
                 </span>
                 <div className="flex items-center justify-center gap-2">
                   <Button
@@ -564,13 +590,16 @@ export function InquiriesSection({
                     size="icon-sm"
                     className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
                     disabled={currentPage <= 1}
-                    aria-label="Forrige side"
+                    aria-label={t("common.pagination.prevPage")}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                   >
                     <ChevronLeft className="size-[18px]" />
                   </Button>
                   <span className="min-w-[5.5rem] text-center text-app-sm font-semibold tabular-nums text-muted-foreground">
-                    Side {currentPage} / {totalPages}
+                    {t("common.pagination.pageOf", {
+                      current: currentPage,
+                      total: totalPages,
+                    })}
                   </span>
                   <Button
                     type="button"
@@ -578,7 +607,7 @@ export function InquiriesSection({
                     size="icon-sm"
                     className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
                     disabled={currentPage >= totalPages}
-                    aria-label="Neste side"
+                    aria-label={t("common.pagination.nextPage")}
                     onClick={() =>
                       setPage((p) => Math.min(totalPages, p + 1))
                     }

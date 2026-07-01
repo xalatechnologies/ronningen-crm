@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { getServerTranslation } from "@/i18n/server";
 import { mapAuthErrorToNorwegian } from "@/lib/auth/auth-error-messages";
 import { normalizeEmail } from "@/lib/auth/normalize-email";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { resolvePostAuthRedirect } from "@/lib/organizations/tenant-setup-queries";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { registerSchema } from "@/lib/validations";
+import { createRegisterSchema, defaultValidationMessages } from "@/lib/validations";
 
 export const runtime = "nodejs";
 
@@ -21,18 +22,19 @@ function getAppOrigin(request: Request): string {
 }
 
 export async function POST(request: Request) {
+  const { t } = await getServerTranslation();
   let body: unknown;
 
   try {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Ugyldig forespørsel." },
+      { error: t("serverErrors.auth.invalidRequest") },
       { status: 400 },
     );
   }
 
-  const parsed = registerSchema.safeParse(body);
+  const parsed = createRegisterSchema(defaultValidationMessages).safeParse(body);
   if (!parsed.success) {
     const firstIssue = parsed.error.issues[0]?.message ?? "Ugyldig skjemadata.";
     return NextResponse.json({ error: firstIssue }, { status: 400 });
@@ -64,7 +66,7 @@ export async function POST(request: Request) {
 
     if (!created.user) {
       return NextResponse.json(
-        { error: "Kontoen ble ikke opprettet. Prøv igjen." },
+        { error: t("serverErrors.auth.accountNotCreated") },
         { status: 500 },
       );
     }
@@ -78,8 +80,7 @@ export async function POST(request: Request) {
     if (signInError) {
       return NextResponse.json(
         {
-          error:
-            "Kontoen ble opprettet, men innlogging feilet. Prøv å logge inn manuelt.",
+          error: t("serverErrors.auth.accountCreatedSignInFailed"),
         },
         { status: 500 },
       );
@@ -95,7 +96,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("[auth/register]", error);
     return NextResponse.json(
-      { error: "Registrering er ikke tilgjengelig akkurat nå." },
+      { error: t("serverErrors.auth.registrationUnavailable") },
       { status: 503 },
     );
   }

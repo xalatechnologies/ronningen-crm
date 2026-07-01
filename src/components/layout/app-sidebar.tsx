@@ -7,6 +7,8 @@ import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { prefetchTenantRoute } from "@/lib/queries/prefetch-route";
 import { getQueryClient } from "@/lib/queries/get-query-client";
 import { RN_NAV_LINK_ACTIVE, RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
+import { appNavLabel } from "@/lib/navigation/nav-labels";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { AppBrandLogo } from "@/components/brand/app-brand-logo";
@@ -15,6 +17,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
 
 export function AppSidebar({ className }: { className?: string }) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -71,7 +74,7 @@ export function AppSidebar({ className }: { className?: string }) {
             className={cn(
               "relative flex size-14 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-black shadow-sm md:size-16",
             )}
-            aria-label={`${APP_NAME} — gå til oversikt`}
+            aria-label={t("navigation.goToDashboardAria", { appName: APP_NAME })}
             onMouseEnter={() => prefetchRoute("/app/dashboard")}
           >
             {logoUrl && !orgLogoFailed ? (
@@ -91,14 +94,14 @@ export function AppSidebar({ className }: { className?: string }) {
               {displayName}
             </p>
             <p className="text-app-xs font-medium text-rn-text-slate">
-              {currentOrganization ? APP_NAME : "Administrasjon"}
+              {currentOrganization ? APP_NAME : t("common.account.administration")}
             </p>
           </div>
         </div>
       </div>
       <nav
         className="flex min-h-0 flex-1 flex-col gap-[length:var(--spacing-app-gap)] overflow-y-auto px-[length:calc(var(--app-card-padding)*0.35)] pt-0 md:gap-[length:var(--spacing-app-gap)] md:px-[length:calc(var(--app-card-padding)*0.45)]"
-        aria-label="Hovedmeny"
+        aria-label={t("navigation.mainMenuAria")}
       >
         {mainNavigation.map((item) => {
           const active =
@@ -151,7 +154,7 @@ export function AppSidebar({ className }: { className?: string }) {
                 )}
                 aria-hidden
               />
-              {item.title}
+              {appNavLabel(item.segment, t)}
             </Link>
           );
         })}

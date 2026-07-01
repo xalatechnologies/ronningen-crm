@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import { getDefaultT } from "@/lib/i18n/default-messages";
 import { isStripeConfigured } from "@/lib/billing/constants";
 import { getStripeClient } from "@/lib/billing/stripe";
 import {
@@ -16,6 +17,7 @@ export type BillingEnforcementResult = {
 };
 
 export async function enforceBillingAccess(): Promise<BillingEnforcementResult> {
+  const t = getDefaultT();
   const admin = createSupabaseAdminClient();
   const result: BillingEnforcementResult = {
     expiredLocalTrials: 0,
@@ -83,7 +85,9 @@ export async function enforceBillingAccess(): Promise<BillingEnforcementResult> 
       result.expiredLocalTrials += 1;
     } catch (error) {
       result.errors.push(
-        error instanceof Error ? error.message : "Utløpt prøveperiode feilet.",
+        error instanceof Error
+          ? error.message
+          : t("serverErrors.billing.expiredTrialFailed"),
       );
     }
   }

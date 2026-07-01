@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from "@/i18n/client";
 import {
   applyOrganizationAddressRetrieve,
   applySimpleAddressRetrieve,
@@ -22,8 +23,6 @@ const AddressAutofill = dynamic(
     import("@mapbox/search-js-react").then((mod) => mod.AddressAutofill),
   { ssr: false },
 );
-
-const DEFAULT_PLACEHOLDER = "Gate, postnr og sted";
 
 type AddressFieldBaseProps<T extends FieldValues> = {
   register: UseFormRegister<T>;
@@ -82,11 +81,12 @@ function useAddressRetrieveHandler<T extends FieldValues>(
  * Use `mode="organization"` to fill structured addressLine1/2, postalCode, and city.
  */
 export function AddressField<T extends FieldValues>(props: AddressFieldProps<T>) {
+  const { t } = useTranslation();
   const {
     register,
     id,
     className,
-    placeholder = DEFAULT_PLACEHOLDER,
+    placeholder = t("common.address.placeholder"),
     readOnly = false,
     disabled = false,
     "aria-invalid": ariaInvalid,
@@ -172,11 +172,11 @@ export function AddressField<T extends FieldValues>(props: AddressFieldProps<T>)
       )}
       {showHint && useAutofill ? (
         <p className="text-app-xs text-muted-foreground">
-          Begynn å skrive for forslag, eller fyll inn manuelt.
+          {t("common.address.autofillHint")}
         </p>
       ) : showHint && !isMapboxConfigured() ? (
         <p className="text-app-xs text-muted-foreground">
-          Fyll inn adressen manuelt.
+          {t("common.address.manualHint")}
         </p>
       ) : null}
     </>

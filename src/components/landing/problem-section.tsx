@@ -1,21 +1,28 @@
-import { LandingSectionShell } from "@/components/landing/landing-section-shell";
-import { PROBLEMS, SECTION_TITLES } from "@/components/landing/landing-content";
-import { cn } from "@/lib/utils";
+"use client";
 
-const SCATTERED_SOURCES = [
-  { label: "E-post", rotate: "-rotate-2" },
-  { label: "Excel", rotate: "rotate-1" },
-  { label: "Notater", rotate: "-rotate-1" },
-  { label: "Telefon", rotate: "rotate-2" },
-  { label: "Kalender", rotate: "-rotate-3" },
-] as const;
+import { LandingSectionShell } from "@/components/landing/landing-section-shell";
+import {
+  PROBLEM_ICONS,
+  SCATTERED_SOURCE_KEYS,
+  SCATTERED_SOURCE_ROTATE,
+} from "@/components/landing/landing-content";
+import { useTranslation } from "@/i18n/client";
+import { getDictionary } from "@/i18n/dictionaries";
+import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 export function ProblemSection() {
+  const { t, locale } = useTranslation();
+  const problems = useMemo(
+    () => getDictionary(locale).landing.problem.items,
+    [locale],
+  );
+
   return (
     <LandingSectionShell
       titleId="landing-problem-title"
-      title={SECTION_TITLES.problem}
-      description="Tre vanlige flaskehalser som bremser hverdagen når alt ligger i regneark og e-post."
+      title={t("landing.sections.problem")}
+      description={t("landing.problem.description")}
     >
       <div className="flex flex-col gap-8 md:gap-10">
         <div
@@ -23,32 +30,30 @@ export function ProblemSection() {
           aria-hidden
         >
           <p className="text-center font-heading text-xs font-bold tracking-[0.2em] text-rn-text-slate uppercase md:text-sm">
-            Uten ett system
+            {t("landing.problem.withoutSystem")}
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3 md:gap-4">
-            {SCATTERED_SOURCES.map(({ label, rotate }) => (
+            {SCATTERED_SOURCE_KEYS.map((key, index) => (
               <span
-                key={label}
+                key={key}
                 className={cn(
                   "inline-flex rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card px-4 py-2.5 font-heading text-sm font-semibold text-rn-text-body shadow-rn-card md:text-base",
-                  rotate,
+                  SCATTERED_SOURCE_ROTATE[index],
                 )}
               >
-                {label}
+                {t(`landing.problem.scatteredSources.${key}`)}
               </span>
             ))}
           </div>
         </div>
 
         <ul className="grid gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6">
-          {PROBLEMS.map(({ icon: Icon, title, text }, index) => {
+          {problems.map(({ title, text }, index) => {
+            const Icon = PROBLEM_ICONS[index]!;
             const isBanner = index === 2;
 
             return (
-              <li
-                key={title}
-                className={cn(isBanner && "lg:col-span-2")}
-              >
+              <li key={title} className={cn(isBanner && "lg:col-span-2")}>
                 <article
                   className={cn(
                     "relative h-full overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-border-strong shadow-rn-card",
@@ -86,7 +91,7 @@ export function ProblemSection() {
                     </div>
                     {isBanner ? (
                       <span className="font-heading text-sm font-bold tracking-[0.18em] text-primary-light uppercase">
-                        Flaskehals {index + 1}
+                        {t("landing.problem.bottleneck", { n: index + 1 })}
                       </span>
                     ) : null}
                   </div>

@@ -9,7 +9,7 @@ export function createSupabaseAdminClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceRoleKey) {
     throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY mangler. Sett den i .env.local og start `npm run dev` på nytt.",
+      "SUPABASE_SERVICE_ROLE_KEY is missing. Set it in .env.local and restart npm run dev.",
     );
   }
 

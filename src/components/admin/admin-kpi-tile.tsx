@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
@@ -329,6 +330,7 @@ export function AdminKpiTile({
   href,
   onClick,
 }: AdminKpiTileProps) {
+  const { t } = useTranslation();
   const shell = cn(
     variantShell[variant],
     active && variantActive[variant],
@@ -354,7 +356,7 @@ export function AdminKpiTile({
     return (
       <Link href={href} className={cn(interactiveBase, shell, "group")}>
         {content}
-        <span className="sr-only">Gå til {label}</span>
+        <span className="sr-only">{t("admin.overview_go_to", { label })}</span>
       </Link>
     );
   }

@@ -1,13 +1,17 @@
 import type { AccommodationReservationStatus } from "@/lib/validations";
+import type { Translator, TranslationKey } from "@/i18n/types";
 
-export const ACCOMMODATION_RESERVATION_LABELS: Record<
-  AccommodationReservationStatus,
-  string
-> = {
-  tentative: "Foreløpig",
-  confirmed: "Bekreftet",
-  cancelled: "Kansellert",
-};
+export function accommodationReservationLabel(
+  status: AccommodationReservationStatus,
+  t: Translator,
+): string {
+  const keyMap: Record<AccommodationReservationStatus, TranslationKey> = {
+    tentative: "statuses.tentative",
+    confirmed: "statuses.confirmed",
+    cancelled: "statuses.cancelled",
+  };
+  return t(keyMap[status]);
+}
 
 export type AccommodationUnitRow = {
   id: string;

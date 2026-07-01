@@ -10,6 +10,7 @@ import {
   type FieldValues,
 } from "react-hook-form";
 
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
 const itemClassName =
@@ -40,6 +41,7 @@ export function AutocompleteField({
   "aria-invalid": ariaInvalid,
   "aria-label": ariaLabel,
 }: AutocompleteFieldProps) {
+  const { t } = useTranslation();
   const { contains } = Autocomplete.useFilter({ sensitivity: "base" });
   const [open, setOpen] = useState(false);
   const [filterWhileOpen, setFilterWhileOpen] = useState(false);
@@ -123,7 +125,7 @@ export function AutocompleteField({
             )}
           >
             <Autocomplete.Empty className="px-2.5 py-2 text-sm text-muted-foreground">
-              Ingen treff
+              {t("common.empty.noResults")}
             </Autocomplete.Empty>
             <Autocomplete.List>
               {(item: string) => (

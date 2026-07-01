@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminPlanBadge, AdminStatusBadge } from "@/components/admin/admin-badges";
 import {
   AdminSubscriptionFilterBar,
@@ -24,7 +25,10 @@ import {
   getStripeDashboardUrl,
   retrySubscriptionPayment,
 } from "@/lib/admin/actions/subscriptions";
-import { SUBSCRIPTION_STATUS_LABELS } from "@/lib/admin/subscription-labels";
+import {
+  subscriptionStatusLabel,
+  tenantAccessLabel,
+} from "@/lib/admin/subscription-labels";
 import type { AdminBillingRow } from "@/lib/admin/queries/users-billing-audit";
 import { formatNok } from "@/lib/admin/revenue-metrics";
 import { SAAS_MONTHLY_PRICE_NOK } from "@/lib/billing/constants";
@@ -32,7 +36,7 @@ import { resolveTenantAccess } from "@/lib/subscriptions/subscription-utils";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import {
   Building2,
   Clock,
@@ -43,18 +47,6 @@ import type { LucideIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-
-const ACCESS_LABELS: Record<string, string> = {
-  full: "Full tilgang",
-  warning: "Advarsel",
-  billing_only: "Kun fakturering",
-  suspended: "Suspendert",
-};
-
-const STATUS_OPTIONS = ADMIN_SETTABLE_SUBSCRIPTION_STATUSES.map((value) => ({
-  value,
-  label: SUBSCRIPTION_STATUS_LABELS[value] ?? value,
-}));
 
 const kpiTileClass =
   "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
@@ -125,7 +117,16 @@ function BillingStatusSelect({
   disabled: boolean;
   onUpdated: () => void;
 }) {
+  const { t, locale } = useTranslation();
   const [busy, setBusy] = useState(false);
+  const statusOptions = useMemo(
+    () =>
+      ADMIN_SETTABLE_SUBSCRIPTION_STATUSES.map((value) => ({
+        value,
+        label: subscriptionStatusLabel(value, t),
+      })),
+    [t],
+  );
 
   async function handleChange(nextStatus: string) {
     if (!nextStatus || nextStatus === row.subscriptionStatus) return;
@@ -139,13 +140,13 @@ function BillingStatusSelect({
     setBusy(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke oppdatere abonnement", {
+      toast.error(t("admin.kunne_ikke_oppdatere_abonnement"), {
         description: result.error,
       });
       return;
     }
 
-    toast.success("Abonnementsstatus oppdatert");
+    toast.success(t("admin.abonnementsstatus_oppdatert"));
     onUpdated();
   }
 
@@ -153,7 +154,7 @@ function BillingStatusSelect({
     <FormSelect
       value={row.subscriptionStatus}
       onValueChange={(value) => void handleChange(value)}
-      options={STATUS_OPTIONS}
+      options={statusOptions}
       disabled={disabled || busy}
       className="admin-table-select min-w-[10.5rem]"
       aria-label={`Endre status for ${row.name}`}
@@ -168,13 +169,14 @@ function SubscriptionStripeCell({
   row: AdminBillingRow;
   onUpdated: () => void;
 }) {
+  const { t, locale } = useTranslation();
   if (!row.providerSubscriptionId) {
-    return <span className="text-muted-foreground">Ikke koblet</span>;
+    return <span className="text-muted-foreground">{t("adminLabels.connection.notConnected")}</span>;
   }
 
   return (
     <div>
-      <span className="font-semibold text-success">Koblet</span>
+      <span className="font-semibold text-success">{t("adminLabels.connection.connected")}</span>
       {row.providerCustomerId ? (
         <p
           className="admin-ops-id mt-1 max-w-[9rem] truncate font-mono text-app-xs text-muted-foreground"
@@ -195,7 +197,7 @@ function SubscriptionStripeCell({
             })()
           }
         >
-          Åpne Stripe
+          {t("admin.apne_stripe")}
         </button>
         <button
           type="button"
@@ -205,7 +207,7 @@ function SubscriptionStripeCell({
               const result = await retrySubscriptionPayment(row.id);
               if (!result.ok) toast.error(result.error);
               else {
-                toast.success("Betaling forsøkt");
+                toast.success(t("admin.betaling_forsokt"));
                 onUpdated();
               }
             })()
@@ -229,6 +231,7 @@ export function AdminSubscriptionsWorkspace({
   initialSearch?: string;
   billingEnabled?: boolean;
 }) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [filter, setFilter] = useState<AdminSubscriptionFilter>(initialFilter);
@@ -279,8 +282,11 @@ export function AdminSubscriptionsWorkspace({
 
   const stripeCaption =
     overview.stripeConnected === 0
-      ? "Ingen Stripe-abonnement ennå"
-      : `${overview.stripeConnected} av ${overview.total} koblet til Stripe`;
+      ? t("admin.ingen_stripe_abonnement_enna")
+      : t("admin.stripe_connected_caption", {
+          connected: overview.stripeConnected,
+          total: overview.total,
+        });
 
   return (
     <div className="admin-page-workspace admin-subscriptions-dashboard mx-auto flex w-full min-w-0 flex-col gap-8 pb-8">
@@ -290,18 +296,18 @@ export function AdminSubscriptionsWorkspace({
             className="mb-0"
             surface="default"
             compact
-            title="Abonnement"
-            description="Abonnementsoperasjoner, Stripe-kobling og effektiv app-tilgang per organisasjon."
+            title={t("admin.abonnement")}
+            description={t("admin.abonnementsoperasjoner_stripe_kobling_og_effektiv_app_tilgan")}
           />
         </div>
 
         <section
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
-          aria-label="Nøkkeltall"
+          aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <SubscriptionsKpiTile
-              label="Totalt"
+              label={t("admin.totalt")}
               value={overview.total}
               caption={stripeCaption}
               icon={Building2}
@@ -312,17 +318,17 @@ export function AdminSubscriptionsWorkspace({
               }}
             />
             <SubscriptionsKpiTile
-              label="Prøve"
+              label={t("admin.prove")}
               value={overview.trialing}
-              caption="Organisasjoner i prøveperiode"
+              caption={t("admin.organisasjoner_i_proveperiode")}
               icon={Clock}
               active={filter === "trialing"}
               onClick={() => updateFilter("trialing")}
             />
             <SubscriptionsKpiTile
-              label="Aktiv"
+              label={t("admin.aktiv")}
               value={overview.active}
-              caption="Betalt abonnement"
+              caption={t("admin.betalt_abonnement")}
               icon={CreditCard}
               active={filter === "active"}
               onClick={() => updateFilter("active")}
@@ -330,7 +336,9 @@ export function AdminSubscriptionsWorkspace({
             <SubscriptionsKpiTile
               label="MRR"
               value={formatNok(overview.mrrNok)}
-              caption={`${formatNok(SAAS_MONTHLY_PRICE_NOK)} per aktiv org`}
+              caption={t("admin.per_active_org", {
+                amount: formatNok(SAAS_MONTHLY_PRICE_NOK),
+              })}
               icon={TrendingUp}
               onClick={() => updateFilter("active")}
             />
@@ -352,14 +360,14 @@ export function AdminSubscriptionsWorkspace({
           <table className="w-full min-w-[1024px] text-left text-app-base">
             <thead>
               <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                <th className={tableHeadClass}>Organisasjon</th>
-                <th className={tableHeadClass}>Abonnement</th>
-                <th className={tableHeadClass}>Plan</th>
-                <th className={tableHeadClass}>App-tilgang</th>
-                <th className={tableHeadClass}>Periode slutt</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.organization")}</th>
+                <th className={tableHeadClass}>{t("admin.abonnement")}</th>
+                <th className={tableHeadClass}>{t("admin.plan")}</th>
+                <th className={tableHeadClass}>{t("admin.app_tilgang")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.periodEnd")}</th>
                 <th className={tableHeadClass}>Stripe</th>
                 <th className={cn(tableHeadClass, "text-right")}>MRR</th>
-                <th className={cn(tableHeadClass, "text-right")}>Medlemmer</th>
+                <th className={cn(tableHeadClass, "text-right")}>{t("admin.medlemmer")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-rn-border-strong/50">
@@ -373,7 +381,7 @@ export function AdminSubscriptionsWorkspace({
                   },
                   { billingEnabled },
                 );
-                const accessLabel = ACCESS_LABELS[access] ?? access;
+                const accessLabel = tenantAccessLabel(access, t);
                 const accessTone =
                   access === "suspended"
                     ? "text-destructive"
@@ -425,7 +433,7 @@ export function AdminSubscriptionsWorkspace({
                     <td className={cn(tableCellClass, "text-muted-foreground")}>
                       {row.periodEnd
                         ? format(new Date(row.periodEnd), "d. MMM yyyy", {
-                            locale: nb,
+                            locale: getDateFnsLocale(locale),
                           })
                         : "—"}
                       {row.subscriptionStatus === "trialing" && !row.isSuspended ? (
@@ -440,13 +448,13 @@ export function AdminSubscriptionsWorkspace({
                               });
                               if (!result.ok) toast.error(result.error);
                               else {
-                                toast.success("Prøveperiode utvidet");
+                                toast.success(t("admin.proveperiode_utvidet"));
                                 router.refresh();
                               }
                             })()
                           }
                         >
-                          +7 dager prøve
+                          {t("admin.extend_trial_days_badge")}
                         </button>
                       ) : null}
                     </td>
@@ -473,13 +481,13 @@ export function AdminSubscriptionsWorkspace({
                     <div className="space-y-3 px-6 py-16 text-center sm:px-10 sm:py-20 md:px-8">
                       <p className="font-heading text-lg font-bold tracking-tight text-rn-text-heading">
                         {rows.length === 0
-                          ? "Ingen organisasjoner ennå"
-                          : "Ingen treff i listen"}
+                          ? t("admin.ingen_organisasjoner_enna")
+                          : t("admin.ingen_treff_i_listen")}
                       </p>
                       <p className="mx-auto max-w-lg text-muted-foreground">
                         {rows.length === 0
-                          ? "Abonnementsdata vises når organisasjoner registreres."
-                          : "Juster søket eller bytt filter. Nullstill ved å velge «Alle» og tømme søkefeltet."}
+                          ? t("admin.abonnementsdata_vises_nar_organisasjoner_registreres")
+                          : t("admin.juster_soket_eller_bytt_filter_nullstill_ved_a_velge_alle_og")}
                       </p>
                     </div>
                   </td>
@@ -491,13 +499,15 @@ export function AdminSubscriptionsWorkspace({
 
         <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
           <p className="app-text-secondary">
-            Viser {filtered.length} av {rows.length} organisasjoner
+            {t("admin.viser_av_organisasjoner", {
+              shown: filtered.length,
+              total: rows.length,
+            })}
           </p>
         </div>
 
         <p className="border-t border-rn-border-strong/50 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
-          Suspendert tilgang overstyrer abonnementsstatus. Endre suspensjon under
-          organisasjonsdetaljer.
+          {t("admin.subscriptions_workspace_footer")}
         </p>
       </div>
     </div>

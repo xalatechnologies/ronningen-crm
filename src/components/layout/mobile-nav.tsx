@@ -3,15 +3,18 @@
 import { mainNavigation } from "@/config/navigation";
 import { SIDEBAR_SEGMENT_ICONS } from "@/config/nav-icons";
 import { RN_NAV_LINK_ACTIVE, RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
+import { appNavLabel } from "@/lib/navigation/nav-labels";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export function MobileNavLinks({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useTranslation();
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-[length:var(--spacing-app-gap)] px-[length:calc(var(--app-card-padding)*0.35)] pb-4 md:gap-[length:var(--spacing-app-gap)] md:px-[length:calc(var(--app-card-padding)*0.45)]" aria-label="Mobil hovedmeny">
+    <nav className="flex flex-col gap-[length:var(--spacing-app-gap)] px-[length:calc(var(--app-card-padding)*0.35)] pb-4 md:gap-[length:var(--spacing-app-gap)] md:px-[length:calc(var(--app-card-padding)*0.45)]" aria-label={t("navigation.mainMenuAria")}>
       {mainNavigation.map((item) => {
         const active =
           pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -38,7 +41,7 @@ export function MobileNavLinks({ onNavigate }: { onNavigate?: () => void }) {
               )}
               aria-hidden
             />
-            {item.title}
+            {appNavLabel(item.segment, t)}
           </Link>
         );
       })}

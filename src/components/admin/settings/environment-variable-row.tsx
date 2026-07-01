@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslation } from "@/i18n/client";
 import type { EnvChecklistItem } from "@/lib/admin/platform-integration-status";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +11,7 @@ export function EnvStatusBadge({
   isSet: boolean;
   className?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <span
       className={cn(
@@ -18,12 +22,13 @@ export function EnvStatusBadge({
         className,
       )}
     >
-      {isSet ? "Satt" : "Mangler"}
+      {isSet ? t("admin.satt") : t("admin.mangler")}
     </span>
   );
 }
 
 export function EnvironmentVariableRow({ item }: { item: EnvChecklistItem }) {
+  const { t } = useTranslation();
   const needsAttention = item.required && !item.isSet;
 
   return (
@@ -43,7 +48,7 @@ export function EnvironmentVariableRow({ item }: { item: EnvChecklistItem }) {
               Påkrevd
             </span>
           ) : (
-            <span className="text-app-xs text-muted-foreground">Valgfri</span>
+            <span className="text-app-xs text-muted-foreground">{t("common.actions.optional")}</span>
           )}
         </div>
         <p className="mt-1 text-app-sm text-muted-foreground">

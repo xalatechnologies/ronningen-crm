@@ -11,13 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCalendarWeekdays } from "@/hooks/use-calendar-weekdays";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-
-const WEEKDAYS_NB = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"] as const;
 
 const CALENDAR_MIN_YEAR = 2020;
 
@@ -167,15 +167,16 @@ export function BookingsMonthCalendarToolbar({
   onMonthSelect,
   onYearSelect,
 }: BookingsMonthCalendarNavigation) {
+  const { t } = useTranslation();
   return (
     <div
       className="flex flex-wrap items-end justify-end gap-2"
       role="toolbar"
-      aria-label="Kalendernavigasjon"
+      aria-label={t("calendar.navAria")}
     >
       <Select value={String(monthIndex + 1)} onValueChange={onMonthSelect}>
         <SelectTrigger
-          aria-label="Velg måned"
+          aria-label={t("calendar.selectMonth")}
           size="default"
           className={cn(
             calendarSelectTriggerClass,
@@ -203,7 +204,7 @@ export function BookingsMonthCalendarToolbar({
 
       <Select value={String(year)} onValueChange={onYearSelect}>
         <SelectTrigger
-          aria-label="Velg år"
+          aria-label={t("calendar.selectYear")}
           size="default"
           className={cn(calendarSelectTriggerClass, "tabular-nums")}
         >
@@ -232,7 +233,7 @@ export function BookingsMonthCalendarToolbar({
         className={calendarNavButtonClass}
         onClick={goToday}
       >
-        I dag
+        {t("bookings.today")}
       </Button>
       <div className="flex items-center gap-1">
         <Button
@@ -241,7 +242,7 @@ export function BookingsMonthCalendarToolbar({
           size="icon-sm"
           className={calendarNavIconButtonClass}
           onClick={prevYear}
-          aria-label="Forrige år"
+          aria-label={t("calendar.prevYear")}
         >
           <ChevronsLeft className="size-[18px]" />
         </Button>
@@ -251,7 +252,7 @@ export function BookingsMonthCalendarToolbar({
           size="icon-sm"
           className={calendarNavIconButtonClass}
           onClick={prevMonth}
-          aria-label="Forrige måned"
+          aria-label={t("calendar.prevMonth")}
         >
           <ChevronLeft className="size-[18px]" />
         </Button>
@@ -261,7 +262,7 @@ export function BookingsMonthCalendarToolbar({
           size="icon-sm"
           className={calendarNavIconButtonClass}
           onClick={nextMonth}
-          aria-label="Neste måned"
+          aria-label={t("calendar.nextMonth")}
         >
           <ChevronRight className="size-[18px]" />
         </Button>
@@ -271,7 +272,7 @@ export function BookingsMonthCalendarToolbar({
           size="icon-sm"
           className={calendarNavIconButtonClass}
           onClick={nextYear}
-          aria-label="Neste år"
+          aria-label={t("calendar.nextYear")}
         >
           <ChevronsRight className="size-[18px]" />
         </Button>
@@ -284,8 +285,91 @@ function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
 
-function formatNokShort(n: number) {
-  return `${new Intl.NumberFormat("nb-NO").format(Math.round(n))} NOK`;
+function BookingCalendarHoverPreview({
+  row,
+  hideFooter,
+}: {
+  row: BookingListRow;
+  hideFooter?: boolean;
+}) {
+  const { t, formatCurrency } = useTranslation();
+  return (
+    <div className="space-y-2 text-left">
+      <div>
+        <p className="font-heading text-app-sm font-bold text-rn-text-heading md:text-app-base">
+          {row.customer}
+        </p>
+        <p className="mt-0.5 text-app-xs text-muted-foreground tabular-nums md:text-app-sm">
+          {row.date}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <BookingStatusBadge status={row.status} />
+      </div>
+      <div className="space-y-1 border-t border-border pt-2 text-app-xs md:text-app-sm">
+        <p>
+          <span className="font-semibold text-rn-text-body">{t("bookings.eventLabel")}</span>{" "}
+          <span className="text-foreground">{row.eventType}</span>
+          {row.festType?.trim() ? (
+            <>
+              {" "}
+              · <span className="font-medium">{row.festType.trim()}</span>
+            </>
+          ) : null}
+        </p>
+        <p className="flex items-center gap-1.5">
+          <Users className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+          <span>
+            <span className="font-semibold text-rn-text-body">{t("bookings.guestsLabel")}</span>{" "}
+            {row.guests}
+          </span>
+        </p>
+        <p>
+          <span className="font-semibold text-rn-text-body">{t("bookings.amount")}</span>{" "}
+          <span className="tabular-nums font-semibold text-foreground">
+            {formatCurrency(row.totalNok)}
+          </span>
+          {row.paidLabel ? (
+            <span className="text-muted-foreground">
+              {" "}
+              · {row.paidLabel}
+            </span>
+          ) : null}
+        </p>
+      </div>
+      {hideFooter ? null : (
+        <p className="text-[10px] leading-snug text-muted-foreground md:text-app-xs">
+          {t("bookings.clickForDetails")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function DayBookingsHoverPopupContent({ bookings }: { bookings: BookingListRow[] }) {
+  const { t } = useTranslation();
+  if (bookings.length === 0) return null;
+  if (bookings.length === 1) {
+    return <BookingCalendarHoverPreview row={bookings[0]} />;
+  }
+  return (
+    <div className="max-h-[min(70vh,22rem)] space-y-0 overflow-y-auto text-left">
+      <p className="mb-2 text-app-xs font-semibold text-muted-foreground">
+        {t("bookings.bookingsThisDay", { count: bookings.length })}
+      </p>
+      {bookings.map((row, i) => (
+        <div
+          key={row.id}
+          className={cn(i > 0 && "mt-3 border-t border-border pt-3")}
+        >
+          <BookingCalendarHoverPreview row={row} hideFooter />
+        </div>
+      ))}
+      <p className="mt-3 text-[10px] leading-snug text-muted-foreground md:text-app-xs">
+        {t("bookings.clickBookingForDetails")}
+      </p>
+    </div>
+  );
 }
 
 /** Bakgrunn for hele dagen — samme prioritering som statusfarger (pending synlig). */
@@ -312,91 +396,6 @@ function bookingRowButtonClass(status: BookingStatus) {
     default:
       return "text-foreground hover:bg-card/50";
   }
-}
-
-function BookingCalendarHoverPreview({
-  row,
-  hideFooter,
-}: {
-  row: BookingListRow;
-  hideFooter?: boolean;
-}) {
-  return (
-    <div className="space-y-2 text-left">
-      <div>
-        <p className="font-heading text-app-sm font-bold text-rn-text-heading md:text-app-base">
-          {row.customer}
-        </p>
-        <p className="mt-0.5 text-app-xs text-muted-foreground tabular-nums md:text-app-sm">
-          {row.date}
-        </p>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <BookingStatusBadge status={row.status} />
-      </div>
-      <div className="space-y-1 border-t border-border pt-2 text-app-xs md:text-app-sm">
-        <p>
-          <span className="font-semibold text-rn-text-body">Arrangement:</span>{" "}
-          <span className="text-foreground">{row.eventType}</span>
-          {row.festType?.trim() ? (
-            <>
-              {" "}
-              · <span className="font-medium">{row.festType.trim()}</span>
-            </>
-          ) : null}
-        </p>
-        <p className="flex items-center gap-1.5">
-          <Users className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-          <span>
-            <span className="font-semibold text-rn-text-body">Gjester:</span>{" "}
-            {row.guests}
-          </span>
-        </p>
-        <p>
-          <span className="font-semibold text-rn-text-body">Beløp:</span>{" "}
-          <span className="tabular-nums font-semibold text-foreground">
-            {formatNokShort(row.totalNok)}
-          </span>
-          {row.paidLabel ? (
-            <span className="text-muted-foreground">
-              {" "}
-              · {row.paidLabel}
-            </span>
-          ) : null}
-        </p>
-      </div>
-      {hideFooter ? null : (
-        <p className="text-[10px] leading-snug text-muted-foreground md:text-app-xs">
-          Klikk for full detalj
-        </p>
-      )}
-    </div>
-  );
-}
-
-function DayBookingsHoverPopupContent({ bookings }: { bookings: BookingListRow[] }) {
-  if (bookings.length === 0) return null;
-  if (bookings.length === 1) {
-    return <BookingCalendarHoverPreview row={bookings[0]} />;
-  }
-  return (
-    <div className="max-h-[min(70vh,22rem)] space-y-0 overflow-y-auto text-left">
-      <p className="mb-2 text-app-xs font-semibold text-muted-foreground">
-        {bookings.length} bookinger denne dagen
-      </p>
-      {bookings.map((row, i) => (
-        <div
-          key={row.id}
-          className={cn(i > 0 && "mt-3 border-t border-border pt-3")}
-        >
-          <BookingCalendarHoverPreview row={row} hideFooter />
-        </div>
-      ))}
-      <p className="mt-3 text-[10px] leading-snug text-muted-foreground md:text-app-xs">
-        Klikk på en booking for full detalj
-      </p>
-    </div>
-  );
 }
 
 export function BookingsMonthCalendar({
@@ -448,15 +447,17 @@ function BookingsMonthCalendarView({
   navigation: BookingsMonthCalendarNavigation;
   hideToolbar?: boolean;
 }) {
+  const { t, formatCurrency, locale } = useTranslation();
+  const weekdays = useCalendarWeekdays();
   const { year, monthIndex } = navigation;
 
   const monthLabel = useMemo(
     () =>
-      new Intl.DateTimeFormat("nb-NO", {
+      new Intl.DateTimeFormat(locale === "nb" ? "nb-NO" : "en-GB", {
         month: "long",
         year: "numeric",
       }).format(new Date(year, monthIndex, 1)),
-    [year, monthIndex],
+    [year, monthIndex, locale],
   );
 
   const rowsInMonth = useMemo(() => {
@@ -506,13 +507,13 @@ function BookingsMonthCalendarView({
   const emptyMonthMessage =
     rowsInMonth.length === 0
       ? totalBookingsCount === 0
-        ? "Ingen bookinger ennå."
+        ? t("bookings.noBookingsYet")
         : filteredCount === 0
-          ? "Ingen treff med søk eller filter."
-          : "Ingen bookinger i denne måneden."
+          ? t("bookings.noSearchResults")
+          : t("bookings.noBookingsThisMonth")
       : null;
 
-  const headerCells = WEEKDAYS_NB.map((wd) => (
+  const headerCells = weekdays.map((wd) => (
     <div
       key={wd}
       className="bg-rn-surface-table-head px-1 py-2 text-center text-[10px] font-bold tracking-wider text-rn-text-column uppercase sm:px-2 md:text-app-xs"
@@ -593,7 +594,11 @@ function BookingsMonthCalendarView({
             delay={180}
             closeDelay={220}
             nativeButton={false}
-            aria-label={`${dayBookings.length} booking${dayBookings.length === 1 ? "" : "er"} ${day}. dato: vis detaljer ved peker, klikk navn for å åpne.`}
+            aria-label={
+              dayBookings.length === 1
+                ? t("bookings.dayBookingsAria", { count: dayBookings.length, day })
+                : t("bookings.dayBookingsAriaPlural", { count: dayBookings.length, day })
+            }
             render={(props) => (
               <div
                 {...props}
@@ -664,7 +669,7 @@ function BookingsMonthCalendarView({
       <div className="overflow-x-auto pb-1">
         <div
           className="min-w-[280px] overflow-hidden rounded-md border-2 border-rn-border-strong bg-border/80 shadow-sm"
-          aria-label={`Bookinger, ${monthLabel}`}
+          aria-label={t("calendar.bookingsMonthAria", { month: monthLabel })}
         >
           <div className="grid grid-cols-7 gap-px">
             {headerCells}

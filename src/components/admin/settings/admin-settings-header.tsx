@@ -1,11 +1,13 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
+import type { Translator } from "@/i18n/types";
 import { AdminActionButton, AdminLinkButton } from "@/components/admin/admin-action-button";
 import { AdminDetailHeaderMeta } from "@/components/admin/admin-detail-header-meta";
 import { AdminDetailTabBar } from "@/components/admin/admin-detail-tab-bar";
 import { AdminHealthStatusBadge } from "@/components/admin/admin-health-status-badge";
 import {
-  ADMIN_SETTINGS_TABS,
+  adminSettingsTabs,
   type AdminSettingsTabId,
 } from "@/components/admin/settings/admin-settings-tabs";
 import { AppPageHeader } from "@/components/layout/app-page-header";
@@ -18,7 +20,7 @@ type AdminSettingsHeaderProps = {
   onTabChange: (tab: AdminSettingsTabId) => void;
 };
 
-function buildMetaItems(settings: AdminSettingsOverview): string[] {
+function buildMetaItems(settings: AdminSettingsOverview, t: Translator): string[] {
   const { summary, platformAdmins } = settings;
   const items = [
     `${summary.configuredCount} av ${summary.totalCount} integrasjoner klare`,
@@ -27,7 +29,9 @@ function buildMetaItems(settings: AdminSettingsOverview): string[] {
 
   if (summary.missingRequiredCount > 0) {
     items.push(
-      `${summary.missingRequiredCount} påkrevde miljøvariabler mangler`,
+      t("admin.overview_missing_env_many", {
+        count: summary.missingRequiredCount,
+      }),
     );
   }
 
@@ -39,6 +43,7 @@ export function AdminSettingsHeader({
   tab,
   onTabChange,
 }: AdminSettingsHeaderProps) {
+  const { t } = useTranslation();
   const { summary } = settings;
 
   return (
@@ -47,18 +52,16 @@ export function AdminSettingsHeader({
       surface="default"
       compact
       detailLayout
-      title="Plattforminnstillinger"
+      title={t("admin.plattforminnstillinger")}
       description={
         <AdminDetailHeaderMeta
-          items={buildMetaItems(settings)}
+          items={buildMetaItems(settings, t)}
           badges={<AdminHealthStatusBadge status={summary.overallStatus} />}
         />
       }
       actions={
         <>
-          <AdminLinkButton href={adminRoutes.systemHealth}>
-            Systemhelse
-          </AdminLinkButton>
+          <AdminLinkButton href={adminRoutes.systemHealth}>{t("admin.systemhelse")}</AdminLinkButton>
           {settings.stripeConfigured ? (
             <AdminActionButton
               className="hidden sm:inline-flex"
@@ -78,10 +81,10 @@ export function AdminSettingsHeader({
       }
       toolbar={
         <AdminDetailTabBar
-          tabs={ADMIN_SETTINGS_TABS}
+          tabs={adminSettingsTabs(t)}
           activeTab={tab}
           onTabChange={onTabChange}
-          aria-label="Plattforminnstillinger"
+          aria-label={t("admin.plattforminnstillinger")}
         />
       }
       toolbarClassName="border-0 px-0 py-2.5 sm:py-3"

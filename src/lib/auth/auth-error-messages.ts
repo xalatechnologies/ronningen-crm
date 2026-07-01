@@ -1,3 +1,8 @@
+import type { Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionaries";
+import { createTranslator } from "@/i18n/translate";
+import type { TranslationKey } from "@/i18n/types";
+
 type AuthErrorLike = {
   message?: string;
   code?: string;
@@ -9,9 +14,13 @@ function includes(haystack: string, needle: string): boolean {
 }
 
 /**
- * Maps Supabase Auth errors to actionable Norwegian messages for end users.
+ * Maps Supabase Auth errors to actionable user messages for the given locale.
  */
-export function mapAuthErrorToNorwegian(error: AuthErrorLike): string {
+export function mapAuthErrorToUserMessage(
+  error: AuthErrorLike,
+  locale: Locale = "nb",
+): string {
+  const t = createTranslator(getDictionary(locale));
   const message = error.message?.trim() ?? "";
   const code = error.code?.trim() ?? "";
   const combined = `${code} ${message}`.toLowerCase();
@@ -20,7 +29,7 @@ export function mapAuthErrorToNorwegian(error: AuthErrorLike): string {
     includes(combined, "email rate limit exceeded") ||
     includes(combined, "over_email_send_rate_limit")
   ) {
-    return "Vi kan ikke sende flere e-poster akkurat nå (grense hos autentiseringstjenesten). Vent minst én time og prøv igjen, eller kontakt support hvis du allerede har fått en bekreftelsesmail.";
+    return t("auth.errors.emailRateLimit");
   }
 
   if (
@@ -28,14 +37,14 @@ export function mapAuthErrorToNorwegian(error: AuthErrorLike): string {
     includes(combined, "already been registered") ||
     includes(combined, "already exists")
   ) {
-    return "Det finnes allerede en konto med denne e-postadressen. Prøv å logge inn, eller bruk «Glemt passord» hvis du ikke husker passordet.";
+    return t("auth.errors.userAlreadyRegistered");
   }
 
   if (
     includes(combined, "invalid login credentials") ||
     includes(combined, "invalid_credentials")
   ) {
-    return "Feil e-post eller passord.";
+    return t("auth.errors.invalidCredentials");
   }
 
   if (
@@ -44,27 +53,34 @@ export function mapAuthErrorToNorwegian(error: AuthErrorLike): string {
       includes(combined, "unable to validate") ||
       includes(combined, "not authorized"))
   ) {
-    return "E-postadressen ble avvist av autentiseringstjenesten. Kontroller at den er stavet riktig (uten mellomrom), og prøv en annen adresse hvis problemet vedvarer.";
+    return t("auth.errors.invalidEmail");
   }
 
   if (includes(combined, "password") && includes(combined, "weak")) {
-    return "Passordet er for svakt. Velg minst 8 tegn.";
+    return t("auth.errors.weakPassword");
   }
 
   if (
     includes(combined, "signup is disabled") ||
     includes(combined, "signups not allowed")
   ) {
-    return "Registrering er midlertidig deaktivert. Kontakt support.";
+    return t("auth.errors.signupDisabled");
   }
 
   if (includes(combined, "failed to fetch") || includes(combined, "network")) {
-    return "Får ikke kontakt med autentiseringstjenesten. Sjekk nettverket ditt og prøv igjen.";
+    return t("auth.errors.network");
   }
 
   if (message) {
     return message;
   }
 
-  return "Noe gikk galt. Prøv igjen om litt.";
+  return t("auth.errors.generic");
 }
+
+/** @deprecated Use mapAuthErrorToUserMessage */
+export function mapAuthErrorToNorwegian(error: AuthErrorLike): string {
+  return mapAuthErrorToUserMessage(error, "nb");
+}
+
+export type { AuthErrorLike, TranslationKey };

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminConfirmActionDialog } from "@/components/admin/admin-confirm-action-dialog";
 import { AdminActionButton } from "@/components/admin/admin-action-button";
 import { AdminDataPanel } from "@/components/admin/admin-data-panel";
@@ -12,12 +13,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { adminRoutes } from "@/config/admin-routes";
-import { ROLE_DISPLAY_LABELS } from "@/constants/roles";
+import { roleLabel } from "@/lib/navigation/nav-labels";
 import { transferOrganizationOwnership } from "@/lib/admin/actions/users";
 import type { AdminOrganizationDetail } from "@/lib/admin/queries/organizations";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -28,6 +29,7 @@ export function OrganizationMembersTab({
 }: {
   org: AdminOrganizationDetail;
 }) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const [transferTarget, setTransferTarget] = useState<{
     userId: string;
@@ -48,23 +50,23 @@ export function OrganizationMembersTab({
       toast.error(result.error);
       return;
     }
-    toast.success("Eierskap overført");
+    toast.success(t("admin.eierskap_overfort"));
     router.refresh();
   }
 
   return (
     <>
-      <AdminDataPanel title="Team">
+      <AdminDataPanel title={t("admin.team")}>
         {org.members.length === 0 ? (
-          <p className="app-text-muted">Ingen medlemmer registrert.</p>
+          <p className="app-text-muted">{t("adminLabels.empty.noMembers")}</p>
         ) : (
           <Table className="admin-ops-table">
             <TableHeader>
               <TableRow>
-                <TableHead>Navn</TableHead>
-                <TableHead>E-post</TableHead>
-                <TableHead>Rolle</TableHead>
-                <TableHead>Medlem siden</TableHead>
+                <TableHead>{t("adminLabels.fields.name")}</TableHead>
+                <TableHead>{t("admin.e_post")}</TableHead>
+                <TableHead>{t("adminLabels.fields.role")}</TableHead>
+                <TableHead>{t("adminLabels.fields.memberSince")}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -87,14 +89,12 @@ export function OrganizationMembersTab({
                           "font-semibold text-success",
                       )}
                     >
-                      {ROLE_DISPLAY_LABELS[
-                        member.role as keyof typeof ROLE_DISPLAY_LABELS
-                      ] ?? member.role}
+                      {roleLabel(member.role, t)}
                     </span>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {format(new Date(member.joinedAt), "d. MMM yyyy", {
-                      locale: nb,
+                      locale: getDateFnsLocale(locale),
                     })}
                   </TableCell>
                   <TableCell>
@@ -126,7 +126,7 @@ export function OrganizationMembersTab({
         onOpenChange={(open) => {
           if (!open && !transferBusy) setTransferTarget(null);
         }}
-        title="Overfør eierskap"
+        title={t("admin.overfor_eierskap")}
         description={
           transferTarget ? (
             <>
@@ -135,7 +135,7 @@ export function OrganizationMembersTab({
             </>
           ) : null
         }
-        confirmLabel="Overfør eierskap"
+        confirmLabel={t("admin.overfor_eierskap")}
         confirmVariant="default"
         busy={transferBusy}
         onConfirm={() => void handleTransferOwnership()}

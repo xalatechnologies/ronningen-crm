@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { UserRole } from "@/constants/roles";
+import { getDefaultT } from "@/lib/i18n/default-messages";
 import type { Database } from "@/types/database.types";
 
 type CustomerRow = {
@@ -44,7 +45,11 @@ export async function mergeDuplicateCustomersWithClient(
   memberRole: UserRole | null,
 ): Promise<MergeDuplicateCustomersResult> {
   if (!memberRole || (memberRole !== "owner" && memberRole !== "admin")) {
-    return { ok: false, error: "Kun administrator kan slå sammen duplikater." };
+    const t = getDefaultT();
+    return {
+      ok: false,
+      error: t("serverErrors.customers.mergeRequiresAdmin"),
+    };
   }
 
   const { data: rows, error: fetchErr } = await supabase

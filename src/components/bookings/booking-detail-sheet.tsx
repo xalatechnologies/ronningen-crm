@@ -37,12 +37,13 @@ import {
   type BookingDetailEditInput,
 } from "@/lib/validations";
 import {
-  BOOKING_PAYMENT_STATUS_LABELS,
   BOOKING_PAYMENT_STATUS_VALUES,
+  bookingPaymentStatusLabel,
   previewBookingRemainingAfterSave,
   resolveBookingPaymentForPersist,
   resolveStandardBookingPaymentFromAmounts,
 } from "@/constants/booking-payment-status";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
@@ -83,10 +84,6 @@ function bookingDetailDefaultsFromRow(
   };
 }
 
-function formatNok(n: number) {
-  return `${new Intl.NumberFormat("nb-NO").format(Math.round(n))} NOK`;
-}
-
 export type BookingDetailSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -109,6 +106,7 @@ export function BookingDetailSheet({
   onSetStatus,
   canDeleteBooking = false,
 }: BookingDetailSheetProps) {
+  const { t, formatCurrency, formatDate } = useTranslation();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateBookings } = useTenantDataInvalidation();
@@ -156,15 +154,24 @@ export function BookingDetailSheet({
   const paidW = useWatch({ control, name: "paidNok" });
   const paymentStatusW = useWatch({ control, name: "paymentStatus" });
   const remainingPreview = useMemo(() => {
-    const t = Number(totalW);
-    const p = Number(paidW);
-    if (!Number.isFinite(t) || !Number.isFinite(p)) return null;
+    const total = Number(totalW);
+    const paid = Number(paidW);
+    if (!Number.isFinite(total) || !Number.isFinite(paid)) return null;
     return previewBookingRemainingAfterSave({
-      totalNok: t,
-      paidNok: p,
+      totalNok: total,
+      paidNok: paid,
       paymentStatus: paymentStatusW ?? "unpaid",
     });
   }, [totalW, paidW, paymentStatusW]);
+
+  const paymentStatusOptions = useMemo(
+    () =>
+      BOOKING_PAYMENT_STATUS_VALUES.map((v) => ({
+        value: v,
+        label: bookingPaymentStatusLabel(v, t),
+      })),
+    [t],
+  );
 
   useLayoutEffect(() => {
     if (!row || !open) return;
@@ -216,7 +223,7 @@ export function BookingDetailSheet({
         .eq("organization_id", currentOrganizationId);
 
       if (custErr) {
-        toast.error("Kunne ikke oppdatere kunde", {
+        toast.error(t("bookings.detail.updateCustomerFailed"), {
           description: custErr.message,
         });
         return;
@@ -251,13 +258,13 @@ export function BookingDetailSheet({
         .eq("organization_id", currentOrganizationId);
 
       if (bookErr) {
-        toast.error("Kunne ikke oppdatere booking", {
+        toast.error(t("bookings.detail.updateFailed"), {
           description: bookErr.message,
         });
         return;
       }
 
-      toast.success("Endringer lagret");
+      toast.success(t("bookings.detail.changesSaved"));
       onOpenChange(false);
       invalidateBookings();
     } finally {
@@ -275,12 +282,12 @@ export function BookingDetailSheet({
         .eq("id", bookingRow.id)
         .eq("organization_id", currentOrganizationId);
       if (error) {
-        toast.error("Kunne ikke registrere innkassovarsel", {
+        toast.error(t("bookings.detail.registerCollectionFailed"), {
           description: error.message,
         });
         return;
       }
-      toast.success("Innkassovarsel registrert");
+      toast.success(t("bookings.detail.collectionRegisteredToast"));
       invalidateBookings();
     } finally {
       setInkassoBusy(false);
@@ -297,12 +304,12 @@ export function BookingDetailSheet({
         .eq("id", bookingRow.id)
         .eq("organization_id", currentOrganizationId);
       if (error) {
-        toast.error("Kunne ikke fjerne markering", {
+        toast.error(t("bookings.detail.removeMarkingFailed"), {
           description: error.message,
         });
         return;
       }
-      toast.success("Markering fjernet");
+      toast.success(t("bookings.detail.markingRemoved"));
       invalidateBookings();
     } finally {
       setInkassoBusy(false);
@@ -320,13 +327,13 @@ export function BookingDetailSheet({
         .eq("organization_id", currentOrganizationId);
 
       if (error) {
-        toast.error("Kunne ikke slette booking", {
+        toast.error(t("bookings.detail.deleteFailed"), {
           description: error.message,
         });
         return;
       }
 
-      toast.success("Booking slettet");
+      toast.success(t("bookings.detail.deleted"));
       setDeleteDialogOpen(false);
       onOpenChange(false);
       invalidateBookings();
@@ -336,11 +343,11 @@ export function BookingDetailSheet({
   }
 
   function formatInkassoRegistered(iso: string) {
-    return new Intl.DateTimeFormat("nb-NO", {
+    return formatDate(new Date(iso), {
       day: "numeric",
       month: "long",
       year: "numeric",
-    }).format(new Date(iso));
+    });
   }
 
   return (
@@ -356,18 +363,17 @@ export function BookingDetailSheet({
       >
         <SheetHeader className="flex shrink-0 flex-row items-center justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head px-6 py-5 sm:px-8 sm:py-6">
           <SheetTitle className="app-section-title min-w-0 flex-1 text-left tracking-tight">
-            Rediger booking
+            {t("bookings.detail.title")}
           </SheetTitle>
           <SheetDescription className="sr-only">
-            Kunde: {bookingRow.customer}. Rediger bookingdetaljer og kunde for
-            denne bestillingen.
+            {t("bookings.detail.description", { customer: bookingRow.customer })}
           </SheetDescription>
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
             className="shrink-0 rounded-md border-2 border-transparent hover:border-rn-border-strong/60"
-            aria-label="Lukk"
+            aria-label={t("common.actions.close")}
             onClick={() => onOpenChange(false)}
           >
             <X className="size-5" aria-hidden />
@@ -379,19 +385,19 @@ export function BookingDetailSheet({
           onSubmit={handleSubmit(onSave)}
         >
           <div className={cn(RN_MODAL_SCROLL_BODY, "flex flex-col gap-6 p-6 sm:p-8")}>
-            <div aria-label="Bookingstatus">
+            <div aria-label={t("common.fields.status")}>
               <BookingStatusBadge status={bookingRow.status} />
             </div>
 
             <section aria-labelledby="booking-edit-ref">
               <h3 id="booking-edit-ref" className={cn(labelClass, "mb-2")}>
-                Referanse
+                {t("common.fields.reference")}
               </h3>
               <Input
                 {...register("bookingReference")}
                 className={fieldClass}
                 aria-invalid={!!errors.bookingReference}
-                placeholder="Egen ID / saksnummer"
+                placeholder={t("bookings.detail.referencePlaceholder")}
               />
               {errors.bookingReference ? (
                 <p className="mt-1 text-app-xs text-destructive">
@@ -402,12 +408,12 @@ export function BookingDetailSheet({
 
             <section aria-labelledby="booking-edit-customer">
               <h3 id="booking-edit-customer" className={cn(labelClass, "mb-3")}>
-                Kunde
+                {t("bookings.detail.customer")}
               </h3>
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="bde-name" className={labelClass}>
-                    Navn
+                    {t("common.fields.name")}
                   </Label>
                   <Input
                     id="bde-name"
@@ -423,7 +429,7 @@ export function BookingDetailSheet({
                 </div>
                 <div>
                   <Label htmlFor="bde-phone" className={labelClass}>
-                    Telefon
+                    {t("common.fields.phone")}
                   </Label>
                   <Input
                     id="bde-phone"
@@ -440,7 +446,7 @@ export function BookingDetailSheet({
                 </div>
                 <div>
                   <Label htmlFor="bde-email" className={labelClass}>
-                    E-post
+                    {t("common.fields.email")}
                   </Label>
                   <Input
                     id="bde-email"
@@ -457,7 +463,7 @@ export function BookingDetailSheet({
                 </div>
                 <div>
                   <Label htmlFor="bde-address" className={labelClass}>
-                    Adresse
+                    {t("common.fields.address")}
                   </Label>
                   <AddressField
                     id="bde-address"
@@ -478,12 +484,12 @@ export function BookingDetailSheet({
 
             <section aria-labelledby="booking-edit-event">
               <h3 id="booking-edit-event" className={cn(labelClass, "mb-3")}>
-                Arrangement
+                {t("bookings.detail.event")}
               </h3>
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="bde-fest" className={labelClass}>
-                    Type
+                    {t("common.fields.type")}
                   </Label>
                   <Input
                     id="bde-fest"
@@ -499,7 +505,7 @@ export function BookingDetailSheet({
                 </div>
                 <div>
                   <Label htmlFor="bde-event-type" className={labelClass}>
-                    Kategori
+                    {t("common.category")}
                   </Label>
                   <FormSelectField
                     name="eventType"
@@ -518,12 +524,12 @@ export function BookingDetailSheet({
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div className="md:col-span-2">
                   <p className="text-app-xs leading-relaxed text-muted-foreground">
-                    La «Til dato» stå tom for ett døgn. Tid er valgfritt (24t).
+                    {t("bookings.detail.dateRangeHint")}
                   </p>
                 </div>
                 <div>
                   <Label htmlFor="bde-date" className={labelClass}>
-                    Fra dato
+                    {t("bookings.dateFrom")}
                   </Label>
                   <Controller
                     name="eventDate"
@@ -553,9 +559,9 @@ export function BookingDetailSheet({
                 </div>
                 <div>
                   <Label htmlFor="bde-end-date" className={labelClass}>
-                    Til dato{" "}
+                    {t("bookings.detail.toDateOptional")}{" "}
                     <span className="font-normal normal-case text-muted-foreground">
-                      (valgfri)
+                      ({t("common.optional")})
                     </span>
                   </Label>
                   <Controller
@@ -587,9 +593,9 @@ export function BookingDetailSheet({
                 </div>
                 <div>
                   <Label htmlFor="bde-start-time" className={labelClass}>
-                    Fra kl.{" "}
+                    {t("common.fromTime")}{" "}
                     <span className="font-normal normal-case text-muted-foreground">
-                      (valgfri)
+                      ({t("common.optional")})
                     </span>
                   </Label>
                   <TimePickerField
@@ -610,9 +616,9 @@ export function BookingDetailSheet({
                 </div>
                 <div>
                   <Label htmlFor="bde-end-time" className={labelClass}>
-                    Til kl.{" "}
+                    {t("common.toTime")}{" "}
                     <span className="font-normal normal-case text-muted-foreground">
-                      (valgfri)
+                      ({t("common.optional")})
                     </span>
                   </Label>
                   <TimePickerField
@@ -633,7 +639,7 @@ export function BookingDetailSheet({
                 </div>
                 <div className="md:col-span-2">
                   <Label htmlFor="bde-guests" className={labelClass}>
-                    Antall gjester
+                    {t("common.guests")}
                   </Label>
                   <Input
                     id="bde-guests"
@@ -655,11 +661,11 @@ export function BookingDetailSheet({
 
             <section aria-labelledby="booking-edit-money">
               <h3 id="booking-edit-money" className={cn(labelClass, "mb-3")}>
-                Økonomi (NOK)
+                {t("bookings.detail.finance")}
               </h3>
               <div className="mb-5">
                 <Label htmlFor="bde-pay-status" className={labelClass}>
-                  Betalingsstatus
+                  {t("bookings.detail.paymentStatus")}
                 </Label>
                 <FormSelectField
                   name="paymentStatus"
@@ -667,10 +673,7 @@ export function BookingDetailSheet({
                   id="bde-pay-status"
                   className="mt-1.5"
                   aria-invalid={!!errors.paymentStatus}
-                  options={BOOKING_PAYMENT_STATUS_VALUES.map((v) => ({
-                    value: v,
-                    label: BOOKING_PAYMENT_STATUS_LABELS[v],
-                  }))}
+                  options={paymentStatusOptions}
                 />
                 {errors.paymentStatus ? (
                   <p className="mt-1 text-app-xs text-destructive">
@@ -678,17 +681,17 @@ export function BookingDetailSheet({
                   </p>
                 ) : null}
                 <p className="mt-2 text-app-xs leading-relaxed text-muted-foreground">
-                  <strong className="font-medium text-foreground">Fullt betalt</strong> og{" "}
-                  <strong className="font-medium text-foreground">Ikke betalt</strong>{" "}
-                  oppdaterer innbetaling og rest automatisk ved lagring.{" "}
-                  <strong className="font-medium text-foreground">Ettergitt</strong> setter
-                  rest til 0 (beholder registrert innbetalt).
+                  {t("bookings.detail.paymentStatusHint", {
+                    paid: t("bookings.paymentStatus.paid"),
+                    unpaid: t("bookings.paymentStatus.unpaid"),
+                    waived: t("bookings.paymentStatus.waived"),
+                  })}
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="bde-total" className={labelClass}>
-                    Avtalt total
+                    {t("bookings.detail.agreedTotal")}
                   </Label>
                   <PriceInput
                     id="bde-total"
@@ -705,7 +708,7 @@ export function BookingDetailSheet({
                 </div>
                 <div>
                   <Label htmlFor="bde-paid" className={labelClass}>
-                    Innbetalt
+                    {t("bookings.detail.paidAmount")}
                   </Label>
                   <PriceInput
                     id="bde-paid"
@@ -723,15 +726,14 @@ export function BookingDetailSheet({
               </div>
               {remainingPreview != null ? (
                 <p className="mt-2 text-app-sm font-medium text-rn-text-body">
-                  Restbeløp etter lagring:{" "}
-                  <span className="tabular-nums text-rn-text-heading">
-                    {formatNok(remainingPreview)}
-                  </span>
+                  {t("bookings.detail.remainingAfterSave", {
+                    amount: formatCurrency(remainingPreview),
+                  })}
                 </p>
               ) : null}
               <div className="mt-5">
                 <Label htmlFor="bde-due" className={labelClass}>
-                  Fakturaforfall (valgfritt)
+                  {t("bookings.detail.invoiceDueOptional")}
                 </Label>
                 <Controller
                   name="paymentDueDate"
@@ -762,7 +764,7 @@ export function BookingDetailSheet({
                             void field.onBlur();
                           }}
                         >
-                          Tøm forfallsdato
+                          {t("bookings.detail.clearDueDate")}
                         </Button>
                       ) : null}
                     </div>
@@ -774,9 +776,9 @@ export function BookingDetailSheet({
                   </p>
                 ) : null}
                 <p className="mt-2 text-app-xs leading-relaxed text-muted-foreground">
-                  La feltet stå tomt dersom du vil at{" "}
-                  <strong className="font-medium text-foreground">Fakturaer</strong>{" "}
-                  skal bruke arrangementsdato som forfallsreferanse.
+                  {t("bookings.detail.invoiceDueHint", {
+                    invoices: t("navigation.invoices"),
+                  })}
                 </p>
               </div>
             </section>
@@ -786,17 +788,19 @@ export function BookingDetailSheet({
               className="rounded-md border-2 border-violet-200/80 bg-violet-50/40 p-4 sm:p-5"
             >
               <h3 id="booking-inkasso" className={cn(labelClass, "mb-2")}>
-                Oppfølging og inkasso
+                {t("bookings.detail.collection")}
               </h3>
               <p className="text-app-sm leading-relaxed text-muted-foreground">
-                Registrer når innkassovarsel er sendt, slik at fakturalisten og
-                teamet ser det tydelig. Dette erstatter ikke juridisk dokumentasjon.
+                {t("bookings.detail.collectionDesc")}
               </p>
               {bookingRow.collectionNoticeSentAt ? (
                 <div className="mt-4 space-y-3">
                   <p className="rounded-md border border-violet-200 bg-card px-4 py-3 text-app-sm font-medium text-violet-950 dark:border-violet-800 dark:text-violet-200">
-                    Innkassovarsel registrert{" "}
-                    {formatInkassoRegistered(bookingRow.collectionNoticeSentAt)}
+                    {t("bookings.detail.collectionRegistered", {
+                      date: formatInkassoRegistered(
+                        bookingRow.collectionNoticeSentAt,
+                      ),
+                    })}
                   </p>
                   <Button
                     type="button"
@@ -805,7 +809,7 @@ export function BookingDetailSheet({
                     className="h-11 w-full rounded-md border-2 border-violet-300 font-semibold text-violet-950 hover:bg-violet-100/80"
                     onClick={() => void clearCollectionNotice()}
                   >
-                    Fjern markering
+                    {t("bookings.detail.removeMarking")}
                   </Button>
                 </div>
               ) : (
@@ -815,22 +819,20 @@ export function BookingDetailSheet({
                   className="mt-4 h-11 w-full rounded-md border-2 border-violet-400 bg-violet-700 font-semibold text-white hover:bg-violet-800"
                   onClick={() => void registerCollectionNotice()}
                 >
-                  Registrer innkassovarsel sendt
+                  {t("bookings.detail.registerCollection")}
                 </Button>
               )}
             </section>
 
             <section aria-labelledby="booking-edit-notes">
               <h3 id="booking-edit-notes" className={cn(labelClass, "mb-2")}>
-                Notater på bookingen
+                {t("bookings.detail.notesTitle")}
               </h3>
               <p
                 id="booking-edit-notes-hint"
                 className="mb-3 text-app-sm leading-relaxed text-muted-foreground"
               >
-                Teksten er hentet fra bookingens lagrede notatfelt i databasen
-                (inkl. tekst som ble lagret ved ny bestilling). Du kan redigere
-                den her og oppdatere med «Lagre endringer».
+                {t("bookings.detail.notesHint")}
               </p>
               <Textarea
                 {...register("notes")}
@@ -841,7 +843,7 @@ export function BookingDetailSheet({
                 )}
                 aria-invalid={!!errors.notes}
                 aria-describedby="booking-edit-notes-hint"
-                placeholder="Ingen notater lagret. Skriv her hvis du vil legge til mer."
+                placeholder={t("bookings.detail.notesPlaceholder")}
               />
               {errors.notes ? (
                 <p className="mt-1 text-app-xs text-destructive">
@@ -860,7 +862,7 @@ export function BookingDetailSheet({
               className="w-full sm:order-first sm:flex-1"
             >
               <Save className="mr-2 size-4 shrink-0" aria-hidden />
-              Lagre endringer
+              {t("bookings.detail.saveChanges")}
             </Button>
             {bookingRow.status === "pending" ? (
               <Button
@@ -872,7 +874,7 @@ export function BookingDetailSheet({
                 onClick={() => onSetStatus(bookingRow.id, "confirmed")}
               >
                 <CheckCircle2 className="mr-2 size-4 shrink-0" aria-hidden />
-                Bekreft booking
+                {t("bookings.detail.confirmBooking")}
               </Button>
             ) : null}
             {bookingRow.status === "pending" ||
@@ -885,13 +887,12 @@ export function BookingDetailSheet({
                 className="w-full border-2 border-destructive/40 font-heading font-bold text-destructive hover:bg-destructive/10 sm:flex-1"
                 onClick={() =>
                   onSetStatus(bookingRow.id, "cancelled", {
-                    confirmMessage:
-                      "Er du sikker på at du vil avbestille denne bookingen? Status settes til Avbestilt.",
+                    confirmMessage: t("bookings.cancelConfirm"),
                   })
                 }
               >
                 <XCircle className="mr-2 size-4 shrink-0" aria-hidden />
-                Avbestill
+                {t("bookings.detail.cancelBooking")}
               </Button>
             ) : null}
             {bookingRow.status === "cancelled" ? (
@@ -903,12 +904,11 @@ export function BookingDetailSheet({
                 className="w-full border-2 border-rn-border-strong font-heading font-bold sm:flex-1"
                 onClick={() =>
                   onSetStatus(bookingRow.id, "pending", {
-                    confirmMessage:
-                      "Flytte denne bookingen tilbake til «Avventer»?",
+                    confirmMessage: t("bookings.detail.moveToPendingConfirm"),
                   })
                 }
               >
-                Til avventer
+                {t("bookings.detail.moveToPending")}
               </Button>
             ) : null}
             {canDeleteBooking ? (
@@ -921,7 +921,7 @@ export function BookingDetailSheet({
                 onClick={() => setDeleteDialogOpen(true)}
               >
                 <Trash2 className="mr-2 size-4 shrink-0" aria-hidden />
-                Slett booking
+                {t("bookings.detail.deleteBooking")}
               </Button>
             ) : null}
           </SheetFooter>
@@ -941,11 +941,13 @@ export function BookingDetailSheet({
         >
           <DialogHeader className="text-left">
             <DialogTitle className="app-section-title">
-              Slette booking?
+              {t("bookings.detail.deleteTitle")}
             </DialogTitle>
             <DialogDescription className="text-app-base leading-relaxed text-muted-foreground">
-              «{bookingRow.customer}», {bookingRow.date}. Dette kan ikke angres.
-              Kunden beholdes i Kunder.
+              {t("bookings.detail.deleteDescription", {
+                customer: bookingRow.customer,
+                date: bookingRow.date,
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -957,7 +959,7 @@ export function BookingDetailSheet({
               disabled={deleteBusy}
               onClick={() => setDeleteDialogOpen(false)}
             >
-              Avbryt
+              {t("common.actions.cancel")}
             </Button>
             <Button
               type="button"
@@ -966,7 +968,9 @@ export function BookingDetailSheet({
               className="w-full border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700 sm:w-auto"
               onClick={() => void performDeleteBooking()}
             >
-              {deleteBusy ? "Sletter…" : "Ja, slett booking"}
+              {deleteBusy
+                ? t("common.deleting")
+                : t("bookings.detail.deleteConfirm")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { logAdminAction } from "@/lib/admin/audit-log";
 import { requirePlatformAdmin } from "@/lib/admin/require-platform-admin";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import { getServerTranslation } from "@/i18n/server";
 
 type FeatureFlagRow = {
   enabled_global: boolean;
@@ -34,6 +35,7 @@ export async function updateFeatureFlag(input: {
   enabledAt?: string | null;
   organizationOverrides?: Record<string, boolean>;
 }) {
+  const { t } = await getServerTranslation();
   const adminUser = await requirePlatformAdmin();
   const admin = createSupabaseAdminClient();
 
@@ -80,7 +82,7 @@ export async function updateFeatureFlag(input: {
     if (input.rolloutPercentage < 0 || input.rolloutPercentage > 100) {
       return {
         ok: false as const,
-        error: "Utrulling må være mellom 0 og 100",
+        error: t("serverErrors.admin.rolloutRange"),
       };
     }
     update.rollout_percentage = input.rolloutPercentage;

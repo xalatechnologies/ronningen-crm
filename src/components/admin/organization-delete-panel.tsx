@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminConfirmActionDialog } from "@/components/admin/admin-confirm-action-dialog";
 import { AdminActionButton } from "@/components/admin/admin-action-button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ export function OrganizationDeletePanel({
   organizationName: string;
   organizationSlug: string;
 }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [confirmSlug, setConfirmSlug] = useState("");
   const [busy, setBusy] = useState(false);
@@ -54,10 +56,9 @@ export function OrganizationDeletePanel({
           "border-destructive/30 p-[length:var(--app-card-padding)] md:p-[length:calc(var(--app-card-padding)+0.25rem)]",
         )}
       >
-        <h2 className="app-section-title text-destructive">Farlig sone</h2>
+        <h2 className="app-section-title text-destructive">{t("adminLabels.sections.dangerousZone")}</h2>
         <p className="mt-2 app-text text-muted-foreground">
-          Sletter {organizationName} permanent, inkludert medlemmer, data og
-          abonnement.
+          {t("adminLabels.deleteOrgDescription", { name: organizationName })}
         </p>
         <AdminActionButton
           type="button"
@@ -65,7 +66,7 @@ export function OrganizationDeletePanel({
           className="mt-4"
           onClick={() => setOpen(true)}
         >
-          Slett organisasjon
+          {t("adminLabels.deleteOrganization")}
         </AdminActionButton>
         {error && !open ? (
           <p className="mt-3 text-app-sm font-medium text-destructive">{error}</p>
@@ -75,15 +76,15 @@ export function OrganizationDeletePanel({
       <AdminConfirmActionDialog
         open={open}
         onOpenChange={setOpen}
-        title={`Slett ${organizationName}?`}
+        title={t("adminLabels.deleteOrgTitle", { name: organizationName })}
         description={
           <div className="space-y-3">
-            <p>Dette kan ikke angres. Skriv inn slug for å bekrefte:</p>
+            <p>{t("adminLabels.deleteOrgConfirmHint")}</p>
             <code className="block rounded-md bg-muted px-2 py-1 text-app-sm">
               {organizationSlug}
             </code>
             <div className="space-y-2">
-              <Label htmlFor="confirm-slug">Slug</Label>
+              <Label htmlFor="confirm-slug">{t("adminLabels.fields.slug")}</Label>
               <Input
                 id="confirm-slug"
                 value={confirmSlug}
@@ -96,7 +97,7 @@ export function OrganizationDeletePanel({
             ) : null}
           </div>
         }
-        confirmLabel="Ja, slett permanent"
+        confirmLabel={t("admin.ja_slett_permanent")}
         confirmVariant="destructive"
         busy={busy}
         onConfirm={handleDelete}

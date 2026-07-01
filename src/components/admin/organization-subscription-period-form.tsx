@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminActionButton } from "@/components/admin/admin-action-button";
 import { Label } from "@/components/ui/label";
 import { updateSubscriptionPeriod } from "@/lib/admin/actions/billing";
@@ -24,6 +25,7 @@ export function OrganizationSubscriptionPeriodForm({
   periodEnd,
   periodStart,
 }: OrganizationSubscriptionPeriodFormProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [endDate, setEndDate] = useState(toDateInputValue(periodEnd));
   const [startDate, setStartDate] = useState(toDateInputValue(periodStart));
@@ -62,15 +64,15 @@ export function OrganizationSubscriptionPeriodForm({
       )}
     >
       <div>
-        <h2 className="app-section-title">Abonnementsperiode</h2>
+        <h2 className="app-section-title">{t("adminLabels.sections.subscriptionPeriod")}</h2>
         <p className="mt-2 app-text text-muted-foreground">
-          Forleng prøveperiode eller sett manuell periode slutt.
+          {t("admin.subscription_period_hint")}
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="period-start">Periode start</Label>
+          <Label htmlFor="period-start">{t("adminLabels.fields.periodStart")}</Label>
           <input
             id="period-start"
             type="date"
@@ -80,7 +82,7 @@ export function OrganizationSubscriptionPeriodForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="period-end">Periode slutt</Label>
+          <Label htmlFor="period-end">{t("adminLabels.fields.periodEnd")}</Label>
           <input
             id="period-end"
             type="date"
@@ -95,11 +97,11 @@ export function OrganizationSubscriptionPeriodForm({
         <p className="text-app-sm font-medium text-destructive">{error}</p>
       ) : null}
       {saved ? (
-        <p className="text-app-sm font-medium text-success">Lagret.</p>
+        <p className="text-app-sm font-medium text-success">{t("adminLabels.saved")}</p>
       ) : null}
 
       <AdminActionButton type="submit" variant="default" disabled={busy}>
-        {busy ? "Lagrer…" : "Lagre periode"}
+        {busy ? t("admin.lagrer") : t("admin.lagre_periode")}
       </AdminActionButton>
     </form>
   );

@@ -1,12 +1,21 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminDataPanel } from "@/components/admin/admin-data-panel";
 import { AdminPageShell } from "@/components/admin/admin-page-shell";
 import { Input } from "@/components/ui/input";
-import type { GlobalSearchResults } from "@/lib/admin/queries/global-search";
+import type { GlobalSearchResults, GlobalSearchGroupType } from "@/lib/admin/queries/global-search";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import type { TranslationKey } from "@/i18n/types";
+
+const GROUP_LABEL_KEYS: Record<GlobalSearchGroupType, TranslationKey> = {
+  organizations: "admin.global_search_group_organizations",
+  users: "admin.global_search_group_users",
+  customers: "admin.global_search_group_customers",
+  bookings: "admin.global_search_group_bookings",
+};
 
 export function AdminGlobalSearchWorkspace({
   query,
@@ -15,8 +24,13 @@ export function AdminGlobalSearchWorkspace({
   query: string;
   results: GlobalSearchResults | null;
 }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [value, setValue] = useState(query);
+  const groupLabel = useCallback(
+    (type: GlobalSearchGroupType) => t(GROUP_LABEL_KEYS[type]),
+    [t],
+  );
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -30,26 +44,26 @@ export function AdminGlobalSearchWorkspace({
 
   return (
     <AdminPageShell
-      title="Søk"
-      description="Søk på tvers av organisasjoner, brukere, kunder og bookinger."
+      title={t("admin.global_search_title")}
+      description={t("admin.sok_pa_tvers_av_organisasjoner_brukere_kunder_og_bookinger")}
     >
       <form onSubmit={handleSubmit} className="max-w-xl">
         <Input
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="Søk…"
-          aria-label="Globalt adminsøk"
+          placeholder={t("admin.sok")}
+          aria-label={t("admin.globalt_adminsok")}
         />
       </form>
 
       {results ? (
         <div className="mt-6 flex flex-col gap-6">
           {results.groups.length === 0 ? (
-            <p className="app-text-muted">Ingen treff for «{results.query}».</p>
+            <p className="app-text-muted">{t("adminLabels.empty.noSearchResults", { query: results.query })}</p>
           ) : (
             results.groups.map((group) => (
               <AdminDataPanel key={group.type}>
-                <h2 className="app-section-title">{group.type}</h2>
+                <h2 className="app-section-title">{groupLabel(group.type)}</h2>
                 <ul className="mt-4 divide-y divide-rn-border-strong/40">
                   {group.items.map((item) => (
                     <li key={item.id} className="py-3">

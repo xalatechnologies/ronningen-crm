@@ -5,6 +5,17 @@ import {
 } from "@/constants/booking-payment-status";
 import { USER_ROLES } from "@/constants/roles";
 import { normalizeEmail } from "@/lib/auth/normalize-email";
+import {
+  type ValidationMessages,
+  defaultValidationMessages,
+  validationMessagesForLocale,
+} from "@/lib/validations/messages";
+
+export {
+  type ValidationMessages,
+  defaultValidationMessages,
+  validationMessagesForLocale,
+} from "@/lib/validations/messages";
 
 const userRoleSchema = z.enum(USER_ROLES);
 
@@ -12,30 +23,76 @@ export function isUserRole(value: unknown): value is z.infer<typeof userRoleSche
   return userRoleSchema.safeParse(value).success;
 }
 
-const emailField = z
-  .string()
-  .min(1, "E-post er påkrevd")
-  .transform((value) => normalizeEmail(value))
-  .pipe(z.string().email("Ugyldig e-postadresse"));
+function createEmailField(msg: ValidationMessages) {
+  return z
+    .string()
+    .min(1, msg.emailRequired)
+    .transform((value) => normalizeEmail(value))
+    .pipe(z.string().email(msg.invalidEmail));
+}
 
-export const loginSchema = z.object({
-  email: emailField,
-  password: z.string().min(8, "Passordet må være minst 8 tegn"),
-});
+function createPhoneWhenPresentSchema(msg: ValidationMessages) {
+  return z
+    .string()
+    .min(8, msg.phoneTooShort)
+    .regex(
+      /^[+]?[\d][\d\s\-/]{5,}\d$/,
+      msg.invalidPhoneFormat,
+    );
+}
+
+function createOptionalBookingTimeSchema(msg: ValidationMessages) {
+  return z
+    .string()
+    .transform((s) => s.trim())
+    .pipe(
+      z.union([
+        z.literal(""),
+        z
+          .string()
+          .regex(
+            /^([01]?\d|2[0-3]):[0-5]\d$/,
+            msg.invalidTime,
+          ),
+      ]),
+    );
+}
+
+function createAccommodationHhMmOptional(msg: ValidationMessages) {
+  return z
+    .string()
+    .transform((s) => s.trim())
+    .refine((s) => s === "" || /^(\d|[01]\d|2[0-3]):[0-5]\d$/.test(s), {
+      message: msg.invalidTimeShort,
+    });
+}
+
+export function createLoginSchema(msg: ValidationMessages) {
+  return z.object({
+    email: createEmailField(msg),
+    password: z.string().min(8, msg.passwordTooShort),
+  });
+}
+
+export const loginSchema = createLoginSchema(defaultValidationMessages);
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
-export const registerSchema = z
-  .object({
-    fullName: z.string().min(1, "Navn er påkrevd"),
-    email: emailField,
-    password: z.string().min(8, "Passordet må være minst 8 tegn"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "Passordene er ikke like",
-  });
+export function createRegisterSchema(msg: ValidationMessages) {
+  return z
+    .object({
+      fullName: z.string().min(1, msg.nameRequired),
+      email: createEmailField(msg),
+      password: z.string().min(8, msg.passwordTooShort),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      path: ["confirmPassword"],
+      message: msg.passwordsMismatch,
+    });
+}
+
+export const registerSchema = createRegisterSchema(defaultValidationMessages);
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
@@ -49,17 +106,23 @@ export const customerSchema = z.object({
 export type CustomerInput = z.infer<typeof customerSchema>;
 
 /** Create / edit customer from CRM UI */
-export const customerUpsertFormSchema = z.object({
-  name: z.string().min(1, "Navn er påkrevd"),
-  phone: z.union([
-    z.literal(""),
-    z.string().min(3, "Telefon må være minst 3 tegn"),
-  ]),
-  email: z.union([
-    z.literal(""),
-    z.string().email("Ugyldig e-post"),
-  ]),
-});
+export function createCustomerUpsertFormSchema(msg: ValidationMessages) {
+  return z.object({
+    name: z.string().min(1, msg.nameRequired),
+    phone: z.union([
+      z.literal(""),
+      z.string().min(3, msg.phoneMin3),
+    ]),
+    email: z.union([
+      z.literal(""),
+      z.string().email(msg.invalidEmailShort),
+    ]),
+  });
+}
+
+export const customerUpsertFormSchema = createCustomerUpsertFormSchema(
+  defaultValidationMessages,
+);
 
 export type CustomerUpsertFormInput = z.infer<typeof customerUpsertFormSchema>;
 
@@ -97,27 +160,31 @@ export function partnerLabelToCategory(input: string): string {
 }
 
 /** Partnere / leverandører på kundesiden */
-export const partnerFormSchema = z.object({
-  category: z
-    .string()
-    .transform((s) => partnerLabelToCategory(s))
-    .pipe(
-      z
-        .string()
-        .min(2, "Kategori må være minst 2 tegn")
-        .max(80, "Maks 80 tegn"),
-    ),
-  name: z
-    .string()
-    .transform((s) => s.trim())
-    .pipe(z.string().min(2, "Navn må være minst 2 tegn").max(200)),
-  phone: z.union([
-    z.literal(""),
-    z.string().min(3, "Telefon må være minst 3 tegn"),
-  ]),
-  email: z.union([z.literal(""), z.string().email("Ugyldig e-post")]),
-  notes: z.string().max(4000, "Maks 4000 tegn").optional(),
-});
+export function createPartnerFormSchema(msg: ValidationMessages) {
+  return z.object({
+    category: z
+      .string()
+      .transform((s) => partnerLabelToCategory(s))
+      .pipe(
+        z
+          .string()
+          .min(2, msg.categoryMin2)
+          .max(80, msg.max80),
+      ),
+    name: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().min(2, msg.nameMin2).max(200)),
+    phone: z.union([
+      z.literal(""),
+      z.string().min(3, msg.phoneMin3),
+    ]),
+    email: z.union([z.literal(""), z.string().email(msg.invalidEmailShort)]),
+    notes: z.string().max(4000, msg.max4000).optional(),
+  });
+}
+
+export const partnerFormSchema = createPartnerFormSchema(defaultValidationMessages);
 
 export type PartnerFormInput = z.infer<typeof partnerFormSchema>;
 
@@ -132,55 +199,69 @@ export const PROPERTY_TYPES = [
 export type PropertyType = (typeof PROPERTY_TYPES)[number];
 
 /** Lokaler / eiendommer (properties) */
-export const propertyFormSchema = z.object({
-  name: z
-    .string()
-    .transform((s) => s.trim())
-    .pipe(z.string().min(2, "Navn må være minst 2 tegn").max(200)),
-  address: z.union([
-    z.literal(""),
-    z.string().min(3, "Adresse må være minst 3 tegn"),
-  ]),
-  type: z.union([z.literal(""), z.enum(PROPERTY_TYPES)]),
-  notes: z.string().max(4000, "Maks 4000 tegn").optional(),
-});
+export function createPropertyFormSchema(msg: ValidationMessages) {
+  return z.object({
+    name: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().min(2, msg.nameMin2).max(200)),
+    address: z.union([
+      z.literal(""),
+      z.string().min(3, msg.addressMin3),
+    ]),
+    type: z.union([z.literal(""), z.enum(PROPERTY_TYPES)]),
+    notes: z.string().max(4000, msg.max4000).optional(),
+  });
+}
+
+export const propertyFormSchema = createPropertyFormSchema(defaultValidationMessages);
 
 export type PropertyFormInput = z.infer<typeof propertyFormSchema>;
 
 /** Organisasjonsprofil / fakturaavsender */
-export const organizationProfileFormSchema = z.object({
-  name: z
-    .string()
-    .transform((s) => s.trim())
-    .pipe(z.string().min(2, "Navn må være minst 2 tegn").max(200)),
-  legalName: z.string().max(200),
-  tagline: z.string().max(200),
-  orgNumber: z.string().max(20),
-  addressLine1: z.string().max(200),
-  addressLine2: z.string().max(200),
-  postalCode: z.string().max(12),
-  city: z.string().max(100),
-  contactEmail: z.union([
-    z.literal(""),
-    z.string().email("Ugyldig e-postadresse"),
-  ]),
-  contactPhone: z.string().max(30),
-  logoUrl: z.union([z.literal(""), z.string().url("Ugyldig URL")]),
-  bankAccount: z.string().max(200),
-  paymentInstructions: z.string().max(2000, "Maks 2000 tegn"),
-});
+export function createOrganizationProfileFormSchema(msg: ValidationMessages) {
+  return z.object({
+    name: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().min(2, msg.nameMin2).max(200)),
+    legalName: z.string().max(200),
+    tagline: z.string().max(200),
+    orgNumber: z.string().max(20),
+    addressLine1: z.string().max(200),
+    addressLine2: z.string().max(200),
+    postalCode: z.string().max(12),
+    city: z.string().max(100),
+    contactEmail: z.union([
+      z.literal(""),
+      z.string().email(msg.invalidEmail),
+    ]),
+    contactPhone: z.string().max(30),
+    logoUrl: z.union([z.literal(""), z.string().url(msg.urlInvalid)]),
+    bankAccount: z.string().max(200),
+    paymentInstructions: z.string().max(2000, msg.max2000),
+  });
+}
+
+export const organizationProfileFormSchema = createOrganizationProfileFormSchema(
+  defaultValidationMessages,
+);
 
 export type OrganizationProfileFormInput = z.infer<
   typeof organizationProfileFormSchema
 >;
 
-export const teamMemberAddSchema = z.object({
-  email: z
-    .string()
-    .transform((s) => s.trim().toLowerCase())
-    .pipe(z.string().email("Skriv inn en gyldig e-postadresse")),
-  role: z.enum(["admin", "manager", "accountant", "viewer"]),
-});
+export function createTeamMemberAddSchema(msg: ValidationMessages) {
+  return z.object({
+    email: z
+      .string()
+      .transform((s) => s.trim().toLowerCase())
+      .pipe(z.string().email(msg.validEmailEnter)),
+    role: z.enum(["admin", "manager", "accountant", "viewer"]),
+  });
+}
+
+export const teamMemberAddSchema = createTeamMemberAddSchema(defaultValidationMessages);
 
 export type TeamMemberAddInput = z.infer<typeof teamMemberAddSchema>;
 
@@ -221,14 +302,18 @@ export const assetSchema = z.object({
 
 export type AssetInput = z.infer<typeof assetSchema>;
 
-export const assetFormSchema = z.object({
-  propertyId: z.string().min(1, "Velg lokale").uuid("Ugyldig lokale"),
-  name: z.string().min(1, "Navn er påkrevd"),
-  quantity: z.coerce.number().int().min(0, "Antall kan ikke være negativt"),
-  value: z.coerce.number().min(0, "Verdi kan ikke være negativ"),
-  condition: z.string().optional(),
-  insuranceStatus: z.string().optional(),
-});
+export function createAssetFormSchema(msg: ValidationMessages) {
+  return z.object({
+    propertyId: z.string().min(1, msg.selectProperty).uuid(msg.invalidProperty),
+    name: z.string().min(1, msg.nameRequired),
+    quantity: z.coerce.number().int().min(0, msg.quantityNonNegative),
+    value: z.coerce.number().min(0, msg.valueNonNegative),
+    condition: z.string().optional(),
+    insuranceStatus: z.string().optional(),
+  });
+}
+
+export const assetFormSchema = createAssetFormSchema(defaultValidationMessages);
 
 export type AssetFormInput = z.infer<typeof assetFormSchema>;
 
@@ -380,229 +465,225 @@ export function todayLocalYmd(): string {
   return `${y}-${month}-${day}`;
 }
 
-const phoneWhenPresentSchema = z
-  .string()
-  .min(8, "Telefonnummeret er for kort")
-  .regex(
-    /^[+]?[\d][\d\s\-/]{5,}\d$/,
-    "Ugyldig telefonnummer (bruk siffer, +47, mellomrom eller bindestrek)",
-  );
+export function createNewBookingFormFieldsSchema(msg: ValidationMessages) {
+  const phoneWhenPresentSchema = createPhoneWhenPresentSchema(msg);
+  const optionalBookingTimeSchema = createOptionalBookingTimeSchema(msg);
 
-const optionalBookingTimeSchema = z
-  .string()
-  .transform((s) => s.trim())
-  .pipe(
-    z.union([
-      z.literal(""),
-      z
-        .string()
-        .regex(
-          /^([01]?\d|2[0-3]):[0-5]\d$/,
-          "Ugyldig klokkeslett (bruk HH:MM)",
-        ),
-    ]),
-  );
-
-export const newBookingFormFieldsSchema = z.object({
-  customerName: z
-    .string()
-    .min(1, "Navn er påkrevd")
-    .transform((s) => s.trim())
-    .pipe(z.string().min(2, "Navnet må være minst 2 tegn")),
-  phone: z
-    .string()
-    .transform((s) => s.trim())
-    .pipe(
-      z
-        .string()
-        .min(1, "Telefon er påkrevd")
-        .pipe(phoneWhenPresentSchema),
-    ),
-  email: z.union([
-    z.literal(""),
-    z.string().email("Ugyldig e-post"),
-  ]),
-  address: z
-    .string()
-    .transform((s) => s.trim())
-    .pipe(z.string().max(300, "Adresse kan ikke overstige 300 tegn")),
-  festType: z
-    .string()
-    .min(1, "Velg type")
-    .pipe(
-      z.enum(NEW_BOOKING_FEST_TYPE_VALUES, {
-        message: "Velg type",
-      }),
-    ),
-  festTypeCustom: z.string().max(120, "Maks 120 tegn").optional(),
-  eventType: z
-    .string()
-    .min(1, "Velg bedrift eller privat")
-    .pipe(
-      z.enum(NEW_BOOKING_EVENT_TYPES, {
-        message: "Velg bedrift eller privat",
-      }),
-    ),
-  eventDate: z
-    .string()
-    .min(1, "Velg dato")
-    .refine((s) => parseBookingDateLocal(s), { message: "Ugyldig dato" })
-    .refine((s) => s >= todayLocalYmd(), {
-      message: "Dato kan ikke ligge i fortiden",
-    }),
-  eventEndDate: z
-    .string()
-    .transform((s) => s.trim())
-    .refine((s) => s === "" || parseBookingDateLocal(s), {
-      message: "Ugyldig sluttdato",
-    })
-    .refine((s) => s === "" || s >= todayLocalYmd(), {
-      message: "Sluttdato kan ikke ligge i fortiden",
-    }),
-  eventStartTime: optionalBookingTimeSchema,
-  eventEndTime: optionalBookingTimeSchema,
-  guestCount: z.coerce
-    .number({ error: "Oppgi antall gjester" })
-    .int("Antall gjester må være et heltall")
-    .min(1, "Oppgi minst én gjest")
-    .max(50_000, "Antall gjester virker urealistisk høyt"),
-  packageSource: z.enum(["catalog", "custom"]),
-  selectedPackageId: z.union([
-    z.literal(""),
-    z.string().uuid("Velg en pakke"),
-  ]),
-  customPackageName: z
-    .string()
-    .transform((s) => s.trim())
-    .pipe(z.string().max(200, "Maks 200 tegn")),
-  customPackagePrice: z.coerce
-    .number({ error: "Ugyldig pris" })
-    .min(0, "Pris kan ikke være negativ"),
-  customAddonLines: z.array(
-    z.object({
-      name: z.string(),
-      priceNok: z.coerce.number().min(0, "Pris kan ikke være negativ"),
-    }),
-  ),
-  selectedAddonIds: z.array(z.string().uuid()),
-  depositPaid: z.coerce
-    .number({ error: "Ugyldig depositum" })
-    .min(0, "Depositum kan ikke være negativt"),
-  /** Faktisk pris på bookingen; kan være lavere enn estimat (rabatt) eller høyere. */
-  agreedTotal: z.coerce
-    .number({ error: "Ugyldig avtalt pris" })
-    .min(0, "Avtalt total kan ikke være negativ")
-    .refine((n) => Number.isFinite(n), { message: "Ugyldig avtalt pris" }),
-  notes: z.string().max(8000, "Notatet er for langt (maks 8000 tegn)").optional(),
-  /** Valgfri egen referanse / saksnummer (lagres som `booking_reference`). */
-  bookingReference: z
-    .string()
-    .transform((s) => s.trim())
-    .pipe(z.string().max(120, "Referanse kan ikke overstige 120 tegn")),
-}).superRefine((data, ctx) => {
-  const end = data.eventEndDate.trim();
-  if (end && end < data.eventDate) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Sluttdato kan ikke være før startdato",
-      path: ["eventEndDate"],
-    });
-  }
-});
-
-export type NewBookingFormInput = z.infer<typeof newBookingFormFieldsSchema>;
-
-/** Redigering av eksisterende booking (sidepanel); dato kan ligge i fortiden. */
-export const bookingDetailEditSchema = z
-  .object({
+  return z.object({
     customerName: z
       .string()
+      .min(1, msg.nameRequired)
       .transform((s) => s.trim())
-      .pipe(z.string().min(2, "Navn må være minst 2 tegn").max(200)),
+      .pipe(z.string().min(2, msg.nameMin2Chars)),
     phone: z
       .string()
       .transform((s) => s.trim())
-      .pipe(z.string().min(1, "Telefon er påkrevd").pipe(phoneWhenPresentSchema)),
-    email: z.union([z.literal(""), z.string().email("Ugyldig e-post")]),
+      .pipe(
+        z
+          .string()
+          .min(1, msg.phoneRequired)
+          .pipe(phoneWhenPresentSchema),
+      ),
+    email: z.union([
+      z.literal(""),
+      z.string().email(msg.invalidEmailShort),
+    ]),
     address: z
       .string()
       .transform((s) => s.trim())
-      .pipe(z.string().max(300, "Adresse kan ikke overstige 300 tegn")),
-    bookingReference: z
-      .string()
-      .transform((s) => s.trim())
-      .pipe(z.string().max(120, "Referanse kan ikke overstige 120 tegn")),
+      .pipe(z.string().max(300, msg.addressMax300)),
     festType: z
       .string()
-      .transform((s) => s.trim())
-      .pipe(z.string().min(1, "Oppgi type fest").max(120)),
-    eventType: z.enum(NEW_BOOKING_EVENT_TYPES, {
-      message: "Velg Bedrift eller Privat",
-    }),
+      .min(1, msg.selectType)
+      .pipe(
+        z.enum(NEW_BOOKING_FEST_TYPE_VALUES, {
+          message: msg.selectType,
+        }),
+      ),
+    festTypeCustom: z.string().max(120, msg.max120).optional(),
+    eventType: z
+      .string()
+      .min(1, msg.selectBusinessOrPrivate)
+      .pipe(
+        z.enum(NEW_BOOKING_EVENT_TYPES, {
+          message: msg.selectBusinessOrPrivate,
+        }),
+      ),
     eventDate: z
       .string()
-      .min(1, "Velg dato")
-      .refine((s) => parseBookingDateLocal(s), { message: "Ugyldig dato" }),
+      .min(1, msg.selectDate)
+      .refine((s) => parseBookingDateLocal(s), { message: msg.invalidDate })
+      .refine((s) => s >= todayLocalYmd(), {
+        message: msg.dateNotInPast,
+      }),
     eventEndDate: z
       .string()
       .transform((s) => s.trim())
       .refine((s) => s === "" || parseBookingDateLocal(s), {
-        message: "Ugyldig sluttdato",
+        message: msg.invalidEndDate,
+      })
+      .refine((s) => s === "" || s >= todayLocalYmd(), {
+        message: msg.endDateNotInPast,
       }),
     eventStartTime: optionalBookingTimeSchema,
     eventEndTime: optionalBookingTimeSchema,
     guestCount: z.coerce
-      .number({ error: "Oppgi antall gjester" })
-      .int("Antall gjester må være et heltall")
-      .min(1, "Oppgi minst én gjest")
-      .max(50_000, "Antall gjester virker urealistisk høyt"),
-    totalNok: z.coerce
-      .number({ error: "Ugyldig totalpris" })
-      .min(0, "Totalpris kan ikke være negativ"),
-    paidNok: z.coerce
-      .number({ error: "Ugyldig innbetaling" })
-      .min(0, "Innbetaling kan ikke være negativ"),
-    paymentStatus: z.enum(BOOKING_PAYMENT_STATUS_VALUES),
-    paymentDueDate: z
+      .number({ error: msg.guestCountRequired })
+      .int(msg.guestCountInteger)
+      .min(1, msg.guestCountMin1)
+      .max(50_000, msg.guestCountTooHigh),
+    packageSource: z.enum(["catalog", "custom"]),
+    selectedPackageId: z.union([
+      z.literal(""),
+      z.string().uuid(msg.selectPackage),
+    ]),
+    customPackageName: z
       .string()
       .transform((s) => s.trim())
-      .refine((s) => s === "" || parseBookingDateLocal(s), {
-        message: "Ugyldig forfallsdato",
+      .pipe(z.string().max(200, msg.max200)),
+    customPackagePrice: z.coerce
+      .number({ error: msg.invalidPrice })
+      .min(0, msg.priceNonNegative),
+    customAddonLines: z.array(
+      z.object({
+        name: z.string(),
+        priceNok: z.coerce.number().min(0, msg.priceNonNegative),
       }),
-    notes: z.string().max(8000, "Notatet er for langt (maks 8000 tegn)").optional(),
-  })
-  .superRefine((data, ctx) => {
+    ),
+    selectedAddonIds: z.array(z.string().uuid()),
+    depositPaid: z.coerce
+      .number({ error: msg.invalidDeposit })
+      .min(0, msg.depositNonNegative),
+    /** Faktisk pris på bookingen; kan være lavere enn estimat (rabatt) eller høyere. */
+    agreedTotal: z.coerce
+      .number({ error: msg.invalidAgreedPrice })
+      .min(0, msg.agreedPriceNonNegative)
+      .refine((n) => Number.isFinite(n), { message: msg.invalidAgreedPrice }),
+    notes: z.string().max(8000, msg.max8000).optional(),
+    /** Valgfri egen referanse / saksnummer (lagres som `booking_reference`). */
+    bookingReference: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().max(120, msg.referenceMax120)),
+  }).superRefine((data, ctx) => {
     const end = data.eventEndDate.trim();
     if (end && end < data.eventDate) {
       ctx.addIssue({
         code: "custom",
-        message: "Sluttdato kan ikke være før startdato",
+        message: msg.endBeforeStart,
         path: ["eventEndDate"],
       });
     }
-    if (data.paidNok > data.totalNok) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Innbetaling kan ikke overstige avtalt total",
-        path: ["paidNok"],
-      });
-    }
   });
+}
+
+export const newBookingFormFieldsSchema = createNewBookingFormFieldsSchema(
+  defaultValidationMessages,
+);
+
+export type NewBookingFormInput = z.infer<typeof newBookingFormFieldsSchema>;
+
+/** Redigering av eksisterende booking (sidepanel); dato kan ligge i fortiden. */
+export function createBookingDetailFormSchema(msg: ValidationMessages) {
+  const phoneWhenPresentSchema = createPhoneWhenPresentSchema(msg);
+  const optionalBookingTimeSchema = createOptionalBookingTimeSchema(msg);
+
+  return z
+    .object({
+      customerName: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().min(2, msg.nameMin2).max(200)),
+      phone: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().min(1, msg.phoneRequired).pipe(phoneWhenPresentSchema)),
+      email: z.union([z.literal(""), z.string().email(msg.invalidEmailShort)]),
+      address: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().max(300, msg.addressMax300)),
+      bookingReference: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().max(120, msg.referenceMax120)),
+      festType: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().min(1, msg.festTypeRequired).max(120)),
+      eventType: z.enum(NEW_BOOKING_EVENT_TYPES, {
+        message: msg.selectBedriftOrPrivat,
+      }),
+      eventDate: z
+        .string()
+        .min(1, msg.selectDate)
+        .refine((s) => parseBookingDateLocal(s), { message: msg.invalidDate }),
+      eventEndDate: z
+        .string()
+        .transform((s) => s.trim())
+        .refine((s) => s === "" || parseBookingDateLocal(s), {
+          message: msg.invalidEndDate,
+        }),
+      eventStartTime: optionalBookingTimeSchema,
+      eventEndTime: optionalBookingTimeSchema,
+      guestCount: z.coerce
+        .number({ error: msg.guestCountRequired })
+        .int(msg.guestCountInteger)
+        .min(1, msg.guestCountMin1)
+        .max(50_000, msg.guestCountTooHigh),
+      totalNok: z.coerce
+        .number({ error: msg.invalidTotalPrice })
+        .min(0, msg.totalPriceNonNegative),
+      paidNok: z.coerce
+        .number({ error: msg.invalidPayment })
+        .min(0, msg.paymentNonNegative),
+      paymentStatus: z.enum(BOOKING_PAYMENT_STATUS_VALUES),
+      paymentDueDate: z
+        .string()
+        .transform((s) => s.trim())
+        .refine((s) => s === "" || parseBookingDateLocal(s), {
+          message: msg.invalidDueDate,
+        }),
+      notes: z.string().max(8000, msg.max8000).optional(),
+    })
+    .superRefine((data, ctx) => {
+      const end = data.eventEndDate.trim();
+      if (end && end < data.eventDate) {
+        ctx.addIssue({
+          code: "custom",
+          message: msg.endBeforeStart,
+          path: ["eventEndDate"],
+        });
+      }
+      if (data.paidNok > data.totalNok) {
+        ctx.addIssue({
+          code: "custom",
+          message: msg.paymentExceedsTotal,
+          path: ["paidNok"],
+        });
+      }
+    });
+}
+
+export const bookingDetailEditSchema = createBookingDetailFormSchema(
+  defaultValidationMessages,
+);
 
 export type BookingDetailEditInput = z.infer<typeof bookingDetailEditSchema>;
 
 export function createNewBookingFormSchema(
+  msg: ValidationMessages,
   addonCatalog: BookingAddonCatalogEntry[],
   packageCatalog: BookingPackageCatalogEntry[],
 ) {
   const allowedAddons = new Set(addonCatalog.map((a) => a.id));
   const allowedPackages = new Set(packageCatalog.map((p) => p.id));
-  return newBookingFormFieldsSchema.superRefine((data, ctx) => {
+  return createNewBookingFormFieldsSchema(msg).superRefine((data, ctx) => {
     if (data.packageSource === "catalog") {
       if (packageCatalog.length === 0) {
         ctx.addIssue({
           code: "custom",
-          message: "Ingen aktive pakker. Velg egen pakkepris eller opprett pakker under Priser.",
+          message: msg.noActivePackages,
           path: ["packageSource"],
         });
         return;
@@ -613,7 +694,7 @@ export function createNewBookingFormSchema(
       ) {
         ctx.addIssue({
           code: "custom",
-          message: "Velg en pakke",
+          message: msg.selectPackage,
           path: ["selectedPackageId"],
         });
         return;
@@ -622,7 +703,7 @@ export function createNewBookingFormSchema(
       if (data.customPackageName.trim().length < 1) {
         ctx.addIssue({
           code: "custom",
-          message: "Oppgi navn på pakke / prisgrunnlag",
+          message: msg.packageNameRequired,
           path: ["customPackageName"],
         });
       }
@@ -633,7 +714,7 @@ export function createNewBookingFormSchema(
       if (!t) {
         ctx.addIssue({
           code: "custom",
-          message: "Beskriv typen",
+          message: msg.describeType,
           path: ["festTypeCustom"],
         });
       }
@@ -642,7 +723,7 @@ export function createNewBookingFormSchema(
       if (!allowedAddons.has(id)) {
         ctx.addIssue({
           code: "custom",
-          message: "Ugyldig tillegg valgt",
+          message: msg.invalidAddon,
           path: ["selectedAddonIds"],
         });
         return;
@@ -651,34 +732,55 @@ export function createNewBookingFormSchema(
     if (data.depositPaid > data.agreedTotal) {
       ctx.addIssue({
         code: "custom",
-        message: "Depositum kan ikke overstige avtalt totalpris",
+        message: msg.depositExceedsTotal,
         path: ["depositPaid"],
       });
     }
   });
 }
 
-const pricingCatalogFormFields = {
-  name: z.string().min(1, "Navn er påkrevd"),
-  description: z.string().optional(),
-  price: z.coerce.number().min(0, "Pris kan ikke være negativ"),
-  active: z.boolean(),
-};
+function createPricingCatalogFormFields(msg: ValidationMessages) {
+  return {
+    name: z.string().min(1, msg.nameRequired),
+    description: z.string().optional(),
+    price: z.coerce.number().min(0, msg.priceNonNegative),
+    active: z.boolean(),
+  };
+}
 
-export const pricingPackageFormSchema = z.object(pricingCatalogFormFields);
-export const pricingServiceFormSchema = z.object(pricingCatalogFormFields);
+export function createPackageFormSchema(msg: ValidationMessages) {
+  return z.object(createPricingCatalogFormFields(msg));
+}
+
+export const pricingPackageFormSchema = createPackageFormSchema(
+  defaultValidationMessages,
+);
+
+export function createPricingServiceFormSchema(msg: ValidationMessages) {
+  return z.object(createPricingCatalogFormFields(msg));
+}
+
+export const pricingServiceFormSchema = createPricingServiceFormSchema(
+  defaultValidationMessages,
+);
 
 export type PricingPackageFormInput = z.infer<typeof pricingPackageFormSchema>;
 export type PricingServiceFormInput = z.infer<typeof pricingServiceFormSchema>;
 
-export const transactionFormSchema = z.object({
-  propertyId: z.string().min(1, "Velg lokale").uuid("Ugyldig lokale"),
-  type: z.enum(["income", "expense"]),
-  category: z.string().min(1, "Kategori er påkrevd"),
-  description: z.string().optional(),
-  amount: z.coerce.number().positive("Beløp må være større enn 0"),
-  transactionDate: z.string().min(1, "Velg dato"),
-});
+export function createFinanceTransactionFormSchema(msg: ValidationMessages) {
+  return z.object({
+    propertyId: z.string().min(1, msg.selectProperty).uuid(msg.invalidProperty),
+    type: z.enum(["income", "expense"]),
+    category: z.string().min(1, msg.categoryRequired),
+    description: z.string().optional(),
+    amount: z.coerce.number().positive(msg.amountPositive),
+    transactionDate: z.string().min(1, msg.selectDate),
+  });
+}
+
+export const transactionFormSchema = createFinanceTransactionFormSchema(
+  defaultValidationMessages,
+);
 
 export type TransactionFormInput = z.infer<typeof transactionFormSchema>;
 
@@ -705,102 +807,116 @@ export const BOOKING_INQUIRY_FORM_STATUSES = [
 export type BookingInquiryFormStatus =
   (typeof BOOKING_INQUIRY_FORM_STATUSES)[number];
 
-export const bookingInquiryFormSchema = z
-  .object({
-    customerId: z.union([z.literal(""), z.string().uuid("Ugyldig kunde")]),
-    newCustomerName: z
-      .string()
-      .transform((s) => s.trim())
-      .pipe(z.string().max(200)),
-    newCustomerPhone: z
-      .string()
-      .transform((s) => s.trim())
-      .pipe(z.string().max(40)),
-    newCustomerEmail: z.union([
-      z.literal(""),
-      z.string().email("Ugyldig e-post"),
-    ]),
-    newCustomerAddress: z
-      .string()
-      .transform((s) => s.trim())
-      .pipe(z.string().max(300)),
-    propertyId: z.union([z.literal(""), z.string().uuid("Ugyldig lokale")]),
-    eventType: z.enum(NEW_BOOKING_EVENT_TYPES, {
-      message: "Velg bedrift eller privat",
-    }),
-    festType: z
-      .string()
-      .transform((s) => s.trim())
-      .pipe(z.string().max(120)),
-    preferredEventDate: z
-      .string()
-      .transform((s) => s.trim())
-      .refine((s) => s === "" || parseBookingDateLocal(s), {
-        message: "Ugyldig ønsket dato",
+export function createBookingInquiryFormSchema(msg: ValidationMessages) {
+  return z
+    .object({
+      customerId: z.union([z.literal(""), z.string().uuid(msg.invalidCustomer)]),
+      newCustomerName: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().max(200)),
+      newCustomerPhone: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().max(40)),
+      newCustomerEmail: z.union([
+        z.literal(""),
+        z.string().email(msg.invalidEmailShort),
+      ]),
+      newCustomerAddress: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().max(300)),
+      propertyId: z.union([z.literal(""), z.string().uuid(msg.invalidProperty)]),
+      eventType: z.enum(NEW_BOOKING_EVENT_TYPES, {
+        message: msg.selectBusinessOrPrivate,
       }),
-    preferredEventEndDate: z
-      .string()
-      .transform((s) => s.trim())
-      .refine((s) => s === "" || parseBookingDateLocal(s), {
-        message: "Ugyldig sluttdato",
+      festType: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().max(120)),
+      preferredEventDate: z
+        .string()
+        .transform((s) => s.trim())
+        .refine((s) => s === "" || parseBookingDateLocal(s), {
+          message: msg.invalidPreferredDate,
+        }),
+      preferredEventEndDate: z
+        .string()
+        .transform((s) => s.trim())
+        .refine((s) => s === "" || parseBookingDateLocal(s), {
+          message: msg.invalidEndDate,
+        }),
+      guestCount: z.coerce
+        .number({ error: msg.guestCountRequired })
+        .int(msg.guestCountInteger)
+        .min(0, msg.guestCountMin0)
+        .max(50_000, msg.guestCountTooHigh),
+      estimatedTotal: z.preprocess((v) => {
+        if (v === "" || v === undefined || v === null) return undefined;
+        const n = typeof v === "number" ? v : Number(v);
+        return Number.isFinite(n) ? n : undefined;
+      }, z.number().min(0, msg.amountNonNegative).optional()),
+      status: z.enum(BOOKING_INQUIRY_FORM_STATUSES, {
+        message: msg.selectStatus,
       }),
-    guestCount: z.coerce
-      .number({ error: "Oppgi antall gjester" })
-      .int("Antall gjester må være et heltall")
-      .min(0, "Antall gjester kan ikke være negativt")
-      .max(50_000, "Antall gjester virker urealistisk høyt"),
-    estimatedTotal: z.preprocess((v) => {
-      if (v === "" || v === undefined || v === null) return undefined;
-      const n = typeof v === "number" ? v : Number(v);
-      return Number.isFinite(n) ? n : undefined;
-    }, z.number().min(0, "Beløp kan ikke være negativt").optional()),
-    status: z.enum(BOOKING_INQUIRY_FORM_STATUSES, {
-      message: "Velg status",
-    }),
-    nextFollowUpAt: z
-      .string()
-      .transform((s) => s.trim())
-      .refine((s) => s === "" || !Number.isNaN(Date.parse(s)), {
-        message: "Ugyldig tidspunkt for oppfølging",
-      }),
-    internalNotes: z.string().max(8000, "Maks 8000 tegn").optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (!data.customerId) {
-      if (data.newCustomerName.length < 2) {
+      nextFollowUpAt: z
+        .string()
+        .transform((s) => s.trim())
+        .refine((s) => s === "" || !Number.isNaN(Date.parse(s)), {
+          message: msg.invalidFollowUpTime,
+        }),
+      internalNotes: z.string().max(8000, msg.max8000).optional(),
+    })
+    .superRefine((data, ctx) => {
+      if (!data.customerId) {
+        if (data.newCustomerName.length < 2) {
+          ctx.addIssue({
+            code: "custom",
+            message: msg.newCustomerNameRequired,
+            path: ["newCustomerName"],
+          });
+        }
+        if (data.newCustomerPhone.length < 3) {
+          ctx.addIssue({
+            code: "custom",
+            message: msg.newCustomerPhoneRequired,
+            path: ["newCustomerPhone"],
+          });
+        }
+      }
+      const start = data.preferredEventDate;
+      const end = data.preferredEventEndDate;
+      if (start && end && end < start) {
         ctx.addIssue({
           code: "custom",
-          message: "Navn er påkrevd (minst 2 tegn)",
-          path: ["newCustomerName"],
+          message: msg.endBeforeStart,
+          path: ["preferredEventEndDate"],
         });
       }
-      if (data.newCustomerPhone.length < 3) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Telefon er påkrevd (minst 3 tegn)",
-          path: ["newCustomerPhone"],
-        });
-      }
-    }
-    const start = data.preferredEventDate;
-    const end = data.preferredEventEndDate;
-    if (start && end && end < start) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Sluttdato kan ikke være før startdato",
-        path: ["preferredEventEndDate"],
-      });
-    }
-  });
+    });
+}
+
+export const bookingInquiryFormSchema = createBookingInquiryFormSchema(
+  defaultValidationMessages,
+);
 
 export type BookingInquiryFormInput = z.infer<typeof bookingInquiryFormSchema>;
 
-export const inquiryActivityNoteSchema = z.object({
-  body: z
-    .string()
-    .transform((s) => s.trim())
-    .pipe(z.string().min(1, "Skriv en melding").max(8000, "Maks 8000 tegn")),
-});
+export function createSupportMessageSchema(msg: ValidationMessages) {
+  return z.object({
+    body: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().min(1, msg.writeMessage).max(8000, msg.max8000)),
+  });
+}
+
+export const supportMessageSchema = createSupportMessageSchema(
+  defaultValidationMessages,
+);
+
+export const inquiryActivityNoteSchema = supportMessageSchema;
 
 export type InquiryActivityNoteInput = z.infer<typeof inquiryActivityNoteSchema>;
 
@@ -814,144 +930,172 @@ export const ACCOMMODATION_RESERVATION_STATUSES = [
 export type AccommodationReservationStatus =
   (typeof ACCOMMODATION_RESERVATION_STATUSES)[number];
 
-const accommodationHhMmOptional = z
-  .string()
-  .transform((s) => s.trim())
-  .refine((s) => s === "" || /^(\d|[01]\d|2[0-3]):[0-5]\d$/.test(s), {
-    message: "Ugyldig klokkeslett (HH:MM)",
-  });
+export function createAccommodationReservationFormSchema(msg: ValidationMessages) {
+  const accommodationHhMmOptional = createAccommodationHhMmOptional(msg);
 
-export const accommodationReservationFormSchema = z
-  .object({
-    customerId: z.union([z.literal(""), z.string().uuid("Ugyldig kunde")]),
-    newCustomerName: z
-      .string()
-      .transform((s) => s.trim())
-      .pipe(z.string().max(200)),
-    newCustomerPhone: z
-      .string()
-      .transform((s) => s.trim())
-      .pipe(z.string().max(40)),
-    newCustomerEmail: z.union([
-      z.literal(""),
-      z.string().email("Ugyldig e-post"),
-    ]),
-    newCustomerAddress: z
-      .string()
-      .transform((s) => s.trim())
-      .pipe(z.string().max(300)),
-    unitId: z.string().uuid("Velg enhet"),
-    checkInDate: z
-      .string()
-      .transform((s) => s.trim())
-      .refine((s) => parseBookingDateLocal(s), { message: "Ugyldig ankomstdato" }),
-    checkOutDate: z
-      .string()
-      .transform((s) => s.trim())
-      .refine((s) => parseBookingDateLocal(s), { message: "Ugyldig avreisedato" }),
-    checkInTime: accommodationHhMmOptional,
-    checkOutTime: accommodationHhMmOptional,
-    guestCount: z.coerce
-      .number({ error: "Oppgi antall gjester" })
-      .int("Antall gjester må være et heltall")
-      .min(1, "Minst én gjest")
-      .max(100, "Antall gjester virker urealistisk høyt"),
-    status: z.enum(ACCOMMODATION_RESERVATION_STATUSES, {
-      message: "Velg status",
-    }),
-    notes: z.string().max(8000, "Maks 8000 tegn").optional(),
-    totalPrice: z.preprocess((v) => {
-      if (v === "" || v === undefined || v === null) return undefined;
-      const n = typeof v === "number" ? v : Number(v);
-      return Number.isFinite(n) ? n : undefined;
-    }, z.number().min(0, "Beløp kan ikke være negativt").optional()),
-  })
-  .superRefine((data, ctx) => {
-    if (!data.customerId) {
-      if (data.newCustomerName.length < 2) {
+  return z
+    .object({
+      customerId: z.union([z.literal(""), z.string().uuid(msg.invalidCustomer)]),
+      newCustomerName: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().max(200)),
+      newCustomerPhone: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().max(40)),
+      newCustomerEmail: z.union([
+        z.literal(""),
+        z.string().email(msg.invalidEmailShort),
+      ]),
+      newCustomerAddress: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().max(300)),
+      unitId: z.string().uuid(msg.selectUnit),
+      checkInDate: z
+        .string()
+        .transform((s) => s.trim())
+        .refine((s) => parseBookingDateLocal(s), { message: msg.invalidArrivalDate }),
+      checkOutDate: z
+        .string()
+        .transform((s) => s.trim())
+        .refine((s) => parseBookingDateLocal(s), { message: msg.invalidDepartureDate }),
+      checkInTime: accommodationHhMmOptional,
+      checkOutTime: accommodationHhMmOptional,
+      guestCount: z.coerce
+        .number({ error: msg.guestCountRequired })
+        .int(msg.guestCountInteger)
+        .min(1, msg.minOneGuest)
+        .max(100, msg.guestCountTooHigh),
+      status: z.enum(ACCOMMODATION_RESERVATION_STATUSES, {
+        message: msg.selectStatus,
+      }),
+      notes: z.string().max(8000, msg.max8000).optional(),
+      totalPrice: z.preprocess((v) => {
+        if (v === "" || v === undefined || v === null) return undefined;
+        const n = typeof v === "number" ? v : Number(v);
+        return Number.isFinite(n) ? n : undefined;
+      }, z.number().min(0, msg.amountNonNegative).optional()),
+    })
+    .superRefine((data, ctx) => {
+      if (!data.customerId) {
+        if (data.newCustomerName.length < 2) {
+          ctx.addIssue({
+            code: "custom",
+            message: msg.newCustomerNameRequired,
+            path: ["newCustomerName"],
+          });
+        }
+        if (data.newCustomerPhone.length < 3) {
+          ctx.addIssue({
+            code: "custom",
+            message: msg.newCustomerPhoneRequired,
+            path: ["newCustomerPhone"],
+          });
+        }
+      }
+      if (data.checkInDate >= data.checkOutDate) {
         ctx.addIssue({
           code: "custom",
-          message: "Navn er påkrevd (minst 2 tegn)",
-          path: ["newCustomerName"],
+          message: msg.checkoutAfterCheckin,
+          path: ["checkOutDate"],
         });
       }
-      if (data.newCustomerPhone.length < 3) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Telefon er påkrevd (minst 3 tegn)",
-          path: ["newCustomerPhone"],
-        });
-      }
-    }
-    if (data.checkInDate >= data.checkOutDate) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Avreisedato må være etter ankomst",
-        path: ["checkOutDate"],
-      });
-    }
-  });
+    });
+}
+
+export const accommodationReservationFormSchema =
+  createAccommodationReservationFormSchema(defaultValidationMessages);
 
 export type AccommodationReservationFormInput = z.infer<
   typeof accommodationReservationFormSchema
 >;
 
-export const accommodationReservationEditSchema = z
-  .object({
-    unitId: z.string().uuid("Velg enhet"),
-    checkInDate: z
-      .string()
-      .transform((s) => s.trim())
-      .refine((s) => parseBookingDateLocal(s), { message: "Ugyldig ankomstdato" }),
-    checkOutDate: z
-      .string()
-      .transform((s) => s.trim())
-      .refine((s) => parseBookingDateLocal(s), { message: "Ugyldig avreisedato" }),
-    checkInTime: accommodationHhMmOptional,
-    checkOutTime: accommodationHhMmOptional,
-    guestCount: z.coerce
-      .number({ error: "Oppgi antall gjester" })
-      .int()
-      .min(1)
-      .max(100),
-    status: z.enum(ACCOMMODATION_RESERVATION_STATUSES, {
-      message: "Velg status",
-    }),
-    notes: z.string().max(8000).optional(),
-    totalPrice: z.preprocess((v) => {
-      if (v === "" || v === undefined || v === null) return undefined;
-      const n = typeof v === "number" ? v : Number(v);
-      return Number.isFinite(n) ? n : undefined;
-    }, z.number().min(0).optional()),
-  })
-  .superRefine((data, ctx) => {
-    if (data.checkInDate >= data.checkOutDate) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Avreisedato må være etter ankomst",
-        path: ["checkOutDate"],
-      });
-    }
-  });
+export function createAccommodationReservationEditSchema(msg: ValidationMessages) {
+  const accommodationHhMmOptional = createAccommodationHhMmOptional(msg);
+
+  return z
+    .object({
+      unitId: z.string().uuid(msg.selectUnit),
+      checkInDate: z
+        .string()
+        .transform((s) => s.trim())
+        .refine((s) => parseBookingDateLocal(s), { message: msg.invalidArrivalDate }),
+      checkOutDate: z
+        .string()
+        .transform((s) => s.trim())
+        .refine((s) => parseBookingDateLocal(s), { message: msg.invalidDepartureDate }),
+      checkInTime: accommodationHhMmOptional,
+      checkOutTime: accommodationHhMmOptional,
+      guestCount: z.coerce
+        .number({ error: msg.guestCountRequired })
+        .int()
+        .min(1)
+        .max(100),
+      status: z.enum(ACCOMMODATION_RESERVATION_STATUSES, {
+        message: msg.selectStatus,
+      }),
+      notes: z.string().max(8000).optional(),
+      totalPrice: z.preprocess((v) => {
+        if (v === "" || v === undefined || v === null) return undefined;
+        const n = typeof v === "number" ? v : Number(v);
+        return Number.isFinite(n) ? n : undefined;
+      }, z.number().min(0).optional()),
+    })
+    .superRefine((data, ctx) => {
+      if (data.checkInDate >= data.checkOutDate) {
+        ctx.addIssue({
+          code: "custom",
+          message: msg.checkoutAfterCheckin,
+          path: ["checkOutDate"],
+        });
+      }
+    });
+}
+
+export const accommodationReservationEditSchema =
+  createAccommodationReservationEditSchema(defaultValidationMessages);
 
 export type AccommodationReservationEditInput = z.infer<
   typeof accommodationReservationEditSchema
 >;
 
-export const accommodationUnitFormSchema = z.object({
-  name: z
-    .string()
-    .transform((s) => s.trim())
-    .pipe(z.string().min(1, "Navn er påkrevd").max(200)),
-  propertyId: z.union([z.literal(""), z.string().uuid("Ugyldig lokale")]),
-  maxGuests: z.coerce
-    .number({ error: "Oppgi kapasitet" })
-    .int()
-    .min(1, "Minst 1 gjest")
-    .max(100, "Maks 100"),
-  notes: z.string().max(2000, "Maks 2000 tegn").optional(),
-  active: z.boolean(),
-  sortOrder: z.coerce.number().int().min(0).max(9999).optional(),
-});
+export function createAccommodationUnitFormSchema(msg: ValidationMessages) {
+  return z.object({
+    name: z
+      .string()
+      .transform((s) => s.trim())
+      .pipe(z.string().min(1, msg.nameRequired).max(200)),
+    propertyId: z.union([z.literal(""), z.string().uuid(msg.invalidProperty)]),
+    maxGuests: z.coerce
+      .number({ error: msg.capacityRequired })
+      .int()
+      .min(1, msg.min1Guest)
+      .max(100, msg.max100),
+    notes: z.string().max(2000, msg.max2000).optional(),
+    active: z.boolean(),
+    sortOrder: z.coerce.number().int().min(0).max(9999).optional(),
+  });
+}
+
+export const accommodationUnitFormSchema = createAccommodationUnitFormSchema(
+  defaultValidationMessages,
+);
 
 export type AccommodationUnitFormInput = z.infer<typeof accommodationUnitFormSchema>;
+
+/** Stored DB preset values for asset condition (allowlisted Norwegian). */
+export const ASSET_CONDITION_PRESET_VALUES = {
+  excellent: "Utmerket",
+  good: "God",
+  acceptable: "Akseptabel",
+  poor: "Dårlig — byttes",
+} as const;
+
+/** Stored DB preset values for asset insurance status (allowlisted Norwegian). */
+export const ASSET_INSURANCE_PRESET_VALUES = {
+  covered: "Forsikret",
+  excluded: "Ikke forsikret",
+  unknown: "Ukjent",
+} as const;

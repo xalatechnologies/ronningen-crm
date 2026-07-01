@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminPlanBadge, AdminStatusBadge } from "@/components/admin/admin-badges";
 import { AdminDataPanel } from "@/components/admin/admin-data-panel";
 import { AdminPageShell } from "@/components/admin/admin-page-shell";
@@ -20,7 +21,7 @@ import {
 } from "@/constants/roles";
 import { adminRoutes } from "@/config/admin-routes";
 import { updateOrganizationSubscription } from "@/lib/admin/actions/organization-subscription";
-import { SUBSCRIPTION_STATUS_LABELS } from "@/lib/admin/subscription-labels";
+import { subscriptionStatusLabel, tenantAccessLabel } from "@/lib/admin/subscription-labels";
 import type { AdminBillingRow } from "@/lib/admin/queries/users-billing-audit";
 import { resolveTenantAccess } from "@/lib/subscriptions/subscription-utils";
 import {
@@ -31,7 +32,7 @@ import {
 import { RN_ADMIN_DETAIL_LINK, RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -44,27 +45,6 @@ type BillingFilter =
   | "past_due"
   | "canceled"
   | "suspended";
-
-const FILTER_OPTIONS: { value: BillingFilter; label: string }[] = [
-  { value: "all", label: "Alle" },
-  { value: "active", label: "Aktiv" },
-  { value: "trialing", label: "Prøve" },
-  { value: "past_due", label: "Forfalt" },
-  { value: "canceled", label: "Avsluttet" },
-  { value: "suspended", label: "Suspendert" },
-];
-
-const ACCESS_LABELS: Record<string, string> = {
-  full: "Full tilgang",
-  warning: "Advarsel",
-  billing_only: "Kun fakturering",
-  suspended: "Suspendert",
-};
-
-const STATUS_OPTIONS = ADMIN_SETTABLE_SUBSCRIPTION_STATUSES.map((value) => ({
-  value,
-  label: SUBSCRIPTION_STATUS_LABELS[value] ?? value,
-}));
 
 function matchesFilter(row: AdminBillingRow, filter: BillingFilter): boolean {
   switch (filter) {
@@ -93,7 +73,16 @@ function BillingStatusSelect({
   disabled: boolean;
   onUpdated: () => void;
 }) {
+  const { t, locale } = useTranslation();
   const [busy, setBusy] = useState(false);
+  const statusOptions = useMemo(
+    () =>
+      ADMIN_SETTABLE_SUBSCRIPTION_STATUSES.map((value) => ({
+        value,
+        label: subscriptionStatusLabel(value, t),
+      })),
+    [t],
+  );
 
   async function handleChange(nextStatus: string) {
     if (!nextStatus || nextStatus === row.subscriptionStatus) return;
@@ -107,13 +96,13 @@ function BillingStatusSelect({
     setBusy(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke oppdatere abonnement", {
+      toast.error(t("admin.kunne_ikke_oppdatere_abonnement"), {
         description: result.error,
       });
       return;
     }
 
-    toast.success("Abonnementsstatus oppdatert");
+    toast.success(t("admin.abonnementsstatus_oppdatert"));
     onUpdated();
   }
 
@@ -121,7 +110,7 @@ function BillingStatusSelect({
     <FormSelect
       value={row.subscriptionStatus}
       onValueChange={(value) => void handleChange(value)}
-      options={STATUS_OPTIONS}
+      options={statusOptions}
       disabled={disabled || busy}
       className="admin-table-select min-w-[10.5rem]"
       aria-label={`Endre status for ${row.name}`}
@@ -130,8 +119,20 @@ function BillingStatusSelect({
 }
 
 export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const [filter, setFilter] = useState<BillingFilter>("all");
+  const filterOptions = useMemo(
+    () => [
+      { value: "all" as const, label: t("admin.alle") },
+      { value: "active" as const, label: t("admin.aktiv") },
+      { value: "trialing" as const, label: t("admin.prove") },
+      { value: "past_due" as const, label: t("admin.forfalt") },
+      { value: "canceled" as const, label: t("admin.avsluttet") },
+      { value: "suspended" as const, label: t("admin.suspendert") },
+    ],
+    [t],
+  );
 
   const counts = useMemo(() => {
     const result: Record<BillingFilter, number> = {
@@ -161,15 +162,15 @@ export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
 
   return (
     <AdminPageShell
-      title="Abonnement"
-      description="Administrer abonnementsstatus og se effektiv app-tilgang per organisasjon."
+      title={t("admin.abonnement")}
+      description={t("admin.administrer_abonnementsstatus_og_se_effektiv_app_tilgang_per")}
     >
       <AdminSegmentFilterBar>
         <AdminSegmentFilterControls
-          aria-label="Filtrer abonnement"
+          aria-label={t("admin.filtrer_abonnement")}
           className="sm:justify-start"
         >
-          {FILTER_OPTIONS.map((option) => {
+          {filterOptions.map((option) => {
             const count = counts[option.value];
             const active = filter === option.value;
             return (
@@ -192,14 +193,14 @@ export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Organisasjon</TableHead>
-              <TableHead>Abonnement</TableHead>
-              <TableHead>Plan</TableHead>
-              <TableHead>App-tilgang</TableHead>
-              <TableHead>Periode slutt</TableHead>
+              <TableHead>{t("adminLabels.fields.organization")}</TableHead>
+              <TableHead>{t("admin.abonnement")}</TableHead>
+              <TableHead>{t("admin.plan")}</TableHead>
+              <TableHead>{t("admin.app_tilgang")}</TableHead>
+              <TableHead>{t("adminLabels.fields.periodEnd")}</TableHead>
               <TableHead>Stripe</TableHead>
-              <TableHead className="text-right">Medlemmer</TableHead>
-              <TableHead>Endre status</TableHead>
+              <TableHead className="text-right">{t("admin.medlemmer")}</TableHead>
+              <TableHead>{t("adminLabels.fields.changeStatus")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -210,7 +211,7 @@ export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
                 current_period_end: row.periodEnd,
                 provider_subscription_id: row.providerSubscriptionId,
               });
-              const accessLabel = ACCESS_LABELS[access] ?? access;
+              const accessLabel = tenantAccessLabel(access, t);
               const accessTone =
                 access === "suspended"
                   ? "text-destructive"
@@ -239,14 +240,14 @@ export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
                     ) : null}
                     {row.providerSubscriptionId ? (
                       <p className="mt-1 font-mono text-app-xs text-muted-foreground">
-                        Stripe aktiv
+                        {t("adminLabels.stripe.active")}
                       </p>
                     ) : (
                       <p
                         className="mt-1 text-app-xs text-muted-foreground"
-                        title="Må fullføre Checkout før prøveperioden utløper, ellers stenges tilgang."
+                        title={t("admin.ma_fullfore_checkout_for_proveperioden_utloper_ellers_stenge")}
                       >
-                        Ingen Stripe-kobling
+                        {t("adminLabels.connection.noStripeLink")}
                       </p>
                     )}
                   </TableCell>
@@ -264,7 +265,7 @@ export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
                   <TableCell className="text-muted-foreground">
                     {row.periodEnd
                       ? format(new Date(row.periodEnd), "d. MMM yyyy", {
-                          locale: nb,
+                          locale: getDateFnsLocale(locale),
                         })
                       : "—"}
                   </TableCell>
@@ -285,7 +286,7 @@ export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
                     ) : row.providerSubscriptionId ? (
                       <span
                         className="text-app-sm text-muted-foreground"
-                        title="Status styres av Stripe. Endre under organisasjonsdetaljer ved behov."
+                        title={t("admin.status_styres_av_stripe_endre_under_organisasjonsdetaljer_ve")}
                       >
                         Stripe styrer status
                       </span>
@@ -306,7 +307,7 @@ export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
                   colSpan={8}
                   className="py-12 text-center app-text-muted"
                 >
-                  Ingen organisasjoner i dette filteret.
+                  {t("adminLabels.empty.noOrgsInFilter")}
                 </TableCell>
               </TableRow>
             ) : null}
@@ -314,7 +315,10 @@ export function AdminBillingWorkspace({ rows }: { rows: AdminBillingRow[] }) {
         </Table>
 
         <p className="mt-4 border-t border-border pt-4 app-text-secondary">
-          Viser {filtered.length} av {rows.length} organisasjoner
+          {t("admin.viser_av_organisasjoner", {
+            shown: filtered.length,
+            total: rows.length,
+          })}
         </p>
       </AdminDataPanel>
 

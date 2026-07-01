@@ -1,10 +1,11 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { FormSelect } from "@/components/ui/form-select";
 import {
-  ADMIN_CAMPAIGN_FILTER_OPTIONS,
-  ADMIN_DELIVERY_FILTER_OPTIONS,
-  ADMIN_NOTIFICATION_VIEW_OPTIONS,
+  adminCampaignFilterOptions,
+  adminDeliveryFilterOptions,
+  adminNotificationViewOptions,
   type AdminCampaignFilter,
   type AdminDeliveryFilter,
   type AdminNotificationView,
@@ -51,14 +52,19 @@ export function AdminNotificationFilterBar({
   createAction,
   embedded = false,
 }: AdminNotificationFilterBarProps) {
+  const { t } = useTranslation();
+  const viewOptions = adminNotificationViewOptions(t);
+  const campaignOptions = adminCampaignFilterOptions(t);
+  const deliveryOptions = adminDeliveryFilterOptions(t);
+
   const subFilterOptions =
     view === "campaigns" && campaignCounts
-      ? ADMIN_CAMPAIGN_FILTER_OPTIONS.map((option) => ({
+      ? campaignOptions.map((option) => ({
           value: option.value,
           label: `${option.label} (${campaignCounts[option.value]})`,
         }))
       : view === "deliveries" && deliveryCounts
-        ? ADMIN_DELIVERY_FILTER_OPTIONS.map((option) => ({
+        ? deliveryOptions.map((option) => ({
             value: option.value,
             label: `${option.label} (${deliveryCounts[option.value]})`,
           }))
@@ -78,8 +84,8 @@ export function AdminNotificationFilterBar({
       <AdminSegmentFilterSearch
         value={search}
         onChange={onSearchChange}
-        placeholder="Søk maler, kampanjer, leveringer…"
-        aria-label="Søk varsler"
+        placeholder={t("admin.sok_maler_kampanjer_leveringer")}
+        aria-label={t("admin.sok_varsler")}
       />
 
       <AdminSegmentFilterDivider />
@@ -88,9 +94,9 @@ export function AdminNotificationFilterBar({
         <div
           className="flex min-w-0 flex-wrap gap-1.5"
           role="group"
-          aria-label="Vis varsler etter type"
+          aria-label={t("admin.vis_varsler_etter_type")}
         >
-          {ADMIN_NOTIFICATION_VIEW_OPTIONS.map((option) => {
+          {viewOptions.map((option) => {
             const count = viewCounts[option.value];
             const active = view === option.value;
             return (
@@ -116,7 +122,7 @@ export function AdminNotificationFilterBar({
                 onCampaignFilterChange(value as AdminCampaignFilter)
               }
               options={subFilterOptions}
-              aria-label="Filtrer kampanjer etter status"
+              aria-label={t("admin.filtrer_kampanjer_etter_status")}
               className="min-h-11"
             />
           </div>
@@ -130,7 +136,7 @@ export function AdminNotificationFilterBar({
                 onDeliveryFilterChange(value as AdminDeliveryFilter)
               }
               options={subFilterOptions}
-              aria-label="Filtrer leveringer etter status"
+              aria-label={t("admin.filtrer_leveringer_etter_status")}
               className="min-h-11"
             />
           </div>

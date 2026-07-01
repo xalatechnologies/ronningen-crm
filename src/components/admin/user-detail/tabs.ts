@@ -1,12 +1,18 @@
-export const USER_DETAIL_TABS = [
-  { id: "account", label: "Konto" },
-  { id: "organizations", label: "Organisasjoner" },
-  { id: "audit", label: "Revisjon" },
-] as const;
+import type { Translator } from "@/i18n/types";
 
-export type UserDetailTabId = (typeof USER_DETAIL_TABS)[number]["id"];
+export const USER_DETAIL_TAB_IDS = ["account", "organizations", "audit"] as const;
 
-const TAB_IDS = new Set<string>(USER_DETAIL_TABS.map((tab) => tab.id));
+export type UserDetailTabId = (typeof USER_DETAIL_TAB_IDS)[number];
+
+const TAB_IDS = new Set<string>(USER_DETAIL_TAB_IDS);
+
+export function getUserDetailTabs(t: Translator) {
+  return [
+    { id: "account" as const, label: t("adminLabels.fields.account") },
+    { id: "organizations" as const, label: t("adminLabels.fields.organizations") },
+    { id: "audit" as const, label: t("adminLabels.fields.audit") },
+  ];
+}
 
 export function parseUserDetailTab(
   value: string | null | undefined,

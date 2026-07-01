@@ -23,11 +23,12 @@ import type {
   AdminAuditEntry,
   AdminAuditOverviewStats,
 } from "@/lib/admin/queries/users-billing-audit";
+import { useTranslation } from "@/i18n/client";
 import { exportAuditLogCsv } from "@/lib/admin/actions/audit-export";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import {
   CalendarDays,
   ChevronDown,
@@ -78,6 +79,7 @@ function AuditKpiTile({
   iconClassName?: string;
   valueClassName?: string;
 }) {
+  const { t } = useTranslation();
   const content = (
     <>
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -102,7 +104,7 @@ function AuditKpiTile({
         className={cn(kpiTileClass, kpiInteractiveClass, active && kpiActiveClass)}
       >
         {content}
-        <span className="sr-only">Gå til {label}</span>
+        <span className="sr-only">{t("admin.overview_go_to", { label })}</span>
       </Link>
     );
   }
@@ -173,6 +175,7 @@ export function AdminAuditWorkspace({
   fromDate = "",
   toDate = "",
 }: AdminAuditWorkspaceProps) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(initialSearch);
@@ -186,10 +189,10 @@ export function AdminAuditWorkspace({
       matchesAuditCategory(action, selectedCategory),
     );
     return [
-      { value: "", label: "Alle handlinger" },
+      { value: "", label: t("admin.alle_handlinger") },
       ...filtered.map(({ action, count }) => ({
         value: action,
-        label: `${formatAuditActionLabel(action)} (${count})`,
+        label: `${formatAuditActionLabel(action, t)} (${count})`,
       })),
     ];
   }, [stats.actionCounts, selectedCategory]);
@@ -282,7 +285,7 @@ export function AdminAuditWorkspace({
     });
     setExporting(false);
     if (!result.ok) {
-      toast.error("Kunne ikke eksportere");
+      toast.error(t("admin.kunne_ikke_eksportere"));
       return;
     }
     const blob = new Blob([result.csv], { type: "text/csv;charset=utf-8" });
@@ -292,7 +295,7 @@ export function AdminAuditWorkspace({
     a.download = "revisjonslogg.csv";
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("CSV eksportert");
+    toast.success(t("admin.csv_eksportert"));
     router.refresh();
   }
 
@@ -304,45 +307,45 @@ export function AdminAuditWorkspace({
             className="mb-0"
             surface="default"
             compact
-            title="Revisjonslogg"
-            description="Sporbarhet for plattformhandlinger utført av super-administratorer."
+            title={t("admin.revisjonslogg")}
+            description={t("admin.sporbarhet_for_plattformhandlinger_utfort_av_super_administr")}
           />
         </div>
 
         <section
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
-          aria-label="Nøkkeltall"
+          aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <AuditKpiTile
-              label="Totalt"
+              label={t("admin.totalt")}
               value={stats.total}
-              caption="Alle registrerte hendelser"
+              caption={t("admin.alle_registrerte_hendelser")}
               icon={ClipboardList}
               active={filtersReset}
               onClick={resetFilters}
             />
             <AuditKpiTile
-              label="Siste 7 dager"
+              label={t("admin.siste_7_dager")}
               value={stats.last7Days}
-              caption="Hendelser siste uke"
+              caption={t("admin.hendelser_siste_uke")}
               icon={CalendarDays}
               active={last7DaysActive}
               href={adminAuditLast7DaysHref()}
             />
             <AuditKpiTile
-              label="Unike administratorer (30 d.)"
+              label={t("admin.unike_administratorer_30_d")}
               value={stats.uniqueActors30d}
-              caption="Aktive plattformadministratorer"
+              caption={t("admin.aktive_plattformadministratorer")}
               icon={Users}
             />
             <AuditKpiTile
-              label="Vanligste handling"
+              label={t("admin.vanligste_handling")}
               value={topAction?.count ?? "—"}
               caption={
                 topAction
-                  ? formatAuditActionLabel(topAction.action)
-                  : "Ingen data ennå"
+                  ? formatAuditActionLabel(topAction.action, t)
+                  : t("admin.ingen_data_enna")
               }
               icon={TrendingUp}
               href={
@@ -394,10 +397,10 @@ export function AdminAuditWorkspace({
             <thead>
               <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
                 <th className={cn(tableHeadClass, "w-10")} />
-                <th className={tableHeadClass}>Tidspunkt</th>
-                <th className={tableHeadClass}>Administrator</th>
-                <th className={tableHeadClass}>Handling</th>
-                <th className={tableHeadClass}>Mål</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.timestamp")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.administrator")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.action")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.target")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-rn-border-strong/50">
@@ -416,7 +419,7 @@ export function AdminAuditWorkspace({
                           }
                           className="inline-flex size-8 items-center justify-center rounded-md border-2 border-rn-border-strong text-muted-foreground transition-colors hover:bg-muted/40"
                           aria-expanded={expanded ? "true" : "false"}
-                          aria-label={expanded ? "Skjul detaljer" : "Vis detaljer"}
+                          aria-label={expanded ? t("admin.skjul_detaljer") : t("admin.vis_detaljer")}
                         >
                           {expanded ? (
                             <ChevronDown className="size-4" />
@@ -427,7 +430,7 @@ export function AdminAuditWorkspace({
                       </td>
                       <td className={cn(tableCellClass, "text-muted-foreground")}>
                         {format(new Date(entry.createdAt), "d. MMM yyyy HH:mm", {
-                          locale: nb,
+                          locale: getDateFnsLocale(locale),
                         })}
                       </td>
                       <td className="p-0 align-middle">
@@ -439,12 +442,12 @@ export function AdminAuditWorkspace({
                       </td>
                       <td className={tableCellClass}>
                         <span className="font-heading text-app-sm font-semibold">
-                          {formatAuditActionLabel(entry.action)}
+                          {formatAuditActionLabel(entry.action, t)}
                         </span>
                       </td>
                       <td className={tableCellClass}>
                         <p className="app-text">
-                          {formatAuditTargetLabel(entry.targetType)}
+                          {formatAuditTargetLabel(entry.targetType, t)}
                         </p>
                         {entry.targetId ? (
                           targetHref ? (
@@ -476,12 +479,9 @@ export function AdminAuditWorkspace({
                 <tr>
                   <td colSpan={5}>
                     <div className="space-y-3 px-6 py-16 text-center sm:px-10 sm:py-20 md:px-8">
-                      <p className="font-heading text-lg font-bold tracking-tight text-rn-text-heading">
-                        Ingen hendelser i dette filteret
-                      </p>
+                      <p className="font-heading text-lg font-bold tracking-tight text-rn-text-heading">{t("admin.ingen_hendelser_i_dette_filteret")}</p>
                       <p className="mx-auto max-w-lg text-muted-foreground">
-                        Juster søk, kategori eller periode. Nullstill filtre for
-                        å se alle hendelser.
+                        {t("admin.audit_empty_filter_hint")}
                       </p>
                     </div>
                   </td>
@@ -495,11 +495,18 @@ export function AdminAuditWorkspace({
           <div className="space-y-1">
             <p className="app-text-secondary">
               {total === 0
-                ? "Ingen hendelser i dette filteret"
-                : `Viser ${rangeStart}–${rangeEnd} av ${total} hendelser`}
+                ? t("admin.ingen_hendelser_i_dette_filteret")
+                : t("admin.viser_range_hendelser", {
+                    start: rangeStart,
+                    end: rangeEnd,
+                    total,
+                  })}
             </p>
             <p className="app-text-muted">
-              Side {page} av {totalPages}
+              {t("common.pagination.pageOf", {
+                current: page,
+                total: totalPages,
+              })}
             </p>
           </div>
           <div className="flex gap-2">
@@ -508,21 +515,20 @@ export function AdminAuditWorkspace({
               disabled={page <= 1}
               onClick={() => goToPage(page - 1)}
             >
-              Forrige
+              {t("common.pagination.prevPage")}
             </AdminActionButton>
             <AdminActionButton
               type="button"
               disabled={page >= totalPages}
               onClick={() => goToPage(page + 1)}
             >
-              Neste
+              {t("common.pagination.nextPage")}
             </AdminActionButton>
           </div>
         </div>
 
         <p className="border-t border-rn-border-strong/50 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
-          Revisjonsloggen inneholder kun handlinger utført av
-          plattformadministratorer. Eksporter CSV for arkivering.
+          {t("admin.audit_footer_hint")}
         </p>
       </div>
     </div>

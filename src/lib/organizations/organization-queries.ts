@@ -7,6 +7,7 @@ import {
   isBillingEnabled,
 } from "@/lib/billing/constants";
 import type { SubscriptionPlan, SubscriptionStatus, UserRole } from "@/constants/roles";
+import { getDefaultT } from "@/lib/i18n/default-messages";
 import { isUserRole } from "@/lib/validations";
 import type { Database } from "@/types/database.types";
 
@@ -330,7 +331,5 @@ export async function createOrganizationForUser(
     );
   }
 
-  throw new Error(
-    "Navnet er allerede tatt. Prøv et annet organisasjonsnavn.",
-  );
+  throw new Error(getDefaultT()("serverErrors.billing.orgNameTaken"));
 }

@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslation } from "@/i18n/client";
 import { AdminLinkButton } from "@/components/admin/admin-action-button";
 import { AdminDataPanel } from "@/components/admin/admin-data-panel";
 import {
@@ -13,11 +16,11 @@ import type { AdminOrgSupportTicketSummary } from "@/lib/support/queries";
 import {
   isSupportTicketCategory,
   isSupportTicketStatus,
-  SUPPORT_CATEGORY_LABELS,
-  SUPPORT_STATUS_LABELS,
+  supportCategoryLabel,
+  supportStatusLabel,
 } from "@/lib/support/labels";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 
 export function OrganizationSupportTicketsPanel({
   organizationSlug,
@@ -26,28 +29,29 @@ export function OrganizationSupportTicketsPanel({
   organizationSlug: string;
   tickets: AdminOrgSupportTicketSummary[];
 }) {
+  const { t, locale } = useTranslation();
   return (
     <AdminDataPanel
-      title="Support-saker"
+      title={t("admin.support_saker")}
       action={
         <AdminLinkButton href={adminSupportHref("all", organizationSlug)}>
-          Alle saker
+          {t("adminLabels.actions.allCases")}
         </AdminLinkButton>
       }
     >
       <p className="mb-4 app-text-muted">
-        Strukturerte saker mellom organisasjonen og plattformsupport.
+        {t("admin.support_tickets_desc")}
       </p>
       {tickets.length === 0 ? (
-        <p className="app-text-muted">Ingen support-saker for denne organisasjonen.</p>
+        <p className="app-text-muted">{t("adminLabels.empty.noSupportTickets")}</p>
       ) : (
         <Table className="admin-ops-table">
           <TableHeader>
             <TableRow>
-              <TableHead>Emne</TableHead>
-              <TableHead>Kategori</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Oppdatert</TableHead>
+              <TableHead>{t("adminLabels.fields.subject")}</TableHead>
+              <TableHead>{t("admin.kategori")}</TableHead>
+              <TableHead>{t("admin.status")}</TableHead>
+              <TableHead>{t("admin.oppdatert")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -62,11 +66,11 @@ export function OrganizationSupportTicketsPanel({
               return (
                 <TableRow key={ticket.id}>
                   <TableCell className="font-medium">{ticket.subject}</TableCell>
-                  <TableCell>{SUPPORT_CATEGORY_LABELS[category]}</TableCell>
-                  <TableCell>{SUPPORT_STATUS_LABELS[status]}</TableCell>
+                  <TableCell>{supportCategoryLabel(category, t)}</TableCell>
+                  <TableCell>{supportStatusLabel(status, t)}</TableCell>
                   <TableCell className="text-muted-foreground">
                     {format(new Date(ticket.updatedAt), "d. MMM yyyy HH:mm", {
-                      locale: nb,
+                      locale: getDateFnsLocale(locale),
                     })}
                   </TableCell>
                 </TableRow>

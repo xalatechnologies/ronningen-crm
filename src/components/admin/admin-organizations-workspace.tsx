@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminAccessBadge } from "@/components/admin/admin-access-badge";
 import { AdminPlanBadge } from "@/components/admin/admin-badges";
 import { AdminHealthBadge } from "@/components/admin/admin-health-badge";
@@ -37,7 +38,7 @@ import { formatNok } from "@/lib/admin/revenue-metrics";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import {
   AlertTriangle,
   Building2,
@@ -116,6 +117,7 @@ export function AdminOrganizationsWorkspace({
   initialSearch = "",
   billingEnabled = false,
 }: AdminOrganizationsWorkspaceProps) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(initialSearch);
@@ -203,13 +205,13 @@ export function AdminOrganizationsWorkspace({
     a.download = "organisasjoner.csv";
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("CSV eksportert");
+    toast.success(t("admin.csv_eksportert"));
   }
 
   async function handleBulkSuspend() {
     const reason = suspendReason.trim();
     if (!reason) {
-      toast.error("Angi en begrunnelse");
+      toast.error(t("admin.angi_en_begrunnelse"));
       return;
     }
     setBusy(true);
@@ -219,7 +221,7 @@ export function AdminOrganizationsWorkspace({
     });
     setBusy(false);
     if (result.ok) {
-      toast.success("Organisasjoner suspendert");
+      toast.success(t("admin.organisasjoner_suspendert"));
       setSelected(new Set());
       setSuspendOpen(false);
       setSuspendReason("");
@@ -232,7 +234,7 @@ export function AdminOrganizationsWorkspace({
     const result = await bulkUnsuspendOrganizations([...selected]);
     setBusy(false);
     if (result.ok) {
-      toast.success("Suspensjon opphevet");
+      toast.success(t("admin.suspensjon_opphevet"));
       setSelected(new Set());
       router.refresh();
     }
@@ -241,7 +243,7 @@ export function AdminOrganizationsWorkspace({
   async function handleBulkExtendTrial() {
     const days = Number(trialDays);
     if (!days || days < 1) {
-      toast.error("Angi et gyldig antall dager");
+      toast.error(t("admin.angi_et_gyldig_antall_dager"));
       return;
     }
     setBusy(true);
@@ -251,7 +253,7 @@ export function AdminOrganizationsWorkspace({
     });
     setBusy(false);
     if (result.ok) {
-      toast.success("Prøveperiode utvidet");
+      toast.success(t("admin.proveperiode_utvidet"));
       setSelected(new Set());
       setTrialOpen(false);
       setTrialDays("7");
@@ -264,13 +266,13 @@ export function AdminOrganizationsWorkspace({
 
   const venuesCaption =
     overview.totalVenues === 0
-      ? "Ingen lokaler registrert ennå"
+      ? t("admin.ingen_lokaler_registrert_enna")
       : `${overview.totalVenues} lokal${overview.totalVenues !== 1 ? "er" : ""} totalt`;
 
   const followUpCaption =
     overview.needsFollowUp === 0
-      ? "Ingen organisasjoner trenger oppfølging"
-      : "Ufullstendig, forfalt eller suspendert";
+      ? t("admin.ingen_organisasjoner_trenger_oppfolging")
+      : t("admin.ufullstendig_forfalt_eller_suspendert");
 
   return (
     <div className="admin-page-workspace admin-organizations-dashboard mx-auto flex w-full min-w-0 flex-col gap-8 pb-8">
@@ -280,8 +282,8 @@ export function AdminOrganizationsWorkspace({
             className="mb-0"
             surface="default"
             compact
-            title="Organisasjoner"
-            description="Oversikt over leietakerorganisasjoner, helse og tilgangsstatus."
+            title={t("admin.organisasjoner")}
+            description={t("admin.oversikt_over_leietakerorganisasjoner_helse_og_tilgangsstatu")}
             actions={
               <AdminActionButton
                 type="button"
@@ -289,20 +291,18 @@ export function AdminOrganizationsWorkspace({
                 onClick={() => void handleExport()}
                 className="gap-2"
               >
-                <Download className="size-4 shrink-0" aria-hidden />
-                Eksporter CSV
-              </AdminActionButton>
+                <Download className="size-4 shrink-0" aria-hidden />{t("admin.eksporter_csv")}</AdminActionButton>
             }
           />
         </div>
 
         <section
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
-          aria-label="Nøkkeltall"
+          aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <OrganizationsKpiTile
-              label="Totalt"
+              label={t("admin.totalt")}
               value={overview.total}
               caption={venuesCaption}
               icon={Building2}
@@ -313,15 +313,15 @@ export function AdminOrganizationsWorkspace({
               }}
             />
             <OrganizationsKpiTile
-              label="Aktive"
+              label={t("admin.aktive")}
               value={overview.active}
-              caption="Trialing og aktive abonnement"
+              caption={t("admin.trialing_og_aktive_abonnement")}
               icon={CheckCircle2}
               active={status === "active"}
               onClick={() => updateStatus("active")}
             />
             <OrganizationsKpiTile
-              label="Trenger oppfølging"
+              label={t("admin.trenger_oppfolging")}
               value={overview.needsFollowUp}
               caption={followUpCaption}
               icon={AlertTriangle}
@@ -340,9 +340,9 @@ export function AdminOrganizationsWorkspace({
               onClick={() => updateStatus("incomplete")}
             />
             <OrganizationsKpiTile
-              label="Total inntekt"
+              label={t("admin.total_inntekt")}
               value={formatNok(overview.totalRevenue)}
-              caption="Fakturert bookinginntekt"
+              caption={t("admin.fakturert_bookinginntekt")}
               icon={TrendingUp}
               onClick={() => updateStatus("all")}
             />
@@ -375,16 +375,12 @@ export function AdminOrganizationsWorkspace({
                 type="button"
                 disabled={busy}
                 onClick={() => void handleBulkUnsuspend()}
-              >
-                Opphev suspensjon
-              </AdminActionButton>
+              >{t("admin.opphev_suspensjon")}</AdminActionButton>
               <AdminActionButton
                 type="button"
                 disabled={busy}
                 onClick={() => setTrialOpen(true)}
-              >
-                Utvid prøve
-              </AdminActionButton>
+              >{t("admin.utvid_prove")}</AdminActionButton>
             </div>
           </div>
         ) : null}
@@ -398,18 +394,18 @@ export function AdminOrganizationsWorkspace({
                     type="checkbox"
                     checked={allSelected}
                     onChange={(e) => toggleAll(e.target.checked)}
-                    aria-label="Velg alle"
+                    aria-label={t("admin.velg_alle")}
                     className="size-4 rounded border-rn-border-strong"
                   />
                 </th>
-                <th className={tableHeadClass}>Navn</th>
-                <th className={tableHeadClass}>Helse</th>
-                <th className={tableHeadClass}>Tilgang</th>
-                <th className={tableHeadClass}>Plan</th>
-                <th className={tableHeadClass}>Prøve slutt</th>
-                <th className={tableHeadClass}>Lokaler</th>
-                <th className={tableHeadClass}>Inntekt</th>
-                <th className={tableHeadClass}>Sist aktiv</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.name")}</th>
+                <th className={tableHeadClass}>{t("admin.helse")}</th>
+                <th className={tableHeadClass}>{t("admin.tilgang")}</th>
+                <th className={tableHeadClass}>{t("admin.plan")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.trialEnds")}</th>
+                <th className={tableHeadClass}>{t("admin.lokaler")}</th>
+                <th className={tableHeadClass}>{t("admin.inntekt")}</th>
+                <th className={tableHeadClass}>{t("adminLabels.fields.lastActivity")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-rn-border-strong/50">
@@ -423,7 +419,7 @@ export function AdminOrganizationsWorkspace({
                       type="checkbox"
                       checked={selected.has(org.id)}
                       onChange={(e) => toggleOne(org.id, e.target.checked)}
-                      aria-label={`Velg ${org.name}`}
+                      aria-label={t("adminLabels.selectOrganizationAria", { name: org.name })}
                       className="size-4 rounded border-rn-border-strong"
                     />
                   </td>
@@ -451,7 +447,7 @@ export function AdminOrganizationsWorkspace({
                   <td className={cn(tableCellClass, "text-muted-foreground")}>
                     {org.trialEnds
                       ? format(new Date(org.trialEnds), "d. MMM yyyy", {
-                          locale: nb,
+                          locale: getDateFnsLocale(locale),
                         })
                       : "—"}
                   </td>
@@ -464,7 +460,7 @@ export function AdminOrganizationsWorkspace({
                   <td className={cn(tableCellClass, "text-muted-foreground")}>
                     {org.lastActivityAt
                       ? format(new Date(org.lastActivityAt), "d. MMM yyyy", {
-                          locale: nb,
+                          locale: getDateFnsLocale(locale),
                         })
                       : "—"}
                   </td>
@@ -476,13 +472,13 @@ export function AdminOrganizationsWorkspace({
                     <div className="space-y-3 px-6 py-16 text-center sm:px-10 sm:py-20 md:px-8">
                       <p className="font-heading text-lg font-bold tracking-tight text-rn-text-heading">
                         {organizations.length === 0
-                          ? "Ingen organisasjoner ennå"
-                          : "Ingen treff i listen"}
+                          ? t("admin.ingen_organisasjoner_enna")
+                          : t("admin.ingen_treff_i_listen")}
                       </p>
                       <p className="mx-auto max-w-lg text-muted-foreground">
                         {organizations.length === 0
-                          ? "Nye organisasjoner vises her når de registrerer seg."
-                          : "Juster søket eller bytt filter. Nullstill ved å velge «Alle» og tømme søkefeltet."}
+                          ? t("admin.nye_organisasjoner_vises_her_nar_de_registrerer_seg")
+                          : t("admin.juster_soket_eller_bytt_filter_nullstill_ved_a_velge_alle_og")}
                       </p>
                     </div>
                   </td>
@@ -494,10 +490,13 @@ export function AdminOrganizationsWorkspace({
 
         <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
           <p className="app-text-secondary">
-            Viser {filtered.length} av {organizations.length} organisasjoner
+            {t("admin.viser_av_organisasjoner", {
+              shown: filtered.length,
+              total: organizations.length,
+            })}
             {selected.size > 0 ? (
               <span className="ml-2 font-medium text-foreground">
-                · {selected.size} valgt
+                {t("admin.valgt_antall", { count: selected.size })}
               </span>
             ) : null}
           </p>
@@ -507,19 +506,20 @@ export function AdminOrganizationsWorkspace({
       <Dialog open={suspendOpen} onOpenChange={setSuspendOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Suspender {selected.size} organisasjoner?</DialogTitle>
+            <DialogTitle>
+              {t("admin.suspend_n_organisasjoner", { count: selected.size })}
+            </DialogTitle>
             <DialogDescription className="app-text text-muted-foreground">
-              Organisasjonene mister tilgang til appen inntil suspensjonen
-              oppheves. Begrunnelse logges i revisjonsloggen.
+              {t("adminLabels.suspendDialogHint")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="suspend-reason">Begrunnelse</Label>
+            <Label htmlFor="suspend-reason">{t("adminLabels.fields.reason")}</Label>
             <Input
               id="suspend-reason"
               value={suspendReason}
               onChange={(event) => setSuspendReason(event.target.value)}
-              placeholder="F.eks. manglende betaling"
+              placeholder={t("admin.f_eks_manglende_betaling")}
               className="border-2 border-rn-border-strong"
             />
           </div>
@@ -529,7 +529,7 @@ export function AdminOrganizationsWorkspace({
               disabled={busy}
               onClick={() => setSuspendOpen(false)}
             >
-              Avbryt
+              {t("common.actions.cancel")}
             </AdminActionButton>
             <AdminActionButton
               type="button"
@@ -537,7 +537,7 @@ export function AdminOrganizationsWorkspace({
               disabled={busy}
               onClick={() => void handleBulkSuspend()}
             >
-              {busy ? "Suspenderer…" : "Suspender"}
+              {busy ? t("admin.suspenderer") : t("admin.suspender")}
             </AdminActionButton>
           </DialogFooter>
         </DialogContent>
@@ -546,14 +546,13 @@ export function AdminOrganizationsWorkspace({
       <Dialog open={trialOpen} onOpenChange={setTrialOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Utvid prøveperiode</DialogTitle>
+            <DialogTitle>{t("adminLabels.dialogs.extendTrial")}</DialogTitle>
             <DialogDescription className="app-text text-muted-foreground">
-              Legger til dager på prøveperioden for {selected.size} valgte
-              organisasjoner.
+              {t("admin.utvid_proveperiode_beskrivelse", { count: selected.size })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="trial-days">Antall dager</Label>
+            <Label htmlFor="trial-days">{t("adminLabels.fields.dayCount")}</Label>
             <Input
               id="trial-days"
               type="number"
@@ -569,14 +568,14 @@ export function AdminOrganizationsWorkspace({
               disabled={busy}
               onClick={() => setTrialOpen(false)}
             >
-              Avbryt
+              {t("common.actions.cancel")}
             </AdminActionButton>
             <AdminActionButton
               type="button"
               disabled={busy}
               onClick={() => void handleBulkExtendTrial()}
             >
-              {busy ? "Lagrer…" : "Utvid prøve"}
+              {busy ? t("admin.lagrer") : t("admin.utvid_prove")}
             </AdminActionButton>
           </DialogFooter>
         </DialogContent>

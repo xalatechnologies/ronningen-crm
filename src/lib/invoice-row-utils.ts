@@ -1,45 +1,18 @@
 import type { UnpaidInvoiceRow } from "@/components/invoices/types";
 
-export type InvoiceRowFilter =
-  | "all"
-  | "overdue"
-  | "unpaid"
-  | "partial"
-  | "upcoming"
-  | "inkasso";
+export const INVOICE_FILTER_IDS = [
+  "all",
+  "overdue",
+  "unpaid",
+  "partial",
+  "upcoming",
+  "inkasso",
+] as const;
 
-export const INVOICE_FILTER_SPECS: {
-  id: InvoiceRowFilter;
-  label: string;
-  title: string;
-}[] = [
-  { id: "all", label: "Alle", title: "Alle med restbeløp" },
-  {
-    id: "overdue",
-    label: "Forfalt",
-    title: "Forfallsdato er passert",
-  },
-  {
-    id: "upcoming",
-    label: "Ikke forfalt",
-    title: "Forfall i dag eller senere",
-  },
-  {
-    id: "partial",
-    label: "Delvis betalt",
-    title: "Noe innbetalt, restbeløp igjen",
-  },
-  {
-    id: "unpaid",
-    label: "Ikke betalt",
-    title: "Ingen innbetaling registrert",
-  },
-  {
-    id: "inkasso",
-    label: "Innkasso",
-    title: "Innkassovarsel registrert",
-  },
-];
+export type InvoiceRowFilter = (typeof INVOICE_FILTER_IDS)[number];
+
+/** @deprecated Use INVOICE_FILTER_IDS — labels via invoices.filters.* */
+export const INVOICE_FILTER_SPECS = INVOICE_FILTER_IDS.map((id) => ({ id }));
 
 /** Today's date as `yyyy-mm-dd` in the user's local calendar. */
 export function localCalendarTodayYmd(): string {
@@ -110,6 +83,31 @@ export function matchesInvoiceFilter(
     default:
       return true;
   }
+}
+
+export function matchesInvoiceSearch(
+  row: UnpaidInvoiceRow,
+  query: string,
+): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+
+  const haystack = [
+    row.customerName,
+    row.customerEmail,
+    row.customerPhone,
+    row.customerAddress,
+    row.eventType,
+    row.eventDateLabel,
+    row.bookingReference,
+    row.propertyName,
+    row.id,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return haystack.includes(q);
 }
 
 /** Row count for each filter (same rules as {@link matchesInvoiceFilter}). */

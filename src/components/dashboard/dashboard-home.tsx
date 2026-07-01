@@ -22,6 +22,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/i18n/client";
+import { statusLabel } from "@/lib/navigation/nav-labels";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import {
@@ -36,34 +38,20 @@ import {
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-function formatNok(n: number) {
-  return new Intl.NumberFormat("nb-NO", {
-    style: "currency",
-    currency: "NOK",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-/** Kortere etikett over stolper (unngår overflow i smale kolonner). */
-function formatNokChartAxis(n: number) {
-  if (n === 0) return "0 kr";
-  if (n >= 1_000_000) {
-    const m = n / 1_000_000;
-    const s = m >= 10 ? m.toFixed(0) : m.toFixed(1).replace(".", ",");
-    return `${s} mill.`;
-  }
-  if (n >= 1000) {
-    const k = n / 1000;
-    const s =
-      k >= 100
-        ? k.toFixed(0)
-        : k >= 10
-          ? k.toFixed(0)
-          : k.toFixed(1).replace(".", ",");
-    return `${s} k`;
-  }
-  return formatNok(n);
-}
+const MONTH_KEYS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+] as const;
 
 function dashboardEventPillClass(eventType: string) {
   const t = eventType.toLowerCase();
@@ -84,25 +72,27 @@ function DashboardUpcomingStatusBadge({
 }: {
   status: "confirmed" | "pending" | "cancelled";
 }) {
+  const { t } = useTranslation();
   const pill =
     "inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase md:px-3 md:py-1.5 md:text-app-xs";
+  const label = statusLabel(status, t);
   if (status === "confirmed") {
     return (
       <span className={cn(pill, "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200")}>
-        Bekreftet
+        {label}
       </span>
     );
   }
   if (status === "pending") {
     return (
       <span className={cn(pill, "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200")}>
-        Avventer
+        {label}
       </span>
     );
   }
   return (
     <span className={cn(pill, "bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-200")}>
-      Avbestilt
+      {label}
     </span>
   );
 }
@@ -111,29 +101,41 @@ const tableHeadClass =
   "px-6 py-4 text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const tableCellClass = "px-6 py-5 md:px-8 md:py-6";
 
-const NB_MONTH_SHORT = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "Mai",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Okt",
-  "Nov",
-  "Des",
-] as const;
-
-function formatPctDelta(p: number | null) {
-  if (p == null) return "Ingen sammenligning med forrige måned";
-  const rounded = Math.abs(p) >= 10 ? p.toFixed(0) : p.toFixed(1);
-  const sign = p > 0 ? "+" : "";
-  return `${sign}${rounded} % mot forrige måned (fakturert, arrangementsdato)`;
-}
-
 export function DashboardHome({ data }: { data: DashboardHomeData }) {
+  const { t, formatCurrency, formatNumber } = useTranslation();
+
+  const monthLabels = useMemo(
+    () => MONTH_KEYS.map((key) => t(`dashboard.months.${key}`)),
+    [t],
+  );
+
+  function formatNokChartAxis(n: number) {
+    if (n === 0) return t("dashboard.chartAxisZero");
+    if (n >= 1_000_000) {
+      const m = n / 1_000_000;
+      const s = m >= 10 ? m.toFixed(0) : m.toFixed(1).replace(".", ",");
+      return t("dashboard.chartAxisMillions", { value: s });
+    }
+    if (n >= 1000) {
+      const k = n / 1000;
+      const s =
+        k >= 100
+          ? k.toFixed(0)
+          : k >= 10
+            ? k.toFixed(0)
+            : k.toFixed(1).replace(".", ",");
+      return t("dashboard.chartAxisThousands", { value: s });
+    }
+    return formatCurrency(n);
+  }
+
+  function formatPctDelta(p: number | null) {
+    if (p == null) return t("dashboard.noComparison");
+    const rounded = Math.abs(p) >= 10 ? p.toFixed(0) : p.toFixed(1);
+    const sign = p > 0 ? "+" : "";
+    return t("dashboard.percentDelta", { sign, percent: rounded });
+  }
+
   const chartYearOptions = useMemo(() => {
     const fromData = data.monthlyByYear.map((s) => s.year);
     if (fromData.length > 0) return fromData;
@@ -164,30 +166,36 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
       const heightPct = hasValue ? Math.max(14, rawPct) : 0;
       return {
         key: `m-${i}`,
-        label: NB_MONTH_SHORT[i] ?? "",
+        label: monthLabels[i] ?? "",
         amount,
         hasValue,
         heightPct,
         highlight: i === highlightMonth,
       };
     });
-  }, [chartMonthAmounts, chartYear]);
+  }, [chartMonthAmounts, chartYear, monthLabels]);
 
   const { kpis } = data;
   const paidShareLabel =
     kpis.paidShareOfInvoicedPct != null
-      ? `${Math.round(kpis.paidShareOfInvoicedPct)} % av fakturert`
+      ? t("dashboard.percentOfInvoiced", {
+          percent: Math.round(kpis.paidShareOfInvoicedPct),
+        })
       : "—";
 
   const overdueLabel =
     kpis.overdueUnpaidCount === 0
-      ? "Ingen forfalte ubetalte bookinger"
-      : `${kpis.overdueUnpaidCount} booking${kpis.overdueUnpaidCount !== 1 ? "er" : ""} med restanse etter arrangementsdato`;
+      ? t("dashboard.noOverdueUnpaid")
+      : kpis.overdueUnpaidCount === 1
+        ? t("dashboard.overdueBookings", { count: kpis.overdueUnpaidCount })
+        : t("dashboard.overdueBookingsPlural", { count: kpis.overdueUnpaidCount });
 
   const venuesLabel =
     kpis.propertyCount === 0
-      ? "Registrer lokaler under Inventar"
-      : `${kpis.propertyCount} lokal${kpis.propertyCount !== 1 ? "er" : ""} i systemet`;
+      ? t("dashboard.registerVenues")
+      : kpis.propertyCount === 1
+        ? t("dashboard.venuesInSystem", { count: kpis.propertyCount })
+        : t("dashboard.venuesInSystemPlural", { count: kpis.propertyCount });
 
   const kpiTileClass =
     "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
@@ -199,7 +207,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
           <AppPageHeader
             className="mb-0"
             surface="default"
-            title="Oversikt"
+            title={t("dashboard.title")}
           />
         </div>
         {data.loadError ? (
@@ -208,25 +216,25 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
             role="alert"
           >
             <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-app-sm text-destructive md:text-app-base">
-              Noe gikk galt ved lasting: {data.loadError}
+              {t("dashboard.loadError", { error: data.loadError })}
             </div>
           </div>
         ) : null}
         <section
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
-          aria-label="Nøkkeltall"
+          aria-label={t("dashboard.kpiAria")}
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
-                <span className="dashboard-kpi-label">Totalt fakturert</span>
+                <span className="dashboard-kpi-label">{t("dashboard.totalInvoiced")}</span>
                 <div className="rounded-md bg-accent p-2 dark:bg-white/10">
                   <LayoutDashboard className="size-6 text-primary dark:text-white" aria-hidden />
                 </div>
               </div>
               <div>
                 <p className="dashboard-kpi-value text-success">
-                  {formatNok(kpis.totalInvoicedNok)}
+                  {formatCurrency(kpis.totalInvoicedNok)}
                 </p>
                 <p className="dashboard-kpi-caption mt-3 text-muted-foreground">
                   {formatPctDelta(kpis.invoicedMonthDeltaPct)}
@@ -236,14 +244,14 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
 
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
-                <span className="dashboard-kpi-label">Betalt</span>
+                <span className="dashboard-kpi-label">{t("dashboard.paid")}</span>
                 <div className="rounded-md bg-accent p-2 dark:bg-white/10">
                   <CheckCircle2 className="size-6 text-primary dark:text-white" aria-hidden />
                 </div>
               </div>
               <div>
                 <p className="dashboard-kpi-value text-success">
-                  {formatNok(kpis.totalPaidNok)}
+                  {formatCurrency(kpis.totalPaidNok)}
                 </p>
                 <p className="dashboard-kpi-caption mt-3 text-muted-foreground">
                   {paidShareLabel}
@@ -253,14 +261,14 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
 
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
-                <span className="dashboard-kpi-label">Ubetalt</span>
+                <span className="dashboard-kpi-label">{t("dashboard.unpaid")}</span>
                 <div className="rounded-md bg-rn-danger-soft p-2">
                   <Clock className="size-6 text-rn-danger-ink" aria-hidden />
                 </div>
               </div>
               <div>
                 <p className="dashboard-kpi-value text-destructive">
-                  {formatNok(kpis.totalUnpaidNok)}
+                  {formatCurrency(kpis.totalUnpaidNok)}
                 </p>
                 <p className="dashboard-kpi-caption mt-3 flex items-center gap-1 text-destructive">
                   <AlertCircle className="size-4 shrink-0" aria-hidden />
@@ -271,14 +279,14 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
 
             <div className={kpiTileClass}>
               <div className="mb-3 flex items-start justify-between">
-                <span className="dashboard-kpi-label">Bookinger</span>
+                <span className="dashboard-kpi-label">{t("dashboard.bookings")}</span>
                 <div className="rounded-md bg-accent p-2 dark:bg-white/10">
                   <CalendarCheck className="size-6 text-primary dark:text-white" aria-hidden />
                 </div>
               </div>
               <div>
                 <p className="dashboard-kpi-value text-success">
-                  {kpis.activeBookingCount}
+                  {formatNumber(kpis.activeBookingCount)}
                 </p>
                 <p className="dashboard-kpi-caption mt-3 text-muted-foreground">
                   {venuesLabel}
@@ -294,10 +302,10 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
           <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:px-8 md:py-6">
             <div>
               <h2 className="app-section-title">
-                Månedlig omsetning
+                {t("dashboard.monthlyRevenue")}
               </h2>
               <p className="mt-1 app-text-muted md:text-app-sm">
-                Fakturert beløp per måned etter arrangementsdato (aktive bookinger)
+                {t("dashboard.revenueSubtitle")}
               </p>
             </div>
             <Select
@@ -305,7 +313,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               onValueChange={(v) => setChartYear(Number(v))}
             >
               <SelectTrigger
-                aria-label="Velg år for diagrammet"
+                aria-label={t("dashboard.selectYearAria")}
                 className={cn(
                   "h-12 min-w-[8.5rem] rounded-md border-2 border-rn-border-strong bg-rn-surface-segment px-4 font-heading text-app-base font-semibold shadow-rn-segment-inset",
                   "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 data-popup-open:border-rn-accent-border",
@@ -332,16 +340,18 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               aria-hidden
             >
               <span className="text-app-xs font-semibold text-foreground md:text-app-sm">
-                Fakturert per måned · {chartYear}
+                {t("dashboard.revenuePerMonth", { year: chartYear })}
               </span>
               <span className="text-[11px] tabular-nums text-muted-foreground md:text-app-xs">
-                Høyeste: {formatNok(Math.max(...chartMonthAmounts, 0))}
+                {t("dashboard.highest", {
+                  amount: formatCurrency(Math.max(...chartMonthAmounts, 0)),
+                })}
               </span>
             </div>
             <div
               className="flex h-[min(20rem,calc(100vw-4rem))] min-h-[13.5rem] w-full items-stretch gap-0.5 sm:gap-1 md:gap-1.5"
               role="img"
-              aria-label={`Stolpediagram for fakturert omsetning per arrangementsmåned i ${chartYear}. Beløp vises over hver stolpe.`}
+              aria-label={t("dashboard.chartAria", { year: chartYear })}
             >
               {chartBars.map((bar) => (
                 <div
@@ -356,7 +366,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                           ? "text-foreground"
                           : "text-muted-foreground",
                       )}
-                      title={`${bar.label}: ${formatNok(bar.amount)}`}
+                      title={`${bar.label}: ${formatCurrency(bar.amount)}`}
                     >
                       {formatNokChartAxis(bar.amount)}
                     </span>
@@ -368,12 +378,12 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                             chartBarFillClass(bar.highlight),
                           )}
                           style={{ height: `${bar.heightPct}%` }}
-                          title={`${bar.label}: ${formatNok(bar.amount)}`}
+                          title={`${bar.label}: ${formatCurrency(bar.amount)}`}
                         />
                       ) : (
                         <div
                           className={chartEmptyBarClass()}
-                          title={`${bar.label}: ${formatNok(bar.amount)}`}
+                          title={`${bar.label}: ${formatCurrency(bar.amount)}`}
                           aria-hidden
                         />
                       )}
@@ -412,13 +422,13 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               aria-hidden
             />
             <h2 className="app-section-title text-rn-danger-ink">
-              Betalingsvarsler
+              {t("dashboard.paymentAlerts")}
             </h2>
           </div>
           <div className="flex flex-1 flex-col gap-4 md:gap-5">
             {data.paymentAlerts.length === 0 ? (
               <p className="text-app-sm text-muted-foreground md:text-app-base">
-                Ingen bookinger med restbeløp der arrangementsdato er passert eller i dag.
+                {t("dashboard.noPaymentAlerts")}
               </p>
             ) : (
               data.paymentAlerts.map((a) => (
@@ -431,18 +441,18 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                       {a.title}
                     </span>
                     <span className="shrink-0 text-app-base font-bold tabular-nums text-destructive">
-                      {formatNok(a.amountNok)}
+                      {formatCurrency(a.amountNok)}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2 text-app-sm text-muted-foreground md:text-app-base">
-                    <span>Arrangement: {a.dueLabel}</span>
+                    <span>{t("dashboard.event", { label: a.dueLabel })}</span>
                     {a.status === "overdue" ? (
                       <span className="inline-flex rounded-full bg-rn-danger-surface px-2.5 py-1 text-[11px] font-bold tracking-wide text-destructive uppercase md:px-3 md:py-1.5 md:text-app-xs">
-                        Forfalt
+                        {t("dashboard.overdue")}
                       </span>
                     ) : (
                       <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold tracking-wide text-amber-900 uppercase dark:bg-amber-950/40 dark:text-amber-100 md:px-3 md:py-1.5 md:text-app-xs">
-                        I dag
+                        {t("dashboard.today")}
                       </span>
                     )}
                   </div>
@@ -457,7 +467,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               "mt-6 w-full",
             )}
           >
-            Gå til fakturaer
+            {t("dashboard.goToInvoices")}
             <ExternalLink className="size-4" aria-hidden />
           </Link>
         </div>
@@ -467,13 +477,13 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
         <Table>
           <TableHeader>
             <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
-              <TableHead className={tableHeadClass}>Dato &amp; tid</TableHead>
-              <TableHead className={tableHeadClass}>Kunde</TableHead>
-              <TableHead className={tableHeadClass}>Type</TableHead>
-              <TableHead className={tableHeadClass}>Lokal</TableHead>
-              <TableHead className={tableHeadClass}>Status</TableHead>
+              <TableHead className={tableHeadClass}>{t("dashboard.tableDateTime")}</TableHead>
+              <TableHead className={tableHeadClass}>{t("dashboard.tableCustomer")}</TableHead>
+              <TableHead className={tableHeadClass}>{t("dashboard.tableType")}</TableHead>
+              <TableHead className={tableHeadClass}>{t("dashboard.tableVenue")}</TableHead>
+              <TableHead className={tableHeadClass}>{t("dashboard.tableStatus")}</TableHead>
               <TableHead className={cn(tableHeadClass, "text-right")}>
-                Bookinger
+                {t("dashboard.tableBookings")}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -484,12 +494,12 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   colSpan={6}
                   className="px-6 py-12 text-center text-app-base md:py-16"
                 >
-                  Ingen kommende bookinger i vinduet.{" "}
+                  {t("dashboard.noUpcoming")}{" "}
                   <Link
                     href="/app/bookings"
                     className="font-semibold text-success underline underline-offset-2 dark:!text-white"
                   >
-                    Se alle bookinger
+                    {t("dashboard.viewAllBookings")}
                   </Link>
                 </TableCell>
               </TableRow>
@@ -548,7 +558,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                       href="/app/bookings"
                       className="inline-flex items-center gap-1 text-app-sm font-semibold text-success underline-offset-2 hover:underline dark:!text-white md:text-app-base"
                     >
-                      Liste
+                      {t("dashboard.listLink")}
                       <ExternalLink className="size-4 shrink-0 opacity-70" aria-hidden />
                     </Link>
                   </TableCell>

@@ -8,6 +8,7 @@ import {
   type HealthStatus,
   type PlatformIntegrationComponent,
 } from "@/lib/admin/platform-integration-status";
+import { getServerTranslation } from "@/i18n/server";
 import {
   isBillingEnabled,
   isStripeConfigured,
@@ -48,6 +49,7 @@ export type AdminSettingsOverview = {
 };
 
 export async function fetchAdminSettingsOverview(): Promise<AdminSettingsOverview> {
+  const { t } = await getServerTranslation();
   const admin = createSupabaseAdminClient();
 
   const { data: admins } = await admin
@@ -56,8 +58,8 @@ export async function fetchAdminSettingsOverview(): Promise<AdminSettingsOvervie
     .eq("is_platform_admin", true)
     .order("email");
 
-  const integrations = buildAllIntegrationStatuses();
-  const envChecklist = buildEnvChecklist();
+  const integrations = buildAllIntegrationStatuses(t);
+  const envChecklist = buildEnvChecklist(t);
   const integrationSummary = computeIntegrationSummary(integrations);
 
   return {

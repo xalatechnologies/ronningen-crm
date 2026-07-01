@@ -1,71 +1,77 @@
+"use client";
+
+import { useTranslation } from "@/i18n/client";
 import { AdminDataPanel } from "@/components/admin/admin-data-panel";
 import { OrganizationDeletePanel } from "@/components/admin/organization-delete-panel";
 import type { AdminOrganizationDetail } from "@/lib/admin/queries/organizations";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 
-function formatDateTime(iso: string | null): string {
+import type { Locale } from "@/i18n/config";
+
+function formatDateTime(iso: string | null, locale: Locale): string {
   if (!iso) return "—";
-  return format(new Date(iso), "d. MMM yyyy HH:mm", { locale: nb });
+  return format(new Date(iso), "d. MMM yyyy HH:mm", { locale: getDateFnsLocale(locale) });
 }
 
 export function OrganizationProfileTab({ org }: { org: AdminOrganizationDetail }) {
+  const { t, locale } = useTranslation();
   return (
     <div className="flex flex-col gap-6">
-      <AdminDataPanel title="Profil">
+      <AdminDataPanel title={t("admin.profil")}>
         <dl className="grid gap-4 sm:grid-cols-2">
           <div>
-            <dt className="app-text-muted">Juridisk navn</dt>
+            <dt className="app-text-muted">{t("adminLabels.fields.legalName")}</dt>
             <dd className="mt-1 font-heading text-app-md font-semibold">
               {org.legalName ?? "—"}
             </dd>
           </div>
           <div>
-            <dt className="app-text-muted">Org.nr.</dt>
+            <dt className="app-text-muted">{t("adminLabels.fields.orgNumber")}</dt>
             <dd className="mt-1 font-heading text-app-md font-semibold">
               {org.orgNumber ?? "—"}
             </dd>
           </div>
           <div>
-            <dt className="app-text-muted">Kontakt e-post</dt>
+            <dt className="app-text-muted">{t("adminLabels.fields.contactEmail")}</dt>
             <dd className="mt-1 font-heading text-app-md font-semibold">
               {org.contactEmail ?? "—"}
             </dd>
           </div>
           <div>
-            <dt className="app-text-muted">Faktura e-post</dt>
+            <dt className="app-text-muted">{t("adminLabels.fields.billingEmail")}</dt>
             <dd className="mt-1 font-heading text-app-md font-semibold">
               {org.billingEmail ?? "—"}
             </dd>
           </div>
           <div>
-            <dt className="app-text-muted">Opprettet</dt>
+            <dt className="app-text-muted">{t("adminLabels.fields.created")}</dt>
             <dd className="mt-1 font-heading text-app-md font-semibold">
-              {formatDateTime(org.createdAt)}
+              {formatDateTime(org.createdAt, locale)}
             </dd>
           </div>
           <div>
-            <dt className="app-text-muted">Sist oppdatert</dt>
+            <dt className="app-text-muted">{t("adminLabels.fields.lastUpdated")}</dt>
             <dd className="mt-1 font-heading text-app-md font-semibold">
-              {formatDateTime(org.updatedAt)}
+              {formatDateTime(org.updatedAt, locale)}
             </dd>
           </div>
           <div>
-            <dt className="app-text-muted">Sist aktivitet</dt>
+            <dt className="app-text-muted">{t("adminLabels.fields.lastActivity")}</dt>
             <dd className="mt-1 font-heading text-app-md font-semibold">
-              {formatDateTime(org.lastActivityAt)}
+              {formatDateTime(org.lastActivityAt, locale)}
             </dd>
           </div>
           {org.isSuspended ? (
             <>
               <div>
-                <dt className="app-text-muted">Suspendert</dt>
+                <dt className="app-text-muted">{t("admin.suspendert")}</dt>
                 <dd className="mt-1 font-heading text-app-md font-semibold">
-                  {formatDateTime(org.suspendedAt)}
+                  {formatDateTime(org.suspendedAt, locale)}
                 </dd>
               </div>
               <div className="sm:col-span-2">
-                <dt className="app-text-muted">Suspensjonsgrunn</dt>
+                <dt className="app-text-muted">{t("adminLabels.fields.suspensionReason")}</dt>
                 <dd className="mt-1 font-heading text-app-md font-semibold">
                   {org.suspendedReason ?? "—"}
                 </dd>

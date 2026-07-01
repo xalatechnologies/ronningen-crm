@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { formatAuditActionLabel } from "@/lib/admin/audit-labels";
 import type { AdminAuditEntry } from "@/lib/admin/queries/users-billing-audit";
 
@@ -15,9 +16,11 @@ function formatValue(value: unknown): string {
 function MetadataDiff({
   before,
   after,
+  t,
 }: {
   before: Record<string, unknown>;
   after: Record<string, unknown>;
+  t: ReturnType<typeof useTranslation>["t"];
 }) {
   const keys = [...new Set([...Object.keys(before), ...Object.keys(after)])].sort();
 
@@ -33,11 +36,11 @@ function MetadataDiff({
           </dt>
           <dd className="mt-1 space-y-1 text-app-sm">
             <p>
-              <span className="text-muted-foreground">Før: </span>
+              <span className="text-muted-foreground">{t("adminLabels.fields.before")} </span>
               {formatValue(before[key])}
             </p>
             <p>
-              <span className="text-muted-foreground">Etter: </span>
+              <span className="text-muted-foreground">{t("adminLabels.fields.after")} </span>
               {formatValue(after[key])}
             </p>
           </dd>
@@ -48,6 +51,7 @@ function MetadataDiff({
 }
 
 export function AuditEntryDetailPanel({ entry }: { entry: AdminAuditEntry }) {
+  const { t } = useTranslation();
   const before = entry.metadata.before;
   const after = entry.metadata.after;
   const hasDiff =
@@ -62,13 +66,14 @@ export function AuditEntryDetailPanel({ entry }: { entry: AdminAuditEntry }) {
     <div className="space-y-4 py-2">
       <p className="font-mono text-app-xs text-muted-foreground">{entry.action}</p>
       <p className="text-app-sm text-muted-foreground">
-        {formatAuditActionLabel(entry.action)}
+        {formatAuditActionLabel(entry.action, t)}
       </p>
 
       {hasDiff ? (
         <MetadataDiff
           before={before as Record<string, unknown>}
           after={after as Record<string, unknown>}
+          t={t}
         />
       ) : (
         <pre className="overflow-x-auto rounded-md bg-muted/40 p-3 text-app-xs">

@@ -19,12 +19,12 @@ import { AutocompleteField } from "@/components/ui/autocomplete-field";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  PARTNER_CATEGORY_SUGGESTIONS,
-  partnerCategoryToLabel,
-  partnerLabelToCategory,
+  PARTNER_CATEGORY_PRESETS,
   partnerFormSchema,
   type PartnerFormInput,
 } from "@/lib/validations";
+import { useTranslation } from "@/i18n/client";
+import type { Translator } from "@/i18n/types";
 import {
   RN_PAGE_SEARCH_ACTIONS,
 } from "@/lib/rn-ui";
@@ -46,8 +46,32 @@ const partnersTableHeadClass =
 const fieldClass =
   "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
-function partnerCategoryLabelNb(category: string): string {
-  return partnerCategoryToLabel(category);
+function partnerCategoryLabel(category: string, t: Translator): string {
+  const preset = PARTNER_CATEGORY_PRESETS.find((p) => p.value === category);
+  if (preset) {
+    return t(`customers.partnerCategories.${preset.value}`);
+  }
+  return category;
+}
+
+function partnerLabelToCategoryLocalized(input: string, t: Translator): string {
+  const trimmed = input.trim();
+  for (const preset of PARTNER_CATEGORY_PRESETS) {
+    const translated = t(`customers.partnerCategories.${preset.value}`);
+    if (
+      translated.toLowerCase() === trimmed.toLowerCase() ||
+      preset.label.toLowerCase() === trimmed.toLowerCase()
+    ) {
+      return preset.value;
+    }
+  }
+  return trimmed;
+}
+
+function partnerCategorySuggestions(t: Translator): string[] {
+  return PARTNER_CATEGORY_PRESETS.map((p) =>
+    t(`customers.partnerCategories.${p.value}`),
+  );
 }
 
 function PartnerFields({
@@ -57,47 +81,47 @@ function PartnerFields({
   form: UseFormReturn<PartnerFormInput>;
   idPrefix: string;
 }) {
+  const { t } = useTranslation();
   const { register, control, formState } = form;
   const err = formState.errors;
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-cat`}>Kategori</Label>
+        <Label htmlFor={`${idPrefix}-cat`}>{t("common.category")}</Label>
         <Controller
           name="category"
           control={control}
           render={({ field, fieldState }) => (
             <AutocompleteField
               id={`${idPrefix}-cat`}
-              value={partnerCategoryToLabel(field.value ?? "")}
+              value={partnerCategoryLabel(field.value ?? "", t)}
               onValueChange={(value) =>
-                field.onChange(partnerLabelToCategory(value))
+                field.onChange(partnerLabelToCategoryLocalized(value, t))
               }
-              suggestions={PARTNER_CATEGORY_SUGGESTIONS}
-              placeholder="Velg eller skriv egen kategori"
-              aria-label="Partnerkategori"
+              suggestions={partnerCategorySuggestions(t)}
+              placeholder={t("customers.partnerForm.categoryPlaceholder")}
+              aria-label={t("customers.partnerForm.categoryAria")}
               aria-invalid={fieldState.invalid}
               inputClassName={fieldClass}
             />
           )}
         />
         <p className="text-xs text-muted-foreground">
-          Velg Catering, Dekorasjon, Renhold eller Annet — eller skriv en egen
-          kategori.
+          {t("customers.partnerForm.categoryHint")}
         </p>
         {err.category ? (
           <p className="text-xs text-destructive">{err.category.message}</p>
         ) : null}
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-name`}>Navn / firma</Label>
+        <Label htmlFor={`${idPrefix}-name`}>{t("customers.partnerForm.nameCompany")}</Label>
         <Input id={`${idPrefix}-name`} {...register("name")} className={fieldClass} />
         {err.name ? (
           <p className="text-xs text-destructive">{err.name.message}</p>
         ) : null}
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-phone`}>Telefon</Label>
+        <Label htmlFor={`${idPrefix}-phone`}>{t("common.fields.phone")}</Label>
         <Input
           id={`${idPrefix}-phone`}
           {...register("phone")}
@@ -109,7 +133,7 @@ function PartnerFields({
         ) : null}
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-email`}>E-post</Label>
+        <Label htmlFor={`${idPrefix}-email`}>{t("common.fields.email")}</Label>
         <Input
           id={`${idPrefix}-email`}
           type="email"
@@ -121,13 +145,13 @@ function PartnerFields({
         ) : null}
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-notes`}>Notat</Label>
+        <Label htmlFor={`${idPrefix}-notes`}>{t("common.fields.notes")}</Label>
         <Textarea
           id={`${idPrefix}-notes`}
           {...register("notes")}
           rows={4}
           className={cn(fieldClass, "min-h-24 py-3")}
-          placeholder="Valgfritt — avtalt pris, kontaktperson, …"
+          placeholder={t("customers.partnerForm.notesPlaceholder")}
         />
         {err.notes ? (
           <p className="text-xs text-destructive">{err.notes.message}</p>
@@ -152,6 +176,7 @@ export function PartnersPanel({
   addOpen?: boolean;
   onAddOpenChange?: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateCustomers } = useTenantDataInvalidation();
@@ -213,13 +238,13 @@ export function PartnersPanel({
         p.name,
         p.email ?? "",
         p.phone ?? "",
-        partnerCategoryLabelNb(p.category),
+        partnerCategoryLabel(p.category, t),
       ]
         .join(" ")
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [partners, query]);
+  }, [partners, query, t]);
 
   const pagination = useMemo(() => {
     const totalPages = Math.max(
@@ -254,13 +279,13 @@ export function PartnersPanel({
       orgId = requireOrganizationId(currentOrganizationId);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+        err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
       );
       return;
     }
 
     const { error } = await supabase.from("partners").insert({
-      category: partnerLabelToCategory(data.category),
+      category: partnerLabelToCategoryLocalized(data.category, t),
       name: data.name,
       phone: data.phone.trim() || null,
       email: data.email.trim() || null,
@@ -269,13 +294,13 @@ export function PartnersPanel({
     });
 
     if (error) {
-      toast.error("Kunne ikke opprette partner", {
+      toast.error(t("customers.toasts.partnerCreateFailed"), {
         description: error.message,
       });
       return;
     }
 
-    toast.success("Partner registrert");
+    toast.success(t("customers.toasts.partnerRegistered"));
     addForm.reset({ category: "catering", name: "", phone: "", email: "", notes: "" });
     setAddOpen(false);
     invalidateCustomers();
@@ -286,7 +311,7 @@ export function PartnersPanel({
     const { error } = await supabase
       .from("partners")
       .update({
-        category: partnerLabelToCategory(data.category),
+        category: partnerLabelToCategoryLocalized(data.category, t),
         name: data.name,
         phone: data.phone.trim() || null,
         email: data.email.trim() || null,
@@ -296,11 +321,11 @@ export function PartnersPanel({
       .eq("organization_id", currentOrganizationId);
 
     if (error) {
-      toast.error("Kunne ikke lagre", { description: error.message });
+      toast.error(t("common.toasts.saveFailed"), { description: error.message });
       return;
     }
 
-    toast.success("Lagret");
+    toast.success(t("common.toasts.saved"));
     invalidateCustomers();
   }
 
@@ -314,10 +339,10 @@ export function PartnersPanel({
         .eq("id", id)
         .eq("organization_id", currentOrganizationId);
       if (error) {
-        toast.error("Kunne ikke slette", { description: error.message });
+        toast.error(t("common.toasts.deleteFailed"), { description: error.message });
         return;
       }
-      toast.success("Partner slettet");
+      toast.success(t("customers.toasts.partnerDeleted"));
       if (selectedId === id) setSelectedId(null);
       invalidateCustomers();
     } finally {
@@ -349,19 +374,19 @@ export function PartnersPanel({
             <AppPageHeader
               className="mb-0"
               surface="default"
-              title="Partnere"
+              title={t("customers.partners")}
               titleClassName="customers-partners-hero"
               actionsClassName={RN_PAGE_SEARCH_ACTIONS}
               actions={
                 <CustomersPageSearchToolbar
                   searchId="partners-search"
-                  searchAriaLabel="Søk partnere"
-                  searchPlaceholder="Søk partner…"
+                  searchAriaLabel={t("customers.searchPartnersAria")}
+                  searchPlaceholder={t("customers.searchPartnersPlaceholder")}
                   query={query}
                   onQueryChange={handleQueryChange}
-                  addLabel="Ny partner"
+                  addLabel={t("customers.newPartner")}
                   onAdd={() => setAddOpen(true)}
-                  toolbarAriaLabel="Partnere — søk og ny partner"
+                  toolbarAriaLabel={t("customers.toolbarPartnersAria")}
                 />
               }
             />
@@ -372,8 +397,7 @@ export function PartnersPanel({
       {partners.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center md:px-8 md:py-16">
           <p className="customers-empty-hint text-muted-foreground">
-            Ingen partnere registrert ennå. Legg til catering, dekor, renhold
-            eller andre.
+            {t("customers.emptyPartners")}
           </p>
         </div>
         ) : (
@@ -382,12 +406,12 @@ export function PartnersPanel({
               <table className="w-full min-w-[640px] text-left text-app-base">
                 <thead>
                   <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                    <th className={partnersTableHeadClass}>Navn</th>
-                    <th className={partnersTableHeadClass}>Kategori</th>
-                    <th className={partnersTableHeadClass}>Telefon</th>
-                    <th className={partnersTableHeadClass}>E-post</th>
+                    <th className={partnersTableHeadClass}>{t("common.fields.name")}</th>
+                    <th className={partnersTableHeadClass}>{t("customers.table.category")}</th>
+                    <th className={partnersTableHeadClass}>{t("common.fields.phone")}</th>
+                    <th className={partnersTableHeadClass}>{t("common.fields.email")}</th>
                     <th className={cn(partnersTableHeadClass, "w-12 text-right")}>
-                      <span className="sr-only">Åpne</span>
+                      <span className="sr-only">{t("customers.open")}</span>
                     </th>
                   </tr>
                 </thead>
@@ -420,7 +444,7 @@ export function PartnersPanel({
                                 : "border-rn-border-strong bg-rn-surface-segment text-rn-text-body",
                             )}
                           >
-                            {partnerCategoryLabelNb(p.category)}
+                            {partnerCategoryLabel(p.category, t)}
                           </span>
                         </td>
                         <td className="customers-partners-row-meta px-6 py-5 md:px-8 md:py-6">
@@ -448,11 +472,22 @@ export function PartnersPanel({
               <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
                 <span>
                   {filtered.length <= TENANT_LIST_PAGE_SIZE
-                    ? `Viser ${filtered.length} ${filtered.length === 1 ? "partner" : "partnere"}`
-                    : `Viser ${(currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1}–${Math.min(
-                        currentPage * TENANT_LIST_PAGE_SIZE,
-                        filtered.length,
-                      )} av ${filtered.length}`}
+                    ? t("customers.footer.showingCount", {
+                        count: filtered.length,
+                        label:
+                          filtered.length === 1
+                            ? t("customers.footer.partnerWord")
+                            : t("customers.footer.partnersWord"),
+                      })
+                    : t("customers.footer.showingRange", {
+                        from:
+                          (currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1,
+                        to: Math.min(
+                          currentPage * TENANT_LIST_PAGE_SIZE,
+                          filtered.length,
+                        ),
+                        total: filtered.length,
+                      })}
                 </span>
                 {filtered.length > TENANT_LIST_PAGE_SIZE ? (
                 <div className="flex flex-wrap items-center gap-2">
@@ -466,10 +501,13 @@ export function PartnersPanel({
                     }
                   >
                     <ChevronLeft className="size-5" aria-hidden />
-                    Forrige
+                    {t("customers.footer.prev")}
                   </Button>
                   <span className="flex items-center px-2 tabular-nums">
-                    Side {currentPage} / {totalPages}
+                    {t("customers.footer.pageOf", {
+                      current: currentPage,
+                      total: totalPages,
+                    })}
                   </span>
                   <Button
                     type="button"
@@ -480,7 +518,7 @@ export function PartnersPanel({
                       setPartnersPage((p) => Math.min(totalPages, p + 1))
                     }
                   >
-                    Neste
+                    {t("common.actions.next")}
                     <ChevronRight className="size-5" aria-hidden />
                   </Button>
                 </div>
@@ -508,14 +546,14 @@ export function PartnersPanel({
             <div className="flex h-full flex-col">
               <SheetHeader className="flex flex-row items-center justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head p-6">
                 <SheetTitle className="app-card-title text-left">
-                  Rediger partner
+                  {t("customers.partnerForm.editTitle")}
                 </SheetTitle>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-sm"
                   className="rounded-md border-2 border-transparent hover:border-rn-border-strong/60"
-                  aria-label="Lukk"
+                  aria-label={t("common.actions.close")}
                   onClick={() => setSelectedId(null)}
                 >
                   <X className="size-5" aria-hidden />
@@ -530,7 +568,7 @@ export function PartnersPanel({
                 </div>
                 <div className="flex flex-col gap-2 border-t-2 border-rn-border-strong bg-rn-surface-footer/50 p-6">
                   <Button type="submit" variant="success" size="cta" className="w-full">
-                    Lagre
+                    {t("customers.partnerForm.save")}
                   </Button>
                   <Button
                     type="button"
@@ -539,7 +577,7 @@ export function PartnersPanel({
                     className="h-12 rounded-md border-2 border-destructive/40 text-base text-destructive hover:bg-destructive/10"
                     onClick={() => onDeletePartner()}
                   >
-                    Slett partner
+                    {t("customers.partnerForm.delete")}
                   </Button>
                 </div>
               </form>
@@ -562,11 +600,12 @@ export function PartnersPanel({
             <>
               <DialogHeader className="text-left">
                 <DialogTitle className="app-card-title">
-                  Slette partner?
+                  {t("customers.partnerDelete.title")}
                 </DialogTitle>
                 <DialogDescription className="text-app-base leading-relaxed text-muted-foreground">
-                  Du er i ferd med å slette «{partnerDeleteTarget.name}». Dette kan
-                  ikke angres.
+                  {t("customers.partnerDelete.description", {
+                    name: partnerDeleteTarget.name,
+                  })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -577,7 +616,7 @@ export function PartnersPanel({
                   className="w-full border-2 border-rn-border-strong sm:w-auto"
                   onClick={() => setPartnerDeleteTarget(null)}
                 >
-                  Avbryt
+                  {t("common.actions.cancel")}
                 </Button>
                 <Button
                   type="button"
@@ -586,7 +625,7 @@ export function PartnersPanel({
                   className="w-full border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700 sm:w-auto"
                   onClick={() => void confirmPartnerDelete()}
                 >
-                  Ja, slett partner
+                  {t("customers.partnerDelete.confirm")}
                 </Button>
               </DialogFooter>
             </>
@@ -597,7 +636,7 @@ export function PartnersPanel({
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-w-md rounded-md" showCloseButton>
           <DialogHeader>
-            <DialogTitle className="app-card-title">Ny partner</DialogTitle>
+            <DialogTitle className="app-card-title">{t("customers.partnerForm.newTitle")}</DialogTitle>
           </DialogHeader>
           <form
             onSubmit={addForm.handleSubmit(onAddPartner)}
@@ -606,10 +645,10 @@ export function PartnersPanel({
             <PartnerFields form={addForm} idPrefix="add" />
             <DialogFooter className="gap-2 sm:justify-end">
               <Button type="button" variant="outline" onClick={() => setAddOpen(false)}>
-                Avbryt
+                {t("common.actions.cancel")}
               </Button>
               <Button type="submit" variant="success" size="cta">
-                Registrer
+                {t("customers.partnerForm.register")}
               </Button>
             </DialogFooter>
           </form>

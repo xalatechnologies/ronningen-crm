@@ -10,12 +10,17 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
+import { enGB } from "date-fns/locale/en-GB";
 import { nb } from "date-fns/locale/nb";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import { useCalendarWeekdays } from "@/hooks/use-calendar-weekdays";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
+
+const dateFnsLocales = { nb, en: enGB };
 
 function toLocalYmd(d: Date) {
   const y = d.getFullYear();
@@ -59,6 +64,9 @@ export function DatePickerField({
   variant = "toolbar",
   "aria-invalid": ariaInvalid,
 }: DatePickerFieldProps) {
+  const { t, locale } = useTranslation();
+  const weekdays = useCalendarWeekdays();
+  const dateFnsLocale = dateFnsLocales[locale];
   const [open, setOpen] = React.useState(false);
   const selected = parseYmd(value);
   const [viewMonth, setViewMonth] = React.useState(() =>
@@ -72,7 +80,7 @@ export function DatePickerField({
   const triggerClasses =
     variant === "toolbar"
       ? cn(
-          "flex h-[max(var(--app-input-min-height),var(--app-tap-target-min))] w-full items-center justify-start gap-2 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card px-4 text-left text-app-control font-medium text-foreground shadow-sm outline-none transition-colors",
+          "box-border flex min-h-[max(var(--app-input-min-height),var(--app-tap-target-min))] w-full items-center justify-start gap-2 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card px-4 text-left text-app-control font-medium text-foreground shadow-sm outline-none transition-colors",
           "hover:bg-muted/40 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25",
           "disabled:pointer-events-none disabled:opacity-50",
         )
@@ -102,8 +110,8 @@ export function DatePickerField({
         />
         <span className="tabular-nums">
           {value && /^\d{4}-\d{2}-\d{2}$/.test(value)
-            ? format(selected, "d. MMM yyyy", { locale: nb })
-            : "Velg dato …"}
+            ? format(selected, "d. MMM yyyy", { locale: dateFnsLocale })
+            : t("calendar.picker.selectDate")}
         </span>
       </PopoverPrimitive.Trigger>
 
@@ -133,20 +141,20 @@ export function DatePickerField({
                 variant="outline"
                 size="icon-sm"
                 className="size-11 min-h-[max(2.75rem,var(--app-tap-target-min))] min-w-[max(2.75rem,var(--app-tap-target-min))] shrink-0 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong"
-                aria-label="Forrige måned"
+                aria-label={t("calendar.prevMonth")}
                 onClick={() => setViewMonth((m) => addMonths(m, -1))}
               >
                 <ChevronLeft className="size-4" aria-hidden />
               </Button>
               <span className="min-w-0 truncate px-1 text-center text-app-control font-semibold capitalize">
-                {format(viewMonth, "LLLL yyyy", { locale: nb })}
+                {format(viewMonth, "LLLL yyyy", { locale: dateFnsLocale })}
               </span>
               <Button
                 type="button"
                 variant="outline"
                 size="icon-sm"
                 className="size-11 min-h-[max(2.75rem,var(--app-tap-target-min))] min-w-[max(2.75rem,var(--app-tap-target-min))] shrink-0 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong"
-                aria-label="Neste måned"
+                aria-label={t("calendar.nextMonth")}
                 onClick={() => setViewMonth((m) => addMonths(m, 1))}
               >
                 <ChevronRight className="size-4" aria-hidden />
@@ -154,7 +162,7 @@ export function DatePickerField({
             </div>
 
             <div className="grid grid-cols-7 gap-1 text-center">
-              {["ma", "ti", "on", "to", "fr", "lø", "sø"].map((d) => (
+              {weekdays.map((d) => (
                 <div
                   key={d}
                   className="flex size-11 items-center justify-center app-meta font-bold tracking-wide text-muted-foreground uppercase"

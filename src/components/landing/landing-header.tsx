@@ -9,12 +9,14 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { APP_NAME } from "@/config/app";
-import { LANDING_NAV, LANDING_ROUTES } from "@/components/landing/landing-content";
+import { LANDING_ROUTES } from "@/components/landing/landing-content";
 import {
   LANDING_CONTAINER,
   LANDING_SECTION_X,
 } from "@/components/landing/landing-layout";
+import { LanguageSwitcher } from "@/components/language/language-switcher";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import type { User } from "@supabase/supabase-js";
@@ -35,23 +37,35 @@ const registerButtonClass = cn(
   "h-11 px-5 font-heading text-sm font-bold",
 );
 
-function getDisplayName(user: User | null, profile: AuthProfile | null) {
+function getDisplayName(
+  user: User | null,
+  profile: AuthProfile | null,
+  fallback: string,
+) {
   if (profile?.fullName?.trim()) return profile.fullName.trim();
   const metaName = user?.user_metadata?.full_name;
   if (typeof metaName === "string" && metaName.trim()) return metaName.trim();
   if (user?.email) return user.email;
-  return "bruker";
+  return fallback;
 }
 
+const NAV_KEYS = [
+  { key: "features" as const, hrefKey: "features" as const },
+  { key: "howItWorks" as const, hrefKey: "howItWorks" as const },
+  { key: "pricing" as const, hrefKey: "pricing" as const },
+  { key: "faq" as const, hrefKey: "faq" as const },
+];
+
 export function LandingHeader() {
+  const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, profile, loading, isAuthenticated } = useAuthUser();
   const supabase = useSupabase();
   const router = useRouter();
 
   const displayName = useMemo(
-    () => getDisplayName(user, profile),
-    [user, profile],
+    () => getDisplayName(user, profile, t("landing.auth.userFallback")),
+    [user, profile, t],
   );
 
   async function signOut() {
@@ -74,49 +88,47 @@ export function LandingHeader() {
           className="flex min-w-0 items-center gap-3 font-heading text-lg font-bold tracking-tight text-rn-text-heading"
         >
           <span className="relative flex size-12 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-black shadow-sm md:size-14">
-            <AppBrandLogo
-              sizes="(min-width: 768px) 56px, 48px"
-              priority
-            />
+            <AppBrandLogo sizes="(min-width: 768px) 56px, 48px" priority />
           </span>
           <span className="truncate">{APP_NAME}</span>
         </Link>
 
         <nav
           className="hidden items-center gap-8 md:flex"
-          aria-label="Hovednavigasjon"
+          aria-label={t("landing.header.mainNavAria")}
         >
-          {LANDING_NAV.map((item) => (
+          {NAV_KEYS.map((item) => (
             <a
-              key={item.href}
-              href={item.href}
+              key={item.key}
+              href={t(`landing.navHrefs.${item.hrefKey}`)}
               className="font-heading text-base font-semibold text-rn-text-slate transition-colors hover:text-rn-text-heading md:text-lg"
             >
-              {item.label}
+              {t(`landing.nav.${item.key}`)}
             </a>
           ))}
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <LanguageSwitcher variant="compact" />
           {!loading && isAuthenticated ? (
             <>
               <p className="hidden max-w-[12rem] truncate text-right text-sm text-rn-text-slate md:block lg:max-w-[16rem]">
-                Innlogget som{" "}
+                {t("landing.auth.loggedInAs")}{" "}
                 <span className="font-semibold text-rn-text-heading">
                   {displayName}
                 </span>
               </p>
               <Link href={LANDING_ROUTES.app} className={registerButtonClass}>
-                Gå til appen
+                {t("landing.auth.goToApp")}
               </Link>
             </>
           ) : !loading ? (
             <>
               <Link href={LANDING_ROUTES.login} className={loginButtonClass}>
-                Logg inn
+                {t("landing.auth.login")}
               </Link>
               <Link href={LANDING_ROUTES.register} className={registerButtonClass}>
-                Start gratis
+                {t("landing.auth.registerShort")}
               </Link>
             </>
           ) : null}
@@ -129,7 +141,7 @@ export function LandingHeader() {
                   variant="ghost"
                   size="icon"
                   className="size-11 md:hidden"
-                  aria-label="Åpne meny"
+                  aria-label={t("landing.header.openMenuAria")}
                 >
                   <MenuIcon className="size-6" />
                 </Button>
@@ -146,23 +158,24 @@ export function LandingHeader() {
               </SheetHeader>
               <nav
                 className="flex flex-col gap-1 p-4"
-                aria-label="Mobilnavigasjon"
+                aria-label={t("landing.header.mobileNavAria")}
               >
-                {LANDING_NAV.map((item) => (
+                {NAV_KEYS.map((item) => (
                   <a
-                    key={item.href}
-                    href={item.href}
+                    key={item.key}
+                    href={t(`landing.navHrefs.${item.hrefKey}`)}
                     onClick={() => setMobileOpen(false)}
                     className="rounded-[length:var(--app-radius)] px-3 py-3 text-base font-medium text-rn-text-body hover:bg-rn-surface-row-hover"
                   >
-                    {item.label}
+                    {t(`landing.nav.${item.key}`)}
                   </a>
                 ))}
                 <div className="mt-4 flex flex-col gap-2 border-t border-rn-border-strong pt-4">
+                  <LanguageSwitcher variant="menu" className="px-0" />
                   {!loading && isAuthenticated ? (
                     <>
                       <p className="px-3 py-1 text-sm text-rn-text-slate">
-                        Innlogget som{" "}
+                        {t("landing.auth.loggedInAs")}{" "}
                         <span className="font-semibold text-rn-text-heading">
                           {displayName}
                         </span>
@@ -175,7 +188,7 @@ export function LandingHeader() {
                           "w-full justify-center",
                         )}
                       >
-                        Gå til appen
+                        {t("landing.auth.goToApp")}
                       </Link>
                       <Button
                         type="button"
@@ -183,7 +196,7 @@ export function LandingHeader() {
                         className="h-12 w-full justify-center border-2 border-rn-border-strong font-heading font-semibold"
                         onClick={() => void signOut()}
                       >
-                        Logg ut
+                        {t("landing.auth.logout")}
                       </Button>
                     </>
                   ) : !loading ? (
@@ -196,7 +209,7 @@ export function LandingHeader() {
                           "h-12 w-full justify-center border-2 border-rn-border-strong font-heading font-semibold",
                         )}
                       >
-                        Logg inn
+                        {t("landing.auth.login")}
                       </Link>
                       <Link
                         href={LANDING_ROUTES.register}
@@ -206,7 +219,7 @@ export function LandingHeader() {
                           "w-full justify-center",
                         )}
                       >
-                        Start gratis prøveperiode
+                        {t("landing.hero.primaryCta")}
                       </Link>
                     </>
                   ) : null}

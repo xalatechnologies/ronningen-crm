@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import {
   AdminSegmentFilterBar,
   AdminSegmentFilterControls,
@@ -7,6 +8,7 @@ import {
   AdminSegmentFilterSearch,
   adminSegmentFilterButtonClass,
 } from "@/components/admin/admin-segment-filter-bar";
+import type { Translator } from "@/i18n/types";
 import type { AdminUserRow } from "@/lib/admin/queries/users-billing-audit";
 
 export type AdminUserFilter =
@@ -15,15 +17,14 @@ export type AdminUserFilter =
   | "no_org"
   | "inactive";
 
-export const ADMIN_USER_FILTER_OPTIONS: {
-  value: AdminUserFilter;
-  label: string;
-}[] = [
-  { value: "all", label: "Alle" },
-  { value: "platform_admin", label: "Plattformadmin" },
-  { value: "no_org", label: "Uten org" },
-  { value: "inactive", label: "Inaktive" },
-];
+export function getAdminUserFilterOptions(t: Translator) {
+  return [
+    { value: "all" as const, label: t("admin.alle") },
+    { value: "platform_admin" as const, label: t("admin.plattformadmin") },
+    { value: "no_org" as const, label: t("admin.uten_org") },
+    { value: "inactive" as const, label: t("admin.inaktive") },
+  ];
+}
 
 export function isInactiveUser(user: AdminUserRow): boolean {
   if (user.isDisabled) return true;
@@ -127,6 +128,8 @@ export function AdminUserFilterBar({
   counts,
   embedded = false,
 }: AdminUserFilterBarProps) {
+  const { t } = useTranslation();
+  const filterOptions = getAdminUserFilterOptions(t);
   return (
     <AdminSegmentFilterBar
       className={
@@ -138,17 +141,17 @@ export function AdminUserFilterBar({
       <AdminSegmentFilterSearch
         value={search}
         onChange={onSearchChange}
-        placeholder="Søk navn, e-post, organisasjon…"
-        aria-label="Søk brukere"
+        placeholder={t("admin.sok_navn_e_post_organisasjon")}
+        aria-label={t("admin.sok_brukere")}
       />
 
       <AdminSegmentFilterDivider />
 
       <AdminSegmentFilterControls
-        aria-label="Filtrer brukere"
+        aria-label={t("admin.filtrer_brukere")}
         className="min-w-0 overflow-x-auto pb-0.5"
       >
-        {ADMIN_USER_FILTER_OPTIONS.map((option) => {
+        {filterOptions.map((option) => {
           const count = counts[option.value];
           const active = filter === option.value;
           return (

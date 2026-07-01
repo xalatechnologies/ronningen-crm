@@ -1,8 +1,14 @@
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { adminRoutes } from "@/config/admin-routes";
 
+export type GlobalSearchGroupType =
+  | "organizations"
+  | "users"
+  | "customers"
+  | "bookings";
+
 export type GlobalSearchResultGroup = {
-  type: string;
+  type: GlobalSearchGroupType;
   items: { id: string; label: string; sublabel?: string; href: string }[];
 };
 
@@ -48,7 +54,7 @@ export async function globalAdminSearch(
 
   if (orgs?.length) {
     groups.push({
-      type: "Organisasjoner",
+      type: "organizations",
       items: orgs.map((o) => ({
         id: o.id,
         label: o.name,
@@ -60,7 +66,7 @@ export async function globalAdminSearch(
 
   if (users?.length) {
     groups.push({
-      type: "Brukere",
+      type: "users",
       items: users.map((u) => ({
         id: u.id,
         label: u.full_name ?? u.email ?? u.id,
@@ -72,7 +78,7 @@ export async function globalAdminSearch(
 
   if (customers?.length) {
     groups.push({
-      type: "Kunder",
+      type: "customers",
       items: customers.map((c) => ({
         id: c.id,
         label: c.name,
@@ -84,7 +90,7 @@ export async function globalAdminSearch(
 
   if (bookings?.length) {
     groups.push({
-      type: "Bookinger",
+      type: "bookings",
       items: bookings.map((b) => {
         const customer = b.customers as { name?: string } | null;
         return {

@@ -3,6 +3,7 @@
 import { Button, buttonVariants } from "@/components/ui/button";
 import { FormSelectField, toIdNameOptions } from "@/components/ui/form-select";
 import { useOrganizationPermissions } from "@/hooks/use-organization-permissions";
+import { useTranslation } from "@/i18n/client";
 import { TENANT_SETUP_LOKALER_PATH } from "@/lib/organizations/tenant-setup";
 import { canManageBookings } from "@/lib/role-access";
 import { RN_SELECT_TRIGGER_FIELD_CLASS } from "@/lib/rn-ui";
@@ -30,11 +31,13 @@ export function PropertySelectField<T extends FieldValues>({
   id,
   disabled = false,
   className,
-  placeholder = "— Ikke valgt —",
+  placeholder,
   optional = false,
 }: PropertySelectFieldProps<T>) {
+  const { t } = useTranslation();
   const { role } = useOrganizationPermissions();
   const canManageProperties = canManageBookings(role);
+  const resolvedPlaceholder = placeholder ?? t("properties.notSelected");
 
   if (properties.length === 0) {
     return (
@@ -44,23 +47,24 @@ export function PropertySelectField<T extends FieldValues>({
       >
         <p>
           {optional
-            ? "Ingen lokaler er registrert ennå."
-            : "Du må registrere minst ett lokale først."}
+            ? t("properties.noVenuesOptional")
+            : t("properties.noVenuesRequired")}
           {canManageProperties ? (
             <>
               {" "}
-              Gå til{" "}
+              {t("properties.goToSettings")}{" "}
               <Link
                 href={TENANT_SETUP_LOKALER_PATH}
                 className="font-semibold underline underline-offset-2"
               >
-                Innstillinger → Lokaler
-              </Link>{" "}
-              for å opprette et lokale
-              {optional ? " du kan knytte til skjemaet." : "."}
+                {t("properties.settingsVenues")}
+              </Link>
+              {optional
+                ? t("properties.createVenueOptional")
+                : t("properties.createVenueRequired")}
             </>
           ) : (
-            " Be en administrator med redigeringstilgang registrere lokaler under Innstillinger."
+            t("properties.askAdmin")
           )}
         </p>
         {canManageProperties ? (
@@ -71,7 +75,7 @@ export function PropertySelectField<T extends FieldValues>({
             className={cn(buttonVariants({ variant: "success", size: "sm" }), "mt-3")}
           >
             <Plus className="size-4" aria-hidden />
-            Registrer lokale
+            {t("properties.registerVenue")}
           </Button>
         ) : null}
       </div>
@@ -85,7 +89,7 @@ export function PropertySelectField<T extends FieldValues>({
       id={id}
       disabled={disabled}
       className={cn(RN_SELECT_TRIGGER_FIELD_CLASS, "w-full font-medium", className)}
-      placeholder={placeholder}
+      placeholder={resolvedPlaceholder}
       options={toIdNameOptions(properties)}
     />
   );

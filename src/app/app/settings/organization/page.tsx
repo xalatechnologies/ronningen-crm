@@ -1,6 +1,7 @@
 import { OrganizationProfileForm } from "@/components/settings/organization-profile-form";
 import { TenantSetupBanner } from "@/components/settings/tenant-setup-banner";
 import { AppPageHeader } from "@/components/layout/app-page-header";
+import { getServerTranslation } from "@/i18n/server";
 import type { OrganizationProfileRow } from "@/lib/organizations/organization-profile";
 import { fetchTenantSetupStatus } from "@/lib/organizations/tenant-setup-queries";
 import { requireOrgAdminSettingsAccess } from "@/lib/settings/require-settings-access";
@@ -10,6 +11,7 @@ import { notFound } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export default async function OrganizationSettingsPage() {
+  const { t } = await getServerTranslation();
   const [supabase, { orgId, role }] = await Promise.all([
     getCachedServerSupabaseClient(),
     requireOrgAdminSettingsAccess(),
@@ -38,14 +40,10 @@ export default async function OrganizationSettingsPage() {
         surface="card"
         compact
         className="mb-0"
-        title="Organisasjon"
-        description={
-          <>
-            Virksomhetsinfo for{" "}
-            <span className="font-medium text-foreground">{organization.name}</span>
-            {" "}— brukes på fakturaer og i appen.
-          </>
-        }
+        title={t("appPages.settings.organization.title")}
+        description={t("appPages.settings.organization.description", {
+          name: organization.name,
+        })}
       />
       <OrganizationProfileForm organization={organization} setupMode={setupMode} />
     </div>

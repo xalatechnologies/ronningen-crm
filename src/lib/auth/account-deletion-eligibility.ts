@@ -1,4 +1,5 @@
 import { normalizeEmail } from "@/lib/auth/normalize-email";
+import type { Translator } from "@/i18n/types";
 
 export type AccountDeletionBlockerCode =
   | "sole_owner_only_member"
@@ -29,18 +30,20 @@ export function normalizeConfirmEmail(value: string): string {
   return normalizeEmail(value);
 }
 
-export function evaluateAccountDeletionEligibility(input: {
-  memberships: MembershipEligibilityInput[];
-  isPlatformAdmin: boolean;
-  platformAdminCount: number;
-}): AccountDeletionEligibility {
+export function evaluateAccountDeletionEligibility(
+  input: {
+    memberships: MembershipEligibilityInput[];
+    isPlatformAdmin: boolean;
+    platformAdminCount: number;
+  },
+  t: Translator,
+): AccountDeletionEligibility {
   const blockers: AccountDeletionBlocker[] = [];
 
   if (input.isPlatformAdmin && input.platformAdminCount <= 1) {
     blockers.push({
       code: "sole_platform_admin",
-      message:
-        "Du er den eneste plattformadministratoren. Utnevn en annen administrator før du sletter kontoen.",
+      message: t("serverErrors.auth.onlyPlatformAdmin"),
     });
   }
 
@@ -54,7 +57,9 @@ export function evaluateAccountDeletionEligibility(input: {
         code: "sole_owner_only_member",
         organizationId: membership.organizationId,
         organizationName: membership.organizationName,
-        message: `Du er eneste bruker og hovedeier i «${membership.organizationName}». Inviter et nytt teammedlem eller kontakt support for å avslutte organisasjonen før du sletter kontoen.`,
+        message: t("serverErrors.auth.soleOwnerUser", {
+          organizationName: membership.organizationName,
+        }),
       });
       continue;
     }
@@ -63,7 +68,9 @@ export function evaluateAccountDeletionEligibility(input: {
       code: "sole_owner_transfer_required",
       organizationId: membership.organizationId,
       organizationName: membership.organizationName,
-      message: `Du er siste hovedeier i «${membership.organizationName}». Eierskap må overføres før du sletter kontoen. Kontakt support for hjelp.`,
+      message: t("serverErrors.auth.lastOwner", {
+        organizationName: membership.organizationName,
+      }),
     });
   }
 

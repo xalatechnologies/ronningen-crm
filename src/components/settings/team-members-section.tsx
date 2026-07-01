@@ -1,6 +1,6 @@
 "use client";
 
-import { ROLE_DISPLAY_LABELS, USER_ROLES, type UserRole } from "@/constants/roles";
+import { USER_ROLES, type UserRole } from "@/constants/roles";
 import { Button } from "@/components/ui/button";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { FormSelect } from "@/components/ui/form-select";
@@ -15,7 +15,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useTranslation } from "@/i18n/client";
 import { notifyTeamMemberAdded } from "@/lib/notifications/actions/org-events";
+import { roleLabel } from "@/lib/navigation/nav-labels";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
@@ -30,8 +32,6 @@ import { cn } from "@/lib/utils";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
 import { UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -49,26 +49,35 @@ export type TeamMemberRow = {
 
 const ASSIGNABLE_ROLES = USER_ROLES.filter((r) => r !== "owner");
 
-const roleOptions = ASSIGNABLE_ROLES.map((r) => ({
-  value: r,
-  label: ROLE_DISPLAY_LABELS[r],
-}));
-
-const allRoleOptions = USER_ROLES.map((r) => ({
-  value: r,
-  label: ROLE_DISPLAY_LABELS[r],
-}));
-
 export function TeamMembersSection({
   members: initialMembers,
 }: {
   members: TeamMemberRow[];
 }) {
+  const { t, formatDate } = useTranslation();
   const supabase = useSupabase();
   const router = useRouter();
   const { user } = useAuthUser();
   const { currentOrganizationId } = useCurrentOrganization();
   const [members, setMembers] = useState(initialMembers);
+
+  const roleOptions = useMemo(
+    () =>
+      ASSIGNABLE_ROLES.map((r) => ({
+        value: r,
+        label: roleLabel(r, t),
+      })),
+    [t],
+  );
+
+  const allRoleOptions = useMemo(
+    () =>
+      USER_ROLES.map((r) => ({
+        value: r,
+        label: roleLabel(r, t),
+      })),
+    [t],
+  );
 
   useEffect(() => {
     setMembers(initialMembers);
@@ -95,7 +104,7 @@ export function TeamMembersSection({
       orgId = requireOrganizationId(currentOrganizationId);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+        err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
       );
       return;
     }
@@ -108,22 +117,21 @@ export function TeamMembersSection({
       );
 
       if (lookupError) {
-        toast.error("Kunne ikke slå opp bruker", {
+        toast.error(t("settings.team.lookupFailed"), {
           description: lookupError.message,
         });
         return;
       }
 
       if (!userId) {
-        toast.error("Brukeren finnes ikke", {
-          description:
-            "Ingen konto med denne e-posten i Event Manager. Personen må registrere seg med samme adresse først, eller du må skrive e-posten nøyaktig som ved innlogging.",
+        toast.error(t("settings.team.userNotFound"), {
+          description: t("settings.team.noAccount"),
         });
         return;
       }
 
       if (members.some((m) => m.userId === userId)) {
-        toast.error("Brukeren er allerede medlem");
+        toast.error(t("settings.team.alreadyMember"));
         return;
       }
 
@@ -134,7 +142,7 @@ export function TeamMembersSection({
       });
 
       if (error) {
-        toast.error("Kunne ikke legge til medlem", {
+        toast.error(t("settings.team.addFailed"), {
           description: error.message,
         });
         return;
@@ -145,7 +153,7 @@ export function TeamMembersSection({
         userId,
       });
 
-      toast.success("Medlem lagt til");
+      toast.success(t("settings.team.memberAdded"));
       addForm.reset({ email: "", role: "manager" });
       router.refresh();
     } finally {
@@ -157,8 +165,8 @@ export function TeamMembersSection({
     if (!supabase || member.role === nextRole) return;
 
     if (member.role === "owner" && ownerCount <= 1 && nextRole !== "owner") {
-      toast.error("Kan ikke endre rolle", {
-        description: "Organisasjonen må ha minst én hovedeier.",
+      toast.error(t("settings.team.cannotChangeRole"), {
+        description: t("settings.team.minOwner"),
       });
       return;
     }
@@ -171,7 +179,7 @@ export function TeamMembersSection({
         .eq("id", member.id);
 
       if (error) {
-        toast.error("Kunne ikke oppdatere rolle", { description: error.message });
+        toast.error(t("settings.team.updateRoleFailed"), { description: error.message });
         return;
       }
 
@@ -180,7 +188,7 @@ export function TeamMembersSection({
           m.id === member.id ? { ...m, role: nextRole as UserRole } : m,
         ),
       );
-      toast.success("Rolle oppdatert");
+      toast.success(t("settings.team.roleUpdated"));
       router.refresh();
     } finally {
       setRoleBusyId(null);
@@ -191,12 +199,12 @@ export function TeamMembersSection({
     if (!supabase || !removeTarget) return;
 
     if (removeTarget.role === "owner" && ownerCount <= 1) {
-      toast.error("Kan ikke fjerne siste hovedeier");
+      toast.error(t("settings.team.cannotRemoveLastOwner"));
       return;
     }
 
     if (removeTarget.userId === user?.id) {
-      toast.error("Du kan ikke fjerne deg selv her");
+      toast.error(t("settings.team.cannotRemoveSelf"));
       return;
     }
 
@@ -208,12 +216,12 @@ export function TeamMembersSection({
         .eq("id", removeTarget.id);
 
       if (error) {
-        toast.error("Kunne ikke fjerne medlem", { description: error.message });
+        toast.error(t("settings.team.removeFailed"), { description: error.message });
         return;
       }
 
       setMembers((prev) => prev.filter((m) => m.id !== removeTarget.id));
-      toast.success("Medlem fjernet");
+      toast.success(t("settings.team.memberRemoved"));
       setRemoveTarget(null);
       router.refresh();
     } finally {
@@ -230,9 +238,9 @@ export function TeamMembersSection({
         }}
         className={cn("flex flex-col gap-4 p-6 md:p-8", RN_CARD_SHELL)}
       >
-        <h2 className="font-heading text-lg font-bold">Legg til medlem</h2>
+        <h2 className="font-heading text-lg font-bold">{t("settings.team.addTitle")}</h2>
         <p className="text-sm text-muted-foreground">
-          Brukeren må allerede ha registrert en konto med denne e-postadressen.
+          {t("settings.team.addDescription")}
         </p>
         <div className="flex flex-col gap-2">
           <div className="flex flex-col gap-4 md:flex-row md:flex-nowrap md:items-center md:gap-3">
@@ -241,7 +249,7 @@ export function TeamMembersSection({
                 htmlFor="team-email"
                 className="shrink-0 text-sm font-semibold md:w-14"
               >
-                E-post
+                {t("common.fields.email")}
               </Label>
               <Input
                 id="team-email"
@@ -255,7 +263,7 @@ export function TeamMembersSection({
                 htmlFor="team-role"
                 className="shrink-0 text-sm font-semibold md:w-12"
               >
-                Rolle
+                {t("settings.team.role")}
               </Label>
               <FormSelect
                 id="team-role"
@@ -274,7 +282,7 @@ export function TeamMembersSection({
               className="h-12 min-h-12 w-full shrink-0 gap-2 px-5 font-semibold md:w-auto"
             >
               <UserPlus className="size-5 shrink-0" aria-hidden />
-              Legg til
+              {t("settings.team.addButton")}
             </Button>
           </div>
           {addForm.formState.errors.email ? (
@@ -289,12 +297,12 @@ export function TeamMembersSection({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Navn</TableHead>
-              <TableHead>E-post</TableHead>
-              <TableHead>Rolle</TableHead>
-              <TableHead>Medlem siden</TableHead>
+              <TableHead>{t("common.fields.name")}</TableHead>
+              <TableHead>{t("common.fields.email")}</TableHead>
+              <TableHead>{t("settings.team.tableRole")}</TableHead>
+              <TableHead>{t("settings.team.tableMemberSince")}</TableHead>
               <TableHead className="w-28 text-right">
-                <span className="sr-only">Handlinger</span>
+                <span className="sr-only">{t("settings.team.tableActions")}</span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -308,7 +316,7 @@ export function TeamMembersSection({
                 <TableCell>
                   {m.role === "owner" ? (
                     <span className="font-medium">
-                      {ROLE_DISPLAY_LABELS.owner}
+                      {roleLabel("owner", t)}
                     </span>
                   ) : (
                     <FormSelect
@@ -321,9 +329,7 @@ export function TeamMembersSection({
                   )}
                 </TableCell>
                 <TableCell className={APP_TABLE_CELL_DATE}>
-                  {format(new Date(m.createdAtIso), "d. MMM yyyy", {
-                    locale: nb,
-                  })}
+                  {formatDate(m.createdAtIso)}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button
@@ -334,7 +340,7 @@ export function TeamMembersSection({
                     disabled={m.userId === user?.id}
                     onClick={() => setRemoveTarget(m)}
                   >
-                    Fjern
+                    {t("settings.team.remove")}
                   </Button>
                 </TableCell>
               </TableRow>
@@ -348,13 +354,18 @@ export function TeamMembersSection({
         onOpenChange={(open) => {
           if (!open) setRemoveTarget(null);
         }}
-        title="Fjerne teammedlem?"
+        title={t("settings.team.removeTitle")}
         description={
           removeTarget
-            ? `${removeTarget.fullName ?? removeTarget.email ?? "Medlemmet"} mister tilgang til organisasjonen.`
+            ? t("settings.team.removeDescription", {
+                name:
+                  removeTarget.fullName ??
+                  removeTarget.email ??
+                  t("settings.team.memberFallback"),
+              })
             : null
         }
-        confirmLabel="Ja, fjern"
+        confirmLabel={t("settings.team.removeConfirm")}
         busy={removeBusy}
         onConfirm={confirmRemoveMember}
       />

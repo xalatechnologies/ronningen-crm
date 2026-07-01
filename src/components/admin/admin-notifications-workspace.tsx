@@ -36,6 +36,7 @@ import {
   formatDeliveryStatusLabel,
   type CampaignStatus,
 } from "@/lib/admin/notification-labels";
+import { useTranslation } from "@/i18n/client";
 import { formatEmailTemplateLabel } from "@/lib/notifications/default-email-templates";
 import type {
   AdminEmailTemplate,
@@ -45,7 +46,7 @@ import type {
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import {
   Bell,
   ChevronDown,
@@ -96,6 +97,7 @@ function NotificationsKpiTile({
   iconClassName?: string;
   valueClassName?: string;
 }) {
+  const { t } = useTranslation();
   const content = (
     <>
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -120,7 +122,7 @@ function NotificationsKpiTile({
         className={cn(kpiTileClass, kpiInteractiveClass, active && kpiActiveClass)}
       >
         {content}
-        <span className="sr-only">Gå til {label}</span>
+        <span className="sr-only">{t("admin.overview_go_to", { label })}</span>
       </Link>
     );
   }
@@ -152,10 +154,12 @@ function deliveryStatusBadgeClass(status: string): string {
   }
 }
 
-const CAMPAIGN_STATUS_OPTIONS = CAMPAIGN_SETTABLE_STATUSES.map((value) => ({
-  value,
-  label: formatCampaignStatusLabel(value),
-}));
+function getCampaignStatusOptions(t: ReturnType<typeof useTranslation>["t"]) {
+  return CAMPAIGN_SETTABLE_STATUSES.map((value) => ({
+    value,
+    label: formatCampaignStatusLabel(value, t),
+  }));
+}
 
 function CampaignSendButton({
   campaign,
@@ -164,6 +168,7 @@ function CampaignSendButton({
   campaign: AdminNotificationCampaign;
   onSent: () => void;
 }) {
+  const { t, locale } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -178,7 +183,7 @@ function CampaignSendButton({
     setConfirmOpen(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke sende kampanje", { description: result.error });
+      toast.error(t("admin.kunne_ikke_sende_kampanje"), { description: result.error });
       return;
     }
 
@@ -195,20 +200,16 @@ function CampaignSendButton({
         disabled={busy}
         onClick={() => setConfirmOpen(true)}
       >
-        Send til alle
+        {t("admin.send_til_alle_brukere_btn")}
       </AdminActionButton>
       <AdminConfirmActionDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Send kampanje til alle brukere?"
-        description={
-          <>
-            Kampanjen <strong>{campaign.name}</strong> sendes til alle brukere
-            med gyldig e-post. Dette kan ikke angres, men hver bruker mottar
-            maks én e-post per kampanje.
-          </>
-        }
-        confirmLabel="Send nå"
+        title={t("admin.send_kampanje_til_alle_brukere")}
+        description={t("admin.kampanje_send_confirm_body", {
+          name: campaign.name,
+        })}
+        confirmLabel={t("admin.send_na")}
         busy={busy}
         onConfirm={() => void handleSend()}
       />
@@ -223,7 +224,12 @@ function CampaignStatusSelect({
   campaign: AdminNotificationCampaign;
   onUpdated: () => void;
 }) {
+  const { t, locale } = useTranslation();
   const [busy, setBusy] = useState(false);
+  const campaignStatusOptions = useMemo(
+    () => getCampaignStatusOptions(t),
+    [t],
+  );
 
   async function handleChange(nextStatus: string) {
     if (!nextStatus || nextStatus === campaign.status) return;
@@ -236,11 +242,11 @@ function CampaignStatusSelect({
     setBusy(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke oppdatere status", { description: result.error });
+      toast.error(t("admin.kunne_ikke_oppdatere_status"), { description: result.error });
       return;
     }
 
-    toast.success("Kampanjestatus oppdatert");
+    toast.success(t("admin.kampanjestatus_oppdatert"));
     onUpdated();
   }
 
@@ -248,7 +254,7 @@ function CampaignStatusSelect({
     <FormSelect
       value={campaign.status}
       onValueChange={(value) => void handleChange(value)}
-      options={CAMPAIGN_STATUS_OPTIONS}
+      options={campaignStatusOptions}
       disabled={busy}
       className="admin-table-select min-w-[8.5rem]"
       aria-label={`Endre status for ${campaign.name}`}
@@ -257,6 +263,7 @@ function CampaignStatusSelect({
 }
 
 function CreateTemplateForm({ onCreated }: { onCreated: () => void }) {
+  const { t, locale } = useTranslation();
   const [key, setKey] = useState("");
   const [subject, setSubject] = useState("");
   const [bodyHtml, setBodyHtml] = useState("<p></p>");
@@ -269,13 +276,12 @@ function CreateTemplateForm({ onCreated }: { onCreated: () => void }) {
     setBusy(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke opprette mal", { description: result.error });
+      toast.error(t("admin.kunne_ikke_opprette_mal"), { description: result.error });
       return;
     }
 
-    toast.success("Mal opprettet", {
-      description:
-        "Knytt malen til en kampanje, sett status til Aktiv, og bruk «Send til alle» for utsending.",
+    toast.success(t("admin.mal_opprettet"), {
+      description: t("admin.mal_opprettet_hint"),
     });
     setKey("");
     setSubject("");
@@ -288,10 +294,10 @@ function CreateTemplateForm({ onCreated }: { onCreated: () => void }) {
       onSubmit={(event) => void handleSubmit(event)}
       className="mb-6 space-y-4 rounded-md border border-rn-border-strong/60 bg-muted/10 p-4"
     >
-      <h3 className="app-section-title">Opprett mal</h3>
+      <h3 className="app-section-title">{t("admin.opprett_mal")}</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="new-template-key">Nøkkel</Label>
+          <Label htmlFor="new-template-key">{t("adminLabels.fields.key")}</Label>
           <Input
             id="new-template-key"
             value={key}
@@ -302,7 +308,7 @@ function CreateTemplateForm({ onCreated }: { onCreated: () => void }) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="new-template-subject">Emne</Label>
+          <Label htmlFor="new-template-subject">{t("adminLabels.fields.subject")}</Label>
           <Input
             id="new-template-subject"
             value={subject}
@@ -313,7 +319,7 @@ function CreateTemplateForm({ onCreated }: { onCreated: () => void }) {
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="new-template-body">HTML-innhold</Label>
+        <Label htmlFor="new-template-body">{t("adminLabels.fields.htmlContent")}</Label>
         <textarea
           id="new-template-body"
           value={bodyHtml}
@@ -324,7 +330,7 @@ function CreateTemplateForm({ onCreated }: { onCreated: () => void }) {
         />
       </div>
       <AdminActionButton type="submit" disabled={busy}>
-        {busy ? "Oppretter…" : "Opprett mal"}
+        {busy ? t("admin.oppretter") : t("admin.opprett_mal")}
       </AdminActionButton>
     </form>
   );
@@ -337,12 +343,13 @@ function CreateCampaignForm({
   templates: AdminEmailTemplate[];
   onCreated: () => void;
 }) {
+  const { t, locale } = useTranslation();
   const [name, setName] = useState("");
   const [templateKey, setTemplateKey] = useState("");
   const [busy, setBusy] = useState(false);
 
   const templateOptions = [
-    { value: "", label: "Ingen mal (utkast)" },
+    { value: "", label: t("admin.ingen_mal_utkast") },
     ...toIdNameOptions(
       templates.map((t) => ({ id: t.key, name: t.subject })),
     ),
@@ -358,11 +365,11 @@ function CreateCampaignForm({
     setBusy(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke opprette kampanje", { description: result.error });
+      toast.error(t("admin.kunne_ikke_opprette_kampanje"), { description: result.error });
       return;
     }
 
-    toast.success("Kampanje opprettet");
+    toast.success(t("admin.kampanje_opprettet"));
     setName("");
     setTemplateKey("");
     onCreated();
@@ -373,10 +380,10 @@ function CreateCampaignForm({
       onSubmit={(event) => void handleSubmit(event)}
       className="mb-6 space-y-4 rounded-md border border-rn-border-strong/60 bg-muted/10 p-4"
     >
-      <h3 className="app-section-title">Opprett kampanje</h3>
+      <h3 className="app-section-title">{t("admin.opprett_kampanje")}</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="new-campaign-name">Navn</Label>
+          <Label htmlFor="new-campaign-name">{t("adminLabels.fields.name")}</Label>
           <Input
             id="new-campaign-name"
             value={name}
@@ -386,17 +393,17 @@ function CreateCampaignForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="new-campaign-template">Mal</Label>
+          <Label htmlFor="new-campaign-template">{t("adminLabels.fields.template")}</Label>
           <FormSelect
             value={templateKey}
             onValueChange={setTemplateKey}
             options={templateOptions}
-            aria-label="Velg mal for kampanje"
+            aria-label={t("admin.velg_mal_for_kampanje")}
           />
         </div>
       </div>
       <AdminActionButton type="submit" disabled={busy}>
-        {busy ? "Oppretter…" : "Opprett kampanje"}
+        {busy ? t("admin.oppretter") : t("admin.opprett_kampanje")}
       </AdminActionButton>
     </form>
   );
@@ -427,6 +434,7 @@ export function AdminNotificationsWorkspace({
   initialSearch = "",
   emailConfigured = false,
 }: AdminNotificationsWorkspaceProps) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [view, setView] = useState<AdminNotificationView>(initialView);
@@ -531,10 +539,19 @@ export function AdminNotificationsWorkspace({
 
   const resultSummary =
     view === "templates"
-      ? `Viser ${filteredTemplates.length} av ${templates.length} maler`
+      ? t("admin.viser_av_maler", {
+          shown: filteredTemplates.length,
+          total: templates.length,
+        })
       : view === "campaigns"
-        ? `Viser ${filteredCampaigns.length} av ${campaigns.length} kampanjer`
-        : `Viser ${filteredDeliveries.length} av ${deliveryTotal} leveringer`;
+        ? t("admin.viser_av_kampanjer", {
+            shown: filteredCampaigns.length,
+            total: campaigns.length,
+          })
+        : t("admin.viser_av_leveringer", {
+            shown: filteredDeliveries.length,
+            total: deliveryTotal,
+          });
 
   const createAction =
     view !== "deliveries" ? (
@@ -551,12 +568,12 @@ export function AdminNotificationsWorkspace({
         {showCreate ? (
           <>
             <X className="size-4" aria-hidden />
-            Lukk
+            {t("common.actions.close")}
           </>
         ) : (
           <>
             <Plus className="size-4" aria-hidden />
-            {view === "templates" ? "Opprett mal" : "Opprett kampanje"}
+            {view === "templates" ? t("admin.opprett_mal") : t("admin.opprett_kampanje")}
           </>
         )}
       </AdminActionButton>
@@ -570,36 +587,36 @@ export function AdminNotificationsWorkspace({
             className="mb-0"
             surface="default"
             compact
-            title="Varsler"
-            description="E-postmaler, kampanjer og leveringsstatus."
+            title={t("admin.varsler")}
+            description={t("admin.e_postmaler_kampanjer_og_leveringsstatus")}
           />
         </div>
 
         <section
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
-          aria-label="Nøkkeltall"
+          aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <NotificationsKpiTile
-              label="Aktive kampanjer"
+              label={t("admin.aktive_kampanjer")}
               value={stats.activeCampaigns}
-              caption="Klar til utsending"
+              caption={t("admin.klar_til_utsending")}
               icon={Mail}
               active={view === "campaigns" && campaignFilter === "active"}
               href={adminNotificationsHref({ view: "campaigns", filter: "active" })}
             />
             <NotificationsKpiTile
-              label="Vellykket e-post"
+              label={t("admin.vellykket_e_post")}
               value={stats.deliverySuccess}
-              caption="Levert eller åpnet"
+              caption={t("admin.levert_eller_apnet")}
               icon={MailCheck}
               active={view === "deliveries" && deliveryFilter === "all" && !search.trim()}
               href={adminNotificationsHref({ view: "deliveries" })}
             />
             <NotificationsKpiTile
-              label="Feilet"
+              label={t("admin.feilet")}
               value={stats.deliveryFailed}
-              caption="E-post som ikke ble levert"
+              caption={t("admin.e_post_som_ikke_ble_levert")}
               icon={MailX}
               iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
               iconClassName="size-6 text-rn-danger-ink"
@@ -613,9 +630,9 @@ export function AdminNotificationsWorkspace({
               })}
             />
             <NotificationsKpiTile
-              label="In-app varsler"
+              label={t("admin.in_app_varsler")}
               value={stats.inAppDelivered}
-              caption="Levert i applikasjonen"
+              caption={t("admin.levert_i_applikasjonen")}
               icon={Bell}
             />
           </div>
@@ -667,9 +684,9 @@ export function AdminNotificationsWorkspace({
               <thead>
                 <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
                   <th className={cn(tableHeadClass, "w-10")} />
-                  <th className={tableHeadClass}>Mal</th>
-                  <th className={tableHeadClass}>Emne</th>
-                  <th className={tableHeadClass}>Sist endret</th>
+                  <th className={tableHeadClass}>{t("adminLabels.fields.template")}</th>
+                  <th className={tableHeadClass}>{t("adminLabels.fields.subject")}</th>
+                  <th className={tableHeadClass}>{t("adminLabels.fields.lastChanged")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-rn-border-strong/50">
@@ -687,7 +704,7 @@ export function AdminNotificationsWorkspace({
                             className="inline-flex size-8 items-center justify-center rounded-md border-2 border-rn-border-strong text-muted-foreground transition-colors hover:bg-muted/40"
                             aria-expanded={expanded ? "true" : "false"}
                             aria-label={
-                              expanded ? "Skjul detaljer" : "Vis detaljer"
+                              expanded ? t("admin.skjul_detaljer") : t("admin.vis_detaljer")
                             }
                           >
                             {expanded ? (
@@ -699,7 +716,7 @@ export function AdminNotificationsWorkspace({
                         </td>
                         <td className={cn(tableCellClass, "min-w-[12rem]")}>
                           <p className="font-medium text-foreground">
-                            {formatEmailTemplateLabel(template.key)}
+                            {formatEmailTemplateLabel(template.key, t)}
                           </p>
                           <p className="mt-0.5 font-mono text-app-xs text-muted-foreground">
                             {template.key}
@@ -708,7 +725,7 @@ export function AdminNotificationsWorkspace({
                         <td className={tableCellClass}>{template.subject}</td>
                         <td className={cn(tableCellClass, "text-muted-foreground")}>
                           {format(new Date(template.updatedAt), "d. MMM yyyy HH:mm", {
-                            locale: nb,
+                            locale: getDateFnsLocale(locale),
                           })}
                         </td>
                       </tr>
@@ -729,7 +746,7 @@ export function AdminNotificationsWorkspace({
                   <tr>
                     <td colSpan={4}>
                       <div className="px-6 py-16 text-center app-text-muted md:px-8">
-                        Ingen maler i dette filteret.
+                        {t("adminLabels.empty.noTemplatesInFilter")}
                       </div>
                     </td>
                   </tr>
@@ -743,11 +760,11 @@ export function AdminNotificationsWorkspace({
               <thead>
                 <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
                   <th className={cn(tableHeadClass, "w-10")} />
-                  <th className={tableHeadClass}>Navn</th>
-                  <th className={tableHeadClass}>Mal</th>
-                  <th className={tableHeadClass}>Status</th>
-                  <th className={tableHeadClass}>Opprettet</th>
-                  <th className={tableHeadClass}>Handlinger</th>
+                  <th className={tableHeadClass}>{t("adminLabels.fields.name")}</th>
+                  <th className={tableHeadClass}>{t("adminLabels.fields.template")}</th>
+                  <th className={tableHeadClass}>{t("admin.status")}</th>
+                  <th className={tableHeadClass}>{t("adminLabels.fields.created")}</th>
+                  <th className={tableHeadClass}>{t("adminLabels.actions.actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-rn-border-strong/50">
@@ -765,7 +782,7 @@ export function AdminNotificationsWorkspace({
                             className="inline-flex size-8 items-center justify-center rounded-md border-2 border-rn-border-strong text-muted-foreground transition-colors hover:bg-muted/40"
                             aria-expanded={expanded ? "true" : "false"}
                             aria-label={
-                              expanded ? "Skjul detaljer" : "Vis detaljer"
+                              expanded ? t("admin.skjul_detaljer") : t("admin.vis_detaljer")
                             }
                           >
                             {expanded ? (
@@ -788,12 +805,12 @@ export function AdminNotificationsWorkspace({
                               campaignStatusBadgeClass(campaign.status),
                             )}
                           >
-                            {formatCampaignStatusLabel(campaign.status)}
+                            {formatCampaignStatusLabel(campaign.status, t)}
                           </span>
                         </td>
                         <td className={cn(tableCellClass, "text-muted-foreground")}>
                           {format(new Date(campaign.createdAt), "d. MMM yyyy", {
-                            locale: nb,
+                            locale: getDateFnsLocale(locale),
                           })}
                         </td>
                         <td className={tableCellClass}>
@@ -823,7 +840,7 @@ export function AdminNotificationsWorkspace({
                   <tr>
                     <td colSpan={6}>
                       <div className="px-6 py-16 text-center app-text-muted md:px-8">
-                        Ingen kampanjer i dette filteret.
+                        {t("adminLabels.empty.noCampaignsInFilter")}
                       </div>
                     </td>
                   </tr>
@@ -836,10 +853,10 @@ export function AdminNotificationsWorkspace({
             <table className="w-full min-w-[40rem] text-left text-app-base">
               <thead>
                 <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                  <th className={tableHeadClass}>Mottaker</th>
-                  <th className={tableHeadClass}>Kampanje</th>
-                  <th className={tableHeadClass}>Status</th>
-                  <th className={tableHeadClass}>Tidspunkt</th>
+                  <th className={tableHeadClass}>{t("adminLabels.fields.recipient")}</th>
+                  <th className={tableHeadClass}>{t("adminLabels.fields.campaign")}</th>
+                  <th className={tableHeadClass}>{t("admin.status")}</th>
+                  <th className={tableHeadClass}>{t("adminLabels.fields.timestamp")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-rn-border-strong/50">
@@ -857,12 +874,12 @@ export function AdminNotificationsWorkspace({
                           deliveryStatusBadgeClass(delivery.status),
                         )}
                       >
-                        {formatDeliveryStatusLabel(delivery.status)}
+                        {formatDeliveryStatusLabel(delivery.status, t)}
                       </span>
                     </td>
                     <td className={cn(tableCellClass, "text-muted-foreground")}>
                       {format(new Date(delivery.createdAt), "d. MMM yyyy HH:mm", {
-                        locale: nb,
+                        locale: getDateFnsLocale(locale),
                       })}
                     </td>
                   </tr>
@@ -871,7 +888,7 @@ export function AdminNotificationsWorkspace({
                   <tr>
                     <td colSpan={4}>
                       <div className="px-6 py-16 text-center app-text-muted md:px-8">
-                        Ingen leveringer i dette filteret.
+                        {t("adminLabels.empty.noDeliveriesInFilter")}
                       </div>
                     </td>
                   </tr>
@@ -892,12 +909,12 @@ export function AdminNotificationsWorkspace({
           )}
         >
           <span className="font-semibold">
-            {emailConfigured ? "E-post aktiv." : "E-post ikke konfigurert."}
+            {emailConfigured ? t("admin.e_post_aktiv") : t("admin.e_post_ikke_konfigurert")}
           </span>{" "}
           <span className="text-muted-foreground">
             {emailConfigured
-              ? "Automatiske varsler og kampanjer leveres i app og på e-post."
-              : "In-app varsler virker. E-post krever Resend-oppsett."}
+              ? t("admin.automatiske_varsler_og_kampanjer_leveres_i_app_og_pa_e_post")
+              : t("admin.in_app_varsler_virker_e_post_krever_resend_oppsett")}
           </span>
         </p>
       </div>

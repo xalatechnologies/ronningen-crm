@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import {
   AdminActionButton,
   AdminLinkButton,
@@ -21,7 +22,7 @@ import { startImpersonation } from "@/lib/admin/actions/impersonation";
 import { syncSubscriptionFromOrganization } from "@/lib/admin/actions/billing";
 import type { AdminOrganizationDetail } from "@/lib/admin/queries/organizations";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -35,9 +36,11 @@ type OrganizationDetailHeaderProps = {
   billingEnabled?: boolean;
 };
 
-function formatMetaDate(iso: string | null): string | null {
+import type { Locale } from "@/i18n/config";
+
+function formatMetaDate(iso: string | null, locale: Locale): string | null {
   if (!iso) return null;
-  return format(new Date(iso), "d. MMM yyyy", { locale: nb });
+  return format(new Date(iso), "d. MMM yyyy", { locale: getDateFnsLocale(locale) });
 }
 
 export function OrganizationDetailHeader({
@@ -46,24 +49,25 @@ export function OrganizationDetailHeader({
   onTabChange,
   billingEnabled = false,
 }: OrganizationDetailHeaderProps) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const [syncBusy, setSyncBusy] = useState(false);
   const [impersonateBusy, setImpersonateBusy] = useState(false);
   const [impersonateOpen, setImpersonateOpen] = useState(false);
   const [impersonateReason, setImpersonateReason] = useState("");
 
-  const createdLabel = formatMetaDate(org.createdAt);
-  const lastActivityLabel = formatMetaDate(org.lastActivityAt);
-  const periodEndLabel = formatMetaDate(org.subscriptionPeriodEnd);
+  const createdLabel = formatMetaDate(org.createdAt, locale);
+  const lastActivityLabel = formatMetaDate(org.lastActivityAt, locale);
+  const periodEndLabel = formatMetaDate(org.subscriptionPeriodEnd, locale);
 
   const metaItems = [
-    createdLabel ? `Opprettet ${createdLabel}` : null,
+    createdLabel ? t("adminLabels.meta.createdAt", { date: createdLabel }) : null,
     lastActivityLabel
-      ? `Sist aktiv ${lastActivityLabel}`
-      : "Ingen registrert aktivitet",
+      ? t("adminLabels.meta.lastActiveAt", { date: lastActivityLabel })
+      : t("admin.ingen_registrert_aktivitet"),
     periodEndLabel &&
     ["active", "trialing"].includes(org.subscriptionStatus)
-      ? `Periode til ${periodEndLabel}`
+      ? t("adminLabels.meta.periodUntil", { date: periodEndLabel })
       : null,
   ].filter((item): item is string => Boolean(item));
 
@@ -75,14 +79,16 @@ export function OrganizationDetailHeader({
       toast.error(result.error);
       return;
     }
-    toast.success("Abonnement synkronisert");
+    toast.success(t("admin.abonnement_synkronisert"));
     router.refresh();
   }
 
   async function handleImpersonate() {
     const reason = impersonateReason.trim();
     if (reason.length < IMPERSONATION_REASON_MIN) {
-      toast.error(`Begrunnelse må være minst ${IMPERSONATION_REASON_MIN} tegn`);
+      toast.error(
+        t("serverErrors.admin.reasonMinLength", { min: IMPERSONATION_REASON_MIN }),
+      );
       return;
     }
     setImpersonateBusy(true);
@@ -109,7 +115,7 @@ export function OrganizationDetailHeader({
         detailLayout
         backLink={{
           href: adminRoutes.organizations,
-          label: "Alle organisasjoner",
+          label: t("admin.alle_organisasjoner"),
         }}
         title={org.name}
         description={
@@ -137,17 +143,15 @@ export function OrganizationDetailHeader({
               disabled={syncBusy || impersonateBusy}
               onClick={() => void handleSyncSubscription()}
             >
-              {syncBusy ? "Synkroniserer…" : "Synk abonnement"}
+              {syncBusy ? t("admin.synkroniserer") : t("admin.synk_abonnement")}
             </AdminActionButton>
             <AdminActionButton
               type="button"
               disabled={syncBusy || impersonateBusy}
               onClick={() => setImpersonateOpen(true)}
-            >
-              Se som organisasjon
-            </AdminActionButton>
+            >{t("admin.se_som_organisasjon")}</AdminActionButton>
             <AdminLinkButton href="/app/dashboard">
-              Åpne dashboard
+              {t("admin.apne_dashboard")}
             </AdminLinkButton>
           </div>
         }
@@ -165,30 +169,31 @@ export function OrganizationDetailHeader({
             if (!open) setImpersonateReason("");
           }
         }}
-        title="Se som organisasjon"
+        title={t("admin.se_som_organisasjon")}
         description={
           <div className="space-y-3 text-left">
             <p>
-              Du logger inn i appen som{" "}
-              <strong>{org.name}</strong>. Handlingen logges i revisjonsloggen.
+              {t("admin.impersonate_as_org_body", { name: org.name })}
             </p>
             <div className="space-y-2">
-              <Label htmlFor="impersonate-reason">Begrunnelse</Label>
+              <Label htmlFor="impersonate-reason">{t("adminLabels.fields.reason")}</Label>
               <Textarea
                 id="impersonate-reason"
                 value={impersonateReason}
                 onChange={(event) => setImpersonateReason(event.target.value)}
-                placeholder="F.eks. feilsøking av support-sak #123"
+                placeholder={t("admin.f_eks_feilsoking_av_support_sak_123")}
                 rows={3}
                 disabled={impersonateBusy}
               />
               <p className="text-app-xs text-muted-foreground">
-                Minst {IMPERSONATION_REASON_MIN} tegn.
+                {t("admin.impersonate_reason_min_chars", {
+                  min: IMPERSONATION_REASON_MIN,
+                })}
               </p>
             </div>
           </div>
         }
-        confirmLabel="Start visning"
+        confirmLabel={t("admin.start_visning")}
         busy={impersonateBusy}
         onConfirm={() => void handleImpersonate()}
       />

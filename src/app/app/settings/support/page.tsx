@@ -1,5 +1,6 @@
 import { OrgSupportPanel } from "@/components/support/org-support-panel";
 import { AppPageHeader } from "@/components/layout/app-page-header";
+import { getServerTranslation } from "@/i18n/server";
 import { fetchOrgSupportOverview } from "@/lib/support/queries";
 import { requireOrgMember } from "@/lib/support/require-org-member";
 import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-client";
@@ -7,6 +8,7 @@ import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-clie
 export const dynamic = "force-dynamic";
 
 export default async function SupportSettingsPage() {
+  const { t } = await getServerTranslation();
   const [{ orgId }, supabase] = await Promise.all([
     requireOrgMember(),
     getCachedServerSupabaseClient(),
@@ -19,8 +21,8 @@ export default async function SupportSettingsPage() {
         surface="card"
         compact
         className="mb-0"
-        title="Support"
-        description="Send meldinger til plattformsupport og følg opp sakene dine."
+        title={t("appPages.settings.support.title")}
+        description={t("appPages.settings.support.description")}
       />
       <OrgSupportPanel data={data} />
     </div>
