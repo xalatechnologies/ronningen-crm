@@ -2,6 +2,7 @@
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
+import { AddressField } from "@/components/forms/address-field";
 import { Input } from "@/components/ui/input";
 import { PriceInput } from "@/components/ui/price-input";
 import { Label } from "@/components/ui/label";
@@ -332,10 +333,12 @@ export function NewAccommodationReservationForm({
                   <Label className={labelClass} htmlFor={`${rid}-nc-addr`}>
                     Adresse
                   </Label>
-                  <Input
+                  <AddressField
                     id={`${rid}-nc-addr`}
+                    name="newCustomerAddress"
+                    register={form.register}
+                    setValue={form.setValue}
                     className={fieldClass}
-                    {...form.register("newCustomerAddress")}
                   />
                 </div>
               </div>

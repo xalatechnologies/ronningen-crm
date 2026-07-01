@@ -507,6 +507,7 @@ export function InquiryDetailSheet({
                 >
                   <InquiryFormBody
                     register={form.register}
+                    setValue={form.setValue}
                     control={form.control}
                     watch={form.watch}
                     errors={form.formState.errors}

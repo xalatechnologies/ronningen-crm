@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { AddressField } from "@/components/forms/address-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormSelectField, toStringOptions } from "@/components/ui/form-select";
@@ -458,9 +459,11 @@ export function BookingDetailSheet({
                   <Label htmlFor="bde-address" className={labelClass}>
                     Adresse
                   </Label>
-                  <Input
+                  <AddressField
                     id="bde-address"
-                    {...register("address")}
+                    name="address"
+                    register={register}
+                    setValue={setValue}
                     className={cn(fieldClass, "mt-1.5")}
                     aria-invalid={!!errors.address}
                   />

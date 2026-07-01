@@ -84,6 +84,7 @@ export function NewInquiryForm({
 
   const {
     register,
+    setValue,
     control,
     watch,
     handleSubmit,
@@ -225,6 +226,7 @@ export function NewInquiryForm({
           <div className="flex flex-col bg-card px-6 py-6 sm:px-8 sm:py-7">
             <InquiryFormBody
               register={register}
+              setValue={setValue}
               control={control}
               watch={watch}
               errors={errors}

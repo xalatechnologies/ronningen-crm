@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { AddressField } from "@/components/forms/address-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormSelectField, toStringOptions } from "@/components/ui/form-select";
@@ -54,7 +55,7 @@ function PropertyFields({
   form: UseFormReturn<PropertyFormInput>;
   idPrefix: string;
 }) {
-  const { register, formState } = form;
+  const { register, setValue, formState } = form;
   const err = formState.errors;
 
   return (
@@ -90,9 +91,11 @@ function PropertyFields({
         <Label htmlFor={`${idPrefix}-address`} className={labelClass}>
           Adresse
         </Label>
-        <Input
+        <AddressField
           id={`${idPrefix}-address`}
-          {...register("address")}
+          name="address"
+          register={register}
+          setValue={setValue}
           className={fieldClass}
           placeholder="Valgfritt"
         />

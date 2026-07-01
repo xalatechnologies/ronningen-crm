@@ -2,6 +2,7 @@
 
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { DateTimePickerField } from "@/components/ui/datetime-picker-field";
+import { AddressField } from "@/components/forms/address-field";
 import { Input } from "@/components/ui/input";
 import { PriceInput } from "@/components/ui/price-input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,7 @@ import {
   type Control,
   type FieldErrors,
   type UseFormRegister,
+  type UseFormSetValue,
   type UseFormWatch,
 } from "react-hook-form";
 
@@ -79,6 +81,7 @@ function FormSection({
 
 export type InquiryFormBodyProps = {
   register: UseFormRegister<BookingInquiryFormInput>;
+  setValue: UseFormSetValue<BookingInquiryFormInput>;
   control: Control<BookingInquiryFormInput>;
   watch: UseFormWatch<BookingInquiryFormInput>;
   errors: FieldErrors<BookingInquiryFormInput>;
@@ -93,6 +96,7 @@ export type InquiryFormBodyProps = {
 
 export function InquiryFormBody({
   register,
+  setValue,
   control,
   watch,
   errors,
@@ -191,12 +195,14 @@ export function InquiryFormBody({
             <Label className={labelClass} htmlFor={`${rid}-nc-addr`}>
               Adresse (valgfritt)
             </Label>
-            <Input
+            <AddressField
               id={`${rid}-nc-addr`}
+              name="newCustomerAddress"
+              register={register}
+              setValue={setValue}
               disabled={disabled}
               className={fieldClass}
-              autoComplete="street-address"
-              {...register("newCustomerAddress")}
+              placeholder="Gate, postnr og sted"
             />
           </div>
         </div>

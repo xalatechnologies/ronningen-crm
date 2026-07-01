@@ -7,6 +7,7 @@ import { PriceInput } from "@/components/ui/price-input";
 import { TimePickerField } from "@/components/ui/time-picker-field";
 import { Label } from "@/components/ui/label";
 import { FormSelectField, toStringOptions } from "@/components/ui/form-select";
+import { AddressField } from "@/components/forms/address-field";
 import { Textarea } from "@/components/ui/textarea";
 import {
   bookingPackageListBlurb,
@@ -780,20 +781,22 @@ export function NewBookingForm({
               <Label className={labelClass}>
                 Adresse
               </Label>
-              <Textarea
+              <AddressField
+                name="address"
+                register={register}
+                setValue={setValue}
                 className={cn(
                   fieldClass,
-                  "min-h-24 resize-y py-3",
                   existingCustomer &&
                     existingCustomer.address?.trim() &&
                     "bg-muted/50",
                 )}
                 placeholder="Gate, postnr og sted"
-                rows={3}
+                format="multiline"
+                variant="textarea"
                 readOnly={
                   !!existingCustomer && !!existingCustomer.address?.trim()
                 }
-                {...register("address")}
                 aria-invalid={!!errors.address}
               />
               {errors.address ? (

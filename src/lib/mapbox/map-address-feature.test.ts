@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   mapAddressFeatureToOrganizationFields,
+  mapAddressRetrieveResponseToFormattedAddress,
   mapAddressRetrieveResponseToOrganizationFields,
 } from "@/lib/mapbox/map-address-feature";
 
@@ -65,5 +66,32 @@ describe("mapAddressRetrieveResponseToOrganizationFields", () => {
     expect(mapped?.addressLine1).toBe("Dronning Eufemias gate 16");
     expect(mapped?.postalCode).toBe("0191");
     expect(mapped?.city).toBe("Oslo");
+  });
+});
+
+describe("mapAddressRetrieveResponseToFormattedAddress", () => {
+  const response = {
+    features: [
+      {
+        properties: {
+          address_line1: "Kongens gate 1",
+          address_line2: "c/o Example",
+          postcode: "7011",
+          place: "Trondheim",
+        },
+      },
+    ],
+  };
+
+  it("formats a single-line address", () => {
+    expect(
+      mapAddressRetrieveResponseToFormattedAddress(response, "single-line"),
+    ).toBe("Kongens gate 1, c/o Example, 7011 Trondheim");
+  });
+
+  it("formats a multiline address", () => {
+    expect(
+      mapAddressRetrieveResponseToFormattedAddress(response, "multiline"),
+    ).toBe("Kongens gate 1\nc/o Example\n7011 Trondheim");
   });
 });

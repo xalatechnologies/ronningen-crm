@@ -72,3 +72,36 @@ export function mapAddressRetrieveResponseToOrganizationFields(
 
   return mapAddressFeatureToOrganizationFields(features[0]);
 }
+
+/** Format a mapped address as a single customer-facing string. */
+export function formatMappedAddressSingleLine(
+  mapped: MappedOrganizationAddress,
+): string {
+  const parts = [mapped.addressLine1];
+  if (mapped.addressLine2) parts.push(mapped.addressLine2);
+  const cityLine = [mapped.postalCode, mapped.city].filter(Boolean).join(" ");
+  if (cityLine) parts.push(cityLine);
+  return parts.join(", ");
+}
+
+/** Format a mapped address across multiple lines (street, then postal + city). */
+export function formatMappedAddressMultiline(
+  mapped: MappedOrganizationAddress,
+): string {
+  const lines = [mapped.addressLine1];
+  if (mapped.addressLine2) lines.push(mapped.addressLine2);
+  const cityLine = [mapped.postalCode, mapped.city].filter(Boolean).join(" ");
+  if (cityLine) lines.push(cityLine);
+  return lines.join("\n");
+}
+
+export function mapAddressRetrieveResponseToFormattedAddress(
+  response: unknown,
+  format: "single-line" | "multiline" = "single-line",
+): string | null {
+  const mapped = mapAddressRetrieveResponseToOrganizationFields(response);
+  if (!mapped) return null;
+  return format === "multiline"
+    ? formatMappedAddressMultiline(mapped)
+    : formatMappedAddressSingleLine(mapped);
+}
