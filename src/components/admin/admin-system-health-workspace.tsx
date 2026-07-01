@@ -1,6 +1,5 @@
 "use client";
 
-import { AdminKpiTile } from "@/components/admin/admin-kpi-tile";
 import { AdminLinkButton } from "@/components/admin/admin-action-button";
 import {
   AdminHealthStatusBadge,
@@ -31,10 +30,69 @@ import {
   Webhook,
 } from "lucide-react";
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
+
+const kpiTileClass =
+  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
 
 const tableHeadClass =
-  "px-6 py-4 text-left text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
-const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
+  "px-4 py-3 text-left text-app-sm font-semibold tracking-wider text-rn-text-column uppercase sm:px-6 sm:py-4 sm:text-app-base md:px-8 md:py-5";
+const tableCellClass =
+  "px-4 py-4 align-middle sm:px-6 sm:py-5 md:px-8 md:py-6";
+
+function HealthKpiTile({
+  label,
+  value,
+  caption,
+  icon: Icon,
+  href,
+  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconClassName = "size-6 text-primary dark:text-white",
+  valueClassName = "text-success",
+}: {
+  label: string;
+  value: string | number;
+  caption: string;
+  icon: LucideIcon;
+  href?: string;
+  iconContainerClassName?: string;
+  iconClassName?: string;
+  valueClassName?: string;
+}) {
+  const content = (
+    <>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <span className="dashboard-kpi-label min-w-0 break-words">{label}</span>
+        <div className={cn(iconContainerClassName, "shrink-0")}>
+          <Icon className={iconClassName} aria-hidden />
+        </div>
+      </div>
+      <div className="min-w-0">
+        <p className={cn("dashboard-kpi-value break-words", valueClassName)}>{value}</p>
+        <p className="dashboard-kpi-caption mt-2 text-muted-foreground sm:mt-3">
+          {caption}
+        </p>
+      </div>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={cn(
+          kpiTileClass,
+          "group transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
+        )}
+      >
+        {content}
+        <span className="sr-only">Gå til {label}</span>
+      </Link>
+    );
+  }
+
+  return <div className={kpiTileClass}>{content}</div>;
+}
 
 function formatWebhookKpi(hours: number | null): string {
   if (hours == null) return "—";
@@ -115,9 +173,23 @@ export function AdminSystemHealthWorkspace({
       ? "Ingen webhooks registrert"
       : "Siste mottatte Stripe-hendelse";
 
+  const overallIconContainer =
+    data.overallStatus === "critical"
+      ? "rounded-md bg-rn-danger-soft p-2"
+      : data.overallStatus === "warning"
+        ? "rounded-md bg-amber-500/10 p-2"
+        : undefined;
+
+  const overallIconClass =
+    data.overallStatus === "critical"
+      ? "size-6 text-rn-danger-ink"
+      : data.overallStatus === "warning"
+        ? "size-6 text-amber-800 dark:text-amber-300"
+        : undefined;
+
   return (
-    <div className="admin-page-workspace mx-auto flex w-full min-w-0 flex-col gap-8 pb-8">
-      <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
+    <div className="admin-page-workspace admin-system-health-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
           <AppPageHeader
             className="mb-0"
@@ -137,24 +209,17 @@ export function AdminSystemHealthWorkspace({
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
           aria-label="Nøkkeltall"
         >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <AdminKpiTile
-              variant="health"
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+            <HealthKpiTile
               label="Samlet status"
               value={overallStatusLabel(data.overallStatus)}
               caption={`${data.summary.total} overvåkede komponenter`}
               icon={Activity}
-              iconClassName={
-                data.overallStatus === "critical"
-                  ? "bg-rn-danger-soft"
-                  : data.overallStatus === "warning"
-                    ? "bg-amber-500/10"
-                    : undefined
-              }
+              iconContainerClassName={overallIconContainer}
+              iconClassName={overallIconClass}
               valueClassName={overallStatusValueClass(data.overallStatus)}
             />
-            <AdminKpiTile
-              variant="health"
+            <HealthKpiTile
               label="Komponenter OK"
               value={`${data.summary.healthy}/${data.summary.total}`}
               caption={componentHint}
@@ -165,20 +230,19 @@ export function AdminSystemHealthWorkspace({
                   : "text-success"
               }
             />
-            <AdminKpiTile
-              variant="health"
+            <HealthKpiTile
               label="Åpne support-saker"
               value={data.openSupportCount}
               caption={supportCaption}
               icon={LifeBuoy}
-              iconClassName="bg-rn-danger-soft"
+              iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
+              iconClassName="size-6 text-rn-danger-ink"
               valueClassName={
                 data.openSupportCount > 0 ? "text-destructive" : "text-success"
               }
               href={adminSupportHref("open")}
             />
-            <AdminKpiTile
-              variant="health"
+            <HealthKpiTile
               label="Siste Stripe-webhook"
               value={formatWebhookKpi(data.lastWebhookHoursAgo)}
               caption={webhookCaption}
@@ -204,7 +268,7 @@ export function AdminSystemHealthWorkspace({
         </section>
       </div>
 
-      <section className="flex flex-col gap-app-gap">
+      <section className="flex flex-col gap-8">
         <SectionIntro
           title="Krever oppmerksomhet"
           description="Operative køer som kan trenge oppfølging."
@@ -212,8 +276,8 @@ export function AdminSystemHealthWorkspace({
         <div
           className={
             data.failedJobQueue.length > 0
-              ? "grid gap-app-gap lg:grid-cols-2 xl:grid-cols-3"
-              : "grid gap-app-gap lg:grid-cols-2"
+              ? "grid grid-cols-1 gap-8 lg:grid-cols-2 xl:grid-cols-3"
+              : "grid grid-cols-1 gap-8 lg:grid-cols-2"
           }
         >
           <AdminQueuePanel
@@ -239,7 +303,7 @@ export function AdminSystemHealthWorkspace({
         </div>
       </section>
 
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section className="px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8">
           <SectionIntro
             title="Hendelseslogg"
@@ -249,11 +313,11 @@ export function AdminSystemHealthWorkspace({
 
         <div className="grid border-t border-rn-border-strong/50 lg:grid-cols-2">
           <div className="border-rn-border-strong/50 lg:border-r">
-            <div className="flex items-center gap-2 border-b border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8">
-              <Server className="size-5 text-primary" aria-hidden />
+            <div className="flex items-center gap-2 border-b-2 border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8 md:py-5">
+              <Server className="size-5 text-primary dark:text-white" aria-hidden />
               <h3 className="app-section-title">Stripe-webhooks</h3>
             </div>
-            <div className="app-table overflow-x-auto">
+            <div className="app-table -mx-px max-w-full overflow-x-auto overscroll-x-contain">
               <table className="w-full min-w-[320px] text-left text-app-base">
                 <thead>
                   <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
@@ -296,11 +360,11 @@ export function AdminSystemHealthWorkspace({
           </div>
 
           <div>
-            <div className="flex items-center gap-2 border-b border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8">
-              <Activity className="size-5 text-primary" aria-hidden />
+            <div className="flex items-center gap-2 border-b-2 border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8 md:py-5">
+              <Activity className="size-5 text-primary dark:text-white" aria-hidden />
               <h3 className="app-section-title">Bakgrunnsjobber</h3>
             </div>
-            <div className="app-table overflow-x-auto">
+            <div className="app-table -mx-px max-w-full overflow-x-auto overscroll-x-contain">
               <table className="w-full min-w-[320px] text-left text-app-base">
                 <thead>
                   <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">

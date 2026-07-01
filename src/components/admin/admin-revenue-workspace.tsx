@@ -1,6 +1,5 @@
 "use client";
 
-import { AdminKpiTile } from "@/components/admin/admin-kpi-tile";
 import { AdminLinkButton } from "@/components/admin/admin-action-button";
 import {
   AdminPlanBadge,
@@ -32,10 +31,69 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
+
+const kpiTileClass =
+  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
 
 const tableHeadClass =
-  "px-6 py-4 text-left text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
-const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
+  "px-4 py-3 text-left text-app-sm font-semibold tracking-wider text-rn-text-column uppercase sm:px-6 sm:py-4 sm:text-app-base md:px-8 md:py-5";
+const tableCellClass =
+  "px-4 py-4 align-middle sm:px-6 sm:py-5 md:px-8 md:py-6";
+
+function RevenueKpiTile({
+  label,
+  value,
+  caption,
+  icon: Icon,
+  href,
+  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconClassName = "size-6 text-primary dark:text-white",
+  valueClassName = "text-success",
+}: {
+  label: string;
+  value: string | number;
+  caption: string;
+  icon: LucideIcon;
+  href?: string;
+  iconContainerClassName?: string;
+  iconClassName?: string;
+  valueClassName?: string;
+}) {
+  const content = (
+    <>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <span className="dashboard-kpi-label min-w-0 break-words">{label}</span>
+        <div className={cn(iconContainerClassName, "shrink-0")}>
+          <Icon className={iconClassName} aria-hidden />
+        </div>
+      </div>
+      <div className="min-w-0">
+        <p className={cn("dashboard-kpi-value break-words", valueClassName)}>{value}</p>
+        <p className="dashboard-kpi-caption mt-2 text-muted-foreground sm:mt-3">
+          {caption}
+        </p>
+      </div>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={cn(
+          kpiTileClass,
+          "group transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
+        )}
+      >
+        {content}
+        <span className="sr-only">Gå til {label}</span>
+      </Link>
+    );
+  }
+
+  return <div className={kpiTileClass}>{content}</div>;
+}
 
 function SectionIntro({
   title,
@@ -74,8 +132,8 @@ export function AdminRevenueWorkspace({
       : "Ingen sammenligning forrige måned";
 
   return (
-    <div className="admin-page-workspace mx-auto flex w-full min-w-0 flex-col gap-8 pb-8">
-      <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
+    <div className="admin-page-workspace admin-revenue-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
           <AppPageHeader
             className="mb-0"
@@ -91,36 +149,33 @@ export function AdminRevenueWorkspace({
             title="SaaS-abonnement"
             description="Plattformabonnement og estimert MRR basert på aktive leietakere."
           />
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <AdminKpiTile
-              variant="revenue"
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+            <RevenueKpiTile
               label="MRR (estimat)"
               value={formatNok(metrics.mrrNok)}
               caption={mrrCaption}
               icon={TrendingUp}
               href={adminSubscriptionsHref("active")}
             />
-            <AdminKpiTile
-              variant="revenue"
+            <RevenueKpiTile
               label="ARR (estimat)"
               value={formatNok(metrics.arrNok)}
               caption="MRR × 12"
               icon={CalendarDays}
             />
-            <AdminKpiTile
-              variant="revenue"
+            <RevenueKpiTile
               label="Churn (30 d.)"
               value={`${metrics.churnRate30d}%`}
               caption="Avsluttede abonnement siste 30 dager"
               icon={TrendingDown}
-              iconClassName="bg-rn-danger-soft"
+              iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
+              iconClassName="size-6 text-rn-danger-ink"
               valueClassName={
                 metrics.churnRate30d > 0 ? "text-destructive" : "text-success"
               }
               href={adminSubscriptionsHref("canceled")}
             />
-            <AdminKpiTile
-              variant="revenue"
+            <RevenueKpiTile
               label="Prøve → betalt (30 d.)"
               value={`${metrics.trialConversionRate30d}%`}
               caption="Konverterte prøveperioder"
@@ -133,6 +188,7 @@ export function AdminRevenueWorkspace({
         <section className="grid border-t border-rn-border-strong/50 lg:grid-cols-2">
           <div className="border-rn-border-strong/50 px-4 py-5 sm:px-5 md:px-6 lg:border-r lg:px-8 lg:py-6">
             <AdminTrendChart
+              className="admin-overview-trend-chart"
               embedded
               title="MRR-trend (12 mnd.)"
               points={data.revenueTrend}
@@ -152,42 +208,39 @@ export function AdminRevenueWorkspace({
         </section>
       </div>
 
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section className="px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8">
           <SectionIntro
             title="Booking-inntekt (leietaker)"
             description="Omsetning registrert i bookinger på tvers av leietakere — ikke plattformfakturering."
           />
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <AdminKpiTile
-              variant="revenue"
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+            <RevenueKpiTile
               label="Inntekt denne måneden"
               value={formatNok(data.revenueThisMonthNok)}
               caption="Basert på arrangementsdato"
               icon={Wallet}
             />
-            <AdminKpiTile
-              variant="revenue"
+            <RevenueKpiTile
               label="Inntekt forrige måned"
               value={formatNok(data.revenueLastMonthNok)}
               caption="Fullført forrige kalendermåned"
               icon={CreditCard}
             />
-            <AdminKpiTile
-              variant="revenue"
+            <RevenueKpiTile
               label="Utestående (bookinger)"
               value={formatNok(data.outstandingNok)}
               caption="Gjenstående beløp i aktive bookinger"
               icon={TrendingDown}
-              iconClassName="bg-amber-500/10"
+              iconContainerClassName="rounded-md bg-amber-500/10 p-2"
+              iconClassName="size-6 text-amber-800 dark:text-amber-300"
               valueClassName={
                 data.outstandingNok > 0
                   ? "text-amber-800 dark:text-amber-300"
                   : "text-success"
               }
             />
-            <AdminKpiTile
-              variant="revenue"
+            <RevenueKpiTile
               label="Måned-over-måned"
               value={monthOverMonth}
               caption={momCaption}
@@ -198,6 +251,7 @@ export function AdminRevenueWorkspace({
 
         <section className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 md:px-6 lg:px-8 lg:py-6">
           <AdminTrendChart
+            className="admin-overview-trend-chart"
             embedded
             title="Booking-inntekt per måned (12 mnd.)"
             points={data.bookingRevenueTrend}
@@ -206,7 +260,7 @@ export function AdminRevenueWorkspace({
         </section>
       </div>
 
-      <div className="grid gap-app-gap lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <AdminQueuePanel
           title="Forfalt betaling"
           items={data.failedPaymentQueue}
@@ -221,16 +275,16 @@ export function AdminRevenueWorkspace({
         />
       </div>
 
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8">
+      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8 md:py-5">
           <h2 className="app-section-title">Aktive abonnement (MRR)</h2>
           <AdminLinkButton href={adminSubscriptionsHref("active")}>
             Alle aktive
           </AdminLinkButton>
         </div>
 
-        <div className="app-table overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-app-base">
+        <div className="app-table -mx-px max-w-full overflow-x-auto overscroll-x-contain">
+          <table className="w-full min-w-[45rem] text-left text-app-base">
             <thead>
               <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
                 <th className={tableHeadClass}>Organisasjon</th>

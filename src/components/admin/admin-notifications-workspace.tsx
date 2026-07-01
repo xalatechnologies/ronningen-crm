@@ -1,6 +1,5 @@
 "use client";
 
-import { AdminKpiTile } from "@/components/admin/admin-kpi-tile";
 import { AdminActionButton } from "@/components/admin/admin-action-button";
 import { AdminConfirmActionDialog } from "@/components/admin/admin-confirm-action-dialog";
 import {
@@ -57,13 +56,77 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
+const kpiTileClass =
+  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
+
 const tableHeadClass =
-  "px-6 py-4 text-left text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
-const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
+  "px-4 py-3 text-left text-app-sm font-semibold tracking-wider text-rn-text-column uppercase sm:px-6 sm:py-4 sm:text-app-base md:px-8 md:py-5";
+const tableCellClass =
+  "px-4 py-4 align-middle sm:px-6 sm:py-5 md:px-8 md:py-6";
+
+const kpiInteractiveClass =
+  "group w-full text-left transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30";
+
+const kpiActiveClass = "border-success/40 bg-muted/20 ring-2 ring-success/25";
+
+function NotificationsKpiTile({
+  label,
+  value,
+  caption,
+  icon: Icon,
+  active,
+  href,
+  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconClassName = "size-6 text-primary dark:text-white",
+  valueClassName = "text-success",
+}: {
+  label: string;
+  value: string | number;
+  caption: string;
+  icon: LucideIcon;
+  active?: boolean;
+  href?: string;
+  iconContainerClassName?: string;
+  iconClassName?: string;
+  valueClassName?: string;
+}) {
+  const content = (
+    <>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <span className="dashboard-kpi-label min-w-0 break-words">{label}</span>
+        <div className={cn(iconContainerClassName, "shrink-0")}>
+          <Icon className={iconClassName} aria-hidden />
+        </div>
+      </div>
+      <div className="min-w-0">
+        <p className={cn("dashboard-kpi-value break-words", valueClassName)}>{value}</p>
+        <p className="dashboard-kpi-caption mt-2 text-muted-foreground sm:mt-3">
+          {caption}
+        </p>
+      </div>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={cn(kpiTileClass, kpiInteractiveClass, active && kpiActiveClass)}
+      >
+        {content}
+        <span className="sr-only">Gå til {label}</span>
+      </Link>
+    );
+  }
+
+  return <div className={kpiTileClass}>{content}</div>;
+}
 
 function campaignStatusBadgeClass(status: string): string {
   switch (status) {
@@ -500,8 +563,8 @@ export function AdminNotificationsWorkspace({
     ) : undefined;
 
   return (
-    <div className="admin-page-workspace mx-auto flex w-full min-w-0 flex-col pb-8">
-      <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
+    <div className="admin-page-workspace admin-notifications-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
           <AppPageHeader
             className="mb-0"
@@ -516,9 +579,8 @@ export function AdminNotificationsWorkspace({
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
           aria-label="Nøkkeltall"
         >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <AdminKpiTile
-              variant="notifications"
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+            <NotificationsKpiTile
               label="Aktive kampanjer"
               value={stats.activeCampaigns}
               caption="Klar til utsending"
@@ -526,8 +588,7 @@ export function AdminNotificationsWorkspace({
               active={view === "campaigns" && campaignFilter === "active"}
               href={adminNotificationsHref({ view: "campaigns", filter: "active" })}
             />
-            <AdminKpiTile
-              variant="notifications"
+            <NotificationsKpiTile
               label="Vellykket e-post"
               value={stats.deliverySuccess}
               caption="Levert eller åpnet"
@@ -535,13 +596,13 @@ export function AdminNotificationsWorkspace({
               active={view === "deliveries" && deliveryFilter === "all" && !search.trim()}
               href={adminNotificationsHref({ view: "deliveries" })}
             />
-            <AdminKpiTile
-              variant="notifications"
+            <NotificationsKpiTile
               label="Feilet"
               value={stats.deliveryFailed}
               caption="E-post som ikke ble levert"
               icon={MailX}
-              iconClassName="bg-rn-danger-soft"
+              iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
+              iconClassName="size-6 text-rn-danger-ink"
               valueClassName={
                 stats.deliveryFailed > 0 ? "text-destructive" : "text-success"
               }
@@ -551,8 +612,7 @@ export function AdminNotificationsWorkspace({
                 filter: "failed",
               })}
             />
-            <AdminKpiTile
-              variant="notifications"
+            <NotificationsKpiTile
               label="In-app varsler"
               value={stats.inAppDelivered}
               caption="Levert i applikasjonen"
@@ -601,9 +661,9 @@ export function AdminNotificationsWorkspace({
           </section>
         ) : null}
 
-        <div className="app-table overflow-x-auto border-t border-rn-border-strong/50">
+        <div className="app-table -mx-px max-w-full overflow-x-auto border-t border-rn-border-strong/50 overscroll-x-contain">
           {view === "templates" ? (
-            <table className="w-full min-w-[640px] text-left text-app-base">
+            <table className="w-full min-w-[40rem] text-left text-app-base">
               <thead>
                 <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
                   <th className={cn(tableHeadClass, "w-10")} />
@@ -679,7 +739,7 @@ export function AdminNotificationsWorkspace({
           ) : null}
 
           {view === "campaigns" ? (
-            <table className="w-full min-w-[880px] text-left text-app-base">
+            <table className="w-full min-w-[48rem] text-left text-app-base">
               <thead>
                 <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
                   <th className={cn(tableHeadClass, "w-10")} />
@@ -773,7 +833,7 @@ export function AdminNotificationsWorkspace({
           ) : null}
 
           {view === "deliveries" ? (
-            <table className="w-full min-w-[640px] text-left text-app-base">
+            <table className="w-full min-w-[40rem] text-left text-app-base">
               <thead>
                 <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
                   <th className={tableHeadClass}>Mottaker</th>

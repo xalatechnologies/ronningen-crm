@@ -1,6 +1,5 @@
 "use client";
 
-import { AdminKpiTile } from "@/components/admin/admin-kpi-tile";
 import {
   AdminActionButton,
   AdminLinkButton,
@@ -45,6 +44,7 @@ import {
   Inbox,
   LifeBuoy,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -54,9 +54,61 @@ const STATUS_OPTIONS = SUPPORT_SETTABLE_STATUSES.map((value) => ({
   label: SUPPORT_STATUS_LABELS[value],
 }));
 
+const kpiTileClass =
+  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
+
 const tableHeadClass =
-  "px-6 py-4 text-left text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
-const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
+  "px-4 py-3 text-left text-app-sm font-semibold tracking-wider text-rn-text-column uppercase sm:px-6 sm:py-4 sm:text-app-base md:px-8 md:py-5";
+const tableCellClass =
+  "px-4 py-4 align-middle sm:px-6 sm:py-5 md:px-8 md:py-6";
+
+function SupportKpiTile({
+  label,
+  value,
+  caption,
+  icon: Icon,
+  active,
+  onClick,
+  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconClassName = "size-6 text-primary dark:text-white",
+  valueClassName = "text-success",
+}: {
+  label: string;
+  value: string | number;
+  caption: string;
+  icon: LucideIcon;
+  active?: boolean;
+  onClick: () => void;
+  iconContainerClassName?: string;
+  iconClassName?: string;
+  valueClassName?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        kpiTileClass,
+        "group w-full text-left transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
+        active && "border-success/40 bg-muted/20 ring-2 ring-success/25",
+      )}
+    >
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <span className="dashboard-kpi-label min-w-0 break-words">{label}</span>
+        <div className={cn(iconContainerClassName, "shrink-0")}>
+          <Icon className={iconClassName} aria-hidden />
+        </div>
+      </div>
+      <div className="min-w-0">
+        <p className={cn("dashboard-kpi-value break-words", valueClassName)}>{value}</p>
+        <p className="dashboard-kpi-caption mt-2 text-muted-foreground sm:mt-3">
+          {caption}
+        </p>
+      </div>
+    </button>
+  );
+}
 
 function parseSupportFilter(value: string | null): AdminSupportFilter {
   if (value === "open" || value === "waiting" || value === "resolved") {
@@ -382,7 +434,7 @@ export function AdminSupportWorkspace({
       : "Venter på kunde eller intern";
 
   return (
-    <div className="admin-page-workspace mx-auto flex w-full min-w-0 flex-col gap-8 pb-8">
+    <div className="admin-page-workspace admin-support-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
       <AdminQueuePanel
         title="Åpne saker"
         items={data.openQueue}
@@ -390,7 +442,7 @@ export function AdminSupportWorkspace({
         onViewAll={showOpenTickets}
       />
 
-      <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
           <AppPageHeader
             className="mb-0"
@@ -413,9 +465,8 @@ export function AdminSupportWorkspace({
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
           aria-label="Nøkkeltall"
         >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <AdminKpiTile
-              variant="support"
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+            <SupportKpiTile
               label="Totalt"
               value={overview.total}
               caption="Alle support-saker"
@@ -426,26 +477,26 @@ export function AdminSupportWorkspace({
                 updateFilter("all");
               }}
             />
-            <AdminKpiTile
-              variant="support"
+            <SupportKpiTile
               label="Åpne"
               value={overview.open}
               caption={openCaption}
               icon={Inbox}
-              iconClassName="bg-rn-danger-soft"
+              iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
+              iconClassName="size-6 text-rn-danger-ink"
               valueClassName={
                 overview.open > 0 ? "text-destructive" : "text-success"
               }
               active={filter === "open"}
               onClick={() => updateFilter("open")}
             />
-            <AdminKpiTile
-              variant="support"
+            <SupportKpiTile
               label="Venter"
               value={overview.waiting}
               caption={waitingCaption}
               icon={Clock}
-              iconClassName="bg-amber-500/10"
+              iconContainerClassName="rounded-md bg-amber-500/10 p-2"
+              iconClassName="size-6 text-amber-800 dark:text-amber-300"
               valueClassName={
                 overview.waiting > 0
                   ? "text-amber-800 dark:text-amber-300"
@@ -454,8 +505,7 @@ export function AdminSupportWorkspace({
               active={filter === "waiting"}
               onClick={() => updateFilter("waiting")}
             />
-            <AdminKpiTile
-              variant="support"
+            <SupportKpiTile
               label="Løst"
               value={overview.resolved}
               caption="Avsluttede saker"
@@ -492,9 +542,9 @@ export function AdminSupportWorkspace({
 
         <div
           id="support-ticket-list"
-          className="app-table overflow-x-auto border-t border-rn-border-strong/50"
+          className="app-table -mx-px max-w-full overflow-x-auto border-t border-rn-border-strong/50 overscroll-x-contain"
         >
-          <table className="w-full min-w-[960px] text-left text-app-base">
+          <table className="w-full min-w-[52rem] text-left text-app-base">
             <thead>
               <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
                 <th className={cn(tableHeadClass, "w-10")} />

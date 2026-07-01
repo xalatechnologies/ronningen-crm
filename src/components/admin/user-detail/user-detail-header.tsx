@@ -161,7 +161,8 @@ export function UserDetailHeader({
   return (
     <>
       <AppPageHeader
-        surface="card"
+        className="mb-0"
+        surface="default"
         compact
         detailLayout
         backLink={{
@@ -223,7 +224,7 @@ export function UserDetailHeader({
             aria-label="Brukerdetaljer"
           />
         }
-        toolbarClassName="py-2.5 sm:py-3"
+        toolbarClassName="border-0 px-0 py-2.5 sm:py-3"
       />
 
       <AdminConfirmActionDialog

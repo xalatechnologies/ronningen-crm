@@ -104,7 +104,7 @@ export function OrganizationDetailHeader({
     <>
       <AppPageHeader
         className="admin-org-detail-header mb-0"
-        surface="card"
+        surface="default"
         compact
         detailLayout
         backLink={{
@@ -154,7 +154,7 @@ export function OrganizationDetailHeader({
         toolbar={
           <OrganizationDetailTabBar activeTab={tab} onTabChange={onTabChange} />
         }
-        toolbarClassName="px-0 pt-4"
+        toolbarClassName="border-0 px-0 py-2.5 sm:py-3"
       />
 
       <AdminConfirmActionDialog

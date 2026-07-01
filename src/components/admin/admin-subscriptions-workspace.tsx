@@ -1,6 +1,5 @@
 "use client";
 
-import { AdminKpiTile } from "@/components/admin/admin-kpi-tile";
 import { AdminPlanBadge, AdminStatusBadge } from "@/components/admin/admin-badges";
 import {
   AdminSubscriptionFilterBar,
@@ -40,6 +39,7 @@ import {
   CreditCard,
   TrendingUp,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -56,9 +56,58 @@ const STATUS_OPTIONS = ADMIN_SETTABLE_SUBSCRIPTION_STATUSES.map((value) => ({
   label: SUBSCRIPTION_STATUS_LABELS[value] ?? value,
 }));
 
+const kpiTileClass =
+  "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
+
 const tableHeadClass =
   "px-6 py-4 text-left text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
+
+function SubscriptionsKpiTile({
+  label,
+  value,
+  caption,
+  icon: Icon,
+  active,
+  onClick,
+  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconClassName = "size-6 text-primary dark:text-white",
+  valueClassName = "text-success",
+}: {
+  label: string;
+  value: string | number;
+  caption: string;
+  icon: LucideIcon;
+  active?: boolean;
+  onClick: () => void;
+  iconContainerClassName?: string;
+  iconClassName?: string;
+  valueClassName?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        kpiTileClass,
+        "group w-full text-left transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
+        active && "border-success/40 bg-muted/20 ring-2 ring-success/25",
+      )}
+    >
+      <div className="mb-3 flex items-start justify-between">
+        <span className="dashboard-kpi-label">{label}</span>
+        <div className={iconContainerClassName}>
+          <Icon className={iconClassName} aria-hidden />
+        </div>
+      </div>
+      <div>
+        <p className={cn("dashboard-kpi-value", valueClassName)}>{value}</p>
+        <p className="dashboard-kpi-caption mt-3 text-muted-foreground">{caption}</p>
+      </div>
+    </button>
+  );
+}
 
 function normalizePlan(plan: string): SubscriptionPlan {
   if (SUBSCRIPTION_PLANS.includes(plan as SubscriptionPlan)) {
@@ -234,7 +283,7 @@ export function AdminSubscriptionsWorkspace({
       : `${overview.stripeConnected} av ${overview.total} koblet til Stripe`;
 
   return (
-    <div className="admin-page-workspace mx-auto flex w-full min-w-0 flex-col pb-8">
+    <div className="admin-page-workspace admin-subscriptions-dashboard mx-auto flex w-full min-w-0 flex-col gap-8 pb-8">
       <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
         <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
           <AppPageHeader
@@ -251,8 +300,7 @@ export function AdminSubscriptionsWorkspace({
           aria-label="Nøkkeltall"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <AdminKpiTile
-              variant="subscriptions"
+            <SubscriptionsKpiTile
               label="Totalt"
               value={overview.total}
               caption={stripeCaption}
@@ -263,8 +311,7 @@ export function AdminSubscriptionsWorkspace({
                 updateFilter("all");
               }}
             />
-            <AdminKpiTile
-              variant="subscriptions"
+            <SubscriptionsKpiTile
               label="Prøve"
               value={overview.trialing}
               caption="Organisasjoner i prøveperiode"
@@ -272,8 +319,7 @@ export function AdminSubscriptionsWorkspace({
               active={filter === "trialing"}
               onClick={() => updateFilter("trialing")}
             />
-            <AdminKpiTile
-              variant="subscriptions"
+            <SubscriptionsKpiTile
               label="Aktiv"
               value={overview.active}
               caption="Betalt abonnement"
@@ -281,8 +327,7 @@ export function AdminSubscriptionsWorkspace({
               active={filter === "active"}
               onClick={() => updateFilter("active")}
             />
-            <AdminKpiTile
-              variant="subscriptions"
+            <SubscriptionsKpiTile
               label="MRR"
               value={formatNok(overview.mrrNok)}
               caption={`${formatNok(SAAS_MONTHLY_PRICE_NOK)} per aktiv org`}

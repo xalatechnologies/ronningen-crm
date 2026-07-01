@@ -1203,6 +1203,97 @@
     margin-top: 0;
   }
 
+  /**
+   * Plattformadmin-sider som matcher kunde-dashboard (Oversikt).
+   */
+  .admin-overview-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+  .admin-organizations-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+  .admin-subscriptions-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+  .admin-users-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+  .admin-revenue-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+  .admin-revenue-dashboard .dashboard-kpi-value,
+  .admin-support-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+  .admin-system-health-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+  .admin-audit-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+  .admin-feature-flags-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+  .admin-notifications-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+  .admin-settings-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+  .admin-user-detail-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+  .admin-organization-detail-dashboard .dashboard-oversikt-card .dashboard-kpi-value {
+    font-size: calc(32px * var(--app-type-scale));
+  }
+
+  @media (max-width: 639px) {
+    .admin-users-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+    .admin-revenue-dashboard .dashboard-kpi-value,
+    .admin-support-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+    .admin-system-health-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+    .admin-audit-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+    .admin-feature-flags-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+    .admin-notifications-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+    .admin-settings-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+    .admin-user-detail-dashboard .dashboard-oversikt-card .dashboard-kpi-value,
+    .admin-organization-detail-dashboard .dashboard-oversikt-card .dashboard-kpi-value {
+      font-size: calc(28px * var(--app-type-scale));
+    }
+  }
+
+  .admin-overview-dashboard ul.divide-y a,
+  .admin-revenue-dashboard ul.divide-y a,
+  .admin-support-dashboard ul.divide-y a,
+  .admin-system-health-dashboard ul.divide-y a {
+    font-weight: 600;
+    color: var(--success);
+    text-decoration: none;
+  }
+
+  .admin-overview-dashboard ul.divide-y a:hover,
+  .admin-revenue-dashboard ul.divide-y a:hover,
+  .admin-support-dashboard ul.divide-y a:hover,
+  .admin-system-health-dashboard ul.divide-y a:hover {
+    text-decoration: underline;
+  }
+
+  [data-theme="dark"] .admin-overview-dashboard ul.divide-y a,
+  [data-theme="dark"] .admin-revenue-dashboard ul.divide-y a,
+  [data-theme="dark"] .admin-support-dashboard ul.divide-y a,
+  [data-theme="dark"] .admin-system-health-dashboard ul.divide-y a {
+    color: #f8fafc;
+  }
+
+  .admin-overview-dashboard .admin-overview-data-panel > div:first-child,
+  .admin-support-dashboard > div:first-of-type > div:first-child {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid var(--rn-border-strong);
+  }
+
+  @media (min-width: 768px) {
+    .admin-overview-dashboard .admin-overview-data-panel > div:first-child,
+    .admin-support-dashboard > div:first-of-type > div:first-child {
+      padding-bottom: 1.5rem;
+    }
+  }
+
+  .admin-overview-dashboard .admin-overview-trend-chart [role="img"] .border-b-2,
+  .admin-revenue-dashboard .admin-overview-trend-chart [role="img"] .border-b-2 {
+    min-height: 7rem;
+  }
+
+  @media (min-width: 640px) {
+    .admin-overview-dashboard .admin-overview-trend-chart [role="img"] .border-b-2,
+    .admin-revenue-dashboard .admin-overview-trend-chart [role="img"] .border-b-2 {
+      min-height: 8.5rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .admin-overview-dashboard .admin-overview-trend-chart [role="img"] .border-b-2,
+    .admin-revenue-dashboard .admin-overview-trend-chart [role="img"] .border-b-2 {
+      min-height: 10rem;
+    }
+  }
+
   @media (min-width: 768px) {
     .reports-page-workspace .reports-load-error {
       font-size: calc(15px * var(--app-read-type-scale));

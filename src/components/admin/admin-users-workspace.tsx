@@ -1,6 +1,5 @@
 "use client";
 
-import { AdminKpiTile } from "@/components/admin/admin-kpi-tile";
 import {
   AdminUserFilterBar,
   computeAdminUserFilterCounts,
@@ -23,14 +22,67 @@ import {
   UserRoundX,
   Users,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 export type { AdminUserFilter } from "@/components/admin/admin-user-filters";
 
+const kpiTileClass =
+  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
+
 const tableHeadClass =
-  "px-6 py-4 text-left text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
-const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
+  "px-4 py-3 text-left text-app-sm font-semibold tracking-wider text-rn-text-column uppercase sm:px-6 sm:py-4 sm:text-app-base md:px-8 md:py-5";
+const tableCellClass =
+  "px-4 py-4 align-middle sm:px-6 sm:py-5 md:px-8 md:py-6";
+
+function UsersKpiTile({
+  label,
+  value,
+  caption,
+  icon: Icon,
+  active,
+  onClick,
+  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconClassName = "size-6 text-primary dark:text-white",
+  valueClassName = "text-success",
+}: {
+  label: string;
+  value: string | number;
+  caption: string;
+  icon: LucideIcon;
+  active?: boolean;
+  onClick: () => void;
+  iconContainerClassName?: string;
+  iconClassName?: string;
+  valueClassName?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        kpiTileClass,
+        "group w-full text-left transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
+        active && "border-success/40 bg-muted/20 ring-2 ring-success/25",
+      )}
+    >
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <span className="dashboard-kpi-label min-w-0 break-words">{label}</span>
+        <div className={cn(iconContainerClassName, "shrink-0")}>
+          <Icon className={iconClassName} aria-hidden />
+        </div>
+      </div>
+      <div className="min-w-0">
+        <p className={cn("dashboard-kpi-value break-words", valueClassName)}>{value}</p>
+        <p className="dashboard-kpi-caption mt-2 text-muted-foreground sm:mt-3">
+          {caption}
+        </p>
+      </div>
+    </button>
+  );
+}
 
 function userStatus(user: AdminUserRow): {
   label: string;
@@ -110,8 +162,8 @@ export function AdminUsersWorkspace({
   const noOrgCount = overview.total - overview.withOrganization;
 
   return (
-    <div className="admin-page-workspace mx-auto flex w-full min-w-0 flex-col pb-8">
-      <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
+    <div className="admin-page-workspace admin-users-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
           <AppPageHeader
             className="mb-0"
@@ -126,9 +178,8 @@ export function AdminUsersWorkspace({
           className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
           aria-label="Nøkkeltall"
         >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <AdminKpiTile
-              variant="users"
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+            <UsersKpiTile
               label="Totalt"
               value={overview.total}
               caption={`${overview.withOrganization} med organisasjon`}
@@ -139,8 +190,7 @@ export function AdminUsersWorkspace({
                 updateFilter("all");
               }}
             />
-            <AdminKpiTile
-              variant="users"
+            <UsersKpiTile
               label="Plattformadmin"
               value={overview.platformAdmins}
               caption="Super-administratorer"
@@ -148,8 +198,7 @@ export function AdminUsersWorkspace({
               active={filter === "platform_admin"}
               onClick={() => updateFilter("platform_admin")}
             />
-            <AdminKpiTile
-              variant="users"
+            <UsersKpiTile
               label="Uten org"
               value={noOrgCount}
               caption={
@@ -161,17 +210,15 @@ export function AdminUsersWorkspace({
               active={filter === "no_org"}
               onClick={() => updateFilter("no_org")}
             />
-            <AdminKpiTile
-              variant="users"
+            <UsersKpiTile
               label="Inaktive"
               value={overview.inactive}
               caption="90+ dager uten innlogging"
               icon={UserRoundX}
-              iconClassName="bg-muted/60"
+              iconContainerClassName="rounded-md bg-muted/60 p-2"
+              iconClassName="size-6 text-muted-foreground"
               valueClassName={
-                overview.inactive > 0
-                  ? "text-muted-foreground"
-                  : "text-success"
+                overview.inactive > 0 ? "text-muted-foreground" : "text-success"
               }
               active={filter === "inactive"}
               onClick={() => updateFilter("inactive")}
@@ -190,8 +237,8 @@ export function AdminUsersWorkspace({
           />
         </section>
 
-        <div className="app-table overflow-x-auto border-t border-rn-border-strong/50">
-          <table className="w-full min-w-[960px] text-left text-app-base">
+        <div className="app-table -mx-px max-w-full overflow-x-auto border-t border-rn-border-strong/50 overscroll-x-contain">
+          <table className="w-full min-w-[52rem] text-left text-app-base">
             <thead>
               <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
                 <th className={tableHeadClass}>Navn</th>
@@ -222,8 +269,10 @@ export function AdminUsersWorkspace({
                         subtitle={orgSubtitle(user)}
                       />
                     </td>
-                    <td className={cn(tableCellClass, "text-muted-foreground")}>
-                      {user.email ?? "—"}
+                    <td className={cn(tableCellClass, "max-w-[11rem] truncate text-muted-foreground sm:max-w-xs md:max-w-md")}>
+                      <span className="block truncate" title={user.email ?? undefined}>
+                        {user.email ?? "—"}
+                      </span>
                     </td>
                     <td className={tableCellClass}>
                       <span className={status.className}>{status.label}</span>

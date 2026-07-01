@@ -22,8 +22,8 @@ export function AdminSettingsWorkspace({
   const { tab, setTab } = useAdminSettingsTab();
 
   return (
-    <div className="admin-page-workspace mx-auto flex w-full min-w-0 flex-col pb-8">
-      <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
+    <div className="admin-page-workspace admin-settings-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
           <AdminSettingsHeader
             settings={settings}

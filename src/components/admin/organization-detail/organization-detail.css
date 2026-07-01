@@ -4,16 +4,23 @@
   --org-detail-border: var(--rn-border-strong);
 }
 
-/* Header-kort — samme vekt som øvrige admin-sider (border-2 / card-padding) */
-.admin-org-detail .admin-org-detail-header {
-  border: 2px solid var(--org-detail-border) !important;
-  border-radius: var(--app-radius);
-  background-color: var(--card);
-  box-shadow: var(--shadow-rn-card, 0 1px 3px rgb(15 23 42 / 0.08)) !important;
+/* Header inside oversikt-kort — ingen eget kortlag */
+.admin-org-detail .dashboard-oversikt-hero .admin-org-detail-header {
+  border: none !important;
+  border-radius: 0;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.admin-org-detail .dashboard-oversikt-hero .admin-org-detail-header > div:last-child {
+  border-top: none !important;
+  padding-inline: 0 !important;
+  padding-top: 0.25rem !important;
+  padding-bottom: 0 !important;
 }
 
 /* Tilbake-lenke — samme størrelse som andre detaljsider, nøytral (ikke grønn) */
-.admin-org-detail .admin-org-detail-header a.admin-inline-link {
+.admin-org-detail .dashboard-oversikt-hero .admin-org-detail-header a.admin-inline-link {
   margin-bottom: 0.75rem;
   border: 2px solid var(--rn-border-strong);
   background-color: color-mix(in srgb, var(--muted) 35%, var(--card));
@@ -24,13 +31,13 @@
   color: var(--foreground);
 }
 
-.admin-org-detail .admin-org-detail-header a.admin-inline-link:hover {
+.admin-org-detail .dashboard-oversikt-hero .admin-org-detail-header a.admin-inline-link:hover {
   border-color: color-mix(in srgb, var(--rn-border-strong) 80%, var(--foreground));
   background-color: color-mix(in srgb, var(--muted) 50%, var(--card));
   color: var(--foreground);
 }
 
-.admin-org-detail .admin-org-detail-header a.admin-inline-link > span[aria-hidden] {
+.admin-org-detail .dashboard-oversikt-hero .admin-org-detail-header a.admin-inline-link > span[aria-hidden] {
   display: flex;
   width: 1.5rem;
   height: 1.5rem;
@@ -41,7 +48,7 @@
   color: var(--foreground);
 }
 
-.admin-org-detail .admin-org-detail-header a.admin-inline-link::before {
+.admin-org-detail .dashboard-oversikt-hero .admin-org-detail-header a.admin-inline-link::before {
   content: none;
 }
 
@@ -159,41 +166,6 @@
   color: var(--foreground);
 }
 
-/* KPI — matcher admin-kpi-grid / dashboard-kpi på andre sider */
-.admin-org-detail .org-detail-kpi {
-  border: 2px solid var(--rn-border-strong);
-  border-radius: var(--app-radius);
-  background-color: var(--card);
-  padding: calc(var(--app-card-padding) * 0.85) var(--app-card-padding);
-  box-shadow: var(--shadow-rn-card, 0 1px 3px rgb(15 23 42 / 0.08));
-}
-
-@media (min-width: 768px) {
-  .admin-org-detail .org-detail-kpi {
-    padding: var(--app-card-padding);
-  }
-}
-
 .admin-org-detail .admin-org-detail-actions {
   gap: 0.625rem;
-}
-
-.admin-org-detail .admin-org-detail-header > div:last-child {
-  border-top: none !important;
-  padding-inline: var(--app-card-padding) !important;
-  padding-top: 0.25rem !important;
-  padding-bottom: 1rem !important;
-}
-
-@media (min-width: 640px) {
-  .admin-org-detail .admin-org-detail-header > div:last-child {
-    padding-inline: calc(var(--app-card-padding) + 0.25rem) !important;
-  }
-}
-
-@media (min-width: 768px) {
-  .admin-org-detail .admin-org-detail-header > div:last-child {
-    padding-inline: calc(var(--app-card-padding) + 0.5rem) !important;
-    padding-bottom: 1.125rem !important;
-  }
 }
