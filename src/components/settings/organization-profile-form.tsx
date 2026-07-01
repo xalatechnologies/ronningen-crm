@@ -1,5 +1,6 @@
 "use client";
 
+import { OrganizationAddressFields } from "@/components/settings/organization-address-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -152,6 +153,7 @@ export function OrganizationProfileForm({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = form;
 
@@ -222,37 +224,13 @@ export function OrganizationProfileForm({
           title="Adresse"
           description="Postadresse på fakturaer og dokumenter."
         >
-          <div className="space-y-2">
-            <Label className={labelClass} htmlFor="org-addr1">
-              Adresse
-            </Label>
-            <Input id="org-addr1" className={fieldClass} {...register("addressLine1")} />
-          </div>
-          <div className="space-y-2">
-            <Label className={labelClass} htmlFor="org-addr2">
-              Adresselinje 2
-            </Label>
-            <Input
-              id="org-addr2"
-              className={fieldClass}
-              placeholder="Valgfritt"
-              {...register("addressLine2")}
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label className={labelClass} htmlFor="org-postal">
-                Postnummer
-              </Label>
-              <Input id="org-postal" className={fieldClass} {...register("postalCode")} />
-            </div>
-            <div className="space-y-2">
-              <Label className={labelClass} htmlFor="org-city">
-                Poststed
-              </Label>
-              <Input id="org-city" className={fieldClass} {...register("city")} />
-            </div>
-          </div>
+          <OrganizationAddressFields
+            register={register}
+            setValue={setValue}
+            errors={errors}
+            labelClass={labelClass}
+            fieldClass={fieldClass}
+          />
         </FormSection>
 
         <FormSection

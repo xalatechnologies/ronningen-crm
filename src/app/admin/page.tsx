@@ -123,7 +123,7 @@ export default async function AdminOverviewPage() {
   const chartYear = new Date().getFullYear();
   const trialingCount = revenue.trialingSubscriptions;
   const activeCount = revenue.activeSubscriptions;
-  const estimatedMrrNok = revenue.potentialMrrNok;
+  const estimatedMrrNok = stats.estimatedMrrNok;
   const currentMonthMrr =
     stats.revenueTrend[new Date().getMonth()]?.value ?? estimatedMrrNok;
 

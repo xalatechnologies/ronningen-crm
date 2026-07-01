@@ -5,12 +5,15 @@ import type { TrendPoint } from "@/components/admin/admin-trend-chart";
 import { adminRoutes } from "@/config/admin-routes";
 import { fetchAdminSubscriptionAnalytics } from "@/lib/admin/queries/users-billing-audit";
 import {
+  alignRevenueTrendCurrentMonth,
   buildDailyNewOrgsTrend,
   buildFailedPaymentQueue,
   buildMonthlyTrend,
   buildPeriodEndByOrg,
   buildTrialExpiringQueue,
+  mapOrganizationsForTrend,
 } from "@/lib/admin/trend-data";
+import { SAAS_MONTHLY_PRICE_NOK } from "@/lib/billing/constants";
 
 async function fetchActiveUsers30d(
   admin: ReturnType<typeof createSupabaseAdminClient>,
@@ -37,6 +40,7 @@ export type AdminOverviewStats = {
   bookingsLast30Days: number;
   inquiriesLast30Days: number;
   revenue: RevenueMetrics;
+  estimatedMrrNok: number;
   activeUsers30d: number;
   recentOrganizations: {
     id: string;
@@ -62,13 +66,15 @@ export type AdminOverviewStats = {
 
 export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
   const admin = createSupabaseAdminClient();
-  const thirtyDaysAgo = new Date();
+  const referenceDate = new Date();
+  const yearStart = new Date(referenceDate.getFullYear(), 0, 1);
+  const thirtyDaysAgo = new Date(referenceDate);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const since = thirtyDaysAgo.toISOString();
-  const sevenDaysAgo = new Date();
+  const sevenDaysAgo = new Date(referenceDate);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const since7 = sevenDaysAgo.toISOString();
-  const fourteenDaysFromNow = new Date();
+  const fourteenDaysFromNow = new Date(referenceDate);
   fourteenDaysFromNow.setDate(fourteenDaysFromNow.getDate() + 14);
   const trialCutoff = fourteenDaysFromNow.toISOString();
 
@@ -82,6 +88,7 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
     { count: inquiriesLast30Days },
     { data: auditEntries },
     { data: subscriptions },
+    { data: subscriptionAuditRows },
     subscriptionAnalytics,
     activeUsers30d,
   ] = await Promise.all([
@@ -118,9 +125,17 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
       .from("subscriptions")
       .select("organization_id, current_period_end, status")
       .order("created_at", { ascending: false }),
+    admin
+      .from("platform_audit_log")
+      .select("target_id, created_at, metadata")
+      .eq("action", "organization.subscription_updated")
+      .gte("created_at", yearStart.toISOString())
+      .order("created_at", { ascending: true }),
     fetchAdminSubscriptionAnalytics(),
     fetchActiveUsers30d(admin, since),
   ]);
+
+  const orgsForTrend = mapOrganizationsForTrend(orgs ?? []);
 
   const statusCounts: Record<string, number> = {};
   for (const org of orgs ?? []) {
@@ -130,10 +145,29 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
   }
 
   const revenue = computeRevenueMetrics(
-    subscriptionAnalytics.orgs,
+    orgsForTrend,
     subscriptionAnalytics.canceledLast30d,
     subscriptionAnalytics.convertedTrialsLast30d,
     subscriptionAnalytics.trialingStartLast30d,
+  );
+
+  const estimatedMrrNok =
+    revenue.potentialMrrNok +
+    revenue.pastDueSubscriptions * SAAS_MONTHLY_PRICE_NOK;
+
+  const revenueTrend = alignRevenueTrendCurrentMonth(
+    buildMonthlyTrend(
+      orgsForTrend,
+      "estimated",
+      referenceDate,
+      subscriptionAuditRows ?? [],
+    ),
+    referenceDate,
+    estimatedMrrNok,
+  );
+  const newTenantsTrend = buildDailyNewOrgsTrend(
+    orgsForTrend.map((o) => ({ createdAt: o.createdAt })),
+    referenceDate,
   );
 
   const periodEndByOrg = buildPeriodEndByOrg(subscriptions ?? []);
@@ -184,14 +218,6 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
     actorName: actorNameById.get(e.actor_user_id) ?? null,
   }));
 
-  const revenueTrend = buildMonthlyTrend(
-    subscriptionAnalytics.orgs,
-    "estimated",
-  );
-  const newTenantsTrend = buildDailyNewOrgsTrend(
-    (orgs ?? []).map((o) => ({ createdAt: o.created_at })),
-  );
-
   return {
     organizationCount: organizationCount ?? 0,
     userCount: userCount ?? 0,
@@ -201,6 +227,7 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
     bookingsLast30Days: bookingsLast30Days ?? 0,
     inquiriesLast30Days: inquiriesLast30Days ?? 0,
     revenue,
+    estimatedMrrNok,
     activeUsers30d,
     recentOrganizations,
     trialExpiringQueue,

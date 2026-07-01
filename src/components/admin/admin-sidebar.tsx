@@ -1,7 +1,7 @@
 import { AdminNavLinks } from "@/components/admin/admin-nav-links";
 import { APP_NAME } from "@/config/app";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
+import { AppBrandLogo } from "@/components/brand/app-brand-logo";
 import Link from "next/link";
 
 export function AdminSidebar({
@@ -27,12 +27,8 @@ export function AdminSidebar({
             className="relative flex size-12 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-black shadow-sm md:size-14"
             aria-label={`${APP_NAME} plattformadmin — gå til oversikt`}
           >
-            <Image
-              src="/event-manager-logo.png"
-              alt={APP_NAME}
-              fill
+            <AppBrandLogo
               sizes="(min-width: 768px) 56px, 48px"
-              className="object-cover"
               priority
             />
           </Link>

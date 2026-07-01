@@ -9,7 +9,7 @@ import { getQueryClient } from "@/lib/queries/get-query-client";
 import { RN_NAV_LINK_ACTIVE, RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
-import Image from "next/image";
+import { AppBrandLogo } from "@/components/brand/app-brand-logo";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
@@ -23,7 +23,12 @@ export function AppSidebar({ className }: { className?: string }) {
     useCurrentOrganization();
   const supabase = useSupabase();
   const displayName = currentOrganization?.name ?? APP_NAME;
-  const logoUrl = currentOrganization?.logoUrl;
+  const logoUrl = currentOrganization?.logoUrl?.trim() || null;
+  const [orgLogoFailed, setOrgLogoFailed] = useState(false);
+
+  useEffect(() => {
+    setOrgLogoFailed(false);
+  }, [logoUrl]);
 
   useEffect(() => {
     if (!isPending) {
@@ -69,24 +74,16 @@ export function AppSidebar({ className }: { className?: string }) {
             aria-label={`${APP_NAME} — gå til oversikt`}
             onMouseEnter={() => prefetchRoute("/app/dashboard")}
           >
-            {logoUrl ? (
-              <Image
+            {logoUrl && !orgLogoFailed ? (
+              <img
                 src={logoUrl}
-                alt={APP_NAME}
-                fill
-                sizes="(min-width: 768px) 64px, 56px"
-                className="object-contain p-1.5"
-                priority
+                alt={displayName}
+                className="absolute inset-0 size-full object-contain p-1.5"
+                referrerPolicy="no-referrer"
+                onError={() => setOrgLogoFailed(true)}
               />
             ) : (
-              <Image
-                src="/event-manager-logo.png"
-                alt={APP_NAME}
-                fill
-                sizes="(min-width: 768px) 64px, 56px"
-                className="object-cover"
-                priority
-              />
+              <AppBrandLogo priority />
             )}
           </Link>
           <div className="min-w-0">

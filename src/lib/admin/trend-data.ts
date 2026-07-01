@@ -10,10 +10,99 @@ import { format } from "date-fns";
 import { nb } from "date-fns/locale/nb";
 
 export type OrgForTrend = {
+  id?: string;
   subscriptionStatus: string;
   isSuspended: boolean;
   createdAt: string;
 };
+
+export type SubscriptionStatusEvent = {
+  organizationId: string;
+  occurredAt: Date;
+  status: string;
+};
+
+const INITIAL_ORG_SUBSCRIPTION_STATUS = "trialing";
+
+export function parseSubscriptionStatusAuditRows(
+  rows: {
+    target_id: string | null;
+    created_at: string;
+    metadata: unknown;
+  }[],
+): SubscriptionStatusEvent[] {
+  const events: SubscriptionStatusEvent[] = [];
+
+  for (const row of rows) {
+    if (!row.target_id) continue;
+    const meta = row.metadata as Record<string, unknown> | null;
+    const after = meta?.after as { subscription_status?: string } | undefined;
+    if (!after?.subscription_status) continue;
+
+    events.push({
+      organizationId: row.target_id,
+      occurredAt: new Date(row.created_at),
+      status: after.subscription_status,
+    });
+  }
+
+  return events.sort(
+    (a, b) => a.occurredAt.getTime() - b.occurredAt.getTime(),
+  );
+}
+
+export function indexSubscriptionStatusEvents(
+  events: SubscriptionStatusEvent[],
+): Map<string, SubscriptionStatusEvent[]> {
+  const byOrg = new Map<string, SubscriptionStatusEvent[]>();
+
+  for (const event of events) {
+    const list = byOrg.get(event.organizationId) ?? [];
+    list.push(event);
+    byOrg.set(event.organizationId, list);
+  }
+
+  return byOrg;
+}
+
+export function resolveOrgSubscriptionStatusAt(
+  org: OrgForTrend,
+  at: Date,
+  eventsByOrgId: Map<string, SubscriptionStatusEvent[]>,
+): string | null {
+  const created = new Date(org.createdAt);
+  if (at < created) return null;
+
+  const events = eventsByOrgId.get(org.id ?? "") ?? [];
+  if (events.length === 0) {
+    return org.subscriptionStatus;
+  }
+
+  let status = INITIAL_ORG_SUBSCRIPTION_STATUS;
+
+  for (const event of events) {
+    if (event.occurredAt > at) break;
+    status = event.status;
+  }
+
+  return status;
+}
+
+export function mapOrganizationsForTrend(
+  orgs: {
+    id: string;
+    subscription_status: string;
+    is_suspended: boolean;
+    created_at: string;
+  }[],
+): OrgForTrend[] {
+  return orgs.map((org) => ({
+    id: org.id,
+    subscriptionStatus: org.subscription_status,
+    isSuspended: org.is_suspended,
+    createdAt: org.created_at,
+  }));
+}
 
 export type OrgForQueue = {
   id: string;
@@ -55,10 +144,18 @@ export function countOrgsForMrrTrendAt(
   orgs: OrgForTrend[],
   monthEnd: Date,
   mode: MrrTrendMode,
+  eventsByOrgId?: Map<string, SubscriptionStatusEvent[]>,
 ): number {
   return orgs.filter((org) => {
     if (org.isSuspended) return false;
-    if (!statusContributesToMrrTrend(org.subscriptionStatus, mode)) return false;
+
+    const statusAtMonth =
+      eventsByOrgId != null
+        ? resolveOrgSubscriptionStatusAt(org, monthEnd, eventsByOrgId)
+        : org.subscriptionStatus;
+
+    if (statusAtMonth == null) return false;
+    if (!statusContributesToMrrTrend(statusAtMonth, mode)) return false;
     return new Date(org.createdAt) <= monthEnd;
   }).length;
 }
@@ -94,9 +191,20 @@ export function buildMonthlyTrend(
   orgs: OrgForTrend[],
   mode: MrrTrendMode = "estimated",
   referenceDate: Date = new Date(),
+  subscriptionAuditRows?: {
+    target_id: string | null;
+    created_at: string;
+    metadata: unknown;
+  }[],
 ): TrendPoint[] {
   const year = referenceDate.getFullYear();
   const months: TrendPoint[] = [];
+  const eventsByOrgId =
+    subscriptionAuditRows != null
+      ? indexSubscriptionStatusEvents(
+          parseSubscriptionStatusAuditRows(subscriptionAuditRows),
+        )
+      : undefined;
 
   for (let month = 0; month < 12; month += 1) {
     const monthEnd = monthEndForCalendarMonth(year, month, referenceDate);
@@ -105,7 +213,7 @@ export function buildMonthlyTrend(
     const orgCount =
       monthEnd == null
         ? 0
-        : countOrgsForMrrTrendAt(orgs, monthEnd, mode);
+        : countOrgsForMrrTrendAt(orgs, monthEnd, mode, eventsByOrgId);
     const value = orgCount * SAAS_MONTHLY_PRICE_NOK;
 
     months.push({ label, value });
@@ -114,12 +222,24 @@ export function buildMonthlyTrend(
   return months;
 }
 
+export function alignRevenueTrendCurrentMonth(
+  points: TrendPoint[],
+  referenceDate: Date,
+  currentMrrNok: number,
+): TrendPoint[] {
+  const currentMonth = referenceDate.getMonth();
+  return points.map((point, index) =>
+    index === currentMonth ? { ...point, value: currentMrrNok } : point,
+  );
+}
+
 export function buildDailyNewOrgsTrend(
   orgs: { createdAt: string }[],
+  referenceDate: Date = new Date(),
 ): TrendPoint[] {
   const days: TrendPoint[] = [];
   for (let i = 6; i >= 0; i -= 1) {
-    const day = new Date();
+    const day = new Date(referenceDate);
     day.setDate(day.getDate() - i);
     day.setHours(0, 0, 0, 0);
     const next = new Date(day);
