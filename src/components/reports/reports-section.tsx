@@ -104,14 +104,17 @@ function OkonomiSection({
   revenue,
   finance,
   focusMonth,
+  allYears,
   reportsPeriodLabel,
 }: {
   revenue: ReportsModuleKpis["revenue"];
   finance: ReportsModuleKpis["finance"];
   focusMonth: number | null;
+  allYears: boolean;
   reportsPeriodLabel: string;
 }) {
   const { t, formatCurrency, locale } = useTranslation();
+  const periodLabel = allYears ? t("reports.allYears") : reportsPeriodLabel;
   const isEmpty =
     revenue.fakturertNok === 0 &&
     finance.incomeNok === 0 &&
@@ -129,7 +132,7 @@ function OkonomiSection({
       />
       {isEmpty ? (
         <div className="mt-4 rounded-md border border-rn-border-strong/60 bg-muted/20 px-4 py-3 text-app-sm text-muted-foreground">
-          {t("reports.economy.empty", { period: reportsPeriodLabel })}{" "}
+          {t("reports.economy.empty", { period: periodLabel })}{" "}
           <Link
             href="/app/bookings/new"
             className="font-semibold text-success underline-offset-2 hover:underline"
@@ -144,7 +147,10 @@ function OkonomiSection({
           value={formatCurrency(revenue.fakturertNok)}
           valueClassName="text-success"
         >
-          <p className="reports-kpi-caption mt-3 tabular-nums">
+          <p className="reports-kpi-caption mt-3">
+            {t("reports.economy.invoicedNote")}
+          </p>
+          <p className="reports-kpi-caption mt-1 tabular-nums">
             {t("reports.economy.reservationsSplit", {
               bookings: formatCurrency(revenue.bookingFakturertNok),
               accommodation: formatCurrency(revenue.accommodationFakturertNok),
@@ -157,6 +163,18 @@ function OkonomiSection({
           value={formatCurrency(revenue.totalPaid)}
           valueClassName="text-success"
         >
+          {revenue.fakturertNok > 0 ? (
+            <p className="reports-kpi-caption mt-3 font-medium tabular-nums">
+              {t("reports.economy.percentOfInvoiced", {
+                percent: (revenue.paidShare * 100)
+                  .toFixed(1)
+                  .replace(".", locale === "nb" ? "," : "."),
+              })}
+            </p>
+          ) : null}
+          <p className="reports-kpi-caption mt-1">
+            {t("reports.economy.bookingsOnlyNote")}
+          </p>
           <div className="mt-4 h-1.5 w-full rounded-full border border-rn-border-strong/30 bg-muted/40">
             <div
               className="h-full rounded-full bg-success"
@@ -180,6 +198,9 @@ function OkonomiSection({
               })}
             </p>
           ) : null}
+          <p className="reports-kpi-caption mt-1">
+            {t("reports.economy.bookingsOnlyNote")}
+          </p>
           {revenue.totalUnpaid > 0 ? (
             <Link
               href="/app/invoices"
@@ -717,8 +738,11 @@ export function ReportsSection({
   festTypeBreakdown,
   facility,
   reportYear,
+  currentCalendarYear,
+  calendarYearMin,
   calendarYearMax,
   focusMonth,
+  allYears,
   reportsPeriodLabel,
   loadError,
   hasRegisteredActivity,
@@ -750,7 +774,10 @@ export function ReportsSection({
               >
                 <ReportsYearMonthCalendar
                   reportYear={reportYear}
+                  currentCalendarYear={currentCalendarYear}
+                  calendarYearMin={calendarYearMin}
                   calendarYearMax={calendarYearMax}
+                  allYears={allYears}
                 />
               </Suspense>
             }
@@ -811,6 +838,7 @@ export function ReportsSection({
               revenue={revenue}
               finance={finance}
               focusMonth={focusMonth}
+              allYears={allYears}
               reportsPeriodLabel={reportsPeriodLabel}
             />
             <PipelineSection bookings={bookings} inquiries={inquiries} />
@@ -830,6 +858,7 @@ export function ReportsSection({
           monthlyRevenue={monthlyRevenue}
           reportYear={reportYear}
           focusMonth={focusMonth}
+          allYears={allYears}
           reportsPeriodLabel={reportsPeriodLabel}
         />
 

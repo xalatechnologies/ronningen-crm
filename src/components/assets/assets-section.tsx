@@ -77,8 +77,8 @@ import type { AssetListItem } from "./types";
 const assetsTableHeadClass =
   "assets-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
 const assetsTableCellClass = "px-6 py-5 md:px-8 md:py-6";
-const assetsKpiStatTileClass =
-  "flex flex-col gap-2 rounded-lg border border-rn-border-strong/50 bg-muted/25 px-4 py-3.5 sm:gap-2.5 sm:px-4 sm:py-4 md:px-5 md:py-5";
+const assetsKpiCompactStatClass =
+  "flex min-w-0 flex-col gap-1.5 rounded-md border border-rn-border-strong/55 bg-background px-4 py-3 sm:gap-2 sm:px-4 sm:py-3.5";
 
 export type AssetsSectionProps = {
   assets: AssetListItem[];
@@ -126,6 +126,98 @@ function insurancePresetOptions(t: Translator) {
 }
 
 const ICONS = [Package, Armchair, Wind, Coffee, Snowflake, Box] as const;
+
+type AssetsInventoryStats = {
+  totalValue: number;
+  totalUnits: number;
+  rowCount: number;
+  counts: { operational: number; maintenance: number; replace: number };
+  insuredValue: number;
+  uninsuredValue: number;
+};
+
+function AssetsKpiSummary({
+  stats,
+  filteredStats,
+  filteredCount,
+  hasActiveFilters,
+  formatCurrency,
+  t,
+}: {
+  stats: AssetsInventoryStats;
+  filteredStats: { totalValue: number; totalUnits: number };
+  filteredCount: number;
+  hasActiveFilters: boolean;
+  formatCurrency: (value: number) => string;
+  t: Translator;
+}) {
+  const entriesLabel =
+    stats.rowCount === 1
+      ? t("assets.registrationWord")
+      : t("assets.registrationsWord");
+  const unitsLabel =
+    stats.totalUnits === 1 ? t("assets.unitWord") : t("assets.unitsWord");
+
+  const statTiles = [
+    { label: t("assets.statusOperational"), value: stats.counts.operational },
+    { label: t("assets.statusMaintenance"), value: stats.counts.maintenance },
+    { label: t("assets.statusReplace"), value: stats.counts.replace },
+    { label: t("assets.insuredValue"), value: formatCurrency(stats.insuredValue) },
+    {
+      label: t("assets.uninsuredValue"),
+      value: formatCurrency(stats.uninsuredValue),
+      highlight: stats.uninsuredValue > 0,
+    },
+  ] as const;
+
+  return (
+    <section
+      className="assets-kpi-summary border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 md:py-7 lg:px-8"
+      aria-label={t("assets.kpiAria")}
+    >
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10 xl:gap-12">
+        <div className="min-w-0 shrink-0 lg:max-w-sm">
+          <p className="dashboard-kpi-label">{t("assets.kpiTotal")}</p>
+          <p className="dashboard-kpi-value mt-2 text-success">
+            {formatCurrency(stats.totalValue)}
+          </p>
+          <p className="dashboard-kpi-caption mt-2 text-muted-foreground">
+            {stats.rowCount} {entriesLabel} · {stats.totalUnits} {unitsLabel}
+          </p>
+        </div>
+
+        <div className="grid min-w-0 flex-1 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-3 xl:gap-4">
+          {statTiles.map((tile) => (
+            <div key={tile.label} className={assetsKpiCompactStatClass}>
+              <p className="text-app-xs font-medium leading-snug text-muted-foreground sm:text-app-sm">
+                {tile.label}
+              </p>
+              <p
+                className={cn(
+                  "font-heading text-xl font-bold tabular-nums tracking-tight text-foreground sm:text-2xl",
+                  "highlight" in tile && tile.highlight
+                    ? "text-amber-900 dark:text-amber-200"
+                    : undefined,
+                )}
+              >
+                {tile.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {hasActiveFilters ? (
+        <p className="assets-filter-hint mt-5 border-t border-rn-border-strong/50 pt-5 text-muted-foreground lg:mt-6">
+          <span className="font-semibold text-foreground">{t("assets.filteredLabel")}</span>{" "}
+          {formatCurrency(filteredStats.totalValue)} · {filteredStats.totalUnits}{" "}
+          {t("assets.unitsWord")} ({filteredCount}{" "}
+          {filteredCount === 1 ? t("assets.lineWord") : t("assets.linesWord")})
+        </p>
+      ) : null}
+    </section>
+  );
+}
 
 function assetIconForName(name: string) {
   let h = 0;
@@ -687,69 +779,14 @@ export function AssetsSection({
         ) : null}
 
         {!loadError && properties.length > 0 && assets.length > 0 ? (
-          <section
-            className="assets-kpi-summary border-t border-rn-border-strong/50 px-4 py-6 sm:px-5 sm:py-7 md:px-6 md:py-8 lg:px-8"
-            aria-label={t("assets.kpiAria")}
-          >
-            <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12 xl:gap-16">
-              <div className="min-w-0 shrink-0 lg:max-w-md">
-                <p className="assets-kpi-label">{t("assets.kpiTotal")}</p>
-                <p className="assets-kpi-value mt-2 font-heading text-success">
-                  {formatCurrency(stats.totalValue)}
-                </p>
-                <p className="assets-kpi-caption mt-3 text-muted-foreground">
-                  {stats.rowCount}{" "}
-                  {stats.rowCount === 1
-                    ? t("assets.registrationWord")
-                    : t("assets.registrationsWord")}{" "}
-                  · {stats.totalUnits}{" "}
-                  {stats.totalUnits === 1
-                    ? t("assets.unitWord")
-                    : t("assets.unitsWord")}
-                </p>
-              </div>
-              <dl className="grid min-w-0 flex-1 grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-5 lg:gap-4 xl:gap-5">
-                <div className={assetsKpiStatTileClass}>
-                  <dt className="assets-stat-label">{t("assets.statusOperational")}</dt>
-                  <dd className="assets-stat-value font-heading text-foreground">
-                    {stats.counts.operational}
-                  </dd>
-                </div>
-                <div className={assetsKpiStatTileClass}>
-                  <dt className="assets-stat-label">{t("assets.statusMaintenance")}</dt>
-                  <dd className="assets-stat-value font-heading text-foreground">
-                    {stats.counts.maintenance}
-                  </dd>
-                </div>
-                <div className={assetsKpiStatTileClass}>
-                  <dt className="assets-stat-label">{t("assets.statusReplace")}</dt>
-                  <dd className="assets-stat-value font-heading text-foreground">
-                    {stats.counts.replace}
-                  </dd>
-                </div>
-                <div className={assetsKpiStatTileClass}>
-                  <dt className="assets-stat-label">{t("assets.insuredValue")}</dt>
-                  <dd className="assets-stat-value font-heading text-foreground">
-                    {formatCurrency(stats.insuredValue)}
-                  </dd>
-                </div>
-                <div className={assetsKpiStatTileClass}>
-                  <dt className="assets-stat-label">{t("assets.uninsuredValue")}</dt>
-                  <dd className="assets-stat-value font-heading text-foreground">
-                    {formatCurrency(stats.uninsuredValue)}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-            {hasActiveFilters ? (
-              <p className="assets-filter-hint mt-8 border-t border-rn-border-strong/60 pt-6 text-muted-foreground">
-                <span className="font-medium text-foreground">{t("assets.filteredLabel")}</span>{" "}
-                {formatCurrency(filteredStats.totalValue)} · {filteredStats.totalUnits}{" "}
-                {t("assets.unitsWord")} ({filtered.length}{" "}
-                {filtered.length === 1 ? t("assets.lineWord") : t("assets.linesWord")})
-              </p>
-            ) : null}
-          </section>
+          <AssetsKpiSummary
+            stats={stats}
+            filteredStats={filteredStats}
+            filteredCount={filtered.length}
+            hasActiveFilters={hasActiveFilters}
+            formatCurrency={formatCurrency}
+            t={t}
+          />
         ) : null}
 
         <div className="min-w-0">

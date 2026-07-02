@@ -47,6 +47,7 @@ Share the public page: **https://eventmanager.no/it**
 | Purpose | Host |
 |---------|------|
 | Application | `eventmanager.no` |
+| Application (www) | `www.eventmanager.no` → CNAME to Vercel project (must be added in Vercel Domains + SSL cert) |
 | API / auth (Supabase) | Value of `NEXT_PUBLIC_SUPABASE_URL` hostname (project-specific) |
 | Payments (Stripe redirect) | `checkout.stripe.com`, `billing.stripe.com`, `js.stripe.com` |
 

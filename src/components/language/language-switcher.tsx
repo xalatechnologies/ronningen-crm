@@ -25,17 +25,19 @@ export function LanguageSwitcher({
   variant = "menu",
 }: {
   className?: string;
-  variant?: "menu" | "compact";
+  variant?: "menu" | "compact" | "segment";
 }) {
   const { locale, setLocale, t } = useTranslation();
   const compact = variant === "compact";
+  const segmentStyle = variant === "segment";
 
   const segment = (
     <div
       className={cn(
         "flex gap-1 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment p-1",
         compact && "h-9 sm:h-10",
-        !compact && "w-full",
+        !compact && !segmentStyle && "w-full",
+        segmentStyle && "w-full",
       )}
     >
       {localeOptions.map((value) => {
@@ -55,7 +57,9 @@ export function LanguageSwitcher({
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               compact
                 ? "min-w-[2.5rem] px-2.5 text-app-xs sm:min-w-[2.75rem] sm:px-3"
-                : "flex-1 px-2 py-2 text-app-xs",
+                : segmentStyle
+                  ? "flex-1 px-3 py-2 text-app-sm"
+                  : "flex-1 px-2 py-2 text-app-xs",
               active
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
@@ -68,10 +72,10 @@ export function LanguageSwitcher({
     </div>
   );
 
-  if (compact) {
+  if (compact || segmentStyle) {
     return (
       <div
-        className={cn("shrink-0", className)}
+        className={cn(compact && "shrink-0", className)}
         role="radiogroup"
         aria-label={t("common.language.chooseAria")}
       >

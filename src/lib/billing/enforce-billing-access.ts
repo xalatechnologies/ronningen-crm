@@ -31,9 +31,10 @@ export async function enforceBillingAccess(): Promise<BillingEnforcementResult> 
   const { data: expiredTrials, error: expiredError } = await admin
     .from("subscriptions")
     .select(
-      "organization_id, provider_subscription_id, provider_customer_id, status, current_period_end",
+      "organization_id, provider_subscription_id, provider_customer_id, status, current_period_end, organizations!inner(billing_exempt)",
     )
     .eq("status", "trialing")
+    .eq("organizations.billing_exempt", false)
     .lt("current_period_end", now);
 
   if (expiredError) {
@@ -98,8 +99,9 @@ export async function enforceBillingAccess(): Promise<BillingEnforcementResult> 
 
   const { data: stalePastDue, error: pastDueError } = await admin
     .from("subscriptions")
-    .select("organization_id, provider_subscription_id")
+    .select("organization_id, provider_subscription_id, organizations!inner(billing_exempt)")
     .eq("status", "past_due")
+    .eq("organizations.billing_exempt", false)
     .not("provider_subscription_id", "is", null);
 
   if (pastDueError) {

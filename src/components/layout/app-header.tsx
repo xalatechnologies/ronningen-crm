@@ -1,7 +1,5 @@
 "use client";
 
-import { LanguageSwitcher } from "@/components/language/language-switcher";
-import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { MobileNavLinks } from "@/components/layout/mobile-nav";
 import { Button } from "@/components/ui/button";
 import {
@@ -140,10 +138,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
       </div>
 
       <div className="flex min-w-0 items-center gap-2 md:gap-3">
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {children}
-          <ThemeToggle variant="header" />
-        </div>
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">{children}</div>
         <OrganizationSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -199,8 +194,6 @@ export function AppHeader({ children }: { children?: ReactNode }) {
                   {t("common.account.platformAdmin")}
                 </DropdownMenuItem>
               ) : null}
-              <DropdownMenuSeparator className="my-2 bg-border" />
-              <LanguageSwitcher />
               <DropdownMenuSeparator className="my-2 bg-border" />
               <DropdownMenuItem
                 className="px-3 py-2.5 font-heading text-app-md font-bold md:px-3.5 md:py-3"

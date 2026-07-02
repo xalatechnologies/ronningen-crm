@@ -15,6 +15,7 @@ export type ReportsMonthlyChartProps = {
   monthlyRevenue: MonthlyRevenuePoint[];
   reportYear: number;
   focusMonth: number | null;
+  allYears: boolean;
   reportsPeriodLabel: string;
 };
 
@@ -22,6 +23,7 @@ export function ReportsMonthlyChart({
   monthlyRevenue,
   reportYear,
   focusMonth,
+  allYears,
   reportsPeriodLabel,
 }: ReportsMonthlyChartProps) {
   const { t, formatCurrency } = useTranslation();
@@ -77,13 +79,15 @@ export function ReportsMonthlyChart({
     return best;
   }, [monthlyRevenue]);
 
-  const periodBadge =
-    focusMonth != null
+  const periodBadge = allYears
+    ? t("reports.allYears")
+    : focusMonth != null
       ? reportsPeriodLabel
       : t("reports.calendarYear", { year: reportYear });
 
-  const chartAriaLabel =
-    focusMonth != null
+  const chartAriaLabel = allYears
+    ? t("reports.chartAriaAllYears")
+    : focusMonth != null
       ? t("reports.chartAriaMonth", { period: reportsPeriodLabel })
       : t("reports.chartAria", { year: reportYear });
 
@@ -93,7 +97,9 @@ export function ReportsMonthlyChart({
     <div className={cn("overflow-hidden lg:col-span-2", RN_CARD_SHELL)}>
       <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:gap-4 md:px-6 md:py-6">
         <div>
-          <h2 className="app-section-title">{t("reports.monthlyRevenue")}</h2>
+          <h2 className="app-section-title">
+            {allYears ? t("reports.yearlyRevenue") : t("reports.monthlyRevenue")}
+          </h2>
           <p className="mt-1 text-app-sm text-muted-foreground">
             {t("reports.subtitle")}
           </p>
@@ -115,7 +121,7 @@ export function ReportsMonthlyChart({
           </div>
           {!allZero && peak && peak.amount > 0 ? (
             <p className="text-app-sm text-muted-foreground">
-              {t("reports.highestMonth")}{" "}
+              {allYears ? t("reports.highestYear") : t("reports.highestMonth")}{" "}
               <span className="font-semibold text-foreground">
                 {peak.label} · {formatCurrency(peak.amount)}
               </span>
@@ -127,9 +133,11 @@ export function ReportsMonthlyChart({
           <div className="flex min-h-[13rem] flex-col items-center justify-center rounded-md border border-dashed border-rn-border-strong/50 bg-muted/15 px-4 py-10 text-center">
             <p className="font-medium text-foreground">{t("reports.noRevenue")}</p>
             <p className="mt-2 max-w-sm text-app-sm text-muted-foreground">
-              {focusMonth != null
-                ? t("reports.noRevenuePeriod", { period: reportsPeriodLabel })
-                : t("reports.noRevenueYear", { year: reportYear })}
+              {allYears
+                ? t("reports.noRevenueAllYears")
+                : focusMonth != null
+                  ? t("reports.noRevenuePeriod", { period: reportsPeriodLabel })
+                  : t("reports.noRevenueYear", { year: reportYear })}
             </p>
           </div>
         ) : (

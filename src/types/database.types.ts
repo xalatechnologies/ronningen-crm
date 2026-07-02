@@ -406,6 +406,7 @@ export type Database = {
           suspended_reason: string | null;
           admin_notes: string | null;
           billing_email: string | null;
+          billing_exempt: boolean;
           last_activity_at: string | null;
           trial_ends_at: string | null;
           tenant_setup_completed_at: string | null;
@@ -435,6 +436,7 @@ export type Database = {
           suspended_reason?: string | null;
           admin_notes?: string | null;
           billing_email?: string | null;
+          billing_exempt?: boolean;
           last_activity_at?: string | null;
           trial_ends_at?: string | null;
           tenant_setup_completed_at?: string | null;
@@ -464,6 +466,7 @@ export type Database = {
           suspended_reason?: string | null;
           admin_notes?: string | null;
           billing_email?: string | null;
+          billing_exempt?: boolean;
           last_activity_at?: string | null;
           trial_ends_at?: string | null;
           tenant_setup_completed_at?: string | null;

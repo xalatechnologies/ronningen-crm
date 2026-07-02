@@ -1,4 +1,5 @@
 import { OrganizationAccessPanel } from "@/components/admin/organization-access-panel";
+import { OrganizationBillingExemptPanel } from "@/components/admin/organization-billing-exempt-panel";
 import { OrganizationSubscriptionForm } from "@/components/admin/organization-subscription-form";
 import { OrganizationSubscriptionPeriodForm } from "@/components/admin/organization-subscription-period-form";
 import type { AdminOrganizationDetail } from "@/lib/admin/queries/organizations";
@@ -12,6 +13,11 @@ export function OrganizationSubscriptionTab({
 }) {
   return (
     <div className="grid gap-[length:var(--spacing-app-gap)] lg:grid-cols-2">
+      <OrganizationBillingExemptPanel
+        organizationId={org.id}
+        billingExempt={org.billingExempt}
+        providerSubscriptionId={org.providerSubscriptionId}
+      />
       <OrganizationAccessPanel
         organizationId={org.id}
         isSuspended={org.isSuspended}

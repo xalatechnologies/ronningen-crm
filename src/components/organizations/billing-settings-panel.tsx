@@ -405,6 +405,7 @@ export function BillingSettingsPanel({
   const planId = subscription?.plan ?? currentOrganization.subscriptionPlan;
   const plan = getBillingPlan(planId) ?? BILLING_PLANS.standard;
   const billingOn = billingEnabled;
+  const billingExempt = currentOrganization.billingExempt;
   const hasStripeSubscription = Boolean(subscription?.provider_subscription_id);
   const hasStripeCustomer = Boolean(subscription?.provider_customer_id);
   const showDevIds = process.env.NODE_ENV === "development";
@@ -425,6 +426,7 @@ export function BillingSettingsPanel({
 
   const showCheckout = needsStripeCheckout({
     billingEnabled: billingOn,
+    billingExempt,
     hasStripeSubscription,
     status,
     trialExpired,
@@ -432,6 +434,7 @@ export function BillingSettingsPanel({
 
   const offerCheckout = canOfferStripeCheckout({
     billingEnabled: billingOn,
+    billingExempt,
     hasStripeSubscription,
     status,
     trialExpired,
@@ -447,19 +450,21 @@ export function BillingSettingsPanel({
     status,
   });
 
-  const attention = resolveAttentionMessage(
-    {
-      billingOn,
-      status,
-      trialExpired,
-      showCheckout,
-      offerCheckout,
-      hasStripeSubscription,
-      isOwner,
-      daysLeft,
-    },
-    t,
-  );
+  const attention = billingExempt
+    ? null
+    : resolveAttentionMessage(
+        {
+          billingOn,
+          status,
+          trialExpired,
+          showCheckout,
+          offerCheckout,
+          hasStripeSubscription,
+          isOwner,
+          daysLeft,
+        },
+        t,
+      );
 
   const showCheckoutCta = showCheckout || offerCheckout;
 
@@ -483,7 +488,11 @@ export function BillingSettingsPanel({
           </>
         }
         actions={
-          billingOn && isSandbox ? (
+          billingExempt ? (
+            <span className="rounded-md border border-success/40 bg-success/10 px-2.5 py-1 text-app-xs font-semibold text-success">
+              {t("billing.exemptBadge")}
+            </span>
+          ) : billingOn && isSandbox ? (
             <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-500/35 bg-amber-500/[0.08] px-2.5 py-1 text-app-xs font-semibold text-amber-900 dark:text-amber-100">
               <FlaskConical className="size-3.5" aria-hidden />
               {billingModeLabel}
@@ -495,6 +504,20 @@ export function BillingSettingsPanel({
           ) : null
         }
       />
+
+      {billingExempt ? (
+        <div
+          role="status"
+          className="rounded-[length:var(--app-radius)] border-2 border-success/35 bg-success/10 px-4 py-3.5 md:px-5 md:py-4"
+        >
+          <p className="text-app-sm font-semibold text-success">
+            {t("billing.exemptTitle")}
+          </p>
+          <p className="mt-1 text-app-sm leading-relaxed text-muted-foreground">
+            {t("billing.exemptBody")}
+          </p>
+        </div>
+      ) : null}
 
       {attention ? (
         <div
@@ -520,7 +543,7 @@ export function BillingSettingsPanel({
                 {t("billing.subscriptionDescription")}
               </p>
             </div>
-            {billingOn && hasStripeSubscription ? (
+            {billingOn && hasStripeSubscription && !billingExempt ? (
               <span className="text-app-xs font-medium text-muted-foreground">
                 {t("billing.stripeLinked")}
               </span>
@@ -549,7 +572,7 @@ export function BillingSettingsPanel({
           </dl>
 
           <div className="flex flex-col gap-3 border-t border-rn-border-strong/50 pt-5">
-            {billingOn && showCheckoutCta && isOwner ? (
+            {!billingExempt && billingOn && showCheckoutCta && isOwner ? (
               <Button
                 type="button"
                 size="cta"
@@ -560,7 +583,7 @@ export function BillingSettingsPanel({
               </Button>
             ) : null}
 
-            {billingOn && isOwner && (showCheckoutCta || !hasStripeSubscription) ? (
+            {!billingExempt && billingOn && isOwner && (showCheckoutCta || !hasStripeSubscription) ? (
               <Button
                 type="button"
                 variant="outline"
@@ -575,7 +598,7 @@ export function BillingSettingsPanel({
               </Button>
             ) : null}
 
-            {billingOn && showPortal && isOwner ? (
+            {!billingExempt && billingOn && showPortal && isOwner ? (
               <Button
                 type="button"
                 variant={showCheckout ? "outline" : "success"}
@@ -593,7 +616,7 @@ export function BillingSettingsPanel({
               </Button>
             ) : null}
 
-            {billingOn && (showCheckout || showPortal) && !isOwner ? (
+            {!billingExempt && billingOn && (showCheckout || showPortal) && !isOwner ? (
               <p className="rounded-md border border-rn-border-strong/60 bg-muted/25 px-4 py-3 text-app-sm text-muted-foreground">
                 {t("billing.ownerOnly")}
               </p>
@@ -611,7 +634,7 @@ export function BillingSettingsPanel({
               </p>
             ) : null}
 
-            {billingOn && !showCheckout && !showPortal && isOwner && !attention ? (
+            {!billingExempt && billingOn && !showCheckout && !showPortal && isOwner && !attention ? (
               <p className="text-app-sm text-muted-foreground">
                 {t("billing.activeHint")}
               </p>

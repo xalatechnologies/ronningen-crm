@@ -1,23 +1,16 @@
 "use client";
 
 import { useTranslation } from "@/i18n/client";
+import { LanguageSwitcher } from "@/components/language/language-switcher";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { DisplayDensityToggle } from "@/components/display/display-density-toggle";
 import { Label } from "@/components/ui/label";
-import {
-  displayDensities,
-  type DisplayDensity,
-} from "@/config/display";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/app-store";
 import { Palette } from "lucide-react";
-
-
 
 export function AppearanceSettingsCard() {
   const { t } = useTranslation();
-  const displayDensity = useAppStore((s) => s.displayDensity);
-  const setDisplayDensity = useAppStore((s) => s.setDisplayDensity);
 
   return (
     <section className={cn(RN_CARD_SHELL, "flex flex-col gap-6 p-5 md:p-6 lg:col-span-2")}>
@@ -35,7 +28,7 @@ export function AppearanceSettingsCard() {
         </div>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-3">
           <Label className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {t("common.theme.label")}
@@ -47,33 +40,14 @@ export function AppearanceSettingsCard() {
           <Label className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {t("settings.appearance.densityLabel")}
           </Label>
-          <div
-            className="flex flex-wrap gap-1 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment p-1"
-            role="radiogroup"
-            aria-label={t("settings.appearance.densityAria")}
-          >
-            {(Object.keys(displayDensities) as DisplayDensity[]).map((key) => {
-              const active = displayDensity === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  role="radio"
-                  aria-checked={active}
-                  onClick={() => setDisplayDensity(key)}
-                  className={cn(
-                    "flex-1 rounded-[calc(var(--app-radius)-2px)] px-3 py-2 font-heading text-app-sm font-semibold transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                    active
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {t(`settings.appearance.density.${key}`)}
-                </button>
-              );
-            })}
-          </div>
+          <DisplayDensityToggle />
+        </div>
+
+        <div className="space-y-3 sm:col-span-2 lg:col-span-1">
+          <Label className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("common.language.label")}
+          </Label>
+          <LanguageSwitcher variant="segment" />
         </div>
       </div>
     </section>

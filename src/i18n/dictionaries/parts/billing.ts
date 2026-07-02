@@ -31,6 +31,10 @@ export const billingNb = {
   perMonth: "kr/mnd",
   trialNote:
     "{days} dagers gratis prøveperiode ved oppstart. Første trekk skjer når prøven er over.",
+  exemptBadge: "Plattformoperatør — ingen fakturering",
+  exemptTitle: "Ingen fakturering kreves",
+  exemptBody:
+    "Denne organisasjonen er fritatt fra abonnement og betaling. Du har full tilgang til appen.",
   attention: {
     billingDisabledTitle: "Fakturering er ikke aktivert",
     billingDisabledBody:
@@ -109,6 +113,10 @@ export const billingEn = {
   perMonth: "NOK/month",
   trialNote:
     "{days}-day free trial on signup. First charge when the trial ends.",
+  exemptBadge: "Platform operator — no billing",
+  exemptTitle: "No billing required",
+  exemptBody:
+    "This organization is exempt from subscription and payment. You have full access to the app.",
   attention: {
     billingDisabledTitle: "Billing is not enabled",
     billingDisabledBody:

@@ -109,7 +109,6 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
       </div>
 
       <div className="ml-auto flex shrink-0 items-center gap-2 md:gap-3">
-        <ThemeToggle variant="header" />
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
@@ -162,6 +161,7 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
               {t("common.account.goToApp")}
             </DropdownMenuItem>
             <DropdownMenuSeparator className="my-2 bg-border" />
+            <ThemeToggle variant="menu" />
             <LanguageSwitcher variant="menu" />
             <DropdownMenuSeparator className="my-2 bg-border" />
             <DropdownMenuItem

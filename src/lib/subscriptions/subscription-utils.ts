@@ -11,6 +11,7 @@ export type TenantAccessInput = {
   subscription_status: string;
   current_period_end?: string | null;
   provider_subscription_id?: string | null;
+  billing_exempt?: boolean;
 };
 
 export type TenantAccessOptions = {
@@ -65,6 +66,7 @@ export function resolveTenantAccess(
   options?: TenantAccessOptions,
 ): TenantAccessLevel {
   if (org.is_suspended) return "suspended";
+  if (org.billing_exempt) return "full";
   if (requiresBillingSetup(org, options)) return "billing_only";
   if (isTrialPeriodExpired(org)) return "billing_only";
   return canAccessApp(org.subscription_status);
@@ -211,6 +213,8 @@ export function toTenantAccessInput(org: {
   current_period_end?: string | null;
   providerSubscriptionId?: string | null;
   provider_subscription_id?: string | null;
+  billingExempt?: boolean;
+  billing_exempt?: boolean;
 }): TenantAccessInput {
   return {
     is_suspended: org.isSuspended ?? org.is_suspended ?? false,
@@ -219,5 +223,6 @@ export function toTenantAccessInput(org: {
     current_period_end: org.periodEnd ?? org.current_period_end ?? null,
     provider_subscription_id:
       org.providerSubscriptionId ?? org.provider_subscription_id ?? null,
+    billing_exempt: org.billingExempt ?? org.billing_exempt ?? false,
   };
 }

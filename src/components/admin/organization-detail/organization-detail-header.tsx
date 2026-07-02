@@ -130,6 +130,7 @@ export function OrganizationDetailHeader({
                   subscriptionStatus={org.subscriptionStatus}
                   providerSubscriptionId={org.providerSubscriptionId}
                   billingEnabled={billingEnabled}
+                  billingExempt={org.billingExempt}
                 />
                 <OrganizationDetailPlanBadge plan={org.subscriptionPlan} />
               </>

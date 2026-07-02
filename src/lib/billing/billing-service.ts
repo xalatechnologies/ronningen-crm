@@ -66,12 +66,19 @@ export async function createCheckoutSessionForOrganization(input: {
 
   const { data: org, error: orgError } = await admin
     .from("organizations")
-    .select("id, name, billing_email, contact_email")
+    .select("id, name, billing_email, contact_email, billing_exempt")
     .eq("id", input.organizationId)
     .single();
 
   if (orgError || !org) {
     return { ok: false, error: t("serverErrors.admin.orgNotFound") };
+  }
+
+  if (org.billing_exempt) {
+    return {
+      ok: false,
+      error: t("serverErrors.billing.billingExempt"),
+    };
   }
 
   const { data: subscription } = await admin
@@ -226,6 +233,19 @@ export async function createPortalSessionForOrganization(input: {
   }
 
   const admin = createSupabaseAdminClient();
+  const { data: org } = await admin
+    .from("organizations")
+    .select("billing_exempt")
+    .eq("id", input.organizationId)
+    .maybeSingle();
+
+  if (org?.billing_exempt) {
+    return {
+      ok: false,
+      error: t("serverErrors.billing.billingExempt"),
+    };
+  }
+
   const { data: subscription } = await admin
     .from("subscriptions")
     .select("provider_customer_id")

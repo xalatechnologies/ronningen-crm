@@ -66,6 +66,8 @@ export const serverErrorsNb = {
     completePayment: "Fullfør betaling",
     goToBilling: "Gå til fakturering",
     billingNotEnabled: "Fakturering er ikke aktivert.",
+    billingExempt: "Denne organisasjonen krever ikke fakturering.",
+    billingExemptRequired: "Organisasjonen må være fritatt fra fakturering først.",
     invalidPlan: "Ugyldig abonnementsplan.",
     alreadyActiveSubscription:
       "Organisasjonen har allerede et aktivt abonnement. Bruk «Administrer abonnement».",
@@ -190,6 +192,9 @@ export const serverErrorsEn = {
     completePayment: "Complete payment",
     goToBilling: "Go to billing",
     billingNotEnabled: "Billing is not enabled.",
+    billingExempt: "This organization does not require billing.",
+    billingExemptRequired:
+      "The organization must be billing exempt first.",
     invalidPlan: "Invalid subscription plan.",
     alreadyActiveSubscription:
       "Organization already has an active subscription. Use «Manage subscription».",

@@ -161,6 +161,26 @@ export const adminLabelsNb = {
     noAutocomplete: "Ingen treff",
   },
   saved: "Lagret.",
+  billingExempt: {
+    title: "Faktureringsfritak",
+    description:
+      "Plattformoperatør-kontoer kan fritas fra Stripe-abonnement uten å påvirke andre kunder.",
+    statusExempt: "Status: Fritatt for fakturering",
+    statusBillable: "Status: Normal fakturering",
+    grantExemption: "Gi faktureringsfritak",
+    removeExemption: "Fjern faktureringsfritak",
+    removing: "Fjerner…",
+    confirmTitle: "Gi faktureringsfritak?",
+    confirmWithStripe:
+      "Dette kansellerer Stripe-abonnementet og gir organisasjonen full tilgang uten månedlig betaling.",
+    confirmWithoutStripe:
+      "Organisasjonen får full tilgang uten månedlig betaling.",
+    confirmButton: "Ja, gi fritak",
+    cancelStripe: "Kanseller Stripe-abonnement",
+    cancelStripeHint:
+      "Et Stripe-abonnement er fortsatt aktivt. Kanseller for å stoppe fremtidige trekk.",
+    cancelingStripe: "Kansellerer…",
+  },
   billingEnvHint:
     "Miljøvariabler, integrasjoner og plattformadministratorer finnes under ",
   supportPublicReplyHint:
@@ -347,6 +367,26 @@ export const adminLabelsEn = {
     noAutocomplete: "No matches",
   },
   saved: "Saved.",
+  billingExempt: {
+    title: "Billing exemption",
+    description:
+      "Platform operator accounts can be exempt from Stripe subscription without affecting other customers.",
+    statusExempt: "Status: Billing exempt",
+    statusBillable: "Status: Standard billing",
+    grantExemption: "Grant billing exemption",
+    removeExemption: "Remove billing exemption",
+    removing: "Removing…",
+    confirmTitle: "Grant billing exemption?",
+    confirmWithStripe:
+      "This cancels the Stripe subscription and grants full access without monthly payment.",
+    confirmWithoutStripe:
+      "The organization gets full access without monthly payment.",
+    confirmButton: "Yes, grant exemption",
+    cancelStripe: "Cancel Stripe subscription",
+    cancelStripeHint:
+      "A Stripe subscription is still active. Cancel it to stop future charges.",
+    cancelingStripe: "Canceling…",
+  },
   billingEnvHint:
     "Environment variables, integrations and platform administrators are under ",
   supportPublicReplyHint:

@@ -1,11 +1,16 @@
 import {
-  REPORTS_CALENDAR_MIN_YEAR,
   type EventTypeBreakdown,
   type FestTypeBreakdown,
   type MonthlyRevenuePoint,
   type ReportsFacilityStats,
   type ReportsModuleKpis,
 } from "@/components/reports/types";
+import {
+  deriveReportsYearBounds,
+  getCurrentCalendarYear,
+  isAllYearsReportParam,
+  resolveReportYearFromParams,
+} from "@/lib/reports/calendar-range";
 import {
   assetRowInsuranceIsCovered,
   assetStatusBucket,
@@ -20,6 +25,7 @@ import {
   buildEventAudienceBreakdown,
   buildFestTypeBreakdown,
   buildMonthlyInvoicedSeries,
+  buildYearlyInvoicedSeries,
   computeFakturertTrendPct,
   countCustomersCreatedInPeriod,
   lastDayOfMonthYmd,
@@ -46,8 +52,11 @@ export type ReportsPageData = {
   festTypeBreakdown: FestTypeBreakdown[];
   facility: ReportsFacilityStats;
   reportYear: number;
+  currentCalendarYear: number;
+  calendarYearMin: number;
   calendarYearMax: number;
   focusMonth: number | null;
+  allYears: boolean;
   reportsPeriodLabel: string;
   loadError: string | null;
   hasRegisteredActivity: boolean;
@@ -57,22 +66,20 @@ export function resolveReportsParams(sp: {
   year?: string;
   month?: string;
 }) {
-  const calendarYearMax = new Date().getFullYear();
-  const parsedYear = Number.parseInt(sp.year ?? "", 10);
-  const reportYear =
-    Number.isFinite(parsedYear) &&
-    parsedYear >= REPORTS_CALENDAR_MIN_YEAR &&
-    parsedYear <= calendarYearMax
-      ? parsedYear
-      : calendarYearMax;
+  const allYears = isAllYearsReportParam(sp.year);
+  const reportYear = allYears
+    ? getCurrentCalendarYear()
+    : resolveReportYearFromParams(sp.year);
 
   const parsedMonth = Number.parseInt(sp.month ?? "", 10);
   const focusMonth =
-    Number.isFinite(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12
-      ? parsedMonth
-      : null;
+    allYears
+      ? null
+      : Number.isFinite(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12
+        ? parsedMonth
+        : null;
 
-  return { reportYear, focusMonth, calendarYearMax };
+  return { reportYear, focusMonth, allYears };
 }
 
 export async function fetchReportsPageData(
@@ -80,7 +87,7 @@ export async function fetchReportsPageData(
   orgId: string,
   reportYear: number,
   focusMonth: number | null,
-  calendarYearMax: number,
+  allYears: boolean,
 ): Promise<ReportsPageData> {
   const reportYearEndYmd = `${reportYear}-12-31`;
   const yearStart = `${reportYear}-01-01`;
@@ -108,8 +115,63 @@ export async function fetchReportsPageData(
   const period = { startYmd: periodStart, endYmd: periodEnd };
   const prevPeriod = { startYmd: prevPeriodStart, endYmd: prevPeriodEnd };
 
-  const reportsPeriodLabel =
-    focusMonth != null
+  let bookingsQuery = supabase
+    .from("bookings")
+    .select(
+      "id, event_type, fest_type, event_date, event_end_date, total_price, paid_amount, remaining_amount, status",
+    )
+    .eq("organization_id", orgId);
+  if (!allYears) {
+    bookingsQuery = bookingsQuery
+      .gte("event_date", bookingsFetchStart)
+      .lte("event_date", reportYearEndYmd);
+  }
+
+  let inquiriesQuery = supabase
+    .from("booking_inquiries")
+    .select(
+      "status, estimated_total, preferred_event_date, created_at, converted_booking_id, converted_at, updated_at",
+    )
+    .eq("organization_id", orgId);
+  if (!allYears) {
+    inquiriesQuery = inquiriesQuery
+      .gte("created_at", `${bookingsFetchStart}T00:00:00`)
+      .lte("created_at", `${reportYearEndYmd}T23:59:59`);
+  }
+
+  let accommodationsQuery = supabase
+    .from("accommodation_reservations")
+    .select("status, total_price, check_in_date, check_out_date")
+    .eq("organization_id", orgId);
+  if (!allYears) {
+    accommodationsQuery = accommodationsQuery
+      .gte("check_in_date", bookingsFetchStart)
+      .lte("check_in_date", reportYearEndYmd);
+  }
+
+  let transactionsQuery = supabase
+    .from("transactions")
+    .select("type, amount, transaction_date")
+    .eq("organization_id", orgId);
+  if (!allYears) {
+    transactionsQuery = transactionsQuery
+      .gte("transaction_date", bookingsFetchStart)
+      .lte("transaction_date", reportYearEndYmd);
+  }
+
+  let customersQuery = supabase
+    .from("customers")
+    .select("created_at")
+    .eq("organization_id", orgId);
+  if (!allYears) {
+    customersQuery = customersQuery
+      .gte("created_at", `${bookingsFetchStart}T00:00:00`)
+      .lte("created_at", `${reportYearEndYmd}T23:59:59`);
+  }
+
+  const reportsPeriodLabel = allYears
+    ? ""
+    : focusMonth != null
       ? new Intl.DateTimeFormat("nb-NO", {
           month: "long",
           year: "numeric",
@@ -127,51 +189,31 @@ export async function fetchReportsPageData(
     propertiesRes,
     packagesRes,
     servicesRes,
+    bookingBoundsRes,
+    accommodationBoundsRes,
   ] = await Promise.all([
-    supabase
-      .from("bookings")
-      .select(
-        "id, event_type, fest_type, event_date, event_end_date, total_price, paid_amount, remaining_amount, status",
-      )
-      .eq("organization_id", orgId)
-      .gte("event_date", bookingsFetchStart)
-      .lte("event_date", reportYearEndYmd)
-      .order("event_date", { ascending: false }),
-    supabase
-      .from("booking_inquiries")
-      .select(
-        "status, estimated_total, preferred_event_date, created_at, converted_booking_id, converted_at, updated_at",
-      )
-      .eq("organization_id", orgId)
-      .gte("created_at", `${bookingsFetchStart}T00:00:00`)
-      .lte("created_at", `${reportYearEndYmd}T23:59:59`),
-    supabase
-      .from("accommodation_reservations")
-      .select("status, total_price, check_in_date, check_out_date")
-      .eq("organization_id", orgId)
-      .gte("check_in_date", bookingsFetchStart)
-      .lte("check_in_date", reportYearEndYmd),
+    bookingsQuery.order("event_date", { ascending: false }),
+    inquiriesQuery,
+    accommodationsQuery,
     supabase
       .from("assets")
       .select("value, quantity, condition, insurance_status")
       .eq("organization_id", orgId)
       .limit(10_000),
-    supabase
-      .from("transactions")
-      .select("type, amount, transaction_date")
-      .eq("organization_id", orgId)
-      .gte("transaction_date", bookingsFetchStart)
-      .lte("transaction_date", reportYearEndYmd),
-    supabase
-      .from("customers")
-      .select("created_at")
-      .eq("organization_id", orgId)
-      .gte("created_at", `${bookingsFetchStart}T00:00:00`)
-      .lte("created_at", `${reportYearEndYmd}T23:59:59`),
+    transactionsQuery,
+    customersQuery,
     supabase.from("partners").select("id").eq("organization_id", orgId),
     supabase.from("properties").select("id").eq("organization_id", orgId),
     supabase.from("packages").select("id").eq("organization_id", orgId),
     supabase.from("services").select("id").eq("organization_id", orgId),
+    supabase
+      .from("bookings")
+      .select("event_date, event_end_date, status")
+      .eq("organization_id", orgId),
+    supabase
+      .from("accommodation_reservations")
+      .select("check_in_date, check_out_date, status")
+      .eq("organization_id", orgId),
   ]);
 
   const loadError =
@@ -185,6 +227,8 @@ export async function fetchReportsPageData(
     propertiesRes.error?.message ??
     packagesRes.error?.message ??
     servicesRes.error?.message ??
+    bookingBoundsRes.error?.message ??
+    accommodationBoundsRes.error?.message ??
     null;
 
   const rawBookings = (bookingsRes.data ?? []) as unknown as ReportBookingRow[];
@@ -195,6 +239,44 @@ export async function fetchReportsPageData(
   const rawTransactions = (transactionsRes.data ??
     []) as unknown as ReportTransactionRow[];
   const rawCustomers = (customersRes.data ?? []) as unknown as ReportCustomerRow[];
+
+  const { currentCalendarYear, calendarYearMin, calendarYearMax } =
+    deriveReportsYearBounds({
+      bookingDates: (bookingBoundsRes.data ?? [])
+        .filter((row) => {
+          const status = String(row.status ?? "").toLowerCase();
+          return status !== "cancelled" && status !== "avbestilt";
+        })
+        .map((row) => ({
+          start: String(row.event_date),
+          end: row.event_end_date ? String(row.event_end_date) : null,
+        })),
+      accommodationDates: (accommodationBoundsRes.data ?? [])
+        .filter((row) => {
+          const status = String(row.status ?? "").toLowerCase();
+          return (
+            status !== "cancelled" &&
+            status !== "avbestilt" &&
+            status !== "canceled"
+          );
+        })
+        .map((row) => ({
+          start: String(row.check_in_date),
+          end: row.check_out_date ? String(row.check_out_date) : null,
+        })),
+    });
+  const pickerYearMin = Math.min(calendarYearMin, reportYear);
+  const pickerYearMax = Math.max(calendarYearMax, reportYear);
+
+  const activePeriod = allYears
+    ? {
+        startYmd: `${pickerYearMin}-01-01`,
+        endYmd: `${pickerYearMax}-12-31`,
+      }
+    : period;
+  const activePrevPeriod = allYears
+    ? { startYmd: "1970-01-01", endYmd: "1970-01-01" }
+    : prevPeriod;
 
   let assetTotalValueNok = 0;
   let assetTotalUnits = 0;
@@ -235,16 +317,16 @@ export async function fetchReportsPageData(
     assetUninsuredValueNok,
   };
 
-  const bookingAgg = aggregateBookingMoney(rawBookings, period);
-  const prevBookingAgg = aggregateBookingMoney(rawBookings, prevPeriod);
-  const accommodationAgg = aggregateAccommodation(rawAccommodations, period);
+  const bookingAgg = aggregateBookingMoney(rawBookings, activePeriod);
+  const prevBookingAgg = aggregateBookingMoney(rawBookings, activePrevPeriod);
+  const accommodationAgg = aggregateAccommodation(rawAccommodations, activePeriod);
   const prevAccommodationAgg = aggregateAccommodation(
     rawAccommodations,
-    prevPeriod,
+    activePrevPeriod,
   );
-  const inquiryPipeline = aggregateInquiryPipeline(rawInquiries, period);
-  const financeAgg = aggregateTransactions(rawTransactions, period);
-  const prevFinanceAgg = aggregateTransactions(rawTransactions, prevPeriod);
+  const inquiryPipeline = aggregateInquiryPipeline(rawInquiries, activePeriod);
+  const financeAgg = aggregateTransactions(rawTransactions, activePeriod);
+  const prevFinanceAgg = aggregateTransactions(rawTransactions, activePrevPeriod);
   const outstandingAgg = aggregateOutstandingBookings(rawBookings);
 
   const fakturertNok =
@@ -252,21 +334,18 @@ export async function fetchReportsPageData(
   const prevFakturertNok =
     prevBookingAgg.totalBooked + prevAccommodationAgg.totalBookedNok;
 
-  const bookingFakturertTotal =
-    bookingAgg.totalBooked + accommodationAgg.totalBookedNok;
+  const bookingBookedTotal = bookingAgg.totalBooked;
   const paidShare =
-    bookingFakturertTotal > 0
-      ? bookingAgg.totalPaid / bookingFakturertTotal
-      : 0;
+    bookingBookedTotal > 0 ? bookingAgg.totalPaid / bookingBookedTotal : 0;
   const unpaidShareOfBooked =
-    bookingFakturertTotal > 0
-      ? bookingAgg.totalUnpaid / bookingFakturertTotal
+    bookingBookedTotal > 0
+      ? bookingAgg.totalUnpaid / bookingBookedTotal
       : 0;
 
   const customerCount = rawCustomers.length;
   const newCustomersInPeriod = countCustomersCreatedInPeriod(
     rawCustomers,
-    period,
+    activePeriod,
   );
   const partnerCount = partnersRes.data?.length ?? 0;
   const propertyCount = propertiesRes.data?.length ?? 0;
@@ -276,10 +355,9 @@ export async function fetchReportsPageData(
   const kpis: ReportsModuleKpis = {
     revenue: {
       fakturertNok,
-      revenueTrendPct: computeFakturertTrendPct(
-        fakturertNok,
-        prevFakturertNok,
-      ),
+      revenueTrendPct: allYears
+        ? null
+        : computeFakturertTrendPct(fakturertNok, prevFakturertNok),
       bookingFakturertNok: bookingAgg.totalBooked,
       accommodationFakturertNok: accommodationAgg.totalBookedNok,
       totalPaid: bookingAgg.totalPaid,
@@ -307,11 +385,12 @@ export async function fetchReportsPageData(
       incomeNok: financeAgg.incomeNok,
       expenseNok: financeAgg.expenseNok,
       netNok: financeAgg.netNok,
-      incomeTrendPct: pctDelta(prevFinanceAgg.incomeNok, financeAgg.incomeNok),
-      expenseTrendPct: pctDelta(
-        prevFinanceAgg.expenseNok,
-        financeAgg.expenseNok,
-      ),
+      incomeTrendPct: allYears
+        ? null
+        : pctDelta(prevFinanceAgg.incomeNok, financeAgg.incomeNok),
+      expenseTrendPct: allYears
+        ? null
+        : pctDelta(prevFinanceAgg.expenseNok, financeAgg.expenseNok),
     },
     invoices: {
       outstandingNok: outstandingAgg.outstandingNok,
@@ -329,29 +408,46 @@ export async function fetchReportsPageData(
     },
   };
 
-  const monthAmounts = buildMonthlyInvoicedSeries({
-    bookings: rawBookings,
-    accommodations: rawAccommodations,
-    reportYear,
-    focusMonth,
-    yearStartYmd: yearStart,
-    yearEndYmd: reportYearEndYmd,
-  });
+  let monthlyRevenue: MonthlyRevenuePoint[] = [];
 
-  const monthlyRevenue: MonthlyRevenuePoint[] = [];
-  for (let m = 1; m <= 12; m++) {
-    const label = new Intl.DateTimeFormat("nb-NO", { month: "short" }).format(
-      new Date(reportYear, m - 1, 1),
-    );
-    monthlyRevenue.push({
-      monthIndex: m,
-      label,
-      amount: monthAmounts.get(m) ?? 0,
+  if (allYears) {
+    const yearAmounts = buildYearlyInvoicedSeries({
+      bookings: rawBookings,
+      accommodations: rawAccommodations,
+      yearMin: pickerYearMin,
+      yearMax: pickerYearMax,
     });
+    for (let y = pickerYearMin; y <= pickerYearMax; y++) {
+      monthlyRevenue.push({
+        monthIndex: y,
+        label: String(y),
+        amount: yearAmounts.get(y) ?? 0,
+      });
+    }
+  } else {
+    const monthAmounts = buildMonthlyInvoicedSeries({
+      bookings: rawBookings,
+      accommodations: rawAccommodations,
+      reportYear,
+      focusMonth,
+      yearStartYmd: yearStart,
+      yearEndYmd: reportYearEndYmd,
+    });
+
+    for (let m = 1; m <= 12; m++) {
+      const label = new Intl.DateTimeFormat("nb-NO", { month: "short" }).format(
+        new Date(reportYear, m - 1, 1),
+      );
+      monthlyRevenue.push({
+        monthIndex: m,
+        label,
+        amount: monthAmounts.get(m) ?? 0,
+      });
+    }
   }
 
-  const eventBreakdown = buildEventAudienceBreakdown(rawBookings, period);
-  const festTypeBreakdown = buildFestTypeBreakdown(rawBookings, period);
+  const eventBreakdown = buildEventAudienceBreakdown(rawBookings, activePeriod);
+  const festTypeBreakdown = buildFestTypeBreakdown(rawBookings, activePeriod);
 
   const hasRegisteredActivity =
     rawBookings.length > 0 ||
@@ -372,8 +468,11 @@ export async function fetchReportsPageData(
     festTypeBreakdown,
     facility,
     reportYear,
-    calendarYearMax,
+    currentCalendarYear,
+    calendarYearMin: pickerYearMin,
+    calendarYearMax: pickerYearMax,
     focusMonth,
+    allYears,
     reportsPeriodLabel,
     loadError,
     hasRegisteredActivity,

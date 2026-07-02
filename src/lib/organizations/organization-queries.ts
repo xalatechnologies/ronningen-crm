@@ -42,6 +42,7 @@ function mapOrganization(
     subscription_plan: string;
     is_suspended?: boolean;
     suspended_reason?: string | null;
+    billing_exempt?: boolean;
   },
   subscription?: {
     current_period_end: string | null;
@@ -57,6 +58,7 @@ function mapOrganization(
     subscriptionPlan: row.subscription_plan as SubscriptionPlan,
     isSuspended: row.is_suspended ?? false,
     suspendedReason: row.suspended_reason ?? null,
+    billingExempt: row.billing_exempt ?? false,
     periodEnd: subscription?.current_period_end ?? null,
     providerSubscriptionId: subscription?.provider_subscription_id ?? null,
   };
@@ -117,7 +119,7 @@ export async function fetchUserOrganizations(
       supabase
         .from("organizations")
         .select(
-          "id, name, slug, logo_url, subscription_status, subscription_plan, is_suspended, suspended_reason",
+          "id, name, slug, logo_url, subscription_status, subscription_plan, is_suspended, suspended_reason, billing_exempt",
         )
         .in("id", orgIds),
       supabase

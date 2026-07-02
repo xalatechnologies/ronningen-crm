@@ -47,11 +47,13 @@ export function OrganizationDetailAccessBadge({
   subscriptionStatus,
   providerSubscriptionId = null,
   billingEnabled = false,
+  billingExempt = false,
 }: {
   isSuspended: boolean;
   subscriptionStatus: string;
   providerSubscriptionId?: string | null;
   billingEnabled?: boolean;
+  billingExempt?: boolean;
 }) {
   const { t } = useTranslation();
   const access = resolveTenantAccess(
@@ -59,6 +61,7 @@ export function OrganizationDetailAccessBadge({
       is_suspended: isSuspended,
       subscription_status: subscriptionStatus,
       provider_subscription_id: providerSubscriptionId,
+      billing_exempt: billingExempt,
     },
     { billingEnabled },
   );

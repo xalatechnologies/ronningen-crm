@@ -316,8 +316,9 @@ export async function sendTrialReminders(): Promise<BroadcastResult> {
 
   const { data: subscriptions, error } = await admin
     .from("subscriptions")
-    .select("organization_id, current_period_end")
+    .select("organization_id, current_period_end, organizations!inner(billing_exempt)")
     .eq("status", "trialing")
+    .eq("organizations.billing_exempt", false)
     .gte("current_period_end", start.toISOString())
     .lte("current_period_end", end.toISOString());
 

@@ -110,9 +110,13 @@ const routePrefetchers: Record<
     });
   },
   [ROUTE_PATHS.reports]: async (qc, supabase, orgId) => {
-    const { reportYear, focusMonth, calendarYearMax } = resolveReportsParams({});
+    const { reportYear, focusMonth, allYears } = resolveReportsParams({});
     await qc.prefetchQuery({
-      queryKey: tenantQueryKeys.reports(orgId, reportYear, focusMonth),
+      queryKey: tenantQueryKeys.reports(
+        orgId,
+        allYears ? "all" : reportYear,
+        focusMonth,
+      ),
       staleTime: tenantStaleTimes.reports,
       queryFn: () =>
         fetchReportsPageData(
@@ -120,7 +124,7 @@ const routePrefetchers: Record<
           orgId,
           reportYear,
           focusMonth,
-          calendarYearMax,
+          allYears,
         ),
     });
   },

@@ -276,4 +276,27 @@ describe("local trial billing — plan acceptance", () => {
       expect(days).toBeLessThanOrEqual(6);
     });
   });
+
+  describe("billing-exempt operator org", () => {
+    it("keeps full access without Stripe after trial expiry", () => {
+      expect(
+        resolveTenantAccess(
+          {
+            ...localTrialExpired,
+            billing_exempt: true,
+          },
+          billingOn,
+        ),
+      ).toBe("full");
+      expect(
+        needsStripeCheckout({
+          billingEnabled: true,
+          billingExempt: true,
+          hasStripeSubscription: false,
+          status: "trialing",
+          trialExpired: true,
+        }),
+      ).toBe(false);
+    });
+  });
 });

@@ -37,7 +37,7 @@ export const financeNb = {
     "«Til dato» er før «fra dato» — vi viser likevel alle transaksjoner mellom disse datoene.",
   kpiIncome: "Inntekter",
   kpiExpense: "Utgifter",
-  kpiResult: "Resultat",
+  kpiResult: "Finansresultat",
   vsPreviousPeriod: "{percent} % vs. forrige periode",
   netMargin: "Netto margin: {percent} %",
   noIncomeInPeriod: "Ingen inntekt i perioden",

@@ -128,7 +128,7 @@ export const settingsNb = {
   },
   appearance: {
     title: "Utseende",
-    description: "Tilpass fargetema og visningstetthet i appen.",
+    description: "Tilpass språk, fargetema og visningstetthet i appen.",
     densityLabel: "Visningstetthet",
     densityAria: "Velg visningstetthet",
     density: {

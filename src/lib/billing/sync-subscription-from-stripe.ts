@@ -40,6 +40,14 @@ export async function syncSubscriptionFromStripe(input: {
   stripeCustomerId?: string | null;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const admin = createSupabaseAdminClient();
+
+  const { data: orgRow } = await admin
+    .from("organizations")
+    .select("billing_exempt")
+    .eq("id", input.organizationId)
+    .maybeSingle();
+
+  const billingExempt = orgRow?.billing_exempt ?? false;
   const status = mapStripeSubscriptionStatus(input.stripeSubscription.status);
   const customerId =
     typeof input.stripeSubscription.customer === "string"
@@ -69,7 +77,7 @@ export async function syncSubscriptionFromStripe(input: {
     provider_price_id: priceId,
     provider_product_id: productId,
     plan: planId,
-    status,
+    status: billingExempt ? "active" : status,
     current_period_start: periodStartIso,
     current_period_end: periodEndIso,
     cancel_at_period_end: input.stripeSubscription.cancel_at_period_end,
@@ -105,10 +113,13 @@ export async function syncSubscriptionFromStripe(input: {
     subscription_plan: string;
     trial_ends_at: string | null;
   } = {
-    subscription_status: status,
+    subscription_status: billingExempt ? "active" : status,
     subscription_plan: planId,
-    trial_ends_at:
-      status === "trialing" && periodEndIso ? periodEndIso : null,
+    trial_ends_at: billingExempt
+      ? null
+      : status === "trialing" && periodEndIso
+        ? periodEndIso
+        : null,
   };
 
   const { error: orgError } = await admin
@@ -125,6 +136,17 @@ export async function markOrganizationPastDue(
   organizationId: string,
   stripeSubscription?: Stripe.Subscription,
 ): Promise<void> {
+  const admin = createSupabaseAdminClient();
+  const { data: org } = await admin
+    .from("organizations")
+    .select("billing_exempt")
+    .eq("id", organizationId)
+    .maybeSingle();
+
+  if (org?.billing_exempt) {
+    return;
+  }
+
   if (stripeSubscription) {
     await syncSubscriptionFromStripe({
       organizationId,
@@ -132,8 +154,6 @@ export async function markOrganizationPastDue(
     });
     return;
   }
-
-  const admin = createSupabaseAdminClient();
 
   await admin
     .from("organizations")
@@ -150,6 +170,16 @@ export async function markOrganizationCanceled(
   organizationId: string,
 ): Promise<void> {
   const admin = createSupabaseAdminClient();
+  const { data: org } = await admin
+    .from("organizations")
+    .select("billing_exempt")
+    .eq("id", organizationId)
+    .maybeSingle();
+
+  if (org?.billing_exempt) {
+    return;
+  }
+
   const nowIso = new Date().toISOString();
 
   await admin

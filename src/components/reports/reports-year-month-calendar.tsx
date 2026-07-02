@@ -8,11 +8,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from "@/i18n/client";
+import {
+  buildReportsYearOptions,
+  REPORTS_ALL_YEARS_PARAM,
+} from "@/lib/reports/calendar-range";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
-
-import { REPORTS_CALENDAR_MIN_YEAR } from "./types";
 
 /** Intern Select-verdi for «hele året» — ikke et tall, så trigger viser etikett. */
 const MONTH_ALL = "alle";
@@ -34,6 +36,12 @@ const monthSelectTriggerClass = cn(
   "w-fit min-w-0 shrink-0 px-3 capitalize md:px-4",
 );
 
+const filterButtonClass = cn(
+  selectTriggerBaseClass,
+  "w-fit min-w-0 shrink-0 px-3 md:px-4",
+  "transition-colors",
+);
+
 function formatMonthTriggerLabel(
   monthValue: string,
   monthNames: string[],
@@ -48,10 +56,16 @@ function formatMonthTriggerLabel(
 
 export function ReportsYearMonthCalendar({
   reportYear,
+  currentCalendarYear,
+  calendarYearMin,
   calendarYearMax,
+  allYears,
 }: {
   reportYear: number;
+  currentCalendarYear: number;
+  calendarYearMin: number;
   calendarYearMax: number;
+  allYears: boolean;
 }) {
   const { t, locale } = useTranslation();
   const router = useRouter();
@@ -66,13 +80,10 @@ export function ReportsYearMonthCalendar({
     );
   }, [locale]);
 
-  const yearOptions = useMemo(() => {
-    const list: number[] = [];
-    for (let y = calendarYearMax; y >= REPORTS_CALENDAR_MIN_YEAR; y--) {
-      list.push(y);
-    }
-    return list;
-  }, [calendarYearMax]);
+  const yearOptions = useMemo(
+    () => buildReportsYearOptions(calendarYearMin, calendarYearMax),
+    [calendarYearMin, calendarYearMax],
+  );
 
   const monthParam = searchParams.get("month");
   const parsedM = Number.parseInt(monthParam ?? "", 10);
@@ -80,6 +91,9 @@ export function ReportsYearMonthCalendar({
     Number.isFinite(parsedM) && parsedM >= 1 && parsedM <= 12
       ? String(parsedM)
       : MONTH_ALL;
+
+  const hasActiveFilters =
+    allYears || searchParams.has("year") || searchParams.has("month");
 
   const pushParams = useCallback(
     (next: URLSearchParams) => {
@@ -90,21 +104,28 @@ export function ReportsYearMonthCalendar({
     [pathname, router],
   );
 
+  const onAllYearsClick = useCallback(() => {
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("year", REPORTS_ALL_YEARS_PARAM);
+    next.delete("month");
+    pushParams(next);
+  }, [pushParams, searchParams]);
+
   const onYearChange = useCallback(
     (value: string | null) => {
       if (value == null) return;
       const y = Number(value);
       const next = new URLSearchParams(searchParams.toString());
-      if (y === calendarYearMax) next.delete("year");
+      if (y === currentCalendarYear) next.delete("year");
       else next.set("year", String(y));
       pushParams(next);
     },
-    [calendarYearMax, pushParams, searchParams],
+    [currentCalendarYear, pushParams, searchParams],
   );
 
   const onMonthChange = useCallback(
     (value: string | null) => {
-      if (value == null) return;
+      if (value == null || allYears) return;
       const next = new URLSearchParams(searchParams.toString());
       if (value === MONTH_ALL) {
         next.delete("month");
@@ -113,47 +134,86 @@ export function ReportsYearMonthCalendar({
       }
       pushParams(next);
     },
-    [pushParams, searchParams],
+    [allYears, pushParams, searchParams],
   );
 
+  const onReset = useCallback(() => {
+    router.push(pathname, { scroll: false });
+  }, [pathname, router]);
+
   const wholeYearLabel = t("calendar.wholeYear");
+  const allYearsLabel = t("reports.allYears");
 
   const monthTriggerLabel = useMemo(
     () => formatMonthTriggerLabel(monthSelectValue, monthNames, wholeYearLabel),
     [monthSelectValue, monthNames, wholeYearLabel],
   );
 
+  const yearTriggerLabel = allYears ? allYearsLabel : String(reportYear);
+  const yearSelectValue = allYears
+    ? REPORTS_ALL_YEARS_PARAM
+    : String(reportYear);
+
   return (
-    <div className="flex w-full flex-row flex-wrap items-center justify-end gap-2 sm:ml-auto sm:w-auto sm:shrink-0 md:gap-3">
-      <Select value={String(reportYear)} onValueChange={onYearChange}>
+    <div
+      className="flex w-full flex-row flex-wrap items-center justify-end gap-2 sm:ml-auto sm:w-auto sm:shrink-0 md:gap-3"
+      data-reports-period-controls
+    >
+      <button
+        type="button"
+        aria-label={t("reports.allYearsAria")}
+        aria-pressed={allYears}
+        onClick={onAllYearsClick}
+        className={cn(
+          filterButtonClass,
+          allYears &&
+            "border-success bg-success/10 text-success shadow-none ring-2 ring-success/25",
+        )}
+      >
+        {allYearsLabel}
+      </button>
+
+      <Select value={yearSelectValue} onValueChange={onYearChange}>
         <SelectTrigger
           aria-label={t("calendar.selectYearReport")}
           size="default"
-          className={cn(yearSelectTriggerClass, "tabular-nums")}
+          className={cn(
+            yearSelectTriggerClass,
+            "tabular-nums",
+            allYears && "text-success",
+          )}
         >
-          <SelectValue>{reportYear}</SelectValue>
+          <SelectValue>{yearTriggerLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent
           align="end"
-          className="min-w-[var(--anchor-width)] rounded-md border-2 border-rn-border-strong"
+          className="max-h-72 min-w-[var(--anchor-width)] rounded-md border-2 border-rn-border-strong"
         >
-          {yearOptions.map((y) => (
+          {yearOptions.map((year) => (
             <SelectItem
-              key={y}
-              value={String(y)}
+              key={year}
+              value={String(year)}
               className="reports-filter-item py-2.5 font-heading font-semibold tabular-nums"
             >
-              {y}
+              {year}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      <Select value={monthSelectValue} onValueChange={onMonthChange}>
+      <Select
+        value={monthSelectValue}
+        onValueChange={onMonthChange}
+        disabled={allYears}
+      >
         <SelectTrigger
           aria-label={t("calendar.selectMonthReport")}
+          aria-disabled={allYears}
           size="default"
-          className={monthSelectTriggerClass}
+          className={cn(
+            monthSelectTriggerClass,
+            allYears && "pointer-events-none opacity-50",
+          )}
         >
           <SelectValue>{monthTriggerLabel}</SelectValue>
         </SelectTrigger>
@@ -178,6 +238,19 @@ export function ReportsYearMonthCalendar({
           ))}
         </SelectContent>
       </Select>
+
+      <button
+        type="button"
+        aria-label={t("reports.resetPeriodAria")}
+        onClick={onReset}
+        disabled={!hasActiveFilters}
+        className={cn(
+          filterButtonClass,
+          !hasActiveFilters && "cursor-not-allowed opacity-45",
+        )}
+      >
+        {t("reports.resetPeriod")}
+      </button>
     </div>
   );
 }

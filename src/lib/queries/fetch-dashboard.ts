@@ -17,6 +17,7 @@ type RawBooking = {
   id: string;
   event_type: string;
   event_date: string;
+  event_end_date: string | null;
   total_price: number;
   paid_amount: number;
   remaining_amount: number;
@@ -59,7 +60,7 @@ export async function fetchDashboardData(
   const windowEndYmd = ymd(windowEnd);
 
   const bookingMoneySelect =
-    "id, event_type, event_date, total_price, paid_amount, remaining_amount, status";
+    "id, event_type, event_date, event_end_date, total_price, paid_amount, remaining_amount, status";
 
   const [
     moneyRes,
@@ -127,7 +128,8 @@ export async function fetchDashboardData(
 
   const { invoiced, paid, unpaid } = sumActiveBookingMoney(moneyRows);
   const invoicedDelta = invoicedMonthOverMonthDelta(moneyRows, now);
-  const paidSharePct = invoiced > 0 ? (paid / invoiced) * 100 : null;
+  const paidSharePct =
+    invoiced > 0 ? (paid / invoiced) * 100 : null;
   const overdueUnpaidCount = countOverdueUnpaidBookings(
     moneyRows.map((r) => ({
       ...r,

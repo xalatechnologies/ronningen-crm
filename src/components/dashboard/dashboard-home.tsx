@@ -237,6 +237,9 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   {formatCurrency(kpis.totalInvoicedNok)}
                 </p>
                 <p className="dashboard-kpi-caption mt-3 text-muted-foreground">
+                  {t("dashboard.kpiBookingsScopeAllYears")}
+                </p>
+                <p className="dashboard-kpi-caption mt-1 text-muted-foreground">
                   {formatPctDelta(kpis.invoicedMonthDeltaPct)}
                 </p>
               </div>

@@ -61,6 +61,18 @@ describe("needsStripeCheckout", () => {
       }),
     ).toBe(false);
   });
+
+  it("returns false when org is billing exempt", () => {
+    expect(
+      needsStripeCheckout({
+        billingEnabled: true,
+        billingExempt: true,
+        hasStripeSubscription: false,
+        status: "incomplete",
+        trialExpired: true,
+      }),
+    ).toBe(false);
+  });
 });
 
 describe("canOfferStripeCheckout", () => {
@@ -82,6 +94,18 @@ describe("canOfferStripeCheckout", () => {
         hasStripeSubscription: false,
         status: "trialing",
         trialExpired: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("returns false when org is billing exempt", () => {
+    expect(
+      canOfferStripeCheckout({
+        billingEnabled: true,
+        billingExempt: true,
+        hasStripeSubscription: false,
+        status: "trialing",
+        trialExpired: false,
       }),
     ).toBe(false);
   });
