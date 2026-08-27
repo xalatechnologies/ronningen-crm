@@ -200,6 +200,11 @@ export const en = {
       title: "My account",
       description: "Your name, email and sign-in details.",
     },
+    integrations: {
+      title: "Integrations",
+      description:
+        "Calendar feed and external integrations for booking sync.",
+    },
     hubTitle: "Settings",
   },
   adminNav: {
@@ -680,6 +685,11 @@ export const en = {
       support: {
         title: "Support",
         description: "Message platform support and follow up on your tickets.",
+      },
+      integrations: {
+        title: "Integrations",
+        description:
+          "Share bookings with external tools via a secure, tokenized calendar feed.",
       },
     },
   },
@@ -1612,6 +1622,41 @@ export const en = {
         compact: "Compact",
         comfortable: "Normal",
         spacious: "Spacious",
+      },
+    },
+    integrations: {
+      calendarFeed: {
+        title: "Bookings calendar feed",
+        description:
+          "Share {org}'s bookings with Digilist, Google Calendar, Apple Calendar and other iCal tools — read-only, no sign-in required. Cancelled reservations are excluded from the feed.",
+        emptyDescription:
+          "No feed created yet. Enable the feed to get a unique, secret URL you can paste into external tools.",
+        enable: "Enable calendar feed",
+        enabling: "Enabling …",
+        enabled: "Calendar feed enabled.",
+        enableFailed: "Could not enable calendar feed.",
+        urlLabel: "Feed URL",
+        reveal: "Show",
+        hide: "Hide",
+        copy: "Copy",
+        copied: "URL copied to clipboard.",
+        copyFailed: "Could not copy URL.",
+        rotate: "Rotate token",
+        rotated: "Feed token rotated. The old URL no longer works.",
+        rotateFailed: "Could not rotate token.",
+        rotateConfirm:
+          "Rotate the token? Any external tool using the old URL will need to be reconfigured.",
+        disable: "Disable",
+        disabled: "Calendar feed disabled.",
+        disableFailed: "Could not disable calendar feed.",
+        disableConfirm:
+          "Disable the feed? External tools will lose access immediately.",
+        createdAt: "Created",
+        rotatedAt: "Rotated",
+        lastAccessedAt: "Last accessed",
+        securityWarningTitle: "Treat the URL like a password",
+        securityWarningBody:
+          "Anyone with this URL can read your bookings. Share only with trusted systems. Rotate the token if it leaks.",
       },
     },
   },

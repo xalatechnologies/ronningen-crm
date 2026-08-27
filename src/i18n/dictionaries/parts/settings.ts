@@ -137,4 +137,39 @@ export const settingsNb = {
       spacious: "Romslig",
     },
   },
+  integrations: {
+    calendarFeed: {
+      title: "Kalender-feed for bookinger",
+      description:
+        "Del bookingene til {org} med Digilist, Google Calendar, Apple Calendar og andre iCal-verktøy — kun lesing, ingen innlogging. Kansellerte reservasjoner tas ikke med i feeden.",
+      emptyDescription:
+        "Ingen feed opprettet ennå. Aktiver feeden for å få en unik, hemmelig URL du kan lime inn i eksterne verktøy.",
+      enable: "Aktiver kalender-feed",
+      enabling: "Aktiverer …",
+      enabled: "Kalender-feed aktivert.",
+      enableFailed: "Kunne ikke aktivere kalender-feed.",
+      urlLabel: "Feed-URL",
+      reveal: "Vis",
+      hide: "Skjul",
+      copy: "Kopier",
+      copied: "URL kopiert til utklippstavlen.",
+      copyFailed: "Kunne ikke kopiere URL.",
+      rotate: "Roter token",
+      rotated: "Feed-token rotert. Den gamle URL-en fungerer ikke lenger.",
+      rotateFailed: "Kunne ikke rotere token.",
+      rotateConfirm:
+        "Er du sikker på at du vil rotere token? Alle eksterne verktøy som bruker den gamle URL-en må oppdateres.",
+      disable: "Deaktiver",
+      disabled: "Kalender-feed deaktivert.",
+      disableFailed: "Kunne ikke deaktivere kalender-feed.",
+      disableConfirm:
+        "Deaktivere feeden? Eksterne verktøy vil miste tilgang umiddelbart.",
+      createdAt: "Opprettet",
+      rotatedAt: "Rotert",
+      lastAccessedAt: "Sist hentet",
+      securityWarningTitle: "Behandle URL-en som et passord",
+      securityWarningBody:
+        "Alle med denne URL-en kan lese bookingene dine. Del kun med systemer du stoler på. Roter token hvis den kommer på avveie.",
+    },
+  },
 } as const;

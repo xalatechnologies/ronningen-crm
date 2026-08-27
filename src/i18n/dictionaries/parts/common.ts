@@ -181,6 +181,11 @@ export const settingsNavNb = {
     title: "Min konto",
     description: "Ditt navn, e-post og innloggingsinformasjon.",
   },
+  integrations: {
+    title: "Integrasjoner",
+    description:
+      "Kalender-feed og eksterne integrasjoner for booking-synk.",
+  },
   hubTitle: "Innstillinger",
 } as const;
 

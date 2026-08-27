@@ -475,6 +475,47 @@ export type Database = {
         };
         Relationships: [];
       };
+      organization_calendar_feeds: {
+        Row: {
+          id: string;
+          organization_id: string;
+          token: string;
+          created_at: string;
+          updated_at: string;
+          last_accessed_at: string | null;
+          created_by_user_id: string | null;
+          rotated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          token: string;
+          created_at?: string;
+          updated_at?: string;
+          last_accessed_at?: string | null;
+          created_by_user_id?: string | null;
+          rotated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          token?: string;
+          created_at?: string;
+          updated_at?: string;
+          last_accessed_at?: string | null;
+          created_by_user_id?: string | null;
+          rotated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_calendar_feeds_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: true;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       platform_email_templates: {
         Row: {
           id: string;

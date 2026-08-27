@@ -44,5 +44,10 @@ export const appPagesNb = {
       title: "Support",
       description: "Send meldinger til plattformsupport og følg opp sakene dine.",
     },
+    integrations: {
+      title: "Integrasjoner",
+      description:
+        "Del bookingdata med eksterne verktøy via sikker, tokenisert kalender-feed.",
+    },
   },
 } as const;

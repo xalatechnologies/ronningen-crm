@@ -903,6 +903,86 @@ export const bookingInquiryFormSchema = createBookingInquiryFormSchema(
 
 export type BookingInquiryFormInput = z.infer<typeof bookingInquiryFormSchema>;
 
+// --- Inbound inquiry (public website → CRM via POST /api/inbound/inquiries)
+// Kept independent of the internal form schema so front-end i18n messages and
+// UX-only fields (customerId picker, form-only statuses) don't leak into the
+// external contract. Never expose validation messages here — return generic
+// errors from the route handler instead.
+const trimmedString = (max: number) =>
+  z
+    .string()
+    .transform((value) => value.trim())
+    .pipe(z.string().max(max));
+
+const optionalTrimmedString = (max: number) =>
+  z
+    .string()
+    .optional()
+    .transform((value) => (value ?? "").trim())
+    .pipe(z.string().max(max));
+
+const optionalIsoDate = z
+  .string()
+  .optional()
+  .transform((value) => (value ?? "").trim())
+  .refine(
+    (value) => value === "" || /^\d{4}-\d{2}-\d{2}$/.test(value),
+    "invalid_date_format",
+  );
+
+export const inboundInquirySchema = z.object({
+  organizationSlug: z
+    .string()
+    .transform((value) => value.trim().toLowerCase())
+    .pipe(
+      z
+        .string()
+        .min(1)
+        .max(64)
+        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "invalid_slug"),
+    ),
+  source: optionalTrimmedString(200),
+  customer: z.object({
+    name: trimmedString(200).refine((value) => value.length >= 2, "name_required"),
+    phone: trimmedString(40).refine((value) => value.length >= 3, "phone_required"),
+    email: z
+      .string()
+      .optional()
+      .transform((value) => (value ?? "").trim())
+      .refine(
+        (value) => value === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+        "invalid_email",
+      ),
+    address: optionalTrimmedString(300),
+  }),
+  inquiry: z
+    .object({
+      eventType: z.enum(NEW_BOOKING_EVENT_TYPES).default("Privat"),
+      festType: optionalTrimmedString(120),
+      preferredEventDate: optionalIsoDate,
+      preferredEventEndDate: optionalIsoDate,
+      guestCount: z.coerce
+        .number()
+        .int()
+        .min(0)
+        .max(50_000)
+        .default(0),
+    })
+    .optional()
+    .transform((value) =>
+      value ?? {
+        eventType: "Privat" as const,
+        festType: "",
+        preferredEventDate: "",
+        preferredEventEndDate: "",
+        guestCount: 0,
+      },
+    ),
+  message: optionalTrimmedString(8000),
+});
+
+export type InboundInquiryInput = z.infer<typeof inboundInquirySchema>;
+
 export function createSupportMessageSchema(msg: ValidationMessages) {
   return z.object({
     body: z
