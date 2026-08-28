@@ -5,6 +5,7 @@ import type {
 import { effectiveBookingPaymentStatus } from "@/constants/booking-payment-status";
 import { normalizeBookingAudience } from "@/lib/booking-audience";
 import { formatBookingListDateLabel } from "@/lib/booking-period";
+import { sortBookingsByUpcomingFirst } from "@/lib/bookings/list-sort";
 import type { TenantSupabaseClient } from "@/lib/queries/types";
 import { canManageBookings } from "@/lib/role-access";
 import type { UserRole } from "@/constants/roles";
@@ -106,7 +107,7 @@ export async function fetchBookingsPageData(
       "id, customer_id, event_type, event_date, event_end_date, event_start_time, event_end_time, guest_count, total_price, paid_amount, remaining_amount, status, fest_type, notes, booking_reference, payment_due_date, collection_notice_sent_at, payment_status, customers(name, phone, email, address)",
     )
     .eq("organization_id", orgId)
-    .order("event_date", { ascending: false });
+    .order("event_date", { ascending: true });
 
   const loadError = error?.message ?? null;
 
@@ -168,5 +169,9 @@ export async function fetchBookingsPageData(
     };
   });
 
-  return { bookings, loadError, canDeleteBookings };
+  return {
+    bookings: sortBookingsByUpcomingFirst(bookings),
+    loadError,
+    canDeleteBookings,
+  };
 }

@@ -21,6 +21,7 @@ import { FormSelect } from "@/components/ui/form-select";
 import { BOOKING_PAYMENT_STATUS_VALUES, bookingPaymentStatusLabel } from "@/constants/booking-payment-status";
 import { useTranslation } from "@/i18n/client";
 import { statusLabel } from "@/lib/navigation/nav-labels";
+import { sortBookingsByUpcomingFirst } from "@/lib/bookings/list-sort";
 import { cn } from "@/lib/utils";
 import { APP_LIST_ROW_DATE } from "@/lib/table-typography";
 import {
@@ -570,7 +571,7 @@ export function BookingsList({
     if (dateFrom || dateTo) {
       rows = rows.filter((r) => matchesBookingDateRange(r, dateFrom, dateTo));
     }
-    return rows;
+    return sortBookingsByUpcomingFirst(rows);
   }, [bookings, query, filter, paymentFilter, audienceFilter, dateFrom, dateTo]);
 
   const pagination = useMemo(() => {
