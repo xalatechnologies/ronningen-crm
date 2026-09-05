@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTranslation } from "@/i18n/client";
+import { defaultCalendarYearOptions } from "@/lib/calendar/year-range";
 import { statusLabel } from "@/lib/navigation/nav-labels";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
@@ -139,8 +140,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
   const chartYearOptions = useMemo(() => {
     const fromData = data.monthlyByYear.map((s) => s.year);
     if (fromData.length > 0) return fromData;
-    const y = new Date().getFullYear();
-    return [y - 2, y - 1, y];
+    return defaultCalendarYearOptions();
   }, [data.monthlyByYear]);
 
   const [chartYear, setChartYear] = useState(() => {
@@ -324,7 +324,12 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent align="end" className="min-w-[var(--anchor-width)]">
+              <SelectContent
+                align="end"
+                side="bottom"
+                alignItemWithTrigger={false}
+                className="min-w-[var(--anchor-width)] max-h-72"
+              >
                 {chartYearOptions.map((y) => (
                   <SelectItem
                     key={y}

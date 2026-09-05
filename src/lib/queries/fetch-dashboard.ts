@@ -1,5 +1,10 @@
 import type { DashboardHomeData } from "@/components/dashboard/types";
 import {
+  buildCalendarYearOptions,
+  resolveCalendarYearMax,
+  resolveCalendarYearMin,
+} from "@/lib/calendar/year-range";
+import {
   addDays,
   buildMonthlyInvoicedByEventYear,
   countOverdueUnpaidBookings,
@@ -48,12 +53,6 @@ export async function fetchDashboardData(
   orgId: string,
 ): Promise<DashboardHomeData> {
   const now = new Date();
-  const chartYears = [
-    now.getFullYear() - 2,
-    now.getFullYear() - 1,
-    now.getFullYear(),
-  ] as const;
-  const chartStartYmd = `${chartYears[0]}-01-01`;
   const today = startOfToday();
   const todayYmd = ymd(today);
   const windowEnd = addDays(today, 30);
@@ -62,23 +61,11 @@ export async function fetchDashboardData(
   const bookingMoneySelect =
     "id, event_type, event_date, event_end_date, total_price, paid_amount, remaining_amount, status";
 
-  const [
-    moneyRes,
-    chartRes,
-    alertsRes,
-    upcomingRes,
-    propRes,
-  ] = await Promise.all([
+  const [moneyRes, alertsRes, upcomingRes, propRes] = await Promise.all([
     supabase
       .from("bookings")
       .select(bookingMoneySelect)
       .eq("organization_id", orgId),
-    supabase
-      .from("bookings")
-      .select(bookingMoneySelect)
-      .eq("organization_id", orgId)
-      .gte("event_date", chartStartYmd)
-      .lte("event_date", `${chartYears[2]}-12-31`),
     supabase
       .from("bookings")
       .select(
@@ -108,7 +95,6 @@ export async function fetchDashboardData(
   const loadError =
     [
       moneyRes.error?.message,
-      chartRes.error?.message,
       alertsRes.error?.message,
       upcomingRes.error?.message,
       propRes.error?.message,
@@ -117,7 +103,7 @@ export async function fetchDashboardData(
       .join(" — ") || null;
 
   const rawBookings = (moneyRes.data ?? []) as unknown as RawBooking[];
-  const chartBookings = (chartRes.data ?? []) as unknown as RawBooking[];
+  const chartBookings = rawBookings;
   const moneyRows = rawBookings.map((r) => ({
     total_price: Number(r.total_price),
     paid_amount: Number(r.paid_amount),
@@ -145,6 +131,27 @@ export async function fetchDashboardData(
     (r) => !isCancelledBookingStatus(r.status),
   ).length;
   const propertyCount = propRes.data?.length ?? 0;
+
+  let dataYearMin: number | null = null;
+  let dataYearMax: number | null = null;
+  for (const r of chartBookings) {
+    const y = Number.parseInt(r.event_date.slice(0, 4), 10);
+    if (!Number.isFinite(y)) continue;
+    dataYearMin = dataYearMin == null ? y : Math.min(dataYearMin, y);
+    dataYearMax = dataYearMax == null ? y : Math.max(dataYearMax, y);
+    if (r.event_end_date) {
+      const endY = Number.parseInt(r.event_end_date.slice(0, 4), 10);
+      if (Number.isFinite(endY)) {
+        dataYearMin = Math.min(dataYearMin, endY);
+        dataYearMax = Math.max(dataYearMax, endY);
+      }
+    }
+  }
+
+  const chartYears = buildCalendarYearOptions(
+    resolveCalendarYearMin(now, dataYearMin),
+    resolveCalendarYearMax(now, dataYearMax),
+  );
 
   const monthlyByYear = buildMonthlyInvoicedByEventYear(
     chartBookings.map((r) => ({

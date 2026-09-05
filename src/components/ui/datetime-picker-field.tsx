@@ -3,19 +3,17 @@
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import {
   addDays,
-  addMonths,
   format,
   isSameDay,
   isSameMonth,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { enGB } from "date-fns/locale/en-GB";
-import { nb } from "date-fns/locale/nb";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import { CalendarPopoverMonthNav } from "@/components/ui/calendar-popover-month-nav";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCalendarWeekdays } from "@/hooks/use-calendar-weekdays";
@@ -24,7 +22,6 @@ import { formatAppDateTime } from "@/lib/format-datetime";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_TIME = "09:00";
-const dateFnsLocales = { nb, en: enGB };
 
 function toLocalYmd(d: Date) {
   const y = d.getFullYear();
@@ -94,7 +91,6 @@ export function DateTimePickerField({
 }: DateTimePickerFieldProps) {
   const { t, locale } = useTranslation();
   const weekdays = useCalendarWeekdays();
-  const dateFnsLocale = dateFnsLocales[locale];
   const [open, setOpen] = React.useState(false);
   const datePart = parseDatePart(value);
   const timePart = parseTimePart(value);
@@ -177,31 +173,10 @@ export function DateTimePickerField({
               "data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
             )}
           >
-            <div className="mb-2 flex h-11 items-center justify-between gap-2 px-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                className="size-11 min-h-[max(2.75rem,var(--app-tap-target-min))] min-w-[max(2.75rem,var(--app-tap-target-min))] shrink-0 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong"
-                aria-label={t("calendar.prevMonth")}
-                onClick={() => setViewMonth((m) => addMonths(m, -1))}
-              >
-                <ChevronLeft className="size-4" aria-hidden />
-              </Button>
-              <span className="min-w-0 truncate px-1 text-center text-app-control font-semibold capitalize">
-                {format(viewMonth, "LLLL yyyy", { locale: dateFnsLocale })}
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                className="size-11 min-h-[max(2.75rem,var(--app-tap-target-min))] min-w-[max(2.75rem,var(--app-tap-target-min))] shrink-0 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong"
-                aria-label={t("calendar.nextMonth")}
-                onClick={() => setViewMonth((m) => addMonths(m, 1))}
-              >
-                <ChevronRight className="size-4" aria-hidden />
-              </Button>
-            </div>
+            <CalendarPopoverMonthNav
+              viewMonth={viewMonth}
+              onViewMonthChange={setViewMonth}
+            />
 
             <div className="grid grid-cols-7 gap-1 text-center">
               {weekdays.map((d) => (

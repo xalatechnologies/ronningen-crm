@@ -1,33 +1,34 @@
 import { describe, expect, it } from "vitest";
 
+import { CALENDAR_YEAR_CEILING, CALENDAR_YEAR_FLOOR } from "@/lib/calendar/year-range";
 import {
   buildReportsYearOptions,
   deriveReportsYearBounds,
   getReportsPlanningYearMax,
   resolveReportYearFromParams,
-} from "@/lib/reports/calendar-range";
+} from "./calendar-range";
 
 const NOW = new Date("2026-06-15T12:00:00");
 
 describe("deriveReportsYearBounds", () => {
-  it("includes planning years ahead of today", () => {
+  it("includes years through the professional ceiling", () => {
     const bounds = deriveReportsYearBounds({
       bookingDates: [],
       accommodationDates: [],
       now: NOW,
     });
     expect(bounds.currentCalendarYear).toBe(2026);
-    expect(bounds.calendarYearMax).toBe(2028);
-    expect(bounds.calendarYearMin).toBe(2020);
+    expect(bounds.calendarYearMax).toBe(CALENDAR_YEAR_CEILING);
+    expect(bounds.calendarYearMin).toBe(CALENDAR_YEAR_FLOOR);
   });
 
   it("extends max when bookings exist further in the future", () => {
     const bounds = deriveReportsYearBounds({
-      bookingDates: [{ start: "2030-03-10", end: null }],
+      bookingDates: [{ start: "2045-03-10", end: null }],
       accommodationDates: [],
       now: NOW,
     });
-    expect(bounds.calendarYearMax).toBe(2030);
+    expect(bounds.calendarYearMax).toBe(2045);
   });
 
   it("extends min when historical bookings exist before floor", () => {
@@ -53,17 +54,23 @@ describe("resolveReportYearFromParams", () => {
     expect(resolveReportYearFromParams(undefined, NOW)).toBe(2026);
   });
 
-  it("accepts a future year within URL limit", () => {
-    expect(resolveReportYearFromParams("2029", NOW)).toBe(2029);
+  it("accepts a future year within the ceiling", () => {
+    expect(resolveReportYearFromParams("2035", NOW)).toBe(2035);
   });
 
-  it("rejects years too far ahead", () => {
-    expect(resolveReportYearFromParams("2035", NOW)).toBe(2026);
+  it("accepts the ceiling year", () => {
+    expect(resolveReportYearFromParams(String(CALENDAR_YEAR_CEILING), NOW)).toBe(
+      CALENDAR_YEAR_CEILING,
+    );
+  });
+
+  it("rejects years beyond the resolved max", () => {
+    expect(resolveReportYearFromParams("2099", NOW)).toBe(2026);
   });
 });
 
 describe("getReportsPlanningYearMax", () => {
-  it("adds future buffer", () => {
-    expect(getReportsPlanningYearMax(NOW)).toBe(2028);
+  it("uses the shared ceiling", () => {
+    expect(getReportsPlanningYearMax(NOW)).toBe(CALENDAR_YEAR_CEILING);
   });
 });

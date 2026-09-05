@@ -1,11 +1,22 @@
-/** Lowest selectable year in the reports calendar (fallback when no data). */
-export const REPORTS_CALENDAR_MIN_YEAR = 2020;
+import {
+  CALENDAR_YEAR_CEILING,
+  CALENDAR_YEAR_FLOOR,
+  buildCalendarYearOptions,
+  getCurrentCalendarYear,
+  resolveCalendarYearMax,
+  resolveCalendarYearMin,
+} from "@/lib/calendar/year-range";
 
-/** Years ahead of today always offered for planning / pipeline reporting. */
-export const REPORTS_CALENDAR_FUTURE_YEARS = 2;
+/** @deprecated Prefer CALENDAR_YEAR_FLOOR — kept for existing report imports. */
+export const REPORTS_CALENDAR_MIN_YEAR = CALENDAR_YEAR_FLOOR;
 
-/** Upper bound for URL `year` validation (allows far-future bookings). */
-export const REPORTS_CALENDAR_URL_MAX_AHEAD = 5;
+/** @deprecated Prefer CALENDAR_YEAR_CEILING. */
+export const REPORTS_CALENDAR_FUTURE_YEARS =
+  CALENDAR_YEAR_CEILING - CALENDAR_YEAR_FLOOR;
+
+/** @deprecated Prefer getReportsUrlYearMax / resolveCalendarYearMax. */
+export const REPORTS_CALENDAR_URL_MAX_AHEAD =
+  CALENDAR_YEAR_CEILING - CALENDAR_YEAR_FLOOR;
 
 /** URL value for `year` when showing lifetime / all-years report data. */
 export const REPORTS_ALL_YEARS_PARAM = "all";
@@ -16,16 +27,14 @@ export function isAllYearsReportParam(
   return yearParam === REPORTS_ALL_YEARS_PARAM;
 }
 
-export function getCurrentCalendarYear(now = new Date()): number {
-  return now.getFullYear();
-}
+export { getCurrentCalendarYear };
 
 export function getReportsPlanningYearMax(now = new Date()): number {
-  return getCurrentCalendarYear(now) + REPORTS_CALENDAR_FUTURE_YEARS;
+  return resolveCalendarYearMax(now);
 }
 
 export function getReportsUrlYearMax(now = new Date()): number {
-  return getCurrentCalendarYear(now) + REPORTS_CALENDAR_URL_MAX_AHEAD;
+  return resolveCalendarYearMax(now);
 }
 
 export function yearFromYmd(ymd: string | null | undefined): number | null {
@@ -38,11 +47,7 @@ export function buildReportsYearOptions(
   calendarYearMin: number,
   calendarYearMax: number,
 ): number[] {
-  const min = Math.min(calendarYearMin, calendarYearMax);
-  const max = Math.max(calendarYearMin, calendarYearMax);
-  const list: number[] = [];
-  for (let y = max; y >= min; y--) list.push(y);
-  return list;
+  return buildCalendarYearOptions(calendarYearMin, calendarYearMax);
 }
 
 export type ReportsYearBounds = {
@@ -58,7 +63,6 @@ export function deriveReportsYearBounds(input: {
 }): ReportsYearBounds {
   const now = input.now ?? new Date();
   const currentCalendarYear = getCurrentCalendarYear(now);
-  const planningMax = getReportsPlanningYearMax(now);
 
   let dataMin: number | null = null;
   let dataMax: number | null = null;
@@ -79,16 +83,11 @@ export function deriveReportsYearBounds(input: {
     bump(row.end ?? row.start);
   }
 
-  const calendarYearMin = Math.min(
-    REPORTS_CALENDAR_MIN_YEAR,
-    dataMin ?? currentCalendarYear,
-  );
-  const calendarYearMax = Math.max(
-    planningMax,
-    dataMax ?? currentCalendarYear,
-  );
-
-  return { currentCalendarYear, calendarYearMin, calendarYearMax };
+  return {
+    currentCalendarYear,
+    calendarYearMin: resolveCalendarYearMin(now, dataMin),
+    calendarYearMax: resolveCalendarYearMax(now, dataMax),
+  };
 }
 
 export function resolveReportYearFromParams(
@@ -99,7 +98,7 @@ export function resolveReportYearFromParams(
   const parsedYear = Number.parseInt(yearParam ?? "", 10);
   if (
     Number.isFinite(parsedYear) &&
-    parsedYear >= REPORTS_CALENDAR_MIN_YEAR &&
+    parsedYear >= CALENDAR_YEAR_FLOOR &&
     parsedYear <= getReportsUrlYearMax(now)
   ) {
     return parsedYear;

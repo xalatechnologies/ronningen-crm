@@ -13,13 +13,16 @@ import {
 } from "@/components/ui/select";
 import { useCalendarWeekdays } from "@/hooks/use-calendar-weekdays";
 import { useTranslation } from "@/i18n/client";
+import {
+  buildCalendarYearOptions,
+  resolveCalendarYearMax,
+  resolveCalendarYearMin,
+} from "@/lib/calendar/year-range";
 import { cn } from "@/lib/utils";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-
-const CALENDAR_MIN_YEAR = 2020;
 
 const calendarSelectTriggerClass = cn(
   "h-11 min-h-11 w-fit min-w-0 shrink-0 rounded-md border-2 border-rn-border-strong bg-background px-3 font-heading text-app-sm font-semibold shadow-none sm:h-12 sm:min-h-12 sm:text-app-base",
@@ -79,25 +82,22 @@ export function useBookingsMonthCalendarNavigation(
   const monthSelectLabel = monthNames[monthIndex] ?? monthLabel;
 
   const yearOptions = useMemo(() => {
-    const now = new Date().getFullYear();
-    let min = now;
-    let max = now;
+    const now = new Date();
+    let dataMin: number | null = null;
+    let dataMax: number | null = null;
     for (const r of rows) {
       for (const iso of [r.eventDateIso, r.eventEndDateIso]) {
         if (!iso) continue;
         const y = Number.parseInt(iso.slice(0, 4), 10);
         if (!Number.isFinite(y)) continue;
-        min = Math.min(min, y);
-        max = Math.max(max, y);
+        dataMin = dataMin == null ? y : Math.min(dataMin, y);
+        dataMax = dataMax == null ? y : Math.max(dataMax, y);
       }
     }
-    min = Math.min(min, CALENDAR_MIN_YEAR, year);
-    max = Math.max(max, now + 2, year);
-    const list: number[] = [];
-    for (let y = max; y >= min; y--) {
-      list.push(y);
-    }
-    return list;
+    return buildCalendarYearOptions(
+      Math.min(resolveCalendarYearMin(now, dataMin), year),
+      Math.max(resolveCalendarYearMax(now, dataMax), year),
+    );
   }, [rows, year]);
 
   function prevMonth() {
