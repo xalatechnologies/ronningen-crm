@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { UserRole } from "@/constants/roles";
+import { normalizeCustomerEmail } from "@/lib/customers/customer-identity";
 import { getDefaultT } from "@/lib/i18n/default-messages";
 import type { Database } from "@/types/database.types";
 
@@ -11,22 +12,16 @@ type CustomerRow = {
   created_at: string;
 };
 
-function normEmail(email: string | null) {
-  const t = (email ?? "").trim().toLowerCase();
-  return t.length > 0 ? t : null;
-}
+export { normalizeCustomerEmail as normCustomerEmail };
 
-function normPhone(phone: string | null) {
-  const digits = (phone ?? "").replace(/\D/g, "");
-  return digits.length > 0 ? digits : null;
-}
-
-function mergeKey(c: CustomerRow) {
-  const e = normEmail(c.email);
-  if (e) return `e:${e}` as const;
-  const p = normPhone(c.phone);
-  if (p) return `p:${p}` as const;
-  return null;
+/**
+ * Auto-merge key: normalized email only.
+ * Phone-only merge is intentionally disabled — shared venue numbers
+ * (e.g. 96665001) previously caused unrelated customers/bookings to collapse.
+ */
+export function customerMergeKey(c: Pick<CustomerRow, "email">) {
+  const e = normalizeCustomerEmail(c.email);
+  return e ? (`e:${e}` as const) : null;
 }
 
 export type MergeDuplicateCustomersResult =
@@ -34,8 +29,9 @@ export type MergeDuplicateCustomersResult =
   | { ok: false; error: string };
 
 /**
- * Merges duplicate customer rows (same normalized email, or same phone if no email).
- * Keeps the newest row by created_at. Reassigns bookings, deletes duplicate customers.
+ * Merges duplicate customer rows that share the same normalized email.
+ * Keeps the newest row by created_at. Reassigns bookings/inquiries/accommodation,
+ * then deletes duplicate customers.
  * Requires an authenticated owner or admin org member on the given client.
  * Does not call revalidatePath (safe during RSC render).
  */
@@ -66,7 +62,7 @@ export async function mergeDuplicateCustomersWithClient(
 
   const groups = new Map<string, CustomerRow[]>();
   for (const r of rows) {
-    const key = mergeKey(r);
+    const key = customerMergeKey(r);
     if (!key) continue;
     const list = groups.get(key) ?? [];
     list.push(r);
@@ -85,6 +81,7 @@ export async function mergeDuplicateCustomersWithClient(
       return b.id.localeCompare(a.id);
     });
     const [keeper, ...victims] = list;
+    if (!keeper) continue;
     mergedGroups += 1;
 
     for (const v of victims) {

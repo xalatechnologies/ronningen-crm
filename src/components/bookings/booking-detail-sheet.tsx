@@ -109,7 +109,7 @@ export function BookingDetailSheet({
   const { t, formatCurrency, formatDate } = useTranslation();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
-  const { invalidateBookings } = useTenantDataInvalidation();
+  const { invalidateBookings, invalidateCustomers } = useTenantDataInvalidation();
   const [detailSaving, setDetailSaving] = useState(false);
   const [inkassoBusy, setInkassoBusy] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -211,22 +211,59 @@ export function BookingDetailSheet({
     if (!currentOrganizationId) return;
     setDetailSaving(true);
     try {
-      const { error: custErr } = await supabase
-        .from("customers")
-        .update({
-          name: data.customerName,
-          phone: data.phone,
-          email: data.email.trim() ? data.email.trim() : null,
-          address: data.address.trim() ? data.address.trim() : null,
-        })
-        .eq("id", bookingRow.customerId)
-        .eq("organization_id", currentOrganizationId);
+      const nameChanged =
+        data.customerName.trim() !== bookingRow.customer.trim();
+      const phoneChanged =
+        (data.phone.trim() || null) !== (bookingRow.customerPhone ?? null);
+      const emailChanged =
+        (data.email.trim() || null) !== (bookingRow.customerEmail ?? null);
+      const customerFieldsChanged = nameChanged || phoneChanged || emailChanged;
 
-      if (custErr) {
-        toast.error(t("bookings.detail.updateCustomerFailed"), {
-          description: custErr.message,
-        });
-        return;
+      if (customerFieldsChanged) {
+        const [{ count: bookingCount }, { count: inquiryCount }] =
+          await Promise.all([
+            supabase
+              .from("bookings")
+              .select("id", { count: "exact", head: true })
+              .eq("customer_id", bookingRow.customerId)
+              .eq("organization_id", currentOrganizationId),
+            supabase
+              .from("booking_inquiries")
+              .select("id", { count: "exact", head: true })
+              .eq("customer_id", bookingRow.customerId)
+              .eq("organization_id", currentOrganizationId),
+          ]);
+
+        const linkedBookings = bookingCount ?? 0;
+        const linkedInquiries = inquiryCount ?? 0;
+        if (linkedBookings + linkedInquiries > 1) {
+          const ok = window.confirm(
+            t("bookings.detail.sharedCustomerRenameConfirm", {
+              name: data.customerName.trim(),
+              bookings: linkedBookings,
+              inquiries: linkedInquiries,
+            }),
+          );
+          if (!ok) return;
+        }
+
+        const { error: custErr } = await supabase
+          .from("customers")
+          .update({
+            name: data.customerName.trim(),
+            phone: data.phone.trim() || null,
+            email: data.email.trim() ? data.email.trim() : null,
+            address: data.address.trim() ? data.address.trim() : null,
+          })
+          .eq("id", bookingRow.customerId)
+          .eq("organization_id", currentOrganizationId);
+
+        if (custErr) {
+          toast.error(t("bookings.detail.updateCustomerFailed"), {
+            description: custErr.message,
+          });
+          return;
+        }
       }
 
       const { paid, remaining, paymentStatus: finalPaymentStatus } =
@@ -267,6 +304,9 @@ export function BookingDetailSheet({
       toast.success(t("bookings.detail.changesSaved"));
       onOpenChange(false);
       invalidateBookings();
+      if (customerFieldsChanged) {
+        invalidateCustomers();
+      }
     } finally {
       setDetailSaving(false);
     }

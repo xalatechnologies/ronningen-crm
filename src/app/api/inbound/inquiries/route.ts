@@ -4,6 +4,10 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import {
+  normalizeCustomerEmail,
+  normalizeCustomerPhone,
+} from "@/lib/customers/customer-identity";
 import { notifyInquiryCreated } from "@/lib/notifications/actions/org-events";
 import { inboundInquirySchema } from "@/lib/validations";
 
@@ -32,6 +36,42 @@ function secretsMatch(provided: string, expected: string): boolean {
 function logSourceForNotes(source: string | undefined): string {
   const label = source?.trim() || "website";
   return `[Kilde: ${label}]`;
+}
+
+function namesMatch(a: string, b: string): boolean {
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
+}
+
+/**
+ * Prefer email match; phone match only when names also match
+ * (avoids attaching to unrelated people who share a venue phone).
+ */
+export function findExistingInboundCustomer<
+  T extends { id: string; name: string; email: string | null; phone: string | null },
+>(
+  candidates: T[],
+  input: { name: string; email?: string | null; phone: string },
+): T | null {
+  const email = normalizeCustomerEmail(input.email ?? null);
+  const phone = normalizeCustomerPhone(input.phone);
+
+  if (email) {
+    const byEmail = candidates.find(
+      (c) => normalizeCustomerEmail(c.email) === email,
+    );
+    if (byEmail) return byEmail;
+  }
+
+  if (phone) {
+    const byPhoneAndName = candidates.find(
+      (c) =>
+        normalizeCustomerPhone(c.phone) === phone &&
+        namesMatch(c.name, input.name),
+    );
+    if (byPhoneAndName) return byPhoneAndName;
+  }
+
+  return null;
 }
 
 export async function POST(request: Request) {
@@ -85,16 +125,10 @@ export async function POST(request: Request) {
 
   let customerId: string | null = null;
 
-  const orFilterParts: string[] = [`phone.eq.${customer.phone}`];
-  if (customer.email) orFilterParts.push(`email.eq.${customer.email}`);
-
-  const { data: existingCustomer, error: existingCustomerErr } = await admin
+  const { data: orgCustomers, error: existingCustomerErr } = await admin
     .from("customers")
-    .select("id")
-    .eq("organization_id", organizationId)
-    .or(orFilterParts.join(","))
-    .limit(1)
-    .maybeSingle();
+    .select("id, name, email, phone")
+    .eq("organization_id", organizationId);
 
   if (existingCustomerErr) {
     console.error(
@@ -103,6 +137,12 @@ export async function POST(request: Request) {
     );
     return NextResponse.json({ error: "customer_lookup_failed" }, { status: 500 });
   }
+
+  const existingCustomer = findExistingInboundCustomer(orgCustomers ?? [], {
+    name: customer.name,
+    email: customer.email,
+    phone: customer.phone,
+  });
 
   if (existingCustomer) {
     customerId = existingCustomer.id;

@@ -15,7 +15,10 @@ type SupabaseResult<T> = { data: T; error: null | { message: string } };
 
 type BuilderConfig = {
   orgLookup?: SupabaseResult<{ id: string } | null>;
-  existingCustomer?: SupabaseResult<{ id: string } | null>;
+  /** Full org customer list used for normalized find-or-create. */
+  orgCustomers?: SupabaseResult<
+    { id: string; name: string; email: string | null; phone: string | null }[]
+  >;
   customerInsert?: SupabaseResult<{ id: string } | null>;
   inquiryInsert?: SupabaseResult<{ id: string } | null>;
   activityInsert?: SupabaseResult<null>;
@@ -31,10 +34,23 @@ function makeQueryChain(table: string) {
 
   const finalize = <T>(result: SupabaseResult<T>) => Promise.resolve(result);
 
+  const asThenable = () => {
+    if (table === "customers") {
+      return finalize(
+        state.config.orgCustomers ?? { data: [], error: null },
+      );
+    }
+    return finalize({ data: null, error: null });
+  };
+
   chain.select = () => chain;
   chain.eq = () => chain;
   chain.or = () => chain;
   chain.limit = () => chain;
+  chain.then = (
+    resolve: (v: unknown) => unknown,
+    reject?: (e: unknown) => unknown,
+  ) => asThenable().then(resolve, reject);
   chain.single = () => {
     if (table === "customers" && state.config.customerInsert) {
       const result = state.config.customerInsert;
@@ -49,11 +65,6 @@ function makeQueryChain(table: string) {
   chain.maybeSingle = () => {
     if (table === "organizations") {
       return finalize(state.config.orgLookup ?? { data: null, error: null });
-    }
-    if (table === "customers") {
-      return finalize(
-        state.config.existingCustomer ?? { data: null, error: null },
-      );
     }
     return finalize({ data: null, error: null });
   };
@@ -110,7 +121,7 @@ vi.mock("@/lib/admin/supabase-admin", () => ({
   createSupabaseAdminClient: () => adminClient,
 }));
 
-import { POST } from "@/app/api/inbound/inquiries/route";
+import { POST, findExistingInboundCustomer } from "@/app/api/inbound/inquiries/route";
 
 const VALID_SECRET = "test-inbound-secret";
 
@@ -159,7 +170,7 @@ describe("POST /api/inbound/inquiries", () => {
     vi.stubEnv("INBOUND_INQUIRY_SECRET", VALID_SECRET);
     state.config = {
       orgLookup: { data: { id: "org-1" }, error: null },
-      existingCustomer: { data: null, error: null },
+      orgCustomers: { data: [], error: null },
       customerInsert: { data: { id: "cust-1" }, error: null },
       inquiryInsert: { data: { id: "inq-1" }, error: null },
     };
@@ -248,9 +259,16 @@ describe("POST /api/inbound/inquiries", () => {
     });
   });
 
-  it("reuses an existing customer matched by phone/email", async () => {
-    state.config.existingCustomer = {
-      data: { id: "cust-existing" },
+  it("reuses an existing customer matched by normalized email", async () => {
+    state.config.orgCustomers = {
+      data: [
+        {
+          id: "cust-existing",
+          name: "Ola Nordmann",
+          email: "OLA@DOMENE.NO",
+          phone: "90000000",
+        },
+      ],
       error: null,
     };
     const res = await POST(buildRequest(VALID_PAYLOAD));
@@ -261,5 +279,26 @@ describe("POST /api/inbound/inquiries", () => {
       unknown
     >;
     expect(inquiryRow.customer_id).toBe("cust-existing");
+  });
+
+  it("does not attach to a different person who only shares a venue phone", () => {
+    const hit = findExistingInboundCustomer(
+      [
+        {
+          id: "angelica",
+          name: "Angelica Solbakken",
+          email: "a@x.com",
+          phone: "+4796665001",
+        },
+        {
+          id: "faisal",
+          name: "Faisal",
+          email: null,
+          phone: "96665001",
+        },
+      ],
+      { name: "Faisal", phone: "+47 966 65 001", email: null },
+    );
+    expect(hit?.id).toBe("faisal");
   });
 });
