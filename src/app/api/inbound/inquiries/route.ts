@@ -1,20 +1,25 @@
-import { timingSafeEqual } from "node:crypto";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import {
+  generateClientRequestId,
   normalizeCustomerEmail,
   normalizeCustomerPhone,
 } from "@/lib/customers/customer-identity";
 import { notifyInquiryCreated } from "@/lib/notifications/actions/org-events";
+import { createInquiryAtomic } from "@/lib/reservations/atomic-create";
+import { hashOrgIdForLog } from "@/lib/reservations/create-logging";
 import { inboundInquirySchema } from "@/lib/validations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const SECRET_HEADER = "x-inbound-secret";
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function readSecret(request: Request): string | null {
   const headerValue = request.headers.get(SECRET_HEADER);
@@ -40,6 +45,22 @@ function logSourceForNotes(source: string | undefined): string {
 
 function namesMatch(a: string, b: string): boolean {
   return a.trim().toLowerCase() === b.trim().toLowerCase();
+}
+
+function readClientRequestId(request: Request): string {
+  const fromIdempotency = request.headers.get("idempotency-key")?.trim();
+  if (fromIdempotency && UUID_RE.test(fromIdempotency)) {
+    return fromIdempotency;
+  }
+  const fromCustom = request.headers.get("x-client-request-id")?.trim();
+  if (fromCustom && UUID_RE.test(fromCustom)) {
+    return fromCustom;
+  }
+  try {
+    return generateClientRequestId();
+  } catch {
+    return randomUUID();
+  }
 }
 
 /**
@@ -103,6 +124,7 @@ export async function POST(request: Request) {
     );
   }
   const payload = parsed.data;
+  const clientRequestId = readClientRequestId(request);
 
   const admin = createSupabaseAdminClient();
 
@@ -123,8 +145,6 @@ export async function POST(request: Request) {
   const organizationId = org.id;
   const { customer, inquiry, message, source } = payload;
 
-  let customerId: string | null = null;
-
   const { data: orgCustomers, error: existingCustomerErr } = await admin
     .from("customers")
     .select("id, name, email, phone")
@@ -144,39 +164,19 @@ export async function POST(request: Request) {
     phone: customer.phone,
   });
 
-  if (existingCustomer) {
-    customerId = existingCustomer.id;
-  } else {
-    const { data: newCustomer, error: createCustomerErr } = await admin
-      .from("customers")
-      .insert({
-        name: customer.name,
-        phone: customer.phone,
-        email: customer.email || null,
-        address: customer.address || null,
-        organization_id: organizationId,
-      })
-      .select("id")
-      .single();
-
-    if (createCustomerErr || !newCustomer) {
-      console.error(
-        "[api/inbound/inquiries] customer insert failed",
-        createCustomerErr,
-      );
-      return NextResponse.json({ error: "customer_insert_failed" }, { status: 500 });
-    }
-    customerId = newCustomer.id;
-  }
-
   const sourceTag = logSourceForNotes(source);
   const internalNotes = message ? `${sourceTag} ${message}` : sourceTag;
 
-  const { data: newInquiry, error: inquiryErr } = await admin
-    .from("booking_inquiries")
-    .insert({
-      customer_id: customerId,
+  let result;
+  try {
+    result = await createInquiryAtomic(admin, {
       organization_id: organizationId,
+      client_request_id: clientRequestId,
+      customer_id: existingCustomer?.id ?? null,
+      customer_name: customer.name,
+      customer_email: customer.email || null,
+      customer_phone: customer.phone,
+      customer_address: customer.address || null,
       event_type: inquiry.eventType,
       fest_type: inquiry.festType || null,
       preferred_event_date: inquiry.preferredEventDate || null,
@@ -184,45 +184,52 @@ export async function POST(request: Request) {
       guest_count: inquiry.guestCount,
       status: "new",
       internal_notes: internalNotes,
-    })
-    .select("id")
-    .single();
-
-  if (inquiryErr || !newInquiry) {
-    console.error("[api/inbound/inquiries] inquiry insert failed", inquiryErr);
+    });
+  } catch (err) {
+    console.error("[api/inbound/inquiries] create_inquiry_atomic failed", {
+      orgIdHash: hashOrgIdForLog(organizationId),
+      clientRequestId,
+      message: err instanceof Error ? err.message : "unknown",
+    });
     return NextResponse.json({ error: "inquiry_insert_failed" }, { status: 500 });
   }
 
-  const { error: activityErr } = await admin
-    .from("booking_inquiry_activities")
-    .insert({
-      inquiry_id: newInquiry.id,
-      kind: "note",
-      body: internalNotes,
-    });
-  if (activityErr) {
-    console.warn(
-      "[api/inbound/inquiries] activity insert failed (non-fatal)",
-      activityErr,
-    );
-  }
+  if (!result.reused) {
+    const { error: activityErr } = await admin
+      .from("booking_inquiry_activities")
+      .insert({
+        inquiry_id: result.reservationId,
+        kind: "note",
+        body: internalNotes,
+      });
+    if (activityErr) {
+      console.warn(
+        "[api/inbound/inquiries] activity insert failed (non-fatal)",
+        activityErr,
+      );
+    }
 
-  try {
-    await notifyInquiryCreated({
-      organizationId,
-      inquiryId: newInquiry.id,
-    });
-  } catch (notifyError) {
-    console.warn(
-      "[api/inbound/inquiries] notifyInquiryCreated failed (non-fatal)",
-      notifyError,
-    );
+    try {
+      await notifyInquiryCreated({
+        organizationId,
+        inquiryId: result.reservationId,
+      });
+    } catch (notifyError) {
+      console.warn(
+        "[api/inbound/inquiries] notifyInquiryCreated failed (non-fatal)",
+        notifyError,
+      );
+    }
   }
 
   revalidatePath("/app/inquiries");
 
   return NextResponse.json(
-    { ok: true, inquiryId: newInquiry.id },
-    { status: 201 },
+    {
+      ok: true,
+      inquiryId: result.reservationId,
+      reused: result.reused,
+    },
+    { status: result.reused ? 200 : 201 },
   );
 }

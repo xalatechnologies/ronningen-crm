@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  generateClientRequestId,
   normalizeCustomerEmail,
   normalizeCustomerPhone,
 } from "./customer-identity";
@@ -21,5 +22,17 @@ describe("normalizeCustomerPhone", () => {
 describe("normalizeCustomerEmail", () => {
   it("lowercases", () => {
     expect(normalizeCustomerEmail("A@B.COM")).toBe("a@b.com");
+  });
+});
+
+describe("generateClientRequestId", () => {
+  it("returns a uuid-shaped string", () => {
+    expect(generateClientRequestId()).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
+  });
+
+  it("returns distinct ids across calls", () => {
+    expect(generateClientRequestId()).not.toBe(generateClientRequestId());
   });
 });

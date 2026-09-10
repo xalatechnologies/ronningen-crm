@@ -20,8 +20,10 @@ import {
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { notifyAccommodationCreated } from "@/lib/notifications/actions/org-events";
+import { generateClientRequestId } from "@/lib/customers/customer-identity";
 import { redirectAfterCreate } from "@/lib/navigation/redirect-after-create";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { createAccommodationReservationAtomic } from "@/lib/reservations/atomic-create";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -32,7 +34,7 @@ import type { AccommodationReservationStatus } from "@/lib/validations";
 import { ArrowLeft, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId } from "react";
+import { useId, useRef } from "react";
 import {
   Controller,
   type Resolver,
@@ -65,6 +67,8 @@ export function NewAccommodationReservationForm({
   const { invalidateOvernatting } = useTenantDataInvalidation();
   const router = useRouter();
   const rid = useId().replace(/:/g, "");
+  const clientRequestIdRef = useRef(generateClientRequestId());
+  const submitInFlightRef = useRef(false);
 
   const form = useForm<AccommodationReservationFormInput>({
     resolver: zodResolver(accommodationReservationFormSchema) as Resolver<
@@ -96,47 +100,40 @@ export function NewAccommodationReservationForm({
 
   const customerId = form.watch("customerId");
   const showNewCustomer = !customerId;
+  const {
+    formState: { isSubmitting },
+  } = form;
 
   async function onSubmit(data: AccommodationReservationFormInput) {
     if (!supabase || !canManage) return;
+    if (submitInFlightRef.current || isSubmitting) return;
+    submitInFlightRef.current = true;
 
     let orgId: string;
     try {
       orgId = requireOrganizationId(currentOrganizationId);
     } catch (err) {
+      submitInFlightRef.current = false;
       toast.error(
         err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
       );
       return;
     }
 
-    let custId = data.customerId || "";
-    if (!custId) {
-      const { data: row, error: ce } = await supabase
-        .from("customers")
-        .insert({
-          name: data.newCustomerName.trim(),
-          phone: data.newCustomerPhone.trim(),
-          email: data.newCustomerEmail.trim() || null,
-          address: data.newCustomerAddress.trim() || null,
-          organization_id: orgId,
-        })
-        .select("id")
-        .single();
-      if (ce || !row) {
-        toast.error(t("overnatting.createCustomerFailed"), {
-          description: ce?.message ?? t("common.toasts.genericError"),
-        });
-        return;
-      }
-      custId = row.id;
-    }
+    const selectedCustomer = data.customerId
+      ? customers.find((c) => c.id === data.customerId)
+      : null;
 
-    const { data: reservationRow, error } = await supabase
-      .from("accommodation_reservations")
-      .insert({
+    try {
+      const result = await createAccommodationReservationAtomic(supabase, {
+        organization_id: orgId,
+        client_request_id: clientRequestIdRef.current,
+        customer_id: data.customerId || null,
+        customer_name: selectedCustomer?.name ?? data.newCustomerName.trim(),
+        customer_email: data.newCustomerEmail.trim() || null,
+        customer_phone: data.newCustomerPhone.trim() || null,
+        customer_address: data.newCustomerAddress.trim() || null,
         unit_id: data.unitId,
-        customer_id: custId,
         check_in_date: data.checkInDate,
         check_out_date: data.checkOutDate,
         check_in_time: data.checkInTime === "" ? null : data.checkInTime,
@@ -148,26 +145,24 @@ export function NewAccommodationReservationForm({
           data.totalPrice === undefined || Number.isNaN(data.totalPrice)
             ? null
             : data.totalPrice,
-        organization_id: orgId,
-      })
-      .select("id")
-      .single();
-
-    if (error || !reservationRow) {
-      toast.error(t("overnatting.createFailed"), {
-        description: error?.message ?? t("common.toasts.genericError"),
       });
-      return;
+
+      void notifyAccommodationCreated({
+        organizationId: orgId,
+        reservationId: result.reservationId,
+      });
+
+      invalidateOvernatting();
+      toast.success(t("overnatting.registered"));
+      clientRequestIdRef.current = generateClientRequestId();
+      redirectAfterCreate(router, "/app/overnatting");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : t("common.toasts.genericError");
+      toast.error(t("overnatting.createFailed"), { description: message });
+    } finally {
+      submitInFlightRef.current = false;
     }
-
-    void notifyAccommodationCreated({
-      organizationId: orgId,
-      reservationId: reservationRow.id,
-    });
-
-    invalidateOvernatting();
-    toast.success(t("overnatting.registered"));
-    redirectAfterCreate(router, "/app/overnatting");
   }
 
   if (!canManage) {
@@ -526,7 +521,12 @@ export function NewAccommodationReservationForm({
             >
               {t("common.actions.cancel")}
             </Link>
-            <Button type="submit" variant="success" size="cta">
+            <Button
+              type="submit"
+              variant="success"
+              size="cta"
+              disabled={isSubmitting || activeUnits.length === 0}
+            >
               {t("overnatting.registerReservation")}
             </Button>
           </div>

@@ -34,8 +34,10 @@ import { notifyBookingCreated } from "@/lib/notifications/actions/org-events";
 import { resolveNewBookingPaymentAmounts } from "@/constants/booking-payment-status";
 import { useTranslation } from "@/i18n/client";
 import { parseNokFormValue } from "@/lib/bookings/parse-nok-form-value";
+import { generateClientRequestId } from "@/lib/customers/customer-identity";
 import { redirectAfterCreate } from "@/lib/navigation/redirect-after-create";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { createBookingAtomic } from "@/lib/reservations/atomic-create";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -258,6 +260,8 @@ export function NewBookingForm({
   );
   const [isGeneratingReference, setIsGeneratingReference] = useState(false);
   const didAutoGenerateRef = useRef(false);
+  const clientRequestIdRef = useRef(generateClientRequestId());
+  const submitInFlightRef = useRef(false);
 
   useEffect(() => {
     if (sortedPackages.length === 0) {
@@ -415,10 +419,14 @@ export function NewBookingForm({
   }, [currentOrganizationId, generateBookingReference, getValues]);
 
   async function submitBooking(data: NewBookingFormInput) {
+    if (submitInFlightRef.current || isSubmitting) return;
+    submitInFlightRef.current = true;
+
     let orgId: string;
     try {
       orgId = requireOrganizationId(currentOrganizationId);
     } catch (err) {
+      submitInFlightRef.current = false;
       toast.error(
         err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
       );
@@ -434,6 +442,7 @@ export function NewBookingForm({
           referenceYearFromEventDate(data.eventDate),
         );
       } catch (err) {
+        submitInFlightRef.current = false;
         toast.error(t("bookings.form.generateRefNumberFailed"), {
           description:
             err instanceof Error
@@ -514,61 +523,17 @@ export function NewBookingForm({
         : t("bookings.form.pricingSummary.catalogPackage", { name: packageName }),
     ].filter(Boolean);
     const notesCombined = parts.join("\n");
-
-    let customerId: string;
-
-    if (existingCustomer) {
-      customerId = existingCustomer.id;
-      const customerPatch: {
-        phone?: string;
-        address?: string;
-      } = {};
-      if (!existingCustomer.phone?.trim() && data.phone.trim()) {
-        customerPatch.phone = data.phone.trim();
-      }
-      if (!existingCustomer.address?.trim() && data.address.trim()) {
-        customerPatch.address = data.address.trim();
-      }
-      if (Object.keys(customerPatch).length > 0) {
-        const { error: custErr } = await supabase
-          .from("customers")
-          .update(customerPatch)
-          .eq("id", customerId);
-        if (custErr) {
-          toast.error(t("bookings.form.updateCustomerFieldsFailed"), {
-            description: custErr.message,
-          });
-          return;
-        }
-      }
-    } else {
-      const { data: customerRow, error: customerError } = await supabase
-        .from("customers")
-        .insert({
-          name: data.customerName,
-          phone: data.phone.trim(),
-          email: data.email || null,
-          address: data.address.trim() || null,
-          organization_id: orgId,
-        })
-        .select("id")
-        .single();
-
-      if (customerError || !customerRow) {
-        toast.error(t("bookings.form.createCustomerFailed"), {
-          description: customerError?.message ?? t("bookings.form.unknownError"),
-        });
-        return;
-      }
-      customerId = customerRow.id;
-    }
-
     const festTypeStored = resolveNewBookingFestTypeStored(data);
 
-    const { data: bookingRow, error: bookingError } = await supabase
-      .from("bookings")
-      .insert({
-        customer_id: customerId,
+    try {
+      const result = await createBookingAtomic(supabase, {
+        organization_id: orgId,
+        client_request_id: clientRequestIdRef.current,
+        customer_id: existingCustomer?.id ?? null,
+        customer_name: data.customerName,
+        customer_email: data.email || null,
+        customer_phone: data.phone.trim() || null,
+        customer_address: data.address.trim() || null,
         property_id: inquiryPrefill?.propertyId ?? null,
         fest_type: festTypeStored,
         event_type: data.eventType,
@@ -584,50 +549,33 @@ export function NewBookingForm({
         notes: notesCombined || null,
         booking_reference: bookingReference,
         payment_status,
-        organization_id: orgId,
-      })
-      .select("id")
-      .single();
-
-    if (bookingError || !bookingRow) {
-      toast.error(t("bookings.form.createFailed"), {
-        description: bookingError?.message ?? t("bookings.form.unknownError"),
+        inquiry_id: inquiryPrefill?.inquiryId ?? null,
       });
-      return;
-    }
 
-    toast.success(t("bookings.form.created"), { description: bookingRow.id });
+      toast.success(t("bookings.form.created"), {
+        description: result.reservationId,
+      });
 
-    invalidateBookings();
-    if (inquiryPrefill?.inquiryId) {
-      invalidateInquiries();
-    }
-
-    void notifyBookingCreated({
-      organizationId: orgId,
-      bookingId: bookingRow.id,
-      bookingReference,
-    });
-
-    if (inquiryPrefill?.inquiryId) {
-      const { error: convErr } = await supabase
-        .from("booking_inquiries")
-        .update({
-          converted_booking_id: bookingRow.id,
-          converted_at: new Date().toISOString(),
-          status: "converted",
-        })
-        .eq("id", inquiryPrefill.inquiryId)
-        .is("converted_booking_id", null);
-
-      if (convErr) {
-        toast.message(t("bookings.createdInquiryNotLinked"), {
-          description: convErr.message,
-        });
+      invalidateBookings();
+      if (inquiryPrefill?.inquiryId) {
+        invalidateInquiries();
       }
-    }
 
-    redirectAfterCreate(router, "/app/bookings");
+      void notifyBookingCreated({
+        organizationId: orgId,
+        bookingId: result.reservationId,
+        bookingReference,
+      });
+
+      clientRequestIdRef.current = generateClientRequestId();
+      redirectAfterCreate(router, "/app/bookings");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : t("bookings.form.unknownError");
+      toast.error(t("bookings.form.createFailed"), { description: message });
+    } finally {
+      submitInFlightRef.current = false;
+    }
   }
 
   const catalogPackageBlocked =

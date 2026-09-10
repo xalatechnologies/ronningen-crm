@@ -10,8 +10,10 @@ import {
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { notifyInquiryCreated } from "@/lib/notifications/actions/org-events";
+import { generateClientRequestId } from "@/lib/customers/customer-identity";
 import { redirectAfterCreate } from "@/lib/navigation/redirect-after-create";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { createInquiryAtomic } from "@/lib/reservations/atomic-create";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -19,6 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useRef } from "react";
 import { type Resolver, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -67,6 +70,8 @@ export function NewInquiryForm({
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateInquiries } = useTenantDataInvalidation();
   const router = useRouter();
+  const clientRequestIdRef = useRef(generateClientRequestId());
+  const submitInFlightRef = useRef(false);
 
   const form = useForm<BookingInquiryFormInput>({
     resolver: zodResolver(bookingInquiryFormSchema) as Resolver<
@@ -95,43 +100,33 @@ export function NewInquiryForm({
 
   async function onSubmit(data: BookingInquiryFormInput) {
     if (!supabase || !canManageInquiries) return;
+    if (submitInFlightRef.current || isSubmitting) return;
+    submitInFlightRef.current = true;
 
     let orgId: string;
     try {
       orgId = requireOrganizationId(currentOrganizationId);
     } catch (err) {
+      submitInFlightRef.current = false;
       toast.error(
         err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
       );
       return;
     }
 
-    let customerId = data.customerId || "";
-    if (!customerId) {
-      const { data: custRow, error: custErr } = await supabase
-        .from("customers")
-        .insert({
-          name: data.newCustomerName.trim(),
-          phone: data.newCustomerPhone.trim(),
-          email: data.newCustomerEmail.trim() || null,
-          address: data.newCustomerAddress.trim() || null,
-          organization_id: orgId,
-        })
-        .select("id")
-        .single();
-      if (custErr || !custRow) {
-        toast.error(t("inquiries.form.createCustomerFailed"), {
-          description: custErr?.message ?? t("inquiries.form.unknownError"),
-        });
-        return;
-      }
-      customerId = custRow.id;
-    }
+    const selectedCustomer = data.customerId
+      ? customers.find((c) => c.id === data.customerId)
+      : null;
 
-    const { data: inquiryRow, error } = await supabase
-      .from("booking_inquiries")
-      .insert({
-        customer_id: customerId,
+    try {
+      const result = await createInquiryAtomic(supabase, {
+        organization_id: orgId,
+        client_request_id: clientRequestIdRef.current,
+        customer_id: data.customerId || null,
+        customer_name: selectedCustomer?.name ?? data.newCustomerName.trim(),
+        customer_email: data.newCustomerEmail.trim() || null,
+        customer_phone: data.newCustomerPhone.trim() || null,
+        customer_address: data.newCustomerAddress.trim() || null,
         property_id: data.propertyId || null,
         event_type: data.eventType,
         fest_type: data.festType.trim() || null,
@@ -145,26 +140,24 @@ export function NewInquiryForm({
         status: data.status,
         next_follow_up_at: fromDatetimeLocalValue(data.nextFollowUpAt),
         internal_notes: data.internalNotes?.trim() || null,
-        organization_id: orgId,
-      })
-      .select("id")
-      .single();
-
-    if (error || !inquiryRow) {
-      toast.error(t("inquiries.createFailed"), {
-        description: error?.message ?? t("inquiries.form.unknownError"),
       });
-      return;
+
+      void notifyInquiryCreated({
+        organizationId: orgId,
+        inquiryId: result.reservationId,
+      });
+
+      invalidateInquiries();
+      toast.success(t("inquiries.registered"));
+      clientRequestIdRef.current = generateClientRequestId();
+      redirectAfterCreate(router, "/app/inquiries");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : t("inquiries.form.unknownError");
+      toast.error(t("inquiries.createFailed"), { description: message });
+    } finally {
+      submitInFlightRef.current = false;
     }
-
-    void notifyInquiryCreated({
-      organizationId: orgId,
-      inquiryId: inquiryRow.id,
-    });
-
-    invalidateInquiries();
-    toast.success(t("inquiries.registered"));
-    redirectAfterCreate(router, "/app/inquiries");
   }
 
   if (!canManageInquiries) {

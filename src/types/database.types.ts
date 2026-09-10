@@ -24,6 +24,7 @@ export type Database = {
           unit_id: string;
           customer_id: string;
           organization_id: string;
+          client_request_id: string | null;
           check_in_date: string;
           check_out_date: string;
           check_in_time: string | null;
@@ -40,6 +41,7 @@ export type Database = {
           unit_id: string;
           customer_id: string;
           organization_id: string;
+          client_request_id?: string | null;
           check_in_date: string;
           check_out_date: string;
           check_in_time?: string | null;
@@ -56,6 +58,7 @@ export type Database = {
           unit_id?: string;
           customer_id?: string;
           organization_id?: string;
+          client_request_id?: string | null;
           check_in_date?: string;
           check_out_date?: string;
           check_in_time?: string | null;
@@ -181,6 +184,7 @@ export type Database = {
       bookings: {
         Row: {
           booking_reference: string | null;
+          client_request_id: string | null;
           collection_notice_sent_at: string | null;
           created_at: string;
           customer_id: string;
@@ -205,6 +209,7 @@ export type Database = {
         };
         Insert: {
           booking_reference?: string | null;
+          client_request_id?: string | null;
           collection_notice_sent_at?: string | null;
           created_at?: string;
           customer_id: string;
@@ -229,6 +234,7 @@ export type Database = {
         };
         Update: {
           booking_reference?: string | null;
+          client_request_id?: string | null;
           collection_notice_sent_at?: string | null;
           created_at?: string;
           customer_id?: string;
@@ -274,6 +280,7 @@ export type Database = {
           customer_id: string;
           property_id: string | null;
           organization_id: string;
+          client_request_id: string | null;
           event_type: string;
           fest_type: string | null;
           preferred_event_date: string | null;
@@ -293,6 +300,7 @@ export type Database = {
           customer_id: string;
           property_id?: string | null;
           organization_id: string;
+          client_request_id?: string | null;
           event_type?: string;
           fest_type?: string | null;
           preferred_event_date?: string | null;
@@ -312,6 +320,7 @@ export type Database = {
           customer_id?: string;
           property_id?: string | null;
           organization_id?: string;
+          client_request_id?: string | null;
           event_type?: string;
           fest_type?: string | null;
           preferred_event_date?: string | null;
@@ -1269,6 +1278,22 @@ export type Database = {
       audit_unique_actors_since: {
         Args: { since_at: string };
         Returns: number;
+      };
+      create_accommodation_reservation_atomic: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
+      create_booking_atomic: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
+      create_customer_atomic: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
+      create_inquiry_atomic: {
+        Args: { payload: Json };
+        Returns: Json;
       };
       current_profile_role: { Args: never; Returns: string };
       find_user_id_by_email: {

@@ -15,18 +15,29 @@ type SupabaseResult<T> = { data: T; error: null | { message: string } };
 
 type BuilderConfig = {
   orgLookup?: SupabaseResult<{ id: string } | null>;
-  /** Full org customer list used for normalized find-or-create. */
   orgCustomers?: SupabaseResult<
     { id: string; name: string; email: string | null; phone: string | null }[]
   >;
-  customerInsert?: SupabaseResult<{ id: string } | null>;
-  inquiryInsert?: SupabaseResult<{ id: string } | null>;
   activityInsert?: SupabaseResult<null>;
+  rpcResult?: {
+    data: {
+      customerId: string;
+      reservationId: string;
+      inquiryId?: string;
+      reused: boolean;
+    } | null;
+    error: null | { message: string };
+  };
 };
 
-const state: { config: BuilderConfig; inserts: Record<string, unknown[]> } = {
+const state: {
+  config: BuilderConfig;
+  inserts: Record<string, unknown[]>;
+  rpcCalls: unknown[];
+} = {
   config: {},
   inserts: {},
+  rpcCalls: [],
 };
 
 function makeQueryChain(table: string) {
@@ -36,32 +47,17 @@ function makeQueryChain(table: string) {
 
   const asThenable = () => {
     if (table === "customers") {
-      return finalize(
-        state.config.orgCustomers ?? { data: [], error: null },
-      );
+      return finalize(state.config.orgCustomers ?? { data: [], error: null });
     }
     return finalize({ data: null, error: null });
   };
 
   chain.select = () => chain;
   chain.eq = () => chain;
-  chain.or = () => chain;
-  chain.limit = () => chain;
   chain.then = (
     resolve: (v: unknown) => unknown,
     reject?: (e: unknown) => unknown,
   ) => asThenable().then(resolve, reject);
-  chain.single = () => {
-    if (table === "customers" && state.config.customerInsert) {
-      const result = state.config.customerInsert;
-      state.config.customerInsert = undefined;
-      return finalize(result);
-    }
-    if (table === "booking_inquiries" && state.config.inquiryInsert) {
-      return finalize(state.config.inquiryInsert);
-    }
-    return finalize({ data: null, error: null });
-  };
   chain.maybeSingle = () => {
     if (table === "organizations") {
       return finalize(state.config.orgLookup ?? { data: null, error: null });
@@ -76,36 +72,16 @@ function makeInsertChain(table: string, row: unknown) {
   state.inserts[table] ??= [];
   state.inserts[table].push(row);
 
-  const chain: Record<string, unknown> = {
-    select: () => chain,
-    single: () => {
-      if (table === "customers") {
-        return Promise.resolve(
-          state.config.customerInsert ?? {
-            data: { id: "cust-new" },
-            error: null,
-          },
-        );
-      }
-      if (table === "booking_inquiries") {
-        return Promise.resolve(
-          state.config.inquiryInsert ?? {
-            data: { id: "inq-new" },
-            error: null,
-          },
-        );
-      }
-      return Promise.resolve({ data: null, error: null });
-    },
+  return {
     then: (resolve: (v: SupabaseResult<null>) => unknown) => {
       if (table === "booking_inquiry_activities") {
-        return resolve(state.config.activityInsert ?? { data: null, error: null });
+        return resolve(
+          state.config.activityInsert ?? { data: null, error: null },
+        );
       }
       return resolve({ data: null, error: null });
     },
   };
-
-  return chain;
 }
 
 const adminClient = {
@@ -114,6 +90,23 @@ const adminClient = {
       select: () => makeQueryChain(table),
       insert: (row: unknown) => makeInsertChain(table, row),
     };
+  },
+  rpc(name: string, args: unknown) {
+    state.rpcCalls.push({ name, args });
+    if (name === "create_inquiry_atomic") {
+      return Promise.resolve(
+        state.config.rpcResult ?? {
+          data: {
+            customerId: "cust-1",
+            reservationId: "inq-1",
+            inquiryId: "inq-1",
+            reused: false,
+          },
+          error: null,
+        },
+      );
+    }
+    return Promise.resolve({ data: null, error: { message: "unknown_rpc" } });
   },
 };
 
@@ -127,7 +120,11 @@ const VALID_SECRET = "test-inbound-secret";
 
 function buildRequest(
   body: unknown,
-  options?: { secret?: string | null; useAuthHeader?: boolean },
+  options?: {
+    secret?: string | null;
+    useAuthHeader?: boolean;
+    idempotencyKey?: string;
+  },
 ): Request {
   const headers = new Headers({ "content-type": "application/json" });
   const secretToSend =
@@ -138,6 +135,9 @@ function buildRequest(
     } else {
       headers.set("x-inbound-secret", secretToSend);
     }
+  }
+  if (options?.idempotencyKey) {
+    headers.set("idempotency-key", options.idempotencyKey);
   }
   return new Request("http://localhost/api/inbound/inquiries", {
     method: "POST",
@@ -171,10 +171,18 @@ describe("POST /api/inbound/inquiries", () => {
     state.config = {
       orgLookup: { data: { id: "org-1" }, error: null },
       orgCustomers: { data: [], error: null },
-      customerInsert: { data: { id: "cust-1" }, error: null },
-      inquiryInsert: { data: { id: "inq-1" }, error: null },
+      rpcResult: {
+        data: {
+          customerId: "cust-1",
+          reservationId: "inq-1",
+          inquiryId: "inq-1",
+          reused: false,
+        },
+        error: null,
+      },
     };
     state.inserts = {};
+    state.rpcCalls = [];
   });
 
   afterEach(() => {
@@ -223,35 +231,31 @@ describe("POST /api/inbound/inquiries", () => {
     expect(res.status).toBe(404);
   });
 
-  it("creates a new customer and inquiry, and notifies members", async () => {
+  it("creates via create_inquiry_atomic and notifies members", async () => {
     const res = await POST(buildRequest(VALID_PAYLOAD));
     expect(res.status).toBe(201);
     const json = await res.json();
-    expect(json).toEqual({ ok: true, inquiryId: "inq-1" });
+    expect(json).toEqual({ ok: true, inquiryId: "inq-1", reused: false });
 
-    const customerRow = state.inserts.customers?.[0] as Record<string, unknown>;
-    expect(customerRow).toMatchObject({
-      name: "Ola Nordmann",
-      phone: "+47 900 00 000",
-      email: "ola@domene.no",
+    expect(state.rpcCalls).toHaveLength(1);
+    const call = state.rpcCalls[0] as {
+      name: string;
+      args: { payload: Record<string, unknown> };
+    };
+    expect(call.name).toBe("create_inquiry_atomic");
+    expect(call.args.payload).toMatchObject({
       organization_id: "org-1",
-    });
-
-    const inquiryRow = state.inserts.booking_inquiries?.[0] as Record<
-      string,
-      unknown
-    >;
-    expect(inquiryRow).toMatchObject({
-      customer_id: "cust-1",
-      organization_id: "org-1",
-      status: "new",
+      customer_name: "Ola Nordmann",
+      customer_email: "ola@domene.no",
       event_type: "Privat",
       fest_type: "Bryllup",
-      preferred_event_date: "2027-06-12",
       guest_count: 80,
+      status: "new",
     });
-    expect(inquiryRow.internal_notes).toContain("[Kilde:");
-    expect(inquiryRow.internal_notes).toContain("Kort om behov");
+    expect(call.args.payload.client_request_id).toMatch(
+      /^[0-9a-f-]{36}$/i,
+    );
+    expect(String(call.args.payload.internal_notes)).toContain("[Kilde:");
 
     expect(notifyInquiryCreatedMock).toHaveBeenCalledWith({
       organizationId: "org-1",
@@ -259,7 +263,7 @@ describe("POST /api/inbound/inquiries", () => {
     });
   });
 
-  it("reuses an existing customer matched by normalized email", async () => {
+  it("passes existing customer_id when email matches", async () => {
     state.config.orgCustomers = {
       data: [
         {
@@ -273,15 +277,52 @@ describe("POST /api/inbound/inquiries", () => {
     };
     const res = await POST(buildRequest(VALID_PAYLOAD));
     expect(res.status).toBe(201);
-    expect(state.inserts.customers).toBeUndefined();
-    const inquiryRow = state.inserts.booking_inquiries?.[0] as Record<
-      string,
-      unknown
-    >;
-    expect(inquiryRow.customer_id).toBe("cust-existing");
+    const call = state.rpcCalls[0] as {
+      args: { payload: Record<string, unknown> };
+    };
+    expect(call.args.payload.customer_id).toBe("cust-existing");
   });
 
-  it("does not attach to a different person who only shares a venue phone", () => {
+  it("honors Idempotency-Key and skips notify on reused create", async () => {
+    const key = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+    state.config.rpcResult = {
+      data: {
+        customerId: "cust-1",
+        reservationId: "inq-1",
+        reused: true,
+      },
+      error: null,
+    };
+    const res = await POST(
+      buildRequest(VALID_PAYLOAD, { idempotencyKey: key }),
+    );
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.reused).toBe(true);
+    const call = state.rpcCalls[0] as {
+      args: { payload: Record<string, unknown> };
+    };
+    expect(call.args.payload.client_request_id).toBe(key);
+    expect(notifyInquiryCreatedMock).not.toHaveBeenCalled();
+    expect(state.inserts.booking_inquiry_activities).toBeUndefined();
+  });
+
+  it("does not attach on shared phone alone (name must match)", () => {
+    const hit = findExistingInboundCustomer(
+      [
+        {
+          id: "angelica",
+          name: "Angelica Solbakken",
+          email: "a@x.com",
+          phone: "+4796665001",
+        },
+      ],
+      { name: "Faisal", phone: "+47 966 65 001", email: null },
+    );
+    expect(hit).toBeNull();
+  });
+
+  it("attaches when phone and name both match", () => {
     const hit = findExistingInboundCustomer(
       [
         {

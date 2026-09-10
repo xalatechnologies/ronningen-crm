@@ -26,13 +26,14 @@ import { RN_CARD_SHELL, RN_PAGE_SEARCH_ACTIONS } from "@/lib/rn-ui";
 import { APP_DATA_AMOUNT, APP_DATA_BODY, APP_DATA_PRIMARY } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import { deleteCustomerWithClient } from "@/lib/customers/delete-customer";
+import { createCustomerAtomic } from "@/lib/reservations/atomic-create";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -148,41 +149,51 @@ export function CustomersSection({
     ) as Resolver<CustomerUpsertFormInput>,
     defaultValues: { name: "", phone: "", email: "" },
   });
+  const submitInFlightRef = useRef(false);
+  const {
+    formState: { isSubmitting: addIsSubmitting },
+  } = addForm;
 
   async function onAddCustomer(data: CustomerUpsertFormInput) {
+    if (submitInFlightRef.current || addIsSubmitting) return;
+    submitInFlightRef.current = true;
+
     let orgId: string;
     try {
       orgId = requireOrganizationId(currentOrganizationId);
     } catch (err) {
+      submitInFlightRef.current = false;
       toast.error(
         err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
       );
       return;
     }
 
-    const { data: row, error } = await supabase
-      .from("customers")
-      .insert({
-        name: data.name.trim(),
-        phone: data.phone.trim() || null,
-        email: data.email.trim() || null,
+    try {
+      const result = await createCustomerAtomic(supabase, {
         organization_id: orgId,
-      })
-      .select("id")
-      .single();
-
-    if (error || !row) {
-      toast.error(t("customers.toasts.customerCreateFailed"), {
-        description: error?.message ?? t("customers.toasts.unknownError"),
+        customer_name: data.name.trim(),
+        customer_phone: data.phone.trim() || null,
+        customer_email: data.email.trim() || null,
+        customer_address: null,
       });
-      return;
-    }
 
-    toast.success(t("customers.toasts.customerCreated"));
-    addForm.reset();
-    setAddOpen(false);
-    setSelectedId(row.id);
-    invalidateCustomers();
+      toast.success(t("customers.toasts.customerCreated"));
+      addForm.reset();
+      setAddOpen(false);
+      setSelectedId(result.customerId);
+      invalidateCustomers();
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : t("customers.toasts.unknownError");
+      toast.error(t("customers.toasts.customerCreateFailed"), {
+        description: message,
+      });
+    } finally {
+      submitInFlightRef.current = false;
+    }
   }
 
   async function performCustomerDelete(id: string) {
@@ -605,7 +616,12 @@ export function CustomersSection({
               >
                 {t("common.actions.cancel")}
               </Button>
-              <Button type="submit" variant="success" size="cta">
+              <Button
+                type="submit"
+                variant="success"
+                size="cta"
+                disabled={addIsSubmitting}
+              >
                 {t("common.actions.create")}
               </Button>
             </DialogFooter>

@@ -1,4 +1,11 @@
-/** Shared customer identity normalization for lookup / merge. */
+/**
+ * Shared customer identity normalization for lookup / merge.
+ *
+ * Lookup keys:
+ * - Primary: normalized email (org-scoped unique when present).
+ * - Secondary (inbound attach only): phone + name must both match.
+ * - Never: name alone, or phone alone (venue shared phones caused production damage).
+ */
 
 export function normalizeCustomerEmail(email: string | null | undefined): string | null {
   const t = (email ?? "").trim().toLowerCase();
@@ -18,4 +25,16 @@ export function normalizeCustomerPhone(phone: string | null | undefined): string
     digits = digits.slice(2);
   }
   return digits.length > 0 ? digits : null;
+}
+
+/** Stable UUID for idempotent reservation creates (one per form attempt). */
+export function generateClientRequestId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
