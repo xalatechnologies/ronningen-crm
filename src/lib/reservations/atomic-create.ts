@@ -7,6 +7,8 @@ export type AtomicCreateResult = {
   customerId: string;
   reservationId: string;
   reused: boolean;
+  /** Present when create requested an inquiry link; false means convert did not land. */
+  inquiryConverted?: boolean | null;
 };
 
 export type AtomicCustomerCreateResult = {
@@ -33,7 +35,14 @@ function parseAtomicResult(
   if (!customerId || !reservationId) {
     throw new Error(`${entityType}_atomic_invalid_response`);
   }
-  return { customerId, reservationId, reused };
+  const inquiryConvertedRaw = row?.inquiryConverted;
+  const inquiryConverted =
+    inquiryConvertedRaw === undefined
+      ? undefined
+      : inquiryConvertedRaw === null
+        ? null
+        : Boolean(inquiryConvertedRaw);
+  return { customerId, reservationId, reused, inquiryConverted };
 }
 
 async function callAtomicRpc(

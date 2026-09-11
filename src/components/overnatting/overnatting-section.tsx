@@ -261,6 +261,8 @@ export function OvernattingSection({
       totalPrice: undefined,
     },
   });
+  const editResInFlightRef = useRef(false);
+  const editResSubmitting = editResForm.formState.isSubmitting;
 
   const fetchReservations = useCallback(async () => {
     if (!supabase) return;
@@ -445,31 +447,39 @@ export function OvernattingSection({
 
   async function onSaveEditRes(data: AccommodationReservationEditInput) {
     if (!supabase || !canManage || !editingRes) return;
-    const { error } = await supabase
-      .from("accommodation_reservations")
-      .update({
-        unit_id: data.unitId,
-        check_in_date: data.checkInDate,
-        check_out_date: data.checkOutDate,
-        check_in_time: data.checkInTime === "" ? null : data.checkInTime,
-        check_out_time: data.checkOutTime === "" ? null : data.checkOutTime,
-        guest_count: data.guestCount,
-        status: data.status,
-        notes: data.notes?.trim() || null,
-        total_price:
-          data.totalPrice === undefined || Number.isNaN(data.totalPrice)
-            ? null
-            : data.totalPrice,
-      })
-      .eq("id", editingRes.id);
-    if (error) {
-      toast.error(t("overnatting.saveFailed"), { description: error.message });
+    if (editResInFlightRef.current || editResForm.formState.isSubmitting) {
       return;
     }
-    toast.success(t("overnatting.reservationUpdated"));
-    setEditResOpen(false);
-    void fetchReservations();
-    invalidateOvernatting();
+    editResInFlightRef.current = true;
+    try {
+      const { error } = await supabase
+        .from("accommodation_reservations")
+        .update({
+          unit_id: data.unitId,
+          check_in_date: data.checkInDate,
+          check_out_date: data.checkOutDate,
+          check_in_time: data.checkInTime === "" ? null : data.checkInTime,
+          check_out_time: data.checkOutTime === "" ? null : data.checkOutTime,
+          guest_count: data.guestCount,
+          status: data.status,
+          notes: data.notes?.trim() || null,
+          total_price:
+            data.totalPrice === undefined || Number.isNaN(data.totalPrice)
+              ? null
+              : data.totalPrice,
+        })
+        .eq("id", editingRes.id);
+      if (error) {
+        toast.error(t("overnatting.saveFailed"), { description: error.message });
+        return;
+      }
+      toast.success(t("overnatting.reservationUpdated"));
+      setEditResOpen(false);
+      void fetchReservations();
+      invalidateOvernatting();
+    } finally {
+      editResInFlightRef.current = false;
+    }
   }
 
   async function confirmDeleteReservation() {
@@ -1516,6 +1526,7 @@ export function OvernattingSection({
                     type="submit"
                     variant="success"
                     className="w-full sm:w-auto"
+                    disabled={editResSubmitting}
                   >
                     {t("common.actions.save")}
                   </Button>

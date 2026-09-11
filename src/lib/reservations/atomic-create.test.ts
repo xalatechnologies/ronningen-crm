@@ -63,8 +63,27 @@ describe("createBookingAtomic", () => {
       }),
     ).rejects.toMatchObject({ message: "customer_org_mismatch" });
   });
-});
 
+  it("surfaces inquiryConverted false from rpc payload", async () => {
+    const supabase = mockSupabaseRpc(async () => ({
+      data: {
+        customerId: "cust-1",
+        reservationId: "book-1",
+        bookingId: "book-1",
+        reused: false,
+        inquiryConverted: false,
+      },
+      error: null,
+    }));
+
+    const result = await createBookingAtomic(supabase, {
+      organization_id: "org-1",
+      client_request_id: "77777777-7777-4777-8777-777777777777",
+      inquiry_id: "inq-already-converted",
+    });
+    expect(result.inquiryConverted).toBe(false);
+  });
+});
 describe("createInquiryAtomic", () => {
   it("treats concurrent same client_request_id as one logical create", async () => {
     let calls = 0;

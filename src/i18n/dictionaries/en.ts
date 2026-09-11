@@ -840,7 +840,7 @@ export const en = {
       updateFailed: "Could not update booking",
       changesSaved: "Changes saved",
       sharedCustomerRenameConfirm:
-        "This customer is linked to {bookings} booking(s) and {inquiries} inquiry(ies). Name/contact will update everywhere to “{name}”. Continue?",
+        "This customer is linked to {bookings} booking(s), {inquiries} inquiry(ies), and {accommodation} accommodation reservation(s). Name/contact will update everywhere to “{name}”. Continue?",
       registerCollectionFailed: "Could not record collection notice",
       collectionRegisteredToast: "Collection notice recorded",
       removeMarkingFailed: "Could not remove marking",

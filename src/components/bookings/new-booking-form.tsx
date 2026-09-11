@@ -556,6 +556,13 @@ export function NewBookingForm({
         description: result.reservationId,
       });
 
+      if (
+        inquiryPrefill?.inquiryId &&
+        result.inquiryConverted === false
+      ) {
+        toast.message(t("bookings.createdInquiryNotLinked"));
+      }
+
       invalidateBookings();
       if (inquiryPrefill?.inquiryId) {
         invalidateInquiries();

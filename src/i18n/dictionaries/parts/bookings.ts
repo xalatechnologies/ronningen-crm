@@ -145,7 +145,7 @@ export const bookingsNb = {
     updateFailed: "Kunne ikke oppdatere booking",
     changesSaved: "Endringer lagret",
     sharedCustomerRenameConfirm:
-      "Denne kunden er koblet til {bookings} booking(er) og {inquiries} forespørsel(er). Navn/kontakt oppdateres overalt til «{name}». Fortsette?",
+      "Denne kunden er koblet til {bookings} booking(er), {inquiries} forespørsel(er) og {accommodation} overnatting(er). Navn/kontakt oppdateres overalt til «{name}». Fortsette?",
     registerCollectionFailed: "Kunne ikke registrere innkassovarsel",
     collectionRegisteredToast: "Innkassovarsel registrert",
     removeMarkingFailed: "Kunne ikke fjerne markering",

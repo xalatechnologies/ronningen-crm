@@ -37,6 +37,10 @@ import {
   type BookingDetailEditInput,
 } from "@/lib/validations";
 import {
+  bookingCustomerFieldsChanged,
+  sharedCustomerLinkTotal,
+} from "@/lib/bookings/booking-customer-edit";
+import {
   BOOKING_PAYMENT_STATUS_VALUES,
   bookingPaymentStatusLabel,
   previewBookingRemainingAfterSave,
@@ -211,37 +215,52 @@ export function BookingDetailSheet({
     if (!currentOrganizationId) return;
     setDetailSaving(true);
     try {
-      const nameChanged =
-        data.customerName.trim() !== bookingRow.customer.trim();
-      const phoneChanged =
-        (data.phone.trim() || null) !== (bookingRow.customerPhone ?? null);
-      const emailChanged =
-        (data.email.trim() || null) !== (bookingRow.customerEmail ?? null);
-      const customerFieldsChanged = nameChanged || phoneChanged || emailChanged;
+      const customerFieldsChanged = bookingCustomerFieldsChanged(data, {
+        name: bookingRow.customer,
+        phone: bookingRow.customerPhone,
+        email: bookingRow.customerEmail,
+        address: bookingRow.customerAddress,
+      });
 
       if (customerFieldsChanged) {
-        const [{ count: bookingCount }, { count: inquiryCount }] =
-          await Promise.all([
-            supabase
-              .from("bookings")
-              .select("id", { count: "exact", head: true })
-              .eq("customer_id", bookingRow.customerId)
-              .eq("organization_id", currentOrganizationId),
-            supabase
-              .from("booking_inquiries")
-              .select("id", { count: "exact", head: true })
-              .eq("customer_id", bookingRow.customerId)
-              .eq("organization_id", currentOrganizationId),
-          ]);
+        const [
+          { count: bookingCount },
+          { count: inquiryCount },
+          { count: accommodationCount },
+        ] = await Promise.all([
+          supabase
+            .from("bookings")
+            .select("id", { count: "exact", head: true })
+            .eq("customer_id", bookingRow.customerId)
+            .eq("organization_id", currentOrganizationId),
+          supabase
+            .from("booking_inquiries")
+            .select("id", { count: "exact", head: true })
+            .eq("customer_id", bookingRow.customerId)
+            .eq("organization_id", currentOrganizationId),
+          supabase
+            .from("accommodation_reservations")
+            .select("id", { count: "exact", head: true })
+            .eq("customer_id", bookingRow.customerId)
+            .eq("organization_id", currentOrganizationId),
+        ]);
 
         const linkedBookings = bookingCount ?? 0;
         const linkedInquiries = inquiryCount ?? 0;
-        if (linkedBookings + linkedInquiries > 1) {
+        const linkedAccommodation = accommodationCount ?? 0;
+        if (
+          sharedCustomerLinkTotal({
+            bookings: linkedBookings,
+            inquiries: linkedInquiries,
+            accommodation: linkedAccommodation,
+          }) > 1
+        ) {
           const ok = window.confirm(
             t("bookings.detail.sharedCustomerRenameConfirm", {
               name: data.customerName.trim(),
               bookings: linkedBookings,
               inquiries: linkedInquiries,
+              accommodation: linkedAccommodation,
             }),
           );
           if (!ok) return;
