@@ -50,6 +50,7 @@ export function BookingContractPanel(props: {
   }, [load]);
 
   const current = versions[0];
+  const accepted = versions.find((row) => row.status === "accepted");
   const statusLabel = current
     ? t(`contracts.status.${current.status}`)
     : t("contracts.noContract");
@@ -87,17 +88,17 @@ export function BookingContractPanel(props: {
           <p className="text-sm text-muted-foreground">{statusLabel}</p>
         </div>
         {current ? (
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Link
               href={`/app/bookings/${props.bookingId}/contract`}
               className={buttonVariants()}
             >
               {t("contracts.openReview")}
             </Link>
-            {current.status === "accepted" ? (
+            {accepted ? (
               <a
                 className={buttonVariants({ variant: "outline" })}
-                href={`/api/contracts/staff-pdf?bookingId=${props.bookingId}&versionId=${current.id}`}
+                href={`/api/contracts/staff-pdf?bookingId=${props.bookingId}&versionId=${accepted.id}`}
               >
                 {t("contracts.downloadPdf")}
               </a>

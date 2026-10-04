@@ -725,7 +725,8 @@ export const en = {
     tableCustomerEvent: "Customer & event",
     tableGuests: "Guests",
     tableFinance: "Finance",
-    tableStatusDetails: "Status · details",
+    tableStatus: "Status",
+    tableContract: "Contract",
     emptyTitle: "No bookings yet",
     emptyFilteredTitle: "No matches in the list",
     emptyDescription:

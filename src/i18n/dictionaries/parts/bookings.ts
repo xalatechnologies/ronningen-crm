@@ -22,7 +22,8 @@ export const bookingsNb = {
   tableCustomerEvent: "Kunde & arrangement",
   tableGuests: "Gjester",
   tableFinance: "Økonomi",
-  tableStatusDetails: "Status · detaljer",
+  tableStatus: "Status",
+  tableContract: "Avtale",
   emptyTitle: "Ingen bookinger ennå",
   emptyFilteredTitle: "Ingen treff i listen",
   emptyDescription:

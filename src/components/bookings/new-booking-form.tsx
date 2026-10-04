@@ -697,6 +697,332 @@ export function NewBookingForm({
         </div>
         <div className="border-b-2 border-rn-border-strong/40 bg-card p-6 md:p-8">
           <div className="mb-6 flex items-center gap-2">
+            <User className={cn("size-5", sectionIconWrap)} aria-hidden />
+            <h3 className="app-card-title md:text-app-xl">
+              {t("bookings.form.customerInfo")}
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
+            <div className="space-y-2">
+              <Label className={labelClass}>
+                {t("common.fields.name")}
+                <RequiredMark />
+              </Label>
+              <Input
+                className={cn(
+                  fieldClass,
+                  existingCustomer && "bg-muted/50",
+                )}
+                placeholder={t("bookings.form.namePlaceholder")}
+                readOnly={!!existingCustomer}
+                {...register("customerName")}
+                aria-invalid={!!errors.customerName}
+              />
+              {errors.customerName ? (
+                <p className="text-app-xs text-destructive">
+                  {errors.customerName.message}
+                </p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label className={labelClass}>
+                {t("common.fields.phone")}
+                <RequiredMark />
+              </Label>
+              <Input
+                className={cn(
+                  fieldClass,
+                  existingCustomer && existingCustomer.phone?.trim() && "bg-muted/50",
+                )}
+                type="tel"
+                placeholder={t("bookings.form.phonePlaceholder")}
+                readOnly={!!existingCustomer && !!existingCustomer.phone?.trim()}
+                {...register("phone")}
+                aria-invalid={!!errors.phone}
+              />
+              {errors.phone ? (
+                <p className="text-app-xs text-destructive">{errors.phone.message}</p>
+              ) : null}
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label className={labelClass}>
+                {t("common.fields.email")}
+              </Label>
+              <Input
+                className={cn(
+                  fieldClass,
+                  existingEmailLocked && "bg-muted/50",
+                )}
+                type="email"
+                placeholder={t("bookings.form.emailPlaceholder")}
+                readOnly={existingEmailLocked}
+                {...register("email")}
+                aria-invalid={!!errors.email}
+              />
+              {errors.email ? (
+                <p className="text-app-xs text-destructive">{errors.email.message}</p>
+              ) : null}
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label className={labelClass}>
+                {t("common.fields.address")}
+              </Label>
+              <AddressField
+                name="address"
+                register={register}
+                setValue={setValue}
+                className={cn(
+                  fieldClass,
+                  existingCustomer &&
+                    existingCustomer.address?.trim() &&
+                    "bg-muted/50",
+                )}
+                placeholder={t("common.address.placeholder")}
+                format="multiline"
+                variant="textarea"
+                readOnly={
+                  !!existingCustomer && !!existingCustomer.address?.trim()
+                }
+                aria-invalid={!!errors.address}
+              />
+              {errors.address ? (
+                <p className="text-app-xs text-destructive">{errors.address.message}</p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="border-b-2 border-rn-border-strong/40 bg-card p-6 md:p-8">
+          <div className="mb-6 flex items-center gap-2">
+            <Calendar className={cn("size-5", sectionIconWrap)} aria-hidden />
+            <h3 className="app-card-title md:text-app-xl">
+              {t("bookings.detail.event")}
+            </h3>
+          </div>
+          <div className="flex flex-col gap-5 md:gap-6">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
+              <div className="space-y-2">
+                <Label className={labelClass}>
+                  {t("common.fields.type")}
+                  <RequiredMark />
+                </Label>
+                <FormSelectField
+                  name="festType"
+                  control={control}
+                  placeholder={t("common.selectPlaceholder")}
+                  className={cn(errors.festType && "border-destructive")}
+                  options={[
+                    ...toStringOptions(NEW_BOOKING_FEST_TYPE_PRESETS),
+                    {
+                      value: NEW_BOOKING_FEST_TYPE_ANNET,
+                      label: t("bookings.form.festTypeOther"),
+                    },
+                  ]}
+                />
+                {festType === NEW_BOOKING_FEST_TYPE_ANNET ? (
+                  <div className="space-y-2 pt-1">
+                    <Label className={labelClass}>
+                      {t("bookings.form.describeType")}
+                      <RequiredMark />
+                    </Label>
+                    <Input
+                      className={cn(
+                        fieldClass,
+                        errors.festTypeCustom && "border-destructive",
+                      )}
+                      placeholder={t("bookings.form.festTypeCustomPlaceholder")}
+                      {...register("festTypeCustom")}
+                    />
+                    {errors.festTypeCustom ? (
+                      <p className="text-app-xs text-destructive">
+                        {errors.festTypeCustom.message}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+                {errors.festType ? (
+                  <p className="text-app-xs text-destructive">
+                    {errors.festType.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <Label className={labelClass}>
+                  {t("bookings.form.corporateOrPrivate")}
+                  <RequiredMark />
+                </Label>
+                <FormSelectField
+                  name="eventType"
+                  control={control}
+                  placeholder={t("common.selectPlaceholder")}
+                  className={cn(errors.eventType && "border-destructive")}
+                  options={[
+                    { value: "Bedrift", label: t("bookings.corporate") },
+                    { value: "Privat", label: t("bookings.private") },
+                  ]}
+                />
+                {errors.eventType ? (
+                  <p className="text-app-xs text-destructive">
+                    {errors.eventType.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label className={labelClass}>
+                  {t("contracts.venue")}
+                  <RequiredMark />
+                </Label>
+                <PropertySelectField
+                  name="propertyId"
+                  control={control}
+                  properties={properties}
+                  id="new-booking-property"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
+              <div className="space-y-2 md:col-span-2">
+                <p className="text-app-xs leading-relaxed text-muted-foreground md:text-app-sm">
+                  {t("bookings.form.periodHint", {
+                    label: t("bookings.form.periodLabel"),
+                    example: "01.07.2027 17:00 – 04.07.2027 17:00",
+                  })}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-booking-event-date" className={labelClass}>
+                  {t("bookings.dateFrom")}
+                  <RequiredMark />
+                </Label>
+                <Controller
+                  name="eventDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePickerField
+                      id="new-booking-event-date"
+                      value={field.value}
+                      onChange={(v) => {
+                        field.onChange(v);
+                        void field.onBlur();
+                      }}
+                      minYmd={todayLocalYmd()}
+                      variant="toolbar"
+                      className={cn(
+                        "bg-background px-3.5 shadow-sm md:h-12 md:px-4 md:text-app-base",
+                        errors.eventDate && "border-destructive",
+                      )}
+                      aria-invalid={!!errors.eventDate}
+                    />
+                  )}
+                />
+                {errors.eventDate ? (
+                  <p className="text-app-xs text-destructive">
+                    {errors.eventDate.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-booking-event-end-date" className={labelClass}>
+                  {t("bookings.detail.toDateOptional")}{" "}
+                  <span className="font-normal normal-case text-muted-foreground">
+                    ({t("common.optional")})
+                  </span>
+                </Label>
+                <Controller
+                  name="eventEndDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePickerField
+                      id="new-booking-event-end-date"
+                      value={field.value}
+                      onChange={(v) => {
+                        field.onChange(v);
+                        void field.onBlur();
+                      }}
+                      minYmd={todayLocalYmd()}
+                      variant="toolbar"
+                      className={cn(
+                        "bg-background px-3.5 shadow-sm md:h-12 md:px-4 md:text-app-base",
+                        errors.eventEndDate && "border-destructive",
+                      )}
+                      aria-invalid={!!errors.eventEndDate}
+                    />
+                  )}
+                />
+                {errors.eventEndDate ? (
+                  <p className="text-app-xs text-destructive">
+                    {errors.eventEndDate.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-booking-start-time" className={labelClass}>
+                  {t("common.fromTime")}{" "}
+                  <span className="font-normal normal-case text-muted-foreground">
+                    ({t("common.optional")})
+                  </span>
+                </Label>
+                <TimePickerField
+                  id="new-booking-start-time"
+                  className={cn(
+                    fieldClass,
+                    errors.eventStartTime && "border-destructive",
+                  )}
+                  {...register("eventStartTime")}
+                  aria-invalid={!!errors.eventStartTime}
+                />
+                {errors.eventStartTime ? (
+                  <p className="text-app-xs text-destructive">
+                    {errors.eventStartTime.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-booking-end-time" className={labelClass}>
+                  {t("common.toTime")}{" "}
+                  <span className="font-normal normal-case text-muted-foreground">
+                    ({t("common.optional")})
+                  </span>
+                </Label>
+                <TimePickerField
+                  id="new-booking-end-time"
+                  className={cn(
+                    fieldClass,
+                    errors.eventEndTime && "border-destructive",
+                  )}
+                  {...register("eventEndTime")}
+                  aria-invalid={!!errors.eventEndTime}
+                />
+                {errors.eventEndTime ? (
+                  <p className="text-app-xs text-destructive">
+                    {errors.eventEndTime.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label className={labelClass}>
+                  {t("common.guests")}
+                  <RequiredMark />
+                </Label>
+                <Input
+                  className={fieldClass}
+                  type="number"
+                  min={1}
+                  {...register("guestCount")}
+                  aria-invalid={!!errors.guestCount}
+                />
+                {errors.guestCount ? (
+                  <p className="text-app-xs text-destructive">
+                    {errors.guestCount.message}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-b-2 border-rn-border-strong/40 bg-card p-6 md:p-8">
+          <div className="mb-6 flex items-center gap-2">
             <Package className={cn("size-5", sectionIconWrap)} aria-hidden />
             <h3 className="app-card-title md:text-app-xl">
               {t("bookings.form.packageAndAddons")}

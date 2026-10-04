@@ -37,6 +37,7 @@ function row(
     collectionNoticeSentAt: null,
     paymentStatus: "unpaid",
     propertyId: null,
+    contract: null,
     ...overrides,
   };
 }

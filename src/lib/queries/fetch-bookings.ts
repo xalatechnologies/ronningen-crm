@@ -1,4 +1,5 @@
 import type {
+  BookingListContract,
   BookingListRow,
   BookingStatus,
 } from "@/components/bookings/types";
@@ -6,6 +7,8 @@ import { effectiveBookingPaymentStatus } from "@/constants/booking-payment-statu
 import { normalizeBookingAudience } from "@/lib/booking-audience";
 import { formatBookingListDateLabel } from "@/lib/booking-period";
 import { sortBookingsByUpcomingFirst } from "@/lib/bookings/list-sort";
+import type { ContractStatus } from "@/lib/contracts/types";
+import { CONTRACT_STATUSES } from "@/lib/contracts/types";
 import type { TenantSupabaseClient } from "@/lib/queries/types";
 import { canManageBookings } from "@/lib/role-access";
 import type { UserRole } from "@/constants/roles";
@@ -95,6 +98,66 @@ function paidLabelAndFraction(
   return { paidFraction: frac, paidLabel: label };
 }
 
+function isContractStatus(value: string): value is ContractStatus {
+  return (CONTRACT_STATUSES as readonly string[]).includes(value);
+}
+
+export function summarizeBookingContract(
+  versions: { id: string; status: string; version_number: number }[],
+): BookingListContract | null {
+  if (!versions.length) return null;
+  const ordered = [...versions].sort((a, b) => b.version_number - a.version_number);
+  const accepted = ordered.find((row) => row.status === "accepted");
+  const current = accepted ?? ordered[0];
+  if (!current || !isContractStatus(current.status)) return null;
+  return { versionId: current.id, status: current.status };
+}
+
+async function loadContractsByBookingId(
+  supabase: TenantSupabaseClient,
+  orgId: string,
+  bookingIds: string[],
+): Promise<Map<string, BookingListContract>> {
+  const byBooking = new Map<string, BookingListContract>();
+  if (!bookingIds.length) return byBooking;
+
+  const { data: contracts, error: contractError } = await supabase
+    .from("rental_contracts" as never)
+    .select("id, booking_id")
+    .eq("organization_id", orgId)
+    .in("booking_id", bookingIds);
+  if (contractError || !contracts?.length) return byBooking;
+
+  const rows = contracts as { id: string; booking_id: string }[];
+  const contractIds = rows.map((row) => row.id);
+  const bookingByContract = new Map(rows.map((row) => [row.id, row.booking_id]));
+
+  const { data: versions, error: versionError } = await supabase
+    .from("rental_contract_versions" as never)
+    .select("id, contract_id, status, version_number")
+    .in("contract_id", contractIds);
+  if (versionError || !versions?.length) return byBooking;
+
+  const grouped = new Map<string, { id: string; status: string; version_number: number }[]>();
+  for (const version of versions as {
+    id: string;
+    contract_id: string;
+    status: string;
+    version_number: number;
+  }[]) {
+    const list = grouped.get(version.contract_id) ?? [];
+    list.push(version);
+    grouped.set(version.contract_id, list);
+  }
+
+  for (const [contractId, list] of grouped) {
+    const bookingId = bookingByContract.get(contractId);
+    const summary = summarizeBookingContract(list);
+    if (bookingId && summary) byBooking.set(bookingId, summary);
+  }
+  return byBooking;
+}
+
 export async function fetchBookingsPageData(
   supabase: TenantSupabaseClient,
   orgId: string,
@@ -111,6 +174,11 @@ export async function fetchBookingsPageData(
     .order("event_date", { ascending: true });
 
   const loadError = error?.message ?? null;
+  const contractsByBooking = await loadContractsByBookingId(
+    supabase,
+    orgId,
+    (rawList ?? []).map((row) => (row as { id: string }).id),
+  );
 
   const bookings: BookingListRow[] = (rawList ?? []).map((row) => {
     const r = row as unknown as RawBooking;
@@ -168,6 +236,7 @@ export async function fetchBookingsPageData(
         remaining,
       ),
       propertyId: r.property_id,
+      contract: contractsByBooking.get(r.id) ?? null,
     };
   });
 

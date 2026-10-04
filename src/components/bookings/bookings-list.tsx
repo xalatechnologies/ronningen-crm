@@ -10,6 +10,7 @@ import {
   useBookingsMonthCalendarNavigation,
 } from "@/components/bookings/bookings-month-calendar";
 import { BookingDetailSheet } from "@/components/bookings/booking-detail-sheet";
+import { BookingListContractAction } from "@/components/bookings/booking-list-contract-action";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
@@ -675,7 +676,7 @@ export function BookingsList({
               </div>
               <div
                 className={cn(
-                  "col-span-12 hidden px-4 text-right sm:col-span-4 sm:block",
+                  "col-span-12 hidden px-3 text-right sm:col-span-2 sm:block",
                   bookingsTableHeadClass,
                   "py-0",
                 )}
@@ -689,7 +690,16 @@ export function BookingsList({
                   "py-0",
                 )}
               >
-                {t("bookings.tableStatusDetails")}
+                {t("bookings.tableStatus")}
+              </div>
+              <div
+                className={cn(
+                  "col-span-12 hidden text-right sm:col-span-2 sm:block",
+                  bookingsTableHeadClass,
+                  "py-0",
+                )}
+              >
+                {t("bookings.tableContract")}
               </div>
             </div>
 
@@ -709,12 +719,14 @@ export function BookingsList({
                 </div>
               ) : (
                 pageRows.map((row) => (
-                  <button
+                  <div
                     key={row.id}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     className={cn(
-                      "grid w-full grid-cols-12 items-center px-6 py-5 text-left font-inherit text-foreground transition-colors sm:px-8 sm:py-6 md:py-6",
-                      "cursor-pointer border-0 outline-none hover:bg-rn-surface-row-hover focus-visible:bg-rn-surface-row-hover focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
+                      "grid w-full cursor-pointer grid-cols-12 items-center px-6 py-5 font-inherit text-foreground transition-colors sm:px-8 sm:py-6 md:py-6",
+                      "hover:bg-rn-surface-row-hover",
+                      "outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-inset",
                       row.dimmed && "opacity-60",
                     )}
                     aria-label={t("bookings.openDetailsAria", {
@@ -727,6 +739,12 @@ export function BookingsList({
                         : "",
                     })}
                     onClick={() => setSelectedBookingId(row.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setSelectedBookingId(row.id);
+                      }
+                    }}
                   >
                     <div className="col-span-12 flex items-center gap-4 sm:col-span-4">
                       <div
@@ -781,7 +799,7 @@ export function BookingsList({
                         {t("bookings.guestsCount", { count: row.guests })}
                       </span>
                     </div>
-                    <div className="col-span-12 mt-3 text-left sm:col-span-4 sm:mt-0 sm:px-4 sm:text-right">
+                    <div className="col-span-12 mt-3 text-left sm:col-span-2 sm:mt-0 sm:px-3 sm:text-right">
                       <div className="inline-block text-left sm:text-right">
                         <div className="bookings-list-row-amount font-bold tabular-nums text-foreground">
                           {formatCurrency(row.totalNok)}
@@ -819,19 +837,19 @@ export function BookingsList({
                         )}
                       </div>
                     </div>
-                    <div className="col-span-12 mt-3 flex items-center justify-between gap-2 sm:col-span-2 sm:mt-0 sm:justify-end">
-                      <div className="flex min-w-0 flex-col items-start gap-2 sm:items-end">
-                        <BookingStatusBadge
-                          className="bookings-list-status-pill"
-                          status={row.status}
-                        />
-                      </div>
-                      <ChevronRight
-                        className="size-6 shrink-0 text-muted-foreground md:size-7"
-                        aria-hidden
+                    <div className="col-span-6 mt-3 flex items-center sm:col-span-2 sm:mt-0 sm:justify-end">
+                      <BookingStatusBadge
+                        className="bookings-list-status-pill"
+                        status={row.status}
                       />
                     </div>
-                  </button>
+                    <div className="col-span-6 mt-3 flex items-center justify-end sm:col-span-2 sm:mt-0">
+                      <BookingListContractAction
+                        bookingId={row.id}
+                        contract={row.contract}
+                      />
+                    </div>
+                  </div>
                 ))
               )}
             </div>

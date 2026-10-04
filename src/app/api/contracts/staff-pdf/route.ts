@@ -65,7 +65,7 @@ export async function GET(request: Request) {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="leieavtale.pdf"`,
+        "Content-Disposition": `attachment; filename="ronningen-leieavtale.pdf"`,
         "Cache-Control": "no-store",
       },
     });
