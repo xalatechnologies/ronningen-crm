@@ -25,6 +25,17 @@ import {
   Controller,
 } from "react-hook-form";
 
+function errorText(error: unknown): string | null {
+  if (!error || typeof error !== "object") return null;
+  const message = (error as { message?: unknown }).message;
+  return typeof message === "string" && message.length > 0 ? message : null;
+}
+
+type CustomAddonLineError = {
+  name?: { message?: string };
+  priceNok?: { message?: string };
+};
+
 function RequiredMark() {
   return (
     <span className="font-semibold text-destructive tabular-nums" aria-hidden>
@@ -63,13 +74,13 @@ export function BookingPackageAddonsFields<T extends BookingPackageAddonFormValu
   catalogLoading = false,
 }: Props<T>) {
   const { t, formatCurrency } = useTranslation();
-  const packageSource = useWatch({ control, name: "packageSource" as never }) as
+  const packageSource = useWatch({ control, name: "packageSource" as never }) as unknown as
     | "catalog"
     | "custom";
   const selectedPackageId = useWatch({
     control,
     name: "selectedPackageId" as never,
-  }) as string;
+  }) as unknown as string;
   const selectedAddonIds =
     (useWatch({ control, name: "selectedAddonIds" as never }) as string[] | undefined) ??
     [];
@@ -78,6 +89,9 @@ export function BookingPackageAddonsFields<T extends BookingPackageAddonFormValu
     name: "customAddonLines" as never,
   });
   const defaultPackageId = packages[0]?.id ?? "";
+  const customAddonLineErrors = errors.customAddonLines as
+    | CustomAddonLineError[]
+    | undefined;
 
   const noPackagesHintParts = useMemo(() => {
     const pricingMarker = "\x00PRICING\x00";
@@ -194,8 +208,8 @@ export function BookingPackageAddonsFields<T extends BookingPackageAddonFormValu
             {noPackagesHintParts.after}
           </p>
         )}
-              {errors.packageSource ? (
-          <p className="text-app-xs text-destructive">{errors.packageSource.message}</p>
+              {errorText(errors.packageSource) ? (
+          <p className="text-app-xs text-destructive">{errorText(errors.packageSource)}</p>
         ) : null}
         {packageSource === "catalog" && !catalogLoading && packages.length > 0 ? (
           <div className="flex flex-col gap-3">
@@ -275,9 +289,9 @@ export function BookingPackageAddonsFields<T extends BookingPackageAddonFormValu
                 {...register("customPackageName" as never)}
                 aria-invalid={!!errors.customPackageName}
               />
-              {errors.customPackageName ? (
+              {errorText(errors.customPackageName) ? (
                 <p className="text-app-xs text-destructive">
-                  {errors.customPackageName.message}
+                  {errorText(errors.customPackageName)}
                 </p>
               ) : null}
             </div>
@@ -303,16 +317,16 @@ export function BookingPackageAddonsFields<T extends BookingPackageAddonFormValu
               <p className="text-app-xs text-muted-foreground">
                 {t("bookings.form.packagePriceHint")}
               </p>
-              {errors.customPackagePrice ? (
+              {errorText(errors.customPackagePrice) ? (
                 <p className="text-app-xs text-destructive">
-                  {errors.customPackagePrice.message}
+                  {errorText(errors.customPackagePrice)}
                 </p>
               ) : null}
             </div>
           </div>
         ) : null}
-        {errors.selectedPackageId ? (
-          <p className="text-app-xs text-destructive">{errors.selectedPackageId.message}</p>
+        {errorText(errors.selectedPackageId) ? (
+          <p className="text-app-xs text-destructive">{errorText(errors.selectedPackageId)}</p>
         ) : null}
       </div>
       <div className="space-y-4">
@@ -370,7 +384,7 @@ export function BookingPackageAddonsFields<T extends BookingPackageAddonFormValu
           </div>
         )}
         {errors.selectedAddonIds ? (
-          <p className="text-app-xs text-destructive">{errors.selectedAddonIds.message}</p>
+          <p className="text-app-xs text-destructive">{errorText(errors.selectedAddonIds)}</p>
         ) : null}
         <div className="space-y-3 border-t border-rn-border-strong pt-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -409,15 +423,15 @@ export function BookingPackageAddonsFields<T extends BookingPackageAddonFormValu
                       id={`${idPrefix}-custom-addon-name-${field.id}`}
                       className={cn(
                         fieldClass,
-                        errors.customAddonLines?.[index]?.name && "border-destructive",
+                        customAddonLineErrors?.[index]?.name && "border-destructive",
                       )}
                       placeholder={t("bookings.extraServingPlaceholder")}
                       {...register(`customAddonLines.${index}.name` as never)}
-                      aria-invalid={!!errors.customAddonLines?.[index]?.name}
+                      aria-invalid={!!customAddonLineErrors?.[index]?.name}
                     />
-                    {errors.customAddonLines?.[index]?.name ? (
+                    {customAddonLineErrors?.[index]?.name?.message ? (
                       <p className="text-app-xs text-destructive">
-                        {errors.customAddonLines[index]?.name?.message}
+                        {customAddonLineErrors[index]?.name?.message}
                       </p>
                     ) : null}
                   </div>
@@ -433,16 +447,16 @@ export function BookingPackageAddonsFields<T extends BookingPackageAddonFormValu
                       step={50}
                       className={cn(
                         fieldClass,
-                        errors.customAddonLines?.[index]?.priceNok && "border-destructive",
+                        customAddonLineErrors?.[index]?.priceNok && "border-destructive",
                       )}
                       {...register(`customAddonLines.${index}.priceNok` as never, {
                         valueAsNumber: true,
                       })}
-                      aria-invalid={!!errors.customAddonLines?.[index]?.priceNok}
+                      aria-invalid={!!customAddonLineErrors?.[index]?.priceNok}
                     />
-                    {errors.customAddonLines?.[index]?.priceNok ? (
+                    {customAddonLineErrors?.[index]?.priceNok?.message ? (
                       <p className="text-app-xs text-destructive">
-                        {errors.customAddonLines[index]?.priceNok?.message}
+                        {customAddonLineErrors[index]?.priceNok?.message}
                       </p>
                     ) : null}
                   </div>

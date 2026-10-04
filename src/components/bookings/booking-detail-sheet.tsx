@@ -73,7 +73,7 @@ import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Save, Trash2, X, XCircle } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useForm, useWatch, Controller, type Resolver } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { toast } from "sonner";
 
 const fieldClass =
@@ -175,10 +175,12 @@ export function BookingDetailSheet({
   formSchemaRef.current = formSchema;
 
   const form = useForm<BookingDetailEditInput>({
-    resolver: ((values, ctx, options) =>
-      zodResolver(formSchemaRef.current)(values, ctx, options)) as Resolver<
-      BookingDetailEditInput
-    >,
+    resolver: ((values: BookingDetailEditInput, ctx: unknown, options: unknown) =>
+      zodResolver(formSchemaRef.current)(
+        values,
+        ctx as never,
+        options as never,
+      )) as never,
     defaultValues: {
       customerName: "",
       phone: "",

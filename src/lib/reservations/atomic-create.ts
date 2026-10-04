@@ -101,12 +101,15 @@ export async function replaceBookingCommercialChildren(
     installments: unknown[];
   },
 ) {
-  const { error } = await supabase.rpc("replace_booking_commercial_children" as never, {
-    p_org: args.organizationId,
-    p_booking: args.bookingId,
-    p_line_items: args.lineItems as Json,
-    p_installments: args.installments as Json,
-  });
+  const { error } = await supabase.rpc(
+    "replace_booking_commercial_children" as never,
+    {
+      p_org: args.organizationId,
+      p_booking: args.bookingId,
+      p_line_items: args.lineItems as Json,
+      p_installments: args.installments as Json,
+    } as never,
+  );
   if (!error) return;
 
   const lineRows = (includeDescription: boolean) =>
