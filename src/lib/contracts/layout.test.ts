@@ -134,6 +134,17 @@ describe("package inclusions", () => {
     expect(filled.features).toContain("medbrakt drikke");
   });
 
+  it("turns custom package bullet description into inclusion bullets", () => {
+    const filled = packageInclusions(
+      "- Lokale med bord og stoler\n- Sluttrenhold",
+      "Helgepakke",
+    );
+    expect(filled.features).toEqual([
+      "Lokale med bord og stoler",
+      "Sluttrenhold",
+    ]);
+  });
+
   it("keeps selected catalog add-ons on the snapshot", () => {
     const extras = contractExtraLines(sampleDoc().booking.lineItems);
     expect(extras.map((item) => item.name)).toEqual(["Lydanlegg"]);

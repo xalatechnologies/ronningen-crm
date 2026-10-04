@@ -1,4 +1,7 @@
 import { frozenPackageDescription } from "@/lib/contracts/paper-copy";
+import { parsePackageDescription } from "@/lib/pricing/parse-package-description";
+
+export const CUSTOM_PACKAGE_FEATURES_MAX = 24;
 
 export type BookingPackageOption = {
   id: string;
@@ -20,6 +23,7 @@ export type StoredBookingLine = {
   quantity: number;
   unitAmountNok: number;
   catalogId: string | null;
+  description?: string | null;
 };
 
 export type BookingPackageAddonFormValues = {
@@ -27,6 +31,7 @@ export type BookingPackageAddonFormValues = {
   selectedPackageId: string;
   customPackageName: string;
   customPackagePrice: number;
+  customPackageFeatures: string[];
   selectedAddonIds: string[];
   customAddonLines: { name: string; priceNok: number }[];
 };
@@ -46,9 +51,70 @@ export const emptyPackageAddonFormValues: BookingPackageAddonFormValues = {
   selectedPackageId: "",
   customPackageName: "",
   customPackagePrice: 0,
+  customPackageFeatures: [],
   selectedAddonIds: [],
   customAddonLines: [],
 };
+
+export function packageFeatureLines(
+  description: string | null | undefined,
+): string[] {
+  const parsed = parsePackageDescription(description);
+  const lines: string[] = [];
+  if (parsed.tagline?.trim()) lines.push(parsed.tagline.trim());
+  for (const feature of parsed.features) {
+    const text = feature.trim();
+    if (text) lines.push(text);
+  }
+  return lines;
+}
+
+function featureKey(value: string): string {
+  return value.trim().toLocaleLowerCase("nb-NO");
+}
+
+export function uniqueCatalogPackageFeatures(
+  packages: readonly { description: string | null }[],
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const pkg of packages) {
+    for (const line of packageFeatureLines(pkg.description)) {
+      const key = featureKey(line);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push(line);
+    }
+  }
+  return out;
+}
+
+export function serializeCustomPackageFeatures(
+  features: readonly string[],
+): string | null {
+  const lines = features
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, CUSTOM_PACKAGE_FEATURES_MAX);
+  if (!lines.length) return null;
+  return lines.map((line) => `- ${line}`).join("\n");
+}
+
+function parseFeatureList(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const value of raw) {
+    const line = String(value ?? "").trim();
+    if (!line) continue;
+    const key = featureKey(line);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(line);
+    if (out.length >= CUSTOM_PACKAGE_FEATURES_MAX) break;
+  }
+  return out;
+}
 
 export function parseInquiryCommercial(
   raw: unknown,
@@ -78,6 +144,7 @@ export function parseInquiryCommercial(
       packageSource === "catalog" ? String(value.selectedPackageId ?? "") : "",
     customPackageName: String(value.customPackageName ?? ""),
     customPackagePrice: Number(value.customPackagePrice) || 0,
+    customPackageFeatures: parseFeatureList(value.customPackageFeatures),
     selectedAddonIds,
     customAddonLines,
   };
@@ -124,6 +191,7 @@ export function packageAddonFormFromLines(
       selectedPackageId: packageLine.catalogId,
       customPackageName: "",
       customPackagePrice: 0,
+      customPackageFeatures: [],
       selectedAddonIds,
       customAddonLines,
     };
@@ -135,6 +203,7 @@ export function packageAddonFormFromLines(
       selectedPackageId: "",
       customPackageName: packageLine.name,
       customPackagePrice: packageLine.unitAmountNok,
+      customPackageFeatures: packageFeatureLines(packageLine.description),
       selectedAddonIds,
       customAddonLines,
     };
@@ -146,6 +215,7 @@ export function packageAddonFormFromLines(
       selectedPackageId: packages[0]!.id,
       customPackageName: "",
       customPackagePrice: 0,
+      customPackageFeatures: [],
       selectedAddonIds,
       customAddonLines,
     };
@@ -156,6 +226,7 @@ export function packageAddonFormFromLines(
     selectedPackageId: "",
     customPackageName: "",
     customPackagePrice: 0,
+    customPackageFeatures: [],
     selectedAddonIds,
     customAddonLines,
   };
@@ -178,7 +249,7 @@ export function buildBookingLineItems(args: {
       kind: "package",
       catalog_id: null,
       name: args.form.customPackageName.trim() || args.defaultPackageName,
-      description: null,
+      description: serializeCustomPackageFeatures(args.form.customPackageFeatures),
       quantity: 1,
       unit_amount_nok: args.form.customPackagePrice,
       sort_order: 0,

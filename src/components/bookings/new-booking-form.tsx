@@ -216,6 +216,7 @@ export function NewBookingForm({
       selectedPackageId: defaultPackageId,
       customPackageName: "",
       customPackagePrice: 0,
+      customPackageFeatures: [],
       customAddonLines: [],
       selectedAddonIds: [],
       depositPaid: 0,
@@ -300,6 +301,9 @@ export function NewBookingForm({
         shouldValidate: true,
       });
       setValue("customPackagePrice", commercial.customPackagePrice, {
+        shouldValidate: true,
+      });
+      setValue("customPackageFeatures", commercial.customPackageFeatures, {
         shouldValidate: true,
       });
       setValue("selectedAddonIds", commercial.selectedAddonIds, {
@@ -502,6 +506,7 @@ export function NewBookingForm({
         selectedPackageId: data.selectedPackageId,
         customPackageName: data.customPackageName,
         customPackagePrice: data.customPackagePrice,
+        customPackageFeatures: data.customPackageFeatures,
         selectedAddonIds: data.selectedAddonIds,
         customAddonLines: data.customAddonLines,
       },

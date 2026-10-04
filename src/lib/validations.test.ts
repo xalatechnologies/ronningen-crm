@@ -93,6 +93,7 @@ describe("validations", () => {
       selectedPackageId: "",
       customPackageName: "Custom",
       customPackagePrice: 1000,
+      customPackageFeatures: [],
       customAddonLines: [],
       selectedAddonIds: [],
       depositPaid: 0,

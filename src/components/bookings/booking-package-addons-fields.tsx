@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PriceInput } from "@/components/ui/price-input";
-import type {
+import {
   BookingAddonOption,
   BookingPackageAddonFormValues,
   BookingPackageOption,
+  CUSTOM_PACKAGE_FEATURES_MAX,
+  packageFeatureLines,
+  uniqueCatalogPackageFeatures,
 } from "@/lib/bookings/commercial-lines";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
@@ -84,11 +87,54 @@ export function BookingPackageAddonsFields<T extends BookingPackageAddonFormValu
   const selectedAddonIds =
     (useWatch({ control, name: "selectedAddonIds" as never }) as string[] | undefined) ??
     [];
+  const customPackageFeatures =
+    (useWatch({ control, name: "customPackageFeatures" as never }) as
+      | string[]
+      | undefined) ?? [];
   const { fields: customAddonFields, append, remove } = useFieldArray({
     control,
     name: "customAddonLines" as never,
   });
   const defaultPackageId = packages[0]?.id ?? "";
+  const catalogFeatureSuggestions = useMemo(
+    () => uniqueCatalogPackageFeatures(packages),
+    [packages],
+  );
+  const catalogFeatureKeys = useMemo(
+    () =>
+      new Set(
+        catalogFeatureSuggestions.map((line) => line.trim().toLocaleLowerCase("nb-NO")),
+      ),
+    [catalogFeatureSuggestions],
+  );
+  const extraPackageFeatures = customPackageFeatures.filter((line) => {
+    const key = line.trim().toLocaleLowerCase("nb-NO");
+    return !key || !catalogFeatureKeys.has(key);
+  });
+
+  function setCustomPackageFeatures(next: string[]) {
+    setValue("customPackageFeatures" as never, next as never, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  }
+
+  function toggleCatalogFeature(feature: string, checked: boolean) {
+    const key = feature.trim().toLocaleLowerCase("nb-NO");
+    if (checked) {
+      if (customPackageFeatures.some((line) => line.trim().toLocaleLowerCase("nb-NO") === key)) {
+        return;
+      }
+      if (customPackageFeatures.filter((line) => line.trim()).length >= CUSTOM_PACKAGE_FEATURES_MAX) {
+        return;
+      }
+      setCustomPackageFeatures([...customPackageFeatures, feature]);
+      return;
+    }
+    setCustomPackageFeatures(
+      customPackageFeatures.filter((line) => line.trim().toLocaleLowerCase("nb-NO") !== key),
+    );
+  }
   const customAddonLineErrors = errors.customAddonLines as
     | CustomAddonLineError[]
     | undefined;
@@ -182,10 +228,12 @@ export function BookingPackageAddonsFields<T extends BookingPackageAddonFormValu
                     checked={field.value === "custom"}
                     onChange={() => {
                       field.onChange("custom");
+                      const selected = packages.find((pkg) => pkg.id === selectedPackageId);
                       setValue("selectedPackageId" as never, "" as never, {
                         shouldValidate: true,
                         shouldDirty: true,
                       });
+                      setCustomPackageFeatures(packageFeatureLines(selected?.description));
                     }}
                     onBlur={field.onBlur}
                   />
@@ -322,6 +370,113 @@ export function BookingPackageAddonsFields<T extends BookingPackageAddonFormValu
                   {errorText(errors.customPackagePrice)}
                 </p>
               ) : null}
+            </div>
+            <div className="space-y-3 border-t border-rn-border-strong/60 pt-3">
+              <div>
+                <Label className={labelClass}>{t("bookings.form.packageContents")}</Label>
+                <p className="mt-1 text-app-xs text-muted-foreground">
+                  {t("bookings.form.packageContentsHint")}
+                </p>
+              </div>
+              {catalogFeatureSuggestions.length > 0 ? (
+                <div className="grid grid-cols-1 gap-1.5">
+                  {catalogFeatureSuggestions.map((feature) => {
+                    const checked = customPackageFeatures.some(
+                      (line) =>
+                        line.trim().toLocaleLowerCase("nb-NO") ===
+                        feature.trim().toLocaleLowerCase("nb-NO"),
+                    );
+                    return (
+                      <label
+                        key={feature}
+                        className="flex cursor-pointer items-start gap-2.5 rounded-md px-1 py-1.5 hover:bg-rn-surface-row-hover"
+                      >
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 size-4 shrink-0 rounded accent-success"
+                          checked={checked}
+                          onChange={(event) =>
+                            toggleCatalogFeature(feature, event.target.checked)
+                          }
+                        />
+                        <span className="text-app-sm leading-snug text-rn-text-heading">
+                          {feature}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              ) : null}
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-rn-text-slate">
+                    {t("bookings.form.extraPackageLine")}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-1.5 rounded-md font-semibold"
+                    disabled={
+                      customPackageFeatures.filter((line) => line.trim()).length >=
+                      CUSTOM_PACKAGE_FEATURES_MAX
+                    }
+                    onClick={() =>
+                      setCustomPackageFeatures([...customPackageFeatures, ""])
+                    }
+                  >
+                    <Plus className="size-4" aria-hidden />
+                    {t("bookings.form.addLine")}
+                  </Button>
+                </div>
+                {extraPackageFeatures.length > 0 ? (
+                  <ul className="space-y-2">
+                    {extraPackageFeatures.map((line, extraIndex) => {
+                      const selectedIndex = (() => {
+                        let seen = 0;
+                        return customPackageFeatures.findIndex((value) => {
+                          const key = value.trim().toLocaleLowerCase("nb-NO");
+                          const isExtra = !key || !catalogFeatureKeys.has(key);
+                          if (!isExtra) return false;
+                          if (seen === extraIndex) return true;
+                          seen += 1;
+                          return false;
+                        });
+                      })();
+                      return (
+                        <li key={`extra-pkg-${extraIndex}`} className="flex items-center gap-2">
+                          <Input
+                            className={cn(fieldClass, "flex-1")}
+                            placeholder={t("bookings.form.extraPackageLinePlaceholder")}
+                            value={line}
+                            onChange={(event) => {
+                              if (selectedIndex < 0) return;
+                              const next = [...customPackageFeatures];
+                              next[selectedIndex] = event.target.value;
+                              setCustomPackageFeatures(next);
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="shrink-0"
+                            aria-label={t("bookings.form.removePackageLine")}
+                            onClick={() => {
+                              if (selectedIndex < 0) return;
+                              setCustomPackageFeatures(
+                                customPackageFeatures.filter((_, index) => index !== selectedIndex),
+                              );
+                            }}
+                          >
+                            <Trash2 className="size-4" aria-hidden />
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : null}
+              </div>
             </div>
           </div>
         ) : null}

@@ -197,6 +197,12 @@ export const bookingsNb = {
     packagePrice: "Pakkepris (NOK)",
     packagePriceHint:
       "Bruk 0 om pris avtales separat — juster «Avtalt total» under.",
+    packageContents: "Innhold i pakken",
+    packageContentsHint:
+      "Velg det som inngår i pakken, eller legg til egne linjer — vises som kuler i leieavtalen.",
+    extraPackageLine: "Egen linje",
+    extraPackageLinePlaceholder: "F.eks. Lokale med bord og stoler",
+    removePackageLine: "Fjern innholdslinje",
     addons: "Tillegg",
     addonsHint:
       "Velg fra katalog (synkronisert med Priser) og/eller legg inn egne tillegg med navn og pris — uten å opprette dem i Priser først.",

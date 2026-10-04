@@ -350,6 +350,7 @@ export function InquiryDetailSheet({
           selectedPackageId: data.selectedPackageId,
           customPackageName: data.customPackageName,
           customPackagePrice: data.customPackagePrice,
+          customPackageFeatures: data.customPackageFeatures,
           selectedAddonIds: data.selectedAddonIds,
           customAddonLines: data.customAddonLines,
         },

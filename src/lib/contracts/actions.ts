@@ -112,6 +112,7 @@ export async function loadBookingCommercialEditor(input: {
       quantity: number;
       unitAmountNok: number;
       catalogId: string | null;
+      description: string | null;
     }[];
     packages: CatalogOption[];
     addons: CatalogOption[];
@@ -144,12 +145,14 @@ export async function loadBookingCommercialEditor(input: {
       quantity: number;
       unit_amount_nok: number;
       catalog_id: string | null;
+      description?: string | null;
     }[] | null) ?? []).map((line) => ({
       kind: line.kind,
       name: line.name,
       quantity: Number(line.quantity),
       unitAmountNok: Number(line.unit_amount_nok),
       catalogId: line.catalog_id ?? null,
+      description: line.description ?? null,
     })),
     packages: catalog.packages,
     addons: catalog.addons,

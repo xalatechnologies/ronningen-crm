@@ -900,6 +900,12 @@ export const en = {
       packagePrice: "Package price (NOK)",
       packagePriceHint:
         "Use 0 if price is agreed separately — adjust «Agreed total» below.",
+      packageContents: "Package contents",
+      packageContentsHint:
+        "Select what the package includes, or add your own lines — shown as bullets on the rental contract.",
+      extraPackageLine: "Custom line",
+      extraPackageLinePlaceholder: "E.g. Venue with tables and chairs",
+      removePackageLine: "Remove inclusion line",
       addons: "Add-ons",
       addonsHint:
         "Choose from catalog (synced with Pricing) and/or add custom add-ons with name and price — without creating them in Pricing first.",

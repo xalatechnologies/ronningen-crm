@@ -544,6 +544,9 @@ export function createNewBookingFormFieldsSchema(msg: ValidationMessages) {
     customPackagePrice: z.coerce
       .number({ error: msg.invalidPrice })
       .min(0, msg.priceNonNegative),
+    customPackageFeatures: z
+      .array(z.string().max(120, msg.max120))
+      .max(24),
     customAddonLines: z.array(
       z.object({
         name: z.string(),
@@ -659,6 +662,9 @@ export function createBookingDetailFormSchema(msg: ValidationMessages) {
       customPackagePrice: z.coerce
         .number({ error: msg.invalidPrice })
         .min(0, msg.priceNonNegative),
+      customPackageFeatures: z
+        .array(z.string().max(120, msg.max120))
+        .max(24),
       customAddonLines: z.array(
         z.object({
           name: z.string(),
@@ -929,6 +935,9 @@ export function createBookingInquiryFormSchema(msg: ValidationMessages) {
       customPackagePrice: z.coerce
         .number({ error: msg.invalidPrice })
         .min(0, msg.priceNonNegative),
+      customPackageFeatures: z
+        .array(z.string().max(120, msg.max120))
+        .max(24),
       customAddonLines: z.array(
         z.object({
           name: z.string(),
