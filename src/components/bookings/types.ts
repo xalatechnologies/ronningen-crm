@@ -37,6 +37,7 @@ export type BookingListRow = {
   collectionNoticeSentAt: string | null;
   /** Manuell betalingsstatus (utledes fra DB eller beløp). */
   paymentStatus: BookingPaymentStatus;
+  propertyId: string | null;
 };
 
 export type BookingsQuickStats = {

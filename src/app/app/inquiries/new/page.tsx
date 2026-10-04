@@ -3,6 +3,7 @@ import { canManageBookings } from "@/lib/role-access";
 import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { sortBookingPackagesByCatalogOrder } from "@/lib/validations";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -39,10 +40,36 @@ export default async function NewInquiryPage({
     }
   }
 
+  const { data: packages } = await supabase
+    .from("packages")
+    .select("id, name, description, price")
+    .eq("organization_id", orgId)
+    .eq("active", true);
+  const { data: services } = await supabase
+    .from("services")
+    .select("id, name, description, price")
+    .eq("organization_id", orgId)
+    .eq("active", true)
+    .order("name", { ascending: true });
+
   return (
     <NewInquiryForm
       properties={properties ?? []}
       customers={customers ?? []}
+      packages={sortBookingPackagesByCatalogOrder(
+        (packages ?? []).map((row) => ({
+          id: row.id,
+          name: row.name,
+          description: row.description,
+          price: Number(row.price),
+        })),
+      )}
+      addons={(services ?? []).map((row) => ({
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        price: Number(row.price),
+      }))}
       canManageInquiries={canEdit}
       initialCustomerId={initialCustomerId}
     />

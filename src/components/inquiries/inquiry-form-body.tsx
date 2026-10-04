@@ -1,5 +1,10 @@
 "use client";
 
+import { BookingPackageAddonsFields } from "@/components/bookings/booking-package-addons-fields";
+import type {
+  BookingAddonOption,
+  BookingPackageOption,
+} from "@/lib/bookings/commercial-lines";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { DateTimePickerField } from "@/components/ui/datetime-picker-field";
 import { AddressField } from "@/components/forms/address-field";
@@ -87,6 +92,9 @@ export type InquiryFormBodyProps = {
   errors: FieldErrors<BookingInquiryFormInput>;
   properties: { id: string; name: string }[];
   customers: { id: string; name: string }[];
+  packages?: BookingPackageOption[];
+  addons?: BookingAddonOption[];
+  catalogLoading?: boolean;
   disabled?: boolean;
   /** Skjul kundevelger (eksisterende forespørsel med låst kunde) */
   lockCustomer?: boolean;
@@ -102,6 +110,9 @@ export function InquiryFormBody({
   errors,
   properties,
   customers,
+  packages = [],
+  addons = [],
+  catalogLoading = false,
   disabled = false,
   lockCustomer = false,
   layout = "default",
@@ -372,6 +383,23 @@ export function InquiryFormBody({
     </>
   );
 
+  const packageBlock = (
+    <BookingPackageAddonsFields
+      control={control as never}
+      register={register as never}
+      setValue={setValue as never}
+      errors={errors as never}
+      packages={packages}
+      addons={addons}
+      fieldClass={fieldClass}
+      labelClass={labelClass}
+      idPrefix={`${rid}-pkg`}
+      allowEmptyPackage
+      catalogLoading={catalogLoading}
+      disabled={disabled}
+    />
+  );
+
   const followUpBlock = (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -456,6 +484,13 @@ export function InquiryFormBody({
         </FormSection>
         <FormSection
           variant="flat"
+          title={t("bookings.form.packageAndAddons")}
+          hint={t("inquiries.form.packageHint")}
+        >
+          {packageBlock}
+        </FormSection>
+        <FormSection
+          variant="flat"
           title={t("inquiries.followUpSection")}
           hint={t("inquiries.followUpHint")}
         >
@@ -469,6 +504,7 @@ export function InquiryFormBody({
     <div className="flex flex-col gap-5 md:gap-6">
       {customerBlock}
       {inquiryBlock}
+      {packageBlock}
       {followUpBlock}
     </div>
   );

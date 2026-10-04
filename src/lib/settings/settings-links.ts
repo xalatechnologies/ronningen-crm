@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarClock,
   CreditCard,
+  FileText,
   LayoutGrid,
   LifeBuoy,
   User,
@@ -81,6 +82,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
       "Kalender-feed og eksterne integrasjoner for booking-synk.",
     icon: CalendarClock,
     visible: isOrganizationOwner,
+  },
+  {
+    id: "contracts",
+    href: "/app/settings/kontrakter",
+    title: "Leieavtaler",
+    description: "Maler og utsendelse av digitale leieavtaler.",
+    icon: FileText,
+    visible: canManageOrgSettings,
   },
   {
     id: "support",

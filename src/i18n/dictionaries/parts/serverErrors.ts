@@ -121,6 +121,10 @@ export const serverErrorsNb = {
     accessRestrictedReason: " Grunn: {reason}",
     openSupport: "Åpne support",
     inquiryLabel: "Forespørsel",
+    contractAccepted: "Leieavtale godkjent",
+    contractAcceptedBody:
+      "{signer} har godkjent leieavtalen for reservasjon {label}.",
+    viewContract: "Se avtalen",
   },
 } as const;
 
@@ -228,6 +232,10 @@ export const serverErrorsEn = {
     defaultOrgName: "the organization",
     trialReminderSubject: "Trial period reminder",
     inquiryLabel: "Inquiry",
+    contractAccepted: "Rental agreement accepted",
+    contractAcceptedBody:
+      "{signer} has accepted the rental agreement for booking {label}.",
+    viewContract: "View agreement",
     mustBeOwner: "Only owner or administrator can complete setup.",
     orgNameTaken: "Name is already taken. Try another organization name.",
     solePlatformAdmin:

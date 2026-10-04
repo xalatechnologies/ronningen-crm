@@ -206,6 +206,14 @@ export type Database = {
           status: string;
           total_price: number;
           updated_at: string;
+          kitchen_access: string;
+          rental_start_date: string | null;
+          rental_end_date: string | null;
+          rental_start_time: string | null;
+          rental_end_time: string | null;
+          timezone: string;
+          signer_name: string | null;
+          signer_title: string | null;
         };
         Insert: {
           booking_reference?: string | null;
@@ -231,6 +239,14 @@ export type Database = {
           status: string;
           total_price?: number;
           updated_at?: string;
+          kitchen_access?: string;
+          rental_start_date?: string | null;
+          rental_end_date?: string | null;
+          rental_start_time?: string | null;
+          rental_end_time?: string | null;
+          timezone?: string;
+          signer_name?: string | null;
+          signer_title?: string | null;
         };
         Update: {
           booking_reference?: string | null;
@@ -256,6 +272,14 @@ export type Database = {
           status?: string;
           total_price?: number;
           updated_at?: string;
+          kitchen_access?: string;
+          rental_start_date?: string | null;
+          rental_end_date?: string | null;
+          rental_start_time?: string | null;
+          rental_end_time?: string | null;
+          timezone?: string;
+          signer_name?: string | null;
+          signer_title?: string | null;
         };
         Relationships: [
           {
@@ -294,6 +318,7 @@ export type Database = {
           converted_at: string | null;
           created_at: string;
           updated_at: string;
+          commercial: Json | null;
         };
         Insert: {
           id?: string;
@@ -314,6 +339,7 @@ export type Database = {
           converted_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          commercial?: Json | null;
         };
         Update: {
           id?: string;
@@ -334,6 +360,7 @@ export type Database = {
           converted_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          commercial?: Json | null;
         };
         Relationships: [
           {
@@ -419,6 +446,10 @@ export type Database = {
           last_activity_at: string | null;
           trial_ends_at: string | null;
           tenant_setup_completed_at: string | null;
+          legal_terms_approved_at: string | null;
+          contracts_enabled: boolean;
+          default_contract_expiry_days: number;
+          default_timezone: string;
           created_at: string;
           updated_at: string;
         };
@@ -449,6 +480,10 @@ export type Database = {
           last_activity_at?: string | null;
           trial_ends_at?: string | null;
           tenant_setup_completed_at?: string | null;
+          legal_terms_approved_at?: string | null;
+          contracts_enabled?: boolean;
+          default_contract_expiry_days?: number;
+          default_timezone?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -479,6 +514,10 @@ export type Database = {
           last_activity_at?: string | null;
           trial_ends_at?: string | null;
           tenant_setup_completed_at?: string | null;
+          legal_terms_approved_at?: string | null;
+          contracts_enabled?: boolean;
+          default_contract_expiry_days?: number;
+          default_timezone?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -864,6 +903,10 @@ export type Database = {
           notes: string | null;
           organization_id: string;
           phone: string | null;
+          company_name: string | null;
+          company_org_number: string | null;
+          signing_representative_name: string | null;
+          signing_representative_title: string | null;
           updated_at: string;
         };
         Insert: {

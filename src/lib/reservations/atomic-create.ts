@@ -92,11 +92,94 @@ async function callAtomicRpc(
   return result;
 }
 
+export async function replaceBookingCommercialChildren(
+  supabase: SupabaseClient<Database>,
+  args: {
+    organizationId: string;
+    bookingId: string;
+    lineItems: unknown[];
+    installments: unknown[];
+  },
+) {
+  const { error } = await supabase.rpc("replace_booking_commercial_children" as never, {
+    p_org: args.organizationId,
+    p_booking: args.bookingId,
+    p_line_items: args.lineItems as Json,
+    p_installments: args.installments as Json,
+  });
+  if (!error) return;
+
+  const lineRows = (includeDescription: boolean) =>
+    args.lineItems.map((item, index) => {
+      const row = item as Record<string, unknown>;
+      return {
+        organization_id: args.organizationId,
+        booking_id: args.bookingId,
+        kind: row.kind ?? "custom",
+        catalog_id: row.catalog_id ?? null,
+        name: row.name ?? "Linje",
+        ...(includeDescription ? { description: row.description ?? null } : {}),
+        quantity: row.quantity ?? 1,
+        unit_amount_nok: row.unit_amount_nok ?? 0,
+        sort_order: row.sort_order ?? index,
+      };
+    });
+
+  const writeChildren = async (includeDescription: boolean) => {
+    await supabase.from("booking_line_items" as never).delete().eq("booking_id", args.bookingId);
+    const rows = lineRows(includeDescription);
+    if (rows.length) {
+      const inserted = await supabase.from("booking_line_items" as never).insert(rows as never);
+      if (inserted.error) return inserted.error;
+    }
+    await supabase
+      .from("booking_payment_installments" as never)
+      .delete()
+      .eq("booking_id", args.bookingId);
+    if (args.installments.length) {
+      await supabase.from("booking_payment_installments" as never).insert(
+        args.installments.map((item, index) => {
+          const row = item as Record<string, unknown>;
+          return {
+            organization_id: args.organizationId,
+            booking_id: args.bookingId,
+            label: row.label ?? "Forfall",
+            amount_nok: row.amount_nok ?? 0,
+            due_date: row.due_date ?? null,
+            sort_order: row.sort_order ?? index,
+          };
+        }) as never,
+      );
+    }
+    return null;
+  };
+
+  const withDescription = await writeChildren(true);
+  if (withDescription) await writeChildren(false);
+}
+
+async function persistBookingCommercialChildren(
+  supabase: SupabaseClient<Database>,
+  payload: Record<string, unknown>,
+  reservationId: string,
+) {
+  const lineItems = payload.line_items;
+  if (!Array.isArray(lineItems) || lineItems.length === 0) return;
+  await replaceBookingCommercialChildren(supabase, {
+    organizationId: String(payload.organization_id ?? ""),
+    bookingId: reservationId,
+    lineItems,
+    installments: Array.isArray(payload.installments) ? payload.installments : [],
+  });
+}
+
 export async function createBookingAtomic(
   supabase: SupabaseClient<Database>,
   payload: Record<string, unknown>,
 ): Promise<AtomicCreateResult> {
-  return callAtomicRpc(supabase, "create_booking_atomic", payload, "booking");
+  const result = await callAtomicRpc(supabase, "create_booking_atomic", payload, "booking");
+  await persistBookingCommercialChildren(supabase, payload, result.reservationId);
+  return result;
 }
 
 export async function createInquiryAtomic(

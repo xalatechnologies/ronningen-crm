@@ -6,6 +6,13 @@ import type {
 } from "@/components/bookings/types";
 import { RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
+import { BookingContractPanel } from "@/components/contracts/booking-contract-panel";
+import { BookingPackageAddonsFields } from "@/components/bookings/booking-package-addons-fields";
+import {
+  loadBookingCommercialEditor,
+  saveBookingCommercialLines,
+} from "@/lib/contracts/actions";
+import { PropertySelectField } from "@/components/properties/property-select-field";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import {
@@ -32,10 +39,21 @@ import { PriceInput } from "@/components/ui/price-input";
 import { Textarea } from "@/components/ui/textarea";
 import { TimePickerField } from "@/components/ui/time-picker-field";
 import {
-  bookingDetailEditSchema,
+  createBookingDetailEditSchema,
+  estimateNewBookingTotalNok,
   NEW_BOOKING_EVENT_TYPES,
+  sortBookingPackagesByCatalogOrder,
+  validationMessagesForLocale,
   type BookingDetailEditInput,
 } from "@/lib/validations";
+import {
+  buildBookingLineItems,
+  emptyPackageAddonFormValues,
+  packageAddonFormFromLines,
+  type BookingAddonOption,
+  type BookingPackageOption,
+} from "@/lib/bookings/commercial-lines";
+import { parseNokFormValue } from "@/lib/bookings/parse-nok-form-value";
 import {
   bookingCustomerFieldsChanged,
   sharedCustomerLinkTotal,
@@ -54,7 +72,7 @@ import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Save, Trash2, X, XCircle } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch, Controller, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -85,6 +103,8 @@ function bookingDetailDefaultsFromRow(
     paymentStatus: row.paymentStatus,
     paymentDueDate: row.paymentDueDateIso ?? "",
     notes: row.notes ?? "",
+    propertyId: row.propertyId ?? "",
+    ...emptyPackageAddonFormValues,
   };
 }
 
@@ -110,7 +130,7 @@ export function BookingDetailSheet({
   onSetStatus,
   canDeleteBooking = false,
 }: BookingDetailSheetProps) {
-  const { t, formatCurrency, formatDate } = useTranslation();
+  const { t, formatCurrency, formatDate, locale } = useTranslation();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateBookings, invalidateCustomers } = useTenantDataInvalidation();
@@ -118,11 +138,47 @@ export function BookingDetailSheet({
   const [inkassoBusy, setInkassoBusy] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [properties, setProperties] = useState<{ id: string; name: string }[]>(
+    [],
+  );
+  const [packages, setPackages] = useState<BookingPackageOption[]>([]);
+  const [addons, setAddons] = useState<BookingAddonOption[]>([]);
+  const [commercialReady, setCommercialReady] = useState(false);
+  const installmentsRef = useRef<
+    {
+      label: string;
+      amount_nok: number;
+      due_date: string | null;
+      sort_order: number;
+    }[]
+  >([]);
+  const prevEstimatedRef = useRef(0);
+
+  const packageCatalog = useMemo(
+    () => packages.map(({ id, price }) => ({ id, price: Number(price) })),
+    [packages],
+  );
+  const addonCatalog = useMemo(
+    () => addons.map(({ id, price }) => ({ id, price: Number(price) })),
+    [addons],
+  );
+  const formSchema = useMemo(
+    () =>
+      createBookingDetailEditSchema(
+        validationMessagesForLocale(locale),
+        addonCatalog,
+        packageCatalog,
+      ),
+    [locale, addonCatalog, packageCatalog],
+  );
+  const formSchemaRef = useRef(formSchema);
+  formSchemaRef.current = formSchema;
 
   const form = useForm<BookingDetailEditInput>({
-    resolver: zodResolver(
-      bookingDetailEditSchema,
-    ) as Resolver<BookingDetailEditInput>,
+    resolver: ((values, ctx, options) =>
+      zodResolver(formSchemaRef.current)(values, ctx, options)) as Resolver<
+      BookingDetailEditInput
+    >,
     defaultValues: {
       customerName: "",
       phone: "",
@@ -141,6 +197,8 @@ export function BookingDetailSheet({
       paymentStatus: "unpaid",
       paymentDueDate: "",
       notes: "",
+      propertyId: "",
+      ...emptyPackageAddonFormValues,
     },
   });
 
@@ -157,6 +215,11 @@ export function BookingDetailSheet({
   const totalW = useWatch({ control, name: "totalNok" });
   const paidW = useWatch({ control, name: "paidNok" });
   const paymentStatusW = useWatch({ control, name: "paymentStatus" });
+  const packageSourceW = useWatch({ control, name: "packageSource" });
+  const selectedPackageIdW = useWatch({ control, name: "selectedPackageId" });
+  const selectedAddonIdsW = useWatch({ control, name: "selectedAddonIds" }) ?? [];
+  const customPackagePriceW = useWatch({ control, name: "customPackagePrice" });
+  const customAddonLinesW = useWatch({ control, name: "customAddonLines" }) ?? [];
   const remainingPreview = useMemo(() => {
     const total = Number(totalW);
     const paid = Number(paidW);
@@ -167,6 +230,46 @@ export function BookingDetailSheet({
       paymentStatus: paymentStatusW ?? "unpaid",
     });
   }, [totalW, paidW, paymentStatusW]);
+
+  const estimatedTotal = useMemo(() => {
+    const lines = Array.isArray(customAddonLinesW)
+      ? customAddonLinesW.map((row) => ({
+          name: String(row?.name ?? ""),
+          priceNok: parseNokFormValue(row?.priceNok),
+        }))
+      : [];
+    return estimateNewBookingTotalNok(
+      {
+        packageSource: packageSourceW ?? "catalog",
+        selectedPackageId: String(selectedPackageIdW ?? ""),
+        selectedAddonIds: Array.isArray(selectedAddonIdsW) ? selectedAddonIdsW : [],
+        customPackagePrice: parseNokFormValue(customPackagePriceW),
+        customAddonLines: lines,
+      },
+      packageCatalog,
+      addonCatalog,
+    );
+  }, [
+    packageSourceW,
+    selectedPackageIdW,
+    selectedAddonIdsW,
+    customPackagePriceW,
+    customAddonLinesW,
+    packageCatalog,
+    addonCatalog,
+  ]);
+
+  useEffect(() => {
+    if (!open || !commercialReady) return;
+    const agreedNorm = parseNokFormValue(getValues("totalNok"));
+    const agreedForSync = Number.isFinite(agreedNorm)
+      ? agreedNorm
+      : prevEstimatedRef.current;
+    if (agreedForSync === prevEstimatedRef.current) {
+      setValue("totalNok", estimatedTotal, { shouldValidate: true });
+    }
+    prevEstimatedRef.current = estimatedTotal;
+  }, [estimatedTotal, commercialReady, open, getValues, setValue]);
 
   const paymentStatusOptions = useMemo(
     () =>
@@ -181,6 +284,46 @@ export function BookingDetailSheet({
     if (!row || !open) return;
     reset(bookingDetailDefaultsFromRow(row));
   }, [row, open, reset]);
+
+  useEffect(() => {
+    if (!open || !row?.id || !currentOrganizationId) {
+      setCommercialReady(false);
+      installmentsRef.current = [];
+      return;
+    }
+    setCommercialReady(false);
+    let cancelled = false;
+    void (async () => {
+      const result = await loadBookingCommercialEditor({
+        organizationId: currentOrganizationId,
+        bookingId: row.id,
+      });
+      if (cancelled) return;
+      if (!result.ok) {
+        setCommercialReady(true);
+        return;
+      }
+      const sorted = sortBookingPackagesByCatalogOrder(result.packages);
+      setPackages(sorted);
+      setAddons(result.addons);
+      setProperties(result.properties);
+      installmentsRef.current = result.installments;
+      const slice = packageAddonFormFromLines(result.lines, sorted, result.addons);
+      reset({
+        ...getValues(),
+        ...slice,
+      });
+      prevEstimatedRef.current = estimateNewBookingTotalNok(
+        slice,
+        sorted.map(({ id, price }) => ({ id, price: Number(price) })),
+        result.addons.map(({ id, price }) => ({ id, price: Number(price) })),
+      );
+      setCommercialReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, row?.id, currentOrganizationId, reset, getValues]);
 
   // Sync standard status when beløp endres — ikke når bruker velger status manuelt.
   useEffect(() => {
@@ -209,7 +352,8 @@ export function BookingDetailSheet({
     updatingId === bookingRow.id ||
     detailSaving ||
     inkassoBusy ||
-    deleteBusy;
+    deleteBusy ||
+    !commercialReady;
 
   async function onSave(data: BookingDetailEditInput) {
     if (!currentOrganizationId) return;
@@ -309,6 +453,7 @@ export function BookingDetailSheet({
           payment_due_date: data.paymentDueDate ? data.paymentDueDate : null,
           payment_status: finalPaymentStatus,
           notes: data.notes?.trim() ? data.notes.trim() : null,
+          property_id: data.propertyId?.trim() ? data.propertyId.trim() : null,
         })
         .eq("id", bookingRow.id)
         .eq("organization_id", currentOrganizationId);
@@ -316,6 +461,32 @@ export function BookingDetailSheet({
       if (bookErr) {
         toast.error(t("bookings.detail.updateFailed"), {
           description: bookErr.message,
+        });
+        return;
+      }
+
+      const commercial = await saveBookingCommercialLines({
+        organizationId: currentOrganizationId,
+        bookingId: bookingRow.id,
+        lineItems: buildBookingLineItems({
+          form: {
+            packageSource: data.packageSource,
+            selectedPackageId: data.selectedPackageId,
+            customPackageName: data.customPackageName,
+            customPackagePrice: data.customPackagePrice,
+            selectedAddonIds: data.selectedAddonIds,
+            customAddonLines: data.customAddonLines,
+          },
+          packages,
+          addons,
+          agreedTotal: data.totalNok,
+          defaultPackageName: t("bookings.form.defaultPackageName"),
+        }),
+        installments: installmentsRef.current,
+      });
+      if (!commercial.ok) {
+        toast.error(t("bookings.detail.updatePackageFailed"), {
+          description: commercial.error,
         });
         return;
       }
@@ -448,6 +619,13 @@ export function BookingDetailSheet({
               <BookingStatusBadge status={bookingRow.status} />
             </div>
 
+            {currentOrganizationId ? (
+              <BookingContractPanel
+                organizationId={currentOrganizationId}
+                bookingId={bookingRow.id}
+              />
+            ) : null}
+
             <section aria-labelledby="booking-edit-ref">
               <h3 id="booking-edit-ref" className={cn(labelClass, "mb-2")}>
                 {t("common.fields.reference")}
@@ -561,6 +739,21 @@ export function BookingDetailSheet({
                       {errors.festType.message}
                     </p>
                   ) : null}
+                </div>
+                <div>
+                  <Label htmlFor="bde-property" className={labelClass}>
+                    {t("contracts.venue")}
+                  </Label>
+                  <div className="mt-1.5">
+                    <PropertySelectField
+                      name="propertyId"
+                      control={control}
+                      properties={properties}
+                      id="bde-property"
+                      optional
+                      loading={!commercialReady && properties.length === 0}
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="bde-event-type" className={labelClass}>
@@ -716,6 +909,27 @@ export function BookingDetailSheet({
                 </div>
                 </div>
               </div>
+            </section>
+
+            <section aria-labelledby="booking-edit-package">
+              <h3 id="booking-edit-package" className={cn(labelClass, "mb-3")}>
+                {t("bookings.detail.packageAndAddons")}
+              </h3>
+              <p className="mb-4 text-app-xs leading-relaxed text-muted-foreground">
+                {t("bookings.detail.packageEditHint")}
+              </p>
+              <BookingPackageAddonsFields
+                control={control}
+                register={register}
+                setValue={setValue}
+                errors={errors}
+                packages={packages}
+                addons={addons}
+                fieldClass={fieldClass}
+                labelClass={labelClass}
+                idPrefix="bde"
+                catalogLoading={!commercialReady}
+              />
             </section>
 
             <section aria-labelledby="booking-edit-money">

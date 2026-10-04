@@ -19,6 +19,7 @@ export type NotificationEventKey =
   | "billing.access_suspended"
   | "support.ticket_reply"
   | "booking.created"
+  | "booking.contract_accepted"
   | "inquiry.created"
   | "accommodation.created"
   | "team.member_added";
@@ -36,6 +37,7 @@ const EVENT_DEFAULTS: Record<NotificationEventKey, EventDefaults> = {
   "billing.access_suspended": { category: "billing", priority: "high" },
   "support.ticket_reply": { category: "support", priority: "normal" },
   "booking.created": { category: "booking", priority: "normal" },
+  "booking.contract_accepted": { category: "booking", priority: "high" },
   "inquiry.created": { category: "inquiry", priority: "normal" },
   "accommodation.created": { category: "accommodation", priority: "normal" },
   "team.member_added": { category: "team", priority: "normal" },
@@ -67,6 +69,10 @@ export function formatNotificationCategory(
 
 export function buildBookingActionUrl(bookingId: string): string {
   return `/app/bookings?booking=${bookingId}`;
+}
+
+export function buildBookingContractActionUrl(bookingId: string): string {
+  return `/app/bookings/${bookingId}/contract`;
 }
 
 export function buildInquiryActionUrl(inquiryId: string): string {

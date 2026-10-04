@@ -186,6 +186,10 @@ export const settingsNavNb = {
     description:
       "Kalender-feed og eksterne integrasjoner for booking-synk.",
   },
+  contracts: {
+    title: "Leieavtaler",
+    description: "Maler og utsendelse av digitale leieavtaler.",
+  },
   hubTitle: "Innstillinger",
 } as const;
 
@@ -208,6 +212,9 @@ export const adminNavNb = {
   },
   platformAdmin: "Plattformadmin",
   backToApp: "Tilbake til app",
+  switchAria: "Bytt mellom app og plattform",
+  switchApp: "App",
+  switchPlatform: "Plattform",
   menuAria: "Plattformadmin-meny",
   overviewAria: "{appName} plattformadmin — gå til oversikt",
   openTicketsAria: "{count} åpne henvendelser",

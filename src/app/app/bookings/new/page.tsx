@@ -7,6 +7,7 @@ import {
 } from "@/components/bookings/new-booking-form";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
+import { parseInquiryCommercial } from "@/lib/bookings/commercial-lines";
 import { sortBookingPackagesByCatalogOrder } from "@/lib/validations";
 import { z } from "zod";
 
@@ -54,6 +55,11 @@ export default async function NewBookingPage({
         inv.event_type === "Bedrift" || inv.event_type === "Privat"
           ? inv.event_type
           : "Privat";
+      const { data: commercialQuery } = await supabase
+        .from("booking_inquiries" as never)
+        .select("commercial")
+        .eq("id", inv.id)
+        .maybeSingle();
       inquiryPrefill = {
         inquiryId: inv.id,
         propertyId: inv.property_id,
@@ -65,6 +71,9 @@ export default async function NewBookingPage({
         estimatedTotal:
           inv.estimated_total != null ? Number(inv.estimated_total) : null,
         internalNotes: inv.internal_notes,
+        commercial: parseInquiryCommercial(
+          (commercialQuery as { commercial?: unknown } | null)?.commercial,
+        ),
       };
     }
   }
@@ -97,7 +106,7 @@ export default async function NewBookingPage({
 
   const { data: services } = await supabase
     .from("services")
-    .select("id, name, price")
+    .select("id, name, description, price")
     .eq("organization_id", orgId)
     .eq("active", true)
     .order("name", { ascending: true });
@@ -105,8 +114,15 @@ export default async function NewBookingPage({
   const bookingAddons: BookingAddonOption[] = (services ?? []).map((row) => ({
     id: row.id,
     name: row.name,
+    description: row.description,
     price: Number(row.price),
   }));
+
+  const { data: properties } = await supabase
+    .from("properties")
+    .select("id, name")
+    .eq("organization_id", orgId)
+    .order("name", { ascending: true });
 
   return (
     <NewBookingForm
@@ -114,6 +130,7 @@ export default async function NewBookingPage({
       bookingAddons={bookingAddons}
       bookingPackages={bookingPackages}
       inquiryPrefill={inquiryPrefill}
+      properties={properties ?? []}
     />
   );
 }

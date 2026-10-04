@@ -118,6 +118,8 @@ export const inquiriesNb = {
     preferredEndDateOptional: "Siste dag i ønsket periode (valgfritt)",
     guestCountSuggestion: "Antall gjester (forslag)",
     estimatedBudgetOptional: "Estimert budsjett (NOK, valgfritt)",
+    packageHint:
+      "Valgfritt. Samme pakke og tillegg som på reservasjonen — følger med når du konverterer.",
     nextFollowUpOptional: "Neste oppfølging (valgfritt)",
     internalNotes: "Interne merknader",
     internalNotesPlaceholder:

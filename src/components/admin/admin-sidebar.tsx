@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminNavLinks } from "@/components/admin/admin-nav-links";
+import { AdminContextSwitch } from "@/components/layout/admin-context-switch";
 import { APP_NAME } from "@/config/app";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
@@ -55,14 +56,9 @@ export function AdminSidebar({
       </nav>
 
       <footer className="shrink-0 border-t border-rn-border-strong/50 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)] md:py-5">
-        <Link
-          href="/app"
-          className="text-app-sm font-semibold text-success transition-colors hover:underline"
-        >
-          ← {t("adminNav.backToApp")}
-        </Link>
+        <AdminContextSwitch active="platform" className="mb-3" />
         <p
-          className="mt-2 text-app-xs leading-snug text-muted-foreground"
+          className="text-app-xs leading-snug text-muted-foreground"
           suppressHydrationWarning
         >
           © {copyrightYear} {APP_NAME}

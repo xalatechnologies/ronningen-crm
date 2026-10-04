@@ -565,6 +565,7 @@ export function createNewBookingFormFieldsSchema(msg: ValidationMessages) {
       .string()
       .transform((s) => s.trim())
       .pipe(z.string().max(120, msg.referenceMax120)),
+    propertyId: z.string().min(1, msg.selectProperty).uuid(msg.invalidProperty),
   }).superRefine((data, ctx) => {
     const end = data.eventEndDate.trim();
     if (end && end < data.eventDate) {
@@ -645,6 +646,26 @@ export function createBookingDetailFormSchema(msg: ValidationMessages) {
           message: msg.invalidDueDate,
         }),
       notes: z.string().max(8000, msg.max8000).optional(),
+      propertyId: z.string().optional(),
+      packageSource: z.enum(["catalog", "custom"]),
+      selectedPackageId: z.union([
+        z.literal(""),
+        z.string().uuid(msg.selectPackage),
+      ]),
+      customPackageName: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().max(200, msg.max200)),
+      customPackagePrice: z.coerce
+        .number({ error: msg.invalidPrice })
+        .min(0, msg.priceNonNegative),
+      customAddonLines: z.array(
+        z.object({
+          name: z.string(),
+          priceNok: z.coerce.number().min(0, msg.priceNonNegative),
+        }),
+      ),
+      selectedAddonIds: z.array(z.string().uuid()),
     })
     .superRefine((data, ctx) => {
       const end = data.eventEndDate.trim();
@@ -663,6 +684,45 @@ export function createBookingDetailFormSchema(msg: ValidationMessages) {
         });
       }
     });
+}
+
+export function createBookingDetailEditSchema(
+  msg: ValidationMessages,
+  addonCatalog: BookingAddonCatalogEntry[],
+  packageCatalog: BookingPackageCatalogEntry[],
+) {
+  const allowedAddons = new Set(addonCatalog.map((a) => a.id));
+  const allowedPackages = new Set(packageCatalog.map((p) => p.id));
+  return createBookingDetailFormSchema(msg).superRefine((data, ctx) => {
+    if (data.packageSource === "catalog") {
+      if (
+        packageCatalog.length > 0 &&
+        (!data.selectedPackageId || !allowedPackages.has(data.selectedPackageId))
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: msg.selectPackage,
+          path: ["selectedPackageId"],
+        });
+      }
+    } else if (data.customPackageName.trim().length < 1) {
+      ctx.addIssue({
+        code: "custom",
+        message: msg.packageNameRequired,
+        path: ["customPackageName"],
+      });
+    }
+    for (const id of data.selectedAddonIds) {
+      if (!allowedAddons.has(id)) {
+        ctx.addIssue({
+          code: "custom",
+          message: msg.invalidAddon,
+          path: ["selectedAddonIds"],
+        });
+        return;
+      }
+    }
+  });
 }
 
 export const bookingDetailEditSchema = createBookingDetailFormSchema(
@@ -857,6 +917,25 @@ export function createBookingInquiryFormSchema(msg: ValidationMessages) {
         const n = typeof v === "number" ? v : Number(v);
         return Number.isFinite(n) ? n : undefined;
       }, z.number().min(0, msg.amountNonNegative).optional()),
+      packageSource: z.enum(["catalog", "custom"]),
+      selectedPackageId: z.union([
+        z.literal(""),
+        z.string().uuid(msg.selectPackage),
+      ]),
+      customPackageName: z
+        .string()
+        .transform((s) => s.trim())
+        .pipe(z.string().max(200, msg.max200)),
+      customPackagePrice: z.coerce
+        .number({ error: msg.invalidPrice })
+        .min(0, msg.priceNonNegative),
+      customAddonLines: z.array(
+        z.object({
+          name: z.string(),
+          priceNok: z.coerce.number().min(0, msg.priceNonNegative),
+        }),
+      ),
+      selectedAddonIds: z.array(z.string().uuid()),
       status: z.enum(BOOKING_INQUIRY_FORM_STATUSES, {
         message: msg.selectStatus,
       }),

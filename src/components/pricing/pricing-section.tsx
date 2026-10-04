@@ -51,6 +51,7 @@ import { useTranslation } from "@/i18n/client";
 import { useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
+import { parsePackageDescription } from "@/lib/pricing/parse-package-description";
 import { statusLabel } from "@/lib/navigation/nav-labels";
 
 type PackageRow = Database["public"]["Tables"]["packages"]["Row"];
@@ -67,31 +68,6 @@ const pricingTableHeadClass =
 const pricingTableCellClass = "px-6 py-5 md:px-8 md:py-6";
 
 /** Liste-tegn brukere skriver foran punkter (-, –, —, •, *). */
-const PACKAGE_LIST_BULLET = /^[-•*–—]\s*/;
-
-/** Første linje uten innledende liste-tegn (= undertittel under pakkenavn). Resten = punktliste. */
-function parsePackageDescription(description: string | null): {
-  tagline: string | null;
-  features: string[];
-} {
-  if (!description?.trim()) return { tagline: null, features: [] };
-  const rawLines = description
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  let start = 0;
-  let tagline: string | null = null;
-  if (rawLines.length > 0 && !PACKAGE_LIST_BULLET.test(rawLines[0]!)) {
-    tagline = rawLines[0]!;
-    start = 1;
-  }
-  const features = rawLines
-    .slice(start)
-    .map((line) => line.replace(PACKAGE_LIST_BULLET, "").trim())
-    .filter(Boolean);
-  return { tagline, features };
-}
-
 const PACKAGE_TIER_ORDER = [
   "basis",
   "plus",

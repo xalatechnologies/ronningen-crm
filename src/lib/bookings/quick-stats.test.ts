@@ -36,6 +36,7 @@ function row(
     paymentDueDateIso: null,
     collectionNoticeSentAt: null,
     paymentStatus: "unpaid",
+    propertyId: null,
     ...overrides,
   };
 }
