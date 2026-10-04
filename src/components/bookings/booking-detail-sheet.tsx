@@ -82,6 +82,18 @@ const fieldClass =
 const labelClass =
   "text-[12px] font-semibold uppercase tracking-wider text-rn-text-slate";
 
+function isBookingContractHistoryError(error: {
+  message?: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+}): boolean {
+  return [error.message, error.details, error.hint, error.code]
+    .filter(Boolean)
+    .join(" ")
+    .includes("booking_has_contract_history");
+}
+
 function bookingDetailDefaultsFromRow(
   row: BookingListRow,
 ): BookingDetailEditInput {
@@ -138,6 +150,7 @@ export function BookingDetailSheet({
   const [inkassoBusy, setInkassoBusy] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [hasContractHistory, setHasContractHistory] = useState(false);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>(
     [],
   );
@@ -286,6 +299,27 @@ export function BookingDetailSheet({
     if (!row || !open) return;
     reset(bookingDetailDefaultsFromRow(row));
   }, [row, open, reset]);
+
+  useEffect(() => {
+    if (!open || !row?.id || !currentOrganizationId) {
+      setHasContractHistory(false);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase
+        .from("rental_contracts" as never)
+        .select("id")
+        .eq("booking_id", row.id)
+        .eq("organization_id", currentOrganizationId)
+        .limit(1)
+        .maybeSingle();
+      if (!cancelled) setHasContractHistory(Boolean(data));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, row?.id, currentOrganizationId, supabase]);
 
   useEffect(() => {
     if (!open || !row?.id || !currentOrganizationId) {
@@ -560,7 +594,9 @@ export function BookingDetailSheet({
 
       if (error) {
         toast.error(t("bookings.detail.deleteFailed"), {
-          description: error.message,
+          description: isBookingContractHistoryError(error)
+            ? t("bookings.detail.deleteBlockedByContract")
+            : error.message,
         });
         return;
       }
@@ -1186,7 +1222,7 @@ export function BookingDetailSheet({
                 {t("bookings.detail.moveToPending")}
               </Button>
             ) : null}
-            {canDeleteBooking ? (
+            {canDeleteBooking && !hasContractHistory ? (
               <Button
                 type="button"
                 variant="outline"

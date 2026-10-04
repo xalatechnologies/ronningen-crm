@@ -242,8 +242,10 @@ describe("accepted PDF", () => {
     expect(decoded).toContain("PLUS PAKKE");
     expect(decoded).toContain("LEIETAKER");
     expect(decoded).toContain("wahid");
+    expect(decoded).toContain("Heonaz Hosseini");
     expect(decoded).toContain("Hameed Rahmani");
     expect(decoded).toContain("1520.3197583");
+    expect(decoded).not.toMatch(/\? (Lokale|Sluttrenhold|Reservasjon)/);
     expect(raw.toString("latin1")).toContain("/Subtype /Image");
   });
 });

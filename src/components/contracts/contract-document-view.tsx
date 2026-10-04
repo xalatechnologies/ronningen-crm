@@ -220,7 +220,7 @@ export function ContractDocumentView(props: {
                 <p className="font-heading pt-3 text-xl font-semibold italic">
                   {props.acceptance.fullName}
                 </p>
-                <p>{props.acceptance.fullName}</p>
+                <p>{doc.customer.name}</p>
                 <p>Sted/Dato: {formatContractDateTime(props.acceptance.acceptedAt)}</p>
               </>
             ) : (

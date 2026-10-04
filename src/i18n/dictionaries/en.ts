@@ -859,6 +859,8 @@ export const en = {
       removeMarkingFailed: "Could not remove marking",
       markingRemoved: "Marking removed",
       deleteFailed: "Could not delete booking",
+      deleteBlockedByContract:
+        "This booking has a rental contract and cannot be deleted. Cancel it instead to archive it.",
       deleted: "Booking deleted",
     },
     form: {
