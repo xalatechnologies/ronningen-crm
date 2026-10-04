@@ -31,6 +31,48 @@ function createEmailField(msg: ValidationMessages) {
     .pipe(z.string().email(msg.invalidEmail));
 }
 
+function createRequiredEmailField(msg: ValidationMessages) {
+  return z
+    .string()
+    .transform((s) => s.trim())
+    .pipe(z.string().min(1, msg.emailRequired).email(msg.invalidEmailShort));
+}
+
+function createRequiredAddressField(msg: ValidationMessages) {
+  return z
+    .string()
+    .transform((s) => s.trim())
+    .pipe(z.string().min(3, msg.addressMin3).max(300, msg.addressMax300));
+}
+
+function refineStaffPackageSelection(
+  data: {
+    packageSource: "catalog" | "custom";
+    selectedPackageId: string;
+    customPackageName: string;
+  },
+  ctx: z.RefinementCtx,
+  msg: ValidationMessages,
+) {
+  if (data.packageSource === "custom") {
+    if (data.customPackageName.trim().length < 1) {
+      ctx.addIssue({
+        code: "custom",
+        message: msg.packageNameRequired,
+        path: ["customPackageName"],
+      });
+    }
+    return;
+  }
+  if (!data.selectedPackageId) {
+    ctx.addIssue({
+      code: "custom",
+      message: msg.selectPackage,
+      path: ["selectedPackageId"],
+    });
+  }
+}
+
 function createPhoneWhenPresentSchema(msg: ValidationMessages) {
   return z
     .string()
@@ -484,14 +526,8 @@ export function createNewBookingFormFieldsSchema(msg: ValidationMessages) {
           .min(1, msg.phoneRequired)
           .pipe(phoneWhenPresentSchema),
       ),
-    email: z.union([
-      z.literal(""),
-      z.string().email(msg.invalidEmailShort),
-    ]),
-    address: z
-      .string()
-      .transform((s) => s.trim())
-      .pipe(z.string().max(300, msg.addressMax300)),
+    email: createRequiredEmailField(msg),
+    address: createRequiredAddressField(msg),
     festType: z
       .string()
       .min(1, msg.selectType)
@@ -602,11 +638,8 @@ export function createBookingDetailFormSchema(msg: ValidationMessages) {
         .string()
         .transform((s) => s.trim())
         .pipe(z.string().min(1, msg.phoneRequired).pipe(phoneWhenPresentSchema)),
-      email: z.union([z.literal(""), z.string().email(msg.invalidEmailShort)]),
-      address: z
-        .string()
-        .transform((s) => s.trim())
-        .pipe(z.string().max(300, msg.addressMax300)),
+      email: createRequiredEmailField(msg),
+      address: createRequiredAddressField(msg),
       bookingReference: z
         .string()
         .transform((s) => s.trim())
@@ -874,26 +907,27 @@ export type BookingInquiryFormStatus =
   (typeof BOOKING_INQUIRY_FORM_STATUSES)[number];
 
 export function createBookingInquiryFormSchema(msg: ValidationMessages) {
+  const phoneWhenPresentSchema = createPhoneWhenPresentSchema(msg);
+
   return z
     .object({
       customerId: z.union([z.literal(""), z.string().uuid(msg.invalidCustomer)]),
       newCustomerName: z
         .string()
         .transform((s) => s.trim())
-        .pipe(z.string().max(200)),
+        .pipe(z.string().min(2, msg.newCustomerNameRequired).max(200)),
       newCustomerPhone: z
         .string()
         .transform((s) => s.trim())
-        .pipe(z.string().max(40)),
-      newCustomerEmail: z.union([
-        z.literal(""),
-        z.string().email(msg.invalidEmailShort),
-      ]),
-      newCustomerAddress: z
-        .string()
-        .transform((s) => s.trim())
-        .pipe(z.string().max(300)),
-      propertyId: z.union([z.literal(""), z.string().uuid(msg.invalidProperty)]),
+        .pipe(
+          z
+            .string()
+            .min(1, msg.newCustomerPhoneRequired)
+            .pipe(phoneWhenPresentSchema),
+        ),
+      newCustomerEmail: createRequiredEmailField(msg),
+      newCustomerAddress: createRequiredAddressField(msg),
+      propertyId: z.string().min(1, msg.selectProperty).uuid(msg.invalidProperty),
       eventType: z.enum(NEW_BOOKING_EVENT_TYPES, {
         message: msg.selectBusinessOrPrivate,
       }),
@@ -904,7 +938,8 @@ export function createBookingInquiryFormSchema(msg: ValidationMessages) {
       preferredEventDate: z
         .string()
         .transform((s) => s.trim())
-        .refine((s) => s === "" || parseBookingDateLocal(s), {
+        .pipe(z.string().min(1, msg.selectDate))
+        .refine((s) => parseBookingDateLocal(s), {
           message: msg.invalidPreferredDate,
         }),
       preferredEventEndDate: z
@@ -916,7 +951,7 @@ export function createBookingInquiryFormSchema(msg: ValidationMessages) {
       guestCount: z.coerce
         .number({ error: msg.guestCountRequired })
         .int(msg.guestCountInteger)
-        .min(0, msg.guestCountMin0)
+        .min(1, msg.guestCountMin1)
         .max(50_000, msg.guestCountTooHigh),
       estimatedTotal: z.preprocess((v) => {
         if (v === "" || v === undefined || v === null) return undefined;
@@ -957,22 +992,7 @@ export function createBookingInquiryFormSchema(msg: ValidationMessages) {
       internalNotes: z.string().max(8000, msg.max8000).optional(),
     })
     .superRefine((data, ctx) => {
-      if (!data.customerId) {
-        if (data.newCustomerName.length < 2) {
-          ctx.addIssue({
-            code: "custom",
-            message: msg.newCustomerNameRequired,
-            path: ["newCustomerName"],
-          });
-        }
-        if (data.newCustomerPhone.length < 3) {
-          ctx.addIssue({
-            code: "custom",
-            message: msg.newCustomerPhoneRequired,
-            path: ["newCustomerPhone"],
-          });
-        }
-      }
+      refineStaffPackageSelection(data, ctx, msg);
       const start = data.preferredEventDate;
       const end = data.preferredEventEndDate;
       if (start && end && end < start) {

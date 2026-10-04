@@ -5,6 +5,7 @@ import { InquiriesFollowUpMonthCalendar } from "@/components/inquiries/inquiries
 import {
   inquiryStatusLabel,
   isActiveInquiry,
+  type InquiryCustomerOption,
   type InquiryListRow,
 } from "@/components/inquiries/types";
 import { AppPageHeader } from "@/components/layout/app-page-header";
@@ -128,7 +129,7 @@ function statusBadgeClass(status: BookingInquiryStatus): string {
 export type InquiriesSectionProps = {
   inquiries: InquiryListRow[];
   properties: { id: string; name: string }[];
-  customers: { id: string; name: string }[];
+  customers: InquiryCustomerOption[];
   canManageInquiries: boolean;
   loadError: string | null;
 };

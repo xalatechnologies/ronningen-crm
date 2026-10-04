@@ -654,6 +654,7 @@ export function NewBookingForm({
 
         {/* RHF handleSubmit uses internal refs; keep handler passed as its callback. */}
         <form
+          noValidate
           // eslint-disable-next-line react-hooks/refs -- react-hook-form integration
           onSubmit={handleSubmit((values) =>
             submitBooking(values as NewBookingFormInput),
@@ -752,6 +753,7 @@ export function NewBookingForm({
             <div className="space-y-2 md:col-span-2">
               <Label className={labelClass}>
                 {t("common.fields.email")}
+                <RequiredMark />
               </Label>
               <Input
                 className={cn(
@@ -771,6 +773,7 @@ export function NewBookingForm({
             <div className="space-y-2 md:col-span-2">
               <Label className={labelClass}>
                 {t("common.fields.address")}
+                <RequiredMark />
               </Label>
               <AddressField
                 name="address"

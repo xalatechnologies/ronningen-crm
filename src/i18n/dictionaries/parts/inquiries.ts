@@ -79,9 +79,9 @@ export const inquiriesNb = {
     "Notatet fjernes fra aktivitetsloggen. Dette kan ikke angres.",
   deleteNoteConfirm: "Ja, slett notat",
   customerHint:
-    "Velg en kunde fra listen, eller la den stå tom og fyll inn kontaktdetaljer for en ny kunde.",
+    "Velg en eksisterende kunde eller fyll inn ny. Navn, telefon, e-post og adresse må fylles ut.",
   tentativeHint:
-    "Dette er foreløpig informasjon — du justerer alt når du oppretter reservasjonen.",
+    "Fyll inn lokale, dato, gjester og pakke nå, så avtalen kan lages uten hull.",
   followUpSection: "Oppfølging",
   followUpHint:
     "Ny forespørsel er vanligvis «Ny». Bruk påminnelse for å huske neste kontakt.",
@@ -117,10 +117,11 @@ export const inquiriesNb = {
     typeOptional: "Type (valgfritt)",
     preferredDateOptional: "Ønsket dato (valgfritt)",
     preferredEndDateOptional: "Siste dag i ønsket periode (valgfritt)",
-    guestCountSuggestion: "Antall gjester (forslag)",
+    guestCount: "Antall gjester",
+    guestCountSuggestion: "Antall gjester",
     estimatedBudgetOptional: "Estimert budsjett (NOK, valgfritt)",
     packageHint:
-      "Valgfritt. Samme pakke og tillegg som på reservasjonen — følger med når du konverterer.",
+      "Velg pakke eller egen pakke. Samme pakke og tillegg følger med når du konverterer.",
     nextFollowUpOptional: "Neste oppfølging (valgfritt)",
     internalNotes: "Interne merknader",
     internalNotesPlaceholder:

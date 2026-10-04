@@ -1,7 +1,7 @@
 "use client";
 
 import { InquiryFormBody } from "@/components/inquiries/inquiry-form-body";
-import type { InquiryActivityRow, InquiryListRow } from "@/components/inquiries/types";
+import type { InquiryActivityRow, InquiryCustomerOption, InquiryListRow } from "@/components/inquiries/types";
 import { inquiryStatusLabel } from "@/components/inquiries/types";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
@@ -81,10 +81,10 @@ function inquiryToFormDefaults(inquiry: InquiryListRow): BookingInquiryFormInput
       : "Privat";
   return {
     customerId: inquiry.customerId,
-    newCustomerName: "",
-    newCustomerPhone: "",
-    newCustomerEmail: "",
-    newCustomerAddress: "",
+    newCustomerName: inquiry.customerName,
+    newCustomerPhone: inquiry.customerPhone ?? "",
+    newCustomerEmail: inquiry.customerEmail ?? "",
+    newCustomerAddress: inquiry.customerAddress ?? "",
     propertyId: inquiry.propertyId ?? "",
     eventType: et,
     festType: inquiry.festType ?? "",
@@ -138,7 +138,7 @@ export function InquiryDetailSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   properties: { id: string; name: string }[];
-  customers: { id: string; name: string }[];
+  customers: InquiryCustomerOption[];
   canManage: boolean;
 }) {
   const { t, locale, formatDate } = useTranslation();
@@ -328,6 +328,31 @@ export function InquiryDetailSheet({
     if (!inquiry || !supabase || isConverted || !canManage) return;
 
     const pendingNote = getNoteValues("body");
+
+    if (!currentOrganizationId) {
+      toast.error(t("common.toasts.noActiveOrg"));
+      return;
+    }
+
+    const { error: custErr } = await supabase
+      .from("customers")
+      .update({
+        name: data.newCustomerName.trim(),
+        phone: data.newCustomerPhone.trim() || null,
+        email: data.newCustomerEmail.trim() ? data.newCustomerEmail.trim() : null,
+        address: data.newCustomerAddress.trim()
+          ? data.newCustomerAddress.trim()
+          : null,
+      })
+      .eq("id", inquiry.customerId)
+      .eq("organization_id", currentOrganizationId);
+
+    if (custErr) {
+      toast.error(t("bookings.detail.updateCustomerFailed"), {
+        description: custErr.message,
+      });
+      return;
+    }
 
     const { error } = await supabase
       .from("booking_inquiries")
@@ -602,6 +627,7 @@ export function InquiryDetailSheet({
                 </div>
               ) : (
                 <form
+                  noValidate
                   className="space-y-6"
                   onSubmit={(e) => {
                     e.preventDefault();

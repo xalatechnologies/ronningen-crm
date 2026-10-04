@@ -7,6 +7,7 @@ import {
   type BookingPackageOption,
 } from "@/lib/bookings/commercial-lines";
 import { InquiryFormBody } from "@/components/inquiries/inquiry-form-body";
+import type { InquiryCustomerOption } from "@/components/inquiries/types";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/client";
 import {
@@ -43,7 +44,7 @@ function fromDatetimeLocalValue(local: string): string | null {
 
 export type NewInquiryFormProps = {
   properties: { id: string; name: string }[];
-  customers: { id: string; name: string }[];
+  customers: InquiryCustomerOption[];
   packages?: BookingPackageOption[];
   addons?: BookingAddonOption[];
   canManageInquiries: boolean;
@@ -184,16 +185,12 @@ export function NewInquiryForm({
       return;
     }
 
-    const selectedCustomer = data.customerId
-      ? customers.find((c) => c.id === data.customerId)
-      : null;
-
     try {
       const result = await createInquiryAtomic(supabase, {
         organization_id: orgId,
         client_request_id: clientRequestIdRef.current,
         customer_id: data.customerId || null,
-        customer_name: selectedCustomer?.name ?? data.newCustomerName.trim(),
+        customer_name: data.newCustomerName.trim(),
         customer_email: data.newCustomerEmail.trim() || null,
         customer_phone: data.newCustomerPhone.trim() || null,
         customer_address: data.newCustomerAddress.trim() || null,
@@ -309,7 +306,11 @@ export function NewInquiryForm({
           </Link>
         </header>
 
-        <form className="flex flex-col" onSubmit={handleSubmit(onSubmit)}>
+        <form
+          noValidate
+          className="flex flex-col"
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <div className="flex flex-col bg-card px-6 py-6 sm:px-8 sm:py-7">
             <InquiryFormBody
               register={register}

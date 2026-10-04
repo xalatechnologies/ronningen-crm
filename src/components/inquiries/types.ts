@@ -1,12 +1,21 @@
 import type { BookingInquiryStatus } from "@/lib/validations";
 import type { Translator, TranslationKey } from "@/i18n/types";
 
+export type InquiryCustomerOption = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+};
+
 export type InquiryListRow = {
   id: string;
   customerId: string;
   customerName: string;
   customerPhone: string | null;
   customerEmail: string | null;
+  customerAddress: string | null;
   propertyId: string | null;
   propertyName: string | null;
   eventType: string;

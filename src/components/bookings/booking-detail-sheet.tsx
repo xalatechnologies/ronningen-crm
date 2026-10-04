@@ -82,6 +82,14 @@ const fieldClass =
 const labelClass =
   "text-[12px] font-semibold uppercase tracking-wider text-rn-text-slate";
 
+function RequiredMark() {
+  return (
+    <span className="font-semibold text-destructive tabular-nums" aria-hidden>
+      {" *"}
+    </span>
+  );
+}
+
 function isBookingContractHistoryError(error: {
   message?: string;
   details?: string;
@@ -650,6 +658,7 @@ export function BookingDetailSheet({
         </SheetHeader>
 
         <form
+          noValidate
           className="flex min-h-0 flex-1 flex-col overflow-hidden"
           onSubmit={handleSubmit(onSave)}
         >
@@ -723,6 +732,7 @@ export function BookingDetailSheet({
                 <div>
                   <Label htmlFor="bde-email" className={labelClass}>
                     {t("common.fields.email")}
+                    <RequiredMark />
                   </Label>
                   <Input
                     id="bde-email"
@@ -740,6 +750,7 @@ export function BookingDetailSheet({
                 <div>
                   <Label htmlFor="bde-address" className={labelClass}>
                     {t("common.fields.address")}
+                    <RequiredMark />
                   </Label>
                   <AddressField
                     id="bde-address"

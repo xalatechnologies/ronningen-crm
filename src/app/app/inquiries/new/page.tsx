@@ -27,7 +27,7 @@ export default async function NewInquiryPage({
 
   const { data: customers } = await supabase
     .from("customers")
-    .select("id, name")
+    .select("id, name, phone, email, address")
     .eq("organization_id", orgId)
     .order("name");
 
@@ -55,7 +55,13 @@ export default async function NewInquiryPage({
   return (
     <NewInquiryForm
       properties={properties ?? []}
-      customers={customers ?? []}
+      customers={(customers ?? []).map((row) => ({
+        id: row.id,
+        name: row.name,
+        phone: row.phone ?? null,
+        email: row.email ?? null,
+        address: row.address ?? null,
+      }))}
       packages={sortBookingPackagesByCatalogOrder(
         (packages ?? []).map((row) => ({
           id: row.id,

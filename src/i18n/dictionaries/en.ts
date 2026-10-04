@@ -1033,9 +1033,9 @@ export const en = {
       "The note will be removed from the activity log. This cannot be undone.",
     deleteNoteConfirm: "Yes, delete note",
     customerHint:
-      "Select a customer from the list, or leave empty and fill in contact details for a new customer.",
+      "Select an existing customer or fill in a new one. Name, phone, email and address are required.",
     tentativeHint:
-      "This is preliminary information — you can adjust everything when creating the booking.",
+      "Fill in venue, date, guests and package now so the contract can be created without gaps.",
     followUpSection: "Follow-up",
     followUpHint:
       "A new inquiry is usually «New». Use a reminder to remember the next contact.",
@@ -1071,10 +1071,11 @@ export const en = {
       typeOptional: "Type (optional)",
       preferredDateOptional: "Preferred date (optional)",
       preferredEndDateOptional: "Last day of preferred period (optional)",
-      guestCountSuggestion: "Guest count (suggestion)",
+      guestCount: "Guest count",
+      guestCountSuggestion: "Guest count",
       estimatedBudgetOptional: "Estimated budget (NOK, optional)",
       packageHint:
-        "Optional. Same package and add-ons as on the reservation — carried over when you convert.",
+        "Choose a package or a custom package. The same package and add-ons are carried over when you convert.",
       nextFollowUpOptional: "Next follow-up (optional)",
       internalNotes: "Internal notes",
       internalNotesPlaceholder:

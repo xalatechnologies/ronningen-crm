@@ -22,11 +22,11 @@ import {
   NEW_BOOKING_EVENT_TYPES,
 } from "@/lib/validations";
 import type { BookingInquiryFormInput } from "@/lib/validations";
-import { inquiryStatusLabel } from "@/components/inquiries/types";
+import { inquiryStatusLabel, type InquiryCustomerOption } from "@/components/inquiries/types";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
-import { useId, useMemo } from "react";
+import { useEffect, useId, useMemo, useRef } from "react";
 import {
   Controller,
   type Control,
@@ -41,6 +41,10 @@ const fieldClass =
 
 const labelClass =
   "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs";
+
+function RequiredMark() {
+  return <span className="font-bold text-destructive">*</span>;
+}
 
 function FormSection({
   title,
@@ -91,7 +95,7 @@ export type InquiryFormBodyProps = {
   watch: UseFormWatch<BookingInquiryFormInput>;
   errors: FieldErrors<BookingInquiryFormInput>;
   properties: { id: string; name: string }[];
-  customers: { id: string; name: string }[];
+  customers: InquiryCustomerOption[];
   packages?: BookingPackageOption[];
   addons?: BookingAddonOption[];
   catalogLoading?: boolean;
@@ -120,8 +124,23 @@ export function InquiryFormBody({
   const { t } = useTranslation();
   const rid = useId().replace(/:/g, "");
   const customerId = watch("customerId");
-  const showNewCustomer = !lockCustomer && !customerId;
   const sectioned = layout === "sectioned";
+  const prevCustomerIdRef = useRef("");
+
+  useEffect(() => {
+    if (lockCustomer) return;
+    if (prevCustomerIdRef.current === customerId) return;
+    prevCustomerIdRef.current = customerId;
+    if (!customerId) return;
+    const selected = customers.find((row) => row.id === customerId);
+    if (!selected) return;
+    setValue("newCustomerName", selected.name, { shouldValidate: true });
+    setValue("newCustomerPhone", selected.phone ?? "", { shouldValidate: true });
+    setValue("newCustomerEmail", selected.email ?? "", { shouldValidate: true });
+    setValue("newCustomerAddress", selected.address ?? "", {
+      shouldValidate: true,
+    });
+  }, [customerId, customers, lockCustomer, setValue]);
 
   const eventTypeOptions = useMemo(
     () =>
@@ -166,82 +185,83 @@ export function InquiryFormBody({
         </div>
       ) : null}
 
-      {showNewCustomer ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2 sm:col-span-2">
-            <Label className={labelClass} htmlFor={`${rid}-nc-name`}>
-              {t("inquiries.form.customerName")}{" "}
-              <span className="font-bold text-destructive">*</span>
-            </Label>
-            <Input
-              id={`${rid}-nc-name`}
-              disabled={disabled}
-              className={fieldClass}
-              autoComplete="name"
-              placeholder={t("inquiries.form.customerNamePlaceholder")}
-              {...register("newCustomerName")}
-            />
-            {errors.newCustomerName ? (
-              <p className="text-sm text-destructive">
-                {errors.newCustomerName.message}
-              </p>
-            ) : null}
-          </div>
-          <div className="space-y-2">
-            <Label className={labelClass} htmlFor={`${rid}-nc-phone`}>
-              {t("common.fields.phone")}{" "}
-              <span className="font-bold text-destructive">*</span>
-            </Label>
-            <Input
-              id={`${rid}-nc-phone`}
-              disabled={disabled}
-              className={fieldClass}
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder={t("bookings.form.phonePlaceholder")}
-              {...register("newCustomerPhone")}
-            />
-            {errors.newCustomerPhone ? (
-              <p className="text-sm text-destructive">
-                {errors.newCustomerPhone.message}
-              </p>
-            ) : null}
-          </div>
-          <div className="space-y-2">
-            <Label className={labelClass} htmlFor={`${rid}-nc-email`}>
-              {t("common.fields.email")}
-            </Label>
-            <Input
-              id={`${rid}-nc-email`}
-              disabled={disabled}
-              type="email"
-              className={fieldClass}
-              autoComplete="email"
-              placeholder={t("inquiries.form.emailOptionalPlaceholder")}
-              {...register("newCustomerEmail")}
-            />
-            {errors.newCustomerEmail ? (
-              <p className="text-sm text-destructive">
-                {errors.newCustomerEmail.message}
-              </p>
-            ) : null}
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label className={labelClass} htmlFor={`${rid}-nc-addr`}>
-              {t("inquiries.form.addressOptional")}
-            </Label>
-            <AddressField
-              id={`${rid}-nc-addr`}
-              name="newCustomerAddress"
-              register={register}
-              setValue={setValue}
-              disabled={disabled}
-              className={fieldClass}
-              placeholder={t("common.address.placeholder")}
-            />
-          </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2 sm:col-span-2">
+          <Label className={labelClass} htmlFor={`${rid}-nc-name`}>
+            {t("inquiries.form.customerName")} <RequiredMark />
+          </Label>
+          <Input
+            id={`${rid}-nc-name`}
+            disabled={disabled}
+            className={fieldClass}
+            autoComplete="name"
+            placeholder={t("inquiries.form.customerNamePlaceholder")}
+            {...register("newCustomerName")}
+          />
+          {errors.newCustomerName ? (
+            <p className="text-sm text-destructive">
+              {errors.newCustomerName.message}
+            </p>
+          ) : null}
         </div>
-      ) : null}
+        <div className="space-y-2">
+          <Label className={labelClass} htmlFor={`${rid}-nc-phone`}>
+            {t("common.fields.phone")} <RequiredMark />
+          </Label>
+          <Input
+            id={`${rid}-nc-phone`}
+            disabled={disabled}
+            className={fieldClass}
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder={t("bookings.form.phonePlaceholder")}
+            {...register("newCustomerPhone")}
+          />
+          {errors.newCustomerPhone ? (
+            <p className="text-sm text-destructive">
+              {errors.newCustomerPhone.message}
+            </p>
+          ) : null}
+        </div>
+        <div className="space-y-2">
+          <Label className={labelClass} htmlFor={`${rid}-nc-email`}>
+            {t("common.fields.email")} <RequiredMark />
+          </Label>
+          <Input
+            id={`${rid}-nc-email`}
+            disabled={disabled}
+            type="email"
+            className={fieldClass}
+            autoComplete="email"
+            placeholder={t("bookings.form.emailPlaceholder")}
+            {...register("newCustomerEmail")}
+          />
+          {errors.newCustomerEmail ? (
+            <p className="text-sm text-destructive">
+              {errors.newCustomerEmail.message}
+            </p>
+          ) : null}
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label className={labelClass} htmlFor={`${rid}-nc-addr`}>
+            {t("common.fields.address")} <RequiredMark />
+          </Label>
+          <AddressField
+            id={`${rid}-nc-addr`}
+            name="newCustomerAddress"
+            register={register}
+            setValue={setValue}
+            disabled={disabled}
+            className={fieldClass}
+            placeholder={t("common.address.placeholder")}
+          />
+          {errors.newCustomerAddress ? (
+            <p className="text-sm text-destructive">
+              {errors.newCustomerAddress.message}
+            </p>
+          ) : null}
+        </div>
+      </div>
     </>
   );
 
@@ -249,17 +269,19 @@ export function InquiryFormBody({
     <>
       <div className="space-y-2">
         <Label className={labelClass} htmlFor={`${rid}-property`}>
-          {t("inquiries.form.venueOptional")}
+          {t("inquiries.tableVenue")} <RequiredMark />
         </Label>
         <PropertySelectField
           name="propertyId"
           control={control}
           id={`${rid}-property`}
           disabled={disabled}
-          optional
           placeholder={t("properties.notSelected")}
           properties={properties}
         />
+        {errors.propertyId ? (
+          <p className="text-sm text-destructive">{errors.propertyId.message}</p>
+        ) : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -296,7 +318,7 @@ export function InquiryFormBody({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className={labelClass} htmlFor={`${rid}-date-start`}>
-            {t("inquiries.form.preferredDateOptional")}
+            {t("inquiries.tablePreferredDate")} <RequiredMark />
           </Label>
           <Controller
             control={control}
@@ -347,12 +369,12 @@ export function InquiryFormBody({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className={labelClass} htmlFor={`${rid}-guests`}>
-            {t("inquiries.form.guestCountSuggestion")}
+            {t("inquiries.form.guestCount")} <RequiredMark />
           </Label>
           <Input
             id={`${rid}-guests`}
             type="number"
-            min={0}
+            min={1}
             disabled={disabled}
             className={cn(fieldClass, "tabular-nums")}
             {...register("guestCount", { valueAsNumber: false })}
@@ -394,7 +416,6 @@ export function InquiryFormBody({
       fieldClass={fieldClass}
       labelClass={labelClass}
       idPrefix={`${rid}-pkg`}
-      allowEmptyPackage
       catalogLoading={catalogLoading}
       disabled={disabled}
     />
