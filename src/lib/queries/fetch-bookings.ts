@@ -29,6 +29,7 @@ type RawBooking = {
   payment_due_date: string | null;
   collection_notice_sent_at: string | null;
   payment_status: string | null;
+  property_id: string | null;
   customers: {
     name: string;
     phone: string | null;
@@ -104,7 +105,7 @@ export async function fetchBookingsPageData(
   const { data: rawList, error } = await supabase
     .from("bookings")
     .select(
-      "id, customer_id, event_type, event_date, event_end_date, event_start_time, event_end_time, guest_count, total_price, paid_amount, remaining_amount, status, fest_type, notes, booking_reference, payment_due_date, collection_notice_sent_at, payment_status, customers(name, phone, email, address)",
+      "id, customer_id, event_type, event_date, event_end_date, event_start_time, event_end_time, guest_count, total_price, paid_amount, remaining_amount, status, fest_type, notes, booking_reference, payment_due_date, collection_notice_sent_at, payment_status, property_id, customers(name, phone, email, address)",
     )
     .eq("organization_id", orgId)
     .order("event_date", { ascending: true });
@@ -166,6 +167,7 @@ export async function fetchBookingsPageData(
         paid,
         remaining,
       ),
+      propertyId: r.property_id,
     };
   });
 

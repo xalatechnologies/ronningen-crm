@@ -63,6 +63,10 @@ const settingsSectionKeys: Record<string, { title: TranslationKey; description: 
     title: "settingsNav.integrations.title",
     description: "settingsNav.integrations.description",
   },
+  contracts: {
+    title: "settingsNav.contracts.title",
+    description: "settingsNav.contracts.description",
+  },
 };
 
 export function appNavLabel(segment: string, t: Translator): string {

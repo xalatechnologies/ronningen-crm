@@ -4,6 +4,7 @@ import {
   buildAccommodationActionUrl,
   buildBillingActionUrl,
   buildBookingActionUrl,
+  buildBookingContractActionUrl,
   buildInquiryActionUrl,
   buildTeamActionUrl,
 } from "@/lib/notifications/notification-events";
@@ -34,6 +35,29 @@ export async function notifyBookingCreated(input: {
     body: t("serverErrors.notifications.newBookingBody", { label }),
     actionUrl: buildBookingActionUrl(input.bookingId),
     actionLabel: t("serverErrors.notifications.viewBooking"),
+  });
+}
+
+export async function notifyContractAccepted(input: {
+  organizationId: string;
+  bookingId: string;
+  signerName: string;
+  bookingReference?: string | null;
+}) {
+  const t = await getServerT();
+  const label = input.bookingReference?.trim() || input.bookingId.slice(0, 8);
+  await notifyOrgMembers({
+    organizationId: input.organizationId,
+    eventKey: "booking.contract_accepted",
+    contextKey: `contract_accepted:${input.bookingId}`,
+    title: t("serverErrors.notifications.contractAccepted"),
+    body: t("serverErrors.notifications.contractAcceptedBody", {
+      label,
+      signer: input.signerName,
+    }),
+    priority: "high",
+    actionUrl: buildBookingContractActionUrl(input.bookingId),
+    actionLabel: t("serverErrors.notifications.viewContract"),
   });
 }
 

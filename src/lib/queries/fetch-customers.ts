@@ -26,7 +26,7 @@ export type CustomersPageData = {
 };
 
 const CUSTOMER_COLUMNS =
-  "id, organization_id, name, email, phone, address, notes, created_at, updated_at";
+  "id, organization_id, name, email, phone, address, notes, company_name, company_org_number, signing_representative_name, signing_representative_title, created_at, updated_at";
 const PARTNER_COLUMNS =
   "id, organization_id, category, name, phone, email, notes, created_at, updated_at";
 

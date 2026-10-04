@@ -1,12 +1,20 @@
 "use client";
 
+import {
+  emptyPackageAddonFormValues,
+  inquiryHasCommercialSelection,
+  type BookingAddonOption,
+  type BookingPackageOption,
+} from "@/lib/bookings/commercial-lines";
 import { InquiryFormBody } from "@/components/inquiries/inquiry-form-body";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/client";
 import {
   bookingInquiryFormSchema,
+  estimateNewBookingTotalNok,
   type BookingInquiryFormInput,
 } from "@/lib/validations";
+import { parseNokFormValue } from "@/lib/bookings/parse-nok-form-value";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { notifyInquiryCreated } from "@/lib/notifications/actions/org-events";
@@ -21,8 +29,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef } from "react";
-import { type Resolver, useForm } from "react-hook-form";
+import { useEffect, useMemo, useRef } from "react";
+import { type Resolver, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 function fromDatetimeLocalValue(local: string): string | null {
@@ -36,6 +44,8 @@ function fromDatetimeLocalValue(local: string): string | null {
 export type NewInquiryFormProps = {
   properties: { id: string; name: string }[];
   customers: { id: string; name: string }[];
+  packages?: BookingPackageOption[];
+  addons?: BookingAddonOption[];
   canManageInquiries: boolean;
   /** Prefill «Eksisterende kunde» when opening from f.eks. ?customerId= */
   initialCustomerId?: string;
@@ -54,6 +64,7 @@ const defaultFormValues: BookingInquiryFormInput = {
   preferredEventEndDate: "",
   guestCount: 0,
   estimatedTotal: undefined,
+  ...emptyPackageAddonFormValues,
   status: "new",
   nextFollowUpAt: "",
   internalNotes: "",
@@ -62,6 +73,8 @@ const defaultFormValues: BookingInquiryFormInput = {
 export function NewInquiryForm({
   properties,
   customers,
+  packages = [],
+  addons = [],
   canManageInquiries,
   initialCustomerId,
 }: NewInquiryFormProps) {
@@ -95,8 +108,65 @@ export function NewInquiryForm({
     control,
     watch,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = form;
+
+  const packageSourceW = useWatch({ control, name: "packageSource" });
+  const selectedPackageIdW = useWatch({ control, name: "selectedPackageId" });
+  const selectedAddonIdsW = useWatch({ control, name: "selectedAddonIds" }) ?? [];
+  const customPackagePriceW = useWatch({ control, name: "customPackagePrice" });
+  const customAddonLinesW = useWatch({ control, name: "customAddonLines" }) ?? [];
+  const packageCatalog = useMemo(
+    () => packages.map(({ id, price }) => ({ id, price: Number(price) })),
+    [packages],
+  );
+  const addonCatalog = useMemo(
+    () => addons.map(({ id, price }) => ({ id, price: Number(price) })),
+    [addons],
+  );
+  const packageEstimate = useMemo(
+    () =>
+      estimateNewBookingTotalNok(
+        {
+          packageSource: packageSourceW ?? "catalog",
+          selectedPackageId: String(selectedPackageIdW ?? ""),
+          selectedAddonIds: Array.isArray(selectedAddonIdsW) ? selectedAddonIdsW : [],
+          customPackagePrice: parseNokFormValue(customPackagePriceW),
+          customAddonLines: Array.isArray(customAddonLinesW)
+            ? customAddonLinesW.map((row) => ({
+                name: String(row?.name ?? ""),
+                priceNok: parseNokFormValue(row?.priceNok),
+              }))
+            : [],
+        },
+        packageCatalog,
+        addonCatalog,
+      ),
+    [
+      packageSourceW,
+      selectedPackageIdW,
+      selectedAddonIdsW,
+      customPackagePriceW,
+      customAddonLinesW,
+      packageCatalog,
+      addonCatalog,
+    ],
+  );
+  const prevEstimateRef = useRef(0);
+  useEffect(() => {
+    const current = parseNokFormValue(getValues("estimatedTotal"));
+    const agreed = Number.isFinite(current) ? current : prevEstimateRef.current;
+    if (agreed === prevEstimateRef.current) {
+      const next = packageEstimate > 0 ? packageEstimate : undefined;
+      if (next === undefined && !(current > 0)) {
+        prevEstimateRef.current = 0;
+        return;
+      }
+      setValue("estimatedTotal", next, { shouldValidate: true });
+    }
+    prevEstimateRef.current = packageEstimate;
+  }, [packageEstimate, getValues, setValue]);
 
   async function onSubmit(data: BookingInquiryFormInput) {
     if (!supabase || !canManageInquiries) return;
@@ -141,6 +211,28 @@ export function NewInquiryForm({
         next_follow_up_at: fromDatetimeLocalValue(data.nextFollowUpAt),
         internal_notes: data.internalNotes?.trim() || null,
       });
+
+      const commercial = {
+        packageSource: data.packageSource,
+        selectedPackageId: data.selectedPackageId,
+        customPackageName: data.customPackageName,
+        customPackagePrice: data.customPackagePrice,
+        selectedAddonIds: data.selectedAddonIds,
+        customAddonLines: data.customAddonLines,
+      };
+      if (inquiryHasCommercialSelection(commercial)) {
+        const { error: commercialError } = await supabase
+          .from("booking_inquiries")
+          .update({ commercial } as never)
+          .eq("id", result.reservationId)
+          .eq("organization_id", orgId);
+        if (commercialError) {
+          toast.error(t("inquiries.createFailed"), {
+            description: commercialError.message,
+          });
+          return;
+        }
+      }
 
       void notifyInquiryCreated({
         organizationId: orgId,
@@ -226,6 +318,8 @@ export function NewInquiryForm({
               errors={errors}
               properties={properties}
               customers={customers}
+              packages={packages}
+              addons={addons}
               layout="sectioned"
             />
           </div>

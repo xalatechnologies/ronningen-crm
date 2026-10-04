@@ -7,10 +7,11 @@ import { PriceInput } from "@/components/ui/price-input";
 import { TimePickerField } from "@/components/ui/time-picker-field";
 import { Label } from "@/components/ui/label";
 import { FormSelectField, toStringOptions } from "@/components/ui/form-select";
+import { PropertySelectField } from "@/components/properties/property-select-field";
 import { AddressField } from "@/components/forms/address-field";
+import { BookingPackageAddonsFields } from "@/components/bookings/booking-package-addons-fields";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  bookingPackageListBlurb,
   createNewBookingFormSchema,
   estimateNewBookingTotalNok,
   NEW_BOOKING_FEST_TYPE_ANNET,
@@ -31,6 +32,13 @@ import {
   suggestNextBookingReference,
 } from "@/lib/bookings/booking-reference";
 import { notifyBookingCreated } from "@/lib/notifications/actions/org-events";
+import {
+  buildBookingLineItems,
+  inquiryHasCommercialSelection,
+  type BookingAddonOption,
+  type BookingPackageAddonFormValues,
+  type BookingPackageOption,
+} from "@/lib/bookings/commercial-lines";
 import { resolveNewBookingPaymentAmounts } from "@/constants/booking-payment-status";
 import { useTranslation } from "@/i18n/client";
 import { parseNokFormValue } from "@/lib/bookings/parse-nok-form-value";
@@ -46,9 +54,7 @@ import {
   ArrowLeft,
   Calendar,
   Package,
-  Plus,
   RefreshCw,
-  Trash2,
   User,
   X,
 } from "lucide-react";
@@ -58,7 +64,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   type Resolver,
   Controller,
-  useFieldArray,
   useForm,
   useWatch,
 } from "react-hook-form";
@@ -119,6 +124,7 @@ export type InquiryPrefill = {
   guestCount: number;
   estimatedTotal: number | null;
   internalNotes: string | null;
+  commercial?: BookingPackageAddonFormValues | null;
 };
 
 type NewBookingFormFieldValues = Omit<
@@ -129,18 +135,7 @@ type NewBookingFormFieldValues = Omit<
   festType: "" | NewBookingFormInput["festType"];
 };
 
-export type BookingAddonOption = {
-  id: string;
-  name: string;
-  price: number;
-};
-
-export type BookingPackageOption = {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-};
+export type { BookingAddonOption, BookingPackageOption };
 
 export type NewBookingFormProps = {
   existingCustomer?: ExistingCustomer | null;
@@ -148,6 +143,7 @@ export type NewBookingFormProps = {
   bookingPackages: BookingPackageOption[];
   /** Når satt: fyller skjema fra forespørsel og kobler konvertering etter lagring. */
   inquiryPrefill?: InquiryPrefill | null;
+  properties?: readonly { id: string; name: string }[];
 };
 
 export function NewBookingForm({
@@ -155,6 +151,7 @@ export function NewBookingForm({
   bookingAddons,
   bookingPackages,
   inquiryPrefill = null,
+  properties = [],
 }: NewBookingFormProps) {
   const { t, formatCurrency, locale } = useTranslation();
   const supabase = useSupabase();
@@ -225,6 +222,7 @@ export function NewBookingForm({
       agreedTotal: defaultAgreedTotal,
       notes: "",
       bookingReference: "",
+      propertyId: inquiryPrefill?.propertyId ?? "",
     },
   });
 
@@ -237,14 +235,8 @@ export function NewBookingForm({
     formState: { errors, isSubmitting },
   } = form;
 
-  const { fields: customAddonFields, append: appendCustomAddon, remove: removeCustomAddon } =
-    useFieldArray({
-      control,
-      name: "customAddonLines",
-    });
-
-  const selectedPackageId = useWatch({ control, name: "selectedPackageId" });
   const packageSource = useWatch({ control, name: "packageSource" });
+  const selectedPackageId = useWatch({ control, name: "selectedPackageId" });
   const festType = useWatch({ control, name: "festType" });
   const eventDate = useWatch({ control, name: "eventDate" });
   const selectedAddonIds =
@@ -262,6 +254,7 @@ export function NewBookingForm({
   const didAutoGenerateRef = useRef(false);
   const clientRequestIdRef = useRef(generateClientRequestId());
   const submitInFlightRef = useRef(false);
+  const existingEmailLocked = Boolean(existingCustomer?.email?.trim());
 
   useEffect(() => {
     if (sortedPackages.length === 0) {
@@ -277,6 +270,9 @@ export function NewBookingForm({
     const { festType: ft, festTypeCustom: ftc } = mapInquiryFestToForm(
       inquiryPrefill.festType,
     );
+    if (inquiryPrefill.propertyId) {
+      setValue("propertyId", inquiryPrefill.propertyId, { shouldValidate: true });
+    }
     setValue("eventType", inquiryPrefill.eventType, { shouldValidate: true });
     setValue("festType", ft, { shouldValidate: true });
     setValue("festTypeCustom", ftc, { shouldValidate: true });
@@ -294,7 +290,33 @@ export function NewBookingForm({
       setValue("eventEndDate", "", { shouldValidate: true });
     }
     const est = inquiryPrefill.estimatedTotal;
-    if (est != null && est > 0) {
+    const commercial = inquiryPrefill.commercial;
+    if (commercial && inquiryHasCommercialSelection(commercial)) {
+      setValue("packageSource", commercial.packageSource, { shouldValidate: true });
+      setValue("selectedPackageId", commercial.selectedPackageId, {
+        shouldValidate: true,
+      });
+      setValue("customPackageName", commercial.customPackageName, {
+        shouldValidate: true,
+      });
+      setValue("customPackagePrice", commercial.customPackagePrice, {
+        shouldValidate: true,
+      });
+      setValue("selectedAddonIds", commercial.selectedAddonIds, {
+        shouldValidate: true,
+      });
+      setValue("customAddonLines", commercial.customAddonLines, {
+        shouldValidate: true,
+      });
+      const estimated = estimateNewBookingTotalNok(
+        commercial,
+        packageCatalog,
+        addonCatalog,
+      );
+      setValue("agreedTotal", estimated > 0 ? estimated : est ?? 0, {
+        shouldValidate: true,
+      });
+    } else if (est != null && est > 0) {
       setValue("packageSource", "custom", { shouldValidate: true });
       setValue("selectedPackageId", "", { shouldValidate: true });
       setValue("customPackageName", t("bookings.customPackageFromInquiry"), {
@@ -465,67 +487,58 @@ export function NewBookingForm({
       addonCatalog,
     );
     const total = data.agreedTotal;
-    const discountNok = Math.max(0, estimated - total);
     const {
       paid,
       remaining,
       paymentStatus: payment_status,
     } = resolveNewBookingPaymentAmounts(total, data.depositPaid);
-    const nameById = new Map(bookingAddons.map((a) => [a.id, a.name]));
-    const catalogAddOnLabels = data.selectedAddonIds
-      .map((id) => nameById.get(id))
-      .filter(Boolean) as string[];
-    const customAddOnLabels = data.customAddonLines
-      .filter((l) => l.name.trim())
-      .map((l) => `${l.name.trim()} (${formatCurrency(l.priceNok)})`);
-    const addOnLabels = [...catalogAddOnLabels, ...customAddOnLabels];
-    const packageName =
-      data.packageSource === "custom"
-        ? data.customPackageName.trim()
-        : sortedPackages.find((p) => p.id === data.selectedPackageId)?.name ??
-          t("bookings.form.defaultPackageName");
-    const pricingSummary = [
-      t("bookings.form.pricingSummary.estimated", {
-        amount: formatCurrency(estimated),
-      }),
-      t("bookings.form.pricingSummary.agreed", {
-        amount: formatCurrency(total),
-      }),
-      discountNok > 0
-        ? t("bookings.form.pricingSummary.discount", {
-            amount: formatCurrency(discountNok),
-          })
-        : null,
-      total > estimated
-        ? t("bookings.form.pricingSummary.adjusted", {
-            amount: formatCurrency(total - estimated),
-          })
-        : null,
-    ]
-      .filter(Boolean)
-      .join(" · ");
-    const parts = [
-      pricingSummary,
-      bookingReference
-        ? t("bookings.form.pricingSummary.reference", { ref: bookingReference })
-        : null,
-      data.notes?.trim(),
-      addOnLabels.length
-        ? t("bookings.form.pricingSummary.addons", {
-            list: addOnLabels.join(", "),
-          })
-        : null,
-      data.packageSource === "custom"
-        ? t("bookings.form.pricingSummary.customPackage", {
-            name: packageName,
-            amount: formatCurrency(data.customPackagePrice),
-          })
-        : t("bookings.form.pricingSummary.catalogPackage", { name: packageName }),
-    ].filter(Boolean);
+    const parts = [data.notes?.trim()].filter(Boolean);
     const notesCombined = parts.join("\n");
     const festTypeStored = resolveNewBookingFestTypeStored(data);
 
+    const lineItems = buildBookingLineItems({
+      form: {
+        packageSource: data.packageSource,
+        selectedPackageId: data.selectedPackageId,
+        customPackageName: data.customPackageName,
+        customPackagePrice: data.customPackagePrice,
+        selectedAddonIds: data.selectedAddonIds,
+        customAddonLines: data.customAddonLines,
+      },
+      packages: sortedPackages,
+      addons: bookingAddons,
+      agreedTotal: total,
+      defaultPackageName: t("bookings.form.defaultPackageName"),
+    });
+    const installments = [
+      {
+        label: paid > 0 ? "Depositum" : "Avtalt leie",
+        amount_nok: paid > 0 ? paid : total,
+        due_date: data.eventDate,
+        sort_order: 0,
+      },
+    ];
+    if (paid > 0 && remaining > 0) {
+      installments.push({
+        label: "Restbeløp",
+        amount_nok: remaining,
+        due_date: data.eventDate,
+        sort_order: 1,
+      });
+    }
+
     try {
+      if (existingCustomer?.id && data.email && !existingCustomer.email?.trim()) {
+        const { error: emailError } = await supabase
+          .from("customers")
+          .update({ email: data.email })
+          .eq("id", existingCustomer.id)
+          .eq("organization_id", orgId);
+        if (emailError) {
+          toast.error(emailError.message);
+          return;
+        }
+      }
       const result = await createBookingAtomic(supabase, {
         organization_id: orgId,
         client_request_id: clientRequestIdRef.current,
@@ -534,7 +547,7 @@ export function NewBookingForm({
         customer_email: data.email || null,
         customer_phone: data.phone.trim() || null,
         customer_address: data.address.trim() || null,
-        property_id: inquiryPrefill?.propertyId ?? null,
+        property_id: data.propertyId,
         fest_type: festTypeStored,
         event_type: data.eventType,
         event_date: data.eventDate,
@@ -550,6 +563,9 @@ export function NewBookingForm({
         booking_reference: bookingReference,
         payment_status,
         inquiry_id: inquiryPrefill?.inquiryId ?? null,
+        line_items: lineItems,
+        installments,
+        kitchen_access: "unknown",
       });
 
       toast.success(t("bookings.form.created"), {
@@ -587,27 +603,6 @@ export function NewBookingForm({
 
   const catalogPackageBlocked =
     packageSource === "catalog" && sortedPackages.length === 0;
-
-  const noPackagesHintParts = useMemo(() => {
-    const pricingMarker = "\x00PRICING\x00";
-    const customMarker = "\x00CUSTOM\x00";
-    const text = t("bookings.form.noPackagesHint", {
-      pricing: pricingMarker,
-      custom: customMarker,
-    });
-    const [beforePricing, restAfterPricing = ""] = text.split(pricingMarker);
-    const [middle, after = ""] = restAfterPricing.split(customMarker);
-    return { beforePricing, middle, after };
-  }, [t]);
-
-  const noCatalogAddonsHintParts = useMemo(() => {
-    const pricingMarker = "\x00PRICING\x00";
-    const text = t("bookings.form.noCatalogAddons", {
-      pricing: pricingMarker,
-    });
-    const [beforePricing, after = ""] = text.split(pricingMarker);
-    return { beforePricing, after };
-  }, [t]);
 
   return (
     <div className="mx-auto w-full pb-12 md:pb-8">
@@ -702,669 +697,22 @@ export function NewBookingForm({
         </div>
         <div className="border-b-2 border-rn-border-strong/40 bg-card p-6 md:p-8">
           <div className="mb-6 flex items-center gap-2">
-            <User className={cn("size-5", sectionIconWrap)} aria-hidden />
-            <h3 className="app-card-title md:text-app-xl">
-              {t("bookings.form.customerInfo")}
-            </h3>
-          </div>
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
-            <div className="space-y-2">
-              <Label className={labelClass}>
-                {t("common.fields.name")}
-                <RequiredMark />
-              </Label>
-              <Input
-                className={cn(
-                  fieldClass,
-                  existingCustomer && "bg-muted/50",
-                )}
-                placeholder={t("bookings.form.namePlaceholder")}
-                readOnly={!!existingCustomer}
-                {...register("customerName")}
-                aria-invalid={!!errors.customerName}
-              />
-              {errors.customerName ? (
-                <p className="text-app-xs text-destructive">
-                  {errors.customerName.message}
-                </p>
-              ) : null}
-            </div>
-            <div className="space-y-2">
-              <Label className={labelClass}>
-                {t("common.fields.phone")}
-                <RequiredMark />
-              </Label>
-              <Input
-                className={cn(
-                  fieldClass,
-                  existingCustomer && existingCustomer.phone?.trim() && "bg-muted/50",
-                )}
-                type="tel"
-                placeholder={t("bookings.form.phonePlaceholder")}
-                readOnly={!!existingCustomer && !!existingCustomer.phone?.trim()}
-                {...register("phone")}
-                aria-invalid={!!errors.phone}
-              />
-              {errors.phone ? (
-                <p className="text-app-xs text-destructive">{errors.phone.message}</p>
-              ) : null}
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label className={labelClass}>
-                {t("common.fields.email")}
-              </Label>
-              <Input
-                className={cn(
-                  fieldClass,
-                  existingCustomer && "bg-muted/50",
-                )}
-                type="email"
-                placeholder={t("bookings.form.emailPlaceholder")}
-                readOnly={!!existingCustomer}
-                {...register("email")}
-                aria-invalid={!!errors.email}
-              />
-              {errors.email ? (
-                <p className="text-app-xs text-destructive">{errors.email.message}</p>
-              ) : null}
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label className={labelClass}>
-                {t("common.fields.address")}
-              </Label>
-              <AddressField
-                name="address"
-                register={register}
-                setValue={setValue}
-                className={cn(
-                  fieldClass,
-                  existingCustomer &&
-                    existingCustomer.address?.trim() &&
-                    "bg-muted/50",
-                )}
-                placeholder={t("common.address.placeholder")}
-                format="multiline"
-                variant="textarea"
-                readOnly={
-                  !!existingCustomer && !!existingCustomer.address?.trim()
-                }
-                aria-invalid={!!errors.address}
-              />
-              {errors.address ? (
-                <p className="text-app-xs text-destructive">{errors.address.message}</p>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        <div className="border-b-2 border-rn-border-strong/40 bg-card p-6 md:p-8">
-          <div className="mb-6 flex items-center gap-2">
-            <Calendar className={cn("size-5", sectionIconWrap)} aria-hidden />
-            <h3 className="app-card-title md:text-app-xl">
-              {t("bookings.detail.event")}
-            </h3>
-          </div>
-          <div className="flex flex-col gap-5 md:gap-6">
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
-              <div className="space-y-2">
-                <Label className={labelClass}>
-                  {t("common.fields.type")}
-                  <RequiredMark />
-                </Label>
-                <FormSelectField
-                  name="festType"
-                  control={control}
-                  placeholder={t("common.selectPlaceholder")}
-                  className={cn(errors.festType && "border-destructive")}
-                  options={[
-                    ...toStringOptions(NEW_BOOKING_FEST_TYPE_PRESETS),
-                    {
-                      value: NEW_BOOKING_FEST_TYPE_ANNET,
-                      label: t("bookings.form.festTypeOther"),
-                    },
-                  ]}
-                />
-                {festType === NEW_BOOKING_FEST_TYPE_ANNET ? (
-                  <div className="space-y-2 pt-1">
-                    <Label className={labelClass}>
-                      {t("bookings.form.describeType")}
-                      <RequiredMark />
-                    </Label>
-                    <Input
-                      className={cn(
-                        fieldClass,
-                        errors.festTypeCustom && "border-destructive",
-                      )}
-                      placeholder={t("bookings.form.festTypeCustomPlaceholder")}
-                      {...register("festTypeCustom")}
-                    />
-                    {errors.festTypeCustom ? (
-                      <p className="text-app-xs text-destructive">
-                        {errors.festTypeCustom.message}
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
-                {errors.festType ? (
-                  <p className="text-app-xs text-destructive">
-                    {errors.festType.message}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <Label className={labelClass}>
-                  {t("bookings.form.corporateOrPrivate")}
-                  <RequiredMark />
-                </Label>
-                <FormSelectField
-                  name="eventType"
-                  control={control}
-                  placeholder={t("common.selectPlaceholder")}
-                  className={cn(errors.eventType && "border-destructive")}
-                  options={[
-                    { value: "Bedrift", label: t("bookings.corporate") },
-                    { value: "Privat", label: t("bookings.private") },
-                  ]}
-                />
-                {errors.eventType ? (
-                  <p className="text-app-xs text-destructive">
-                    {errors.eventType.message}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
-              <div className="space-y-2 md:col-span-2">
-                <p className="text-app-xs leading-relaxed text-muted-foreground md:text-app-sm">
-                  {t("bookings.form.periodHint", {
-                    label: t("bookings.form.periodLabel"),
-                    example: "01.07.2027 17:00 – 04.07.2027 17:00",
-                  })}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-booking-event-date" className={labelClass}>
-                  {t("bookings.dateFrom")}
-                  <RequiredMark />
-                </Label>
-                <Controller
-                  name="eventDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePickerField
-                      id="new-booking-event-date"
-                      value={field.value}
-                      onChange={(v) => {
-                        field.onChange(v);
-                        void field.onBlur();
-                      }}
-                      minYmd={todayLocalYmd()}
-                      variant="toolbar"
-                      className={cn(
-                        "bg-background px-3.5 shadow-sm md:h-12 md:px-4 md:text-app-base",
-                        errors.eventDate && "border-destructive",
-                      )}
-                      aria-invalid={!!errors.eventDate}
-                    />
-                  )}
-                />
-                {errors.eventDate ? (
-                  <p className="text-app-xs text-destructive">
-                    {errors.eventDate.message}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-booking-event-end-date" className={labelClass}>
-                  {t("bookings.detail.toDateOptional")}{" "}
-                  <span className="font-normal normal-case text-muted-foreground">
-                    ({t("common.optional")})
-                  </span>
-                </Label>
-                <Controller
-                  name="eventEndDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePickerField
-                      id="new-booking-event-end-date"
-                      value={field.value}
-                      onChange={(v) => {
-                        field.onChange(v);
-                        void field.onBlur();
-                      }}
-                      minYmd={todayLocalYmd()}
-                      variant="toolbar"
-                      className={cn(
-                        "bg-background px-3.5 shadow-sm md:h-12 md:px-4 md:text-app-base",
-                        errors.eventEndDate && "border-destructive",
-                      )}
-                      aria-invalid={!!errors.eventEndDate}
-                    />
-                  )}
-                />
-                {errors.eventEndDate ? (
-                  <p className="text-app-xs text-destructive">
-                    {errors.eventEndDate.message}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-booking-start-time" className={labelClass}>
-                  {t("common.fromTime")}{" "}
-                  <span className="font-normal normal-case text-muted-foreground">
-                    ({t("common.optional")})
-                  </span>
-                </Label>
-                <TimePickerField
-                  id="new-booking-start-time"
-                  className={cn(
-                    fieldClass,
-                    errors.eventStartTime && "border-destructive",
-                  )}
-                  {...register("eventStartTime")}
-                  aria-invalid={!!errors.eventStartTime}
-                />
-                {errors.eventStartTime ? (
-                  <p className="text-app-xs text-destructive">
-                    {errors.eventStartTime.message}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-booking-end-time" className={labelClass}>
-                  {t("common.toTime")}{" "}
-                  <span className="font-normal normal-case text-muted-foreground">
-                    ({t("common.optional")})
-                  </span>
-                </Label>
-                <TimePickerField
-                  id="new-booking-end-time"
-                  className={cn(
-                    fieldClass,
-                    errors.eventEndTime && "border-destructive",
-                  )}
-                  {...register("eventEndTime")}
-                  aria-invalid={!!errors.eventEndTime}
-                />
-                {errors.eventEndTime ? (
-                  <p className="text-app-xs text-destructive">
-                    {errors.eventEndTime.message}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label className={labelClass}>
-                  {t("common.guests")}
-                  <RequiredMark />
-                </Label>
-                <Input
-                  className={fieldClass}
-                  type="number"
-                  min={1}
-                  {...register("guestCount")}
-                  aria-invalid={!!errors.guestCount}
-                />
-                {errors.guestCount ? (
-                  <p className="text-app-xs text-destructive">
-                    {errors.guestCount.message}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-b-2 border-rn-border-strong/40 bg-card p-6 md:p-8">
-          <div className="mb-6 flex items-center gap-2">
             <Package className={cn("size-5", sectionIconWrap)} aria-hidden />
             <h3 className="app-card-title md:text-app-xl">
               {t("bookings.form.packageAndAddons")}
             </h3>
           </div>
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
-            <div className="space-y-4">
-              <Label className={labelClass}>
-                {t("bookings.form.servicePackage")}
-                <RequiredMark />
-              </Label>
-              {sortedPackages.length > 0 ? (
-                <Controller
-                  name="packageSource"
-                  control={control}
-                  render={({ field }) => (
-                    <div
-                      className="flex flex-wrap gap-3"
-                      role="group"
-                      aria-label={t("bookings.form.packageSourceAria")}
-                    >
-                      <label
-                        className={cn(
-                          "flex cursor-pointer items-center gap-2 rounded-md border-2 px-3 py-2 text-app-sm font-medium transition-colors",
-                          field.value === "catalog"
-                            ? "border-success bg-success/5 text-rn-text-heading"
-                            : "border-rn-border-strong hover:bg-rn-surface-row-hover",
-                        )}
-                      >
-                        <input
-                          type="radio"
-                          className="size-4 accent-success"
-                          name={field.name}
-                          value="catalog"
-                          checked={field.value === "catalog"}
-                          onChange={() => {
-                            field.onChange("catalog");
-                            if (defaultPackageId) {
-                              setValue("selectedPackageId", defaultPackageId, {
-                                shouldValidate: true,
-                                shouldDirty: true,
-                              });
-                            }
-                          }}
-                          onBlur={field.onBlur}
-                          ref={field.ref}
-                        />
-                        {t("bookings.form.fromCatalog")}
-                      </label>
-                      <label
-                        className={cn(
-                          "flex cursor-pointer items-center gap-2 rounded-md border-2 px-3 py-2 text-app-sm font-medium transition-colors",
-                          field.value === "custom"
-                            ? "border-success bg-success/5 text-rn-text-heading"
-                            : "border-rn-border-strong hover:bg-rn-surface-row-hover",
-                        )}
-                      >
-                        <input
-                          type="radio"
-                          className="size-4 accent-success"
-                          name={field.name}
-                          value="custom"
-                          checked={field.value === "custom"}
-                          onChange={() => {
-                            field.onChange("custom");
-                            setValue("selectedPackageId", "", {
-                              shouldValidate: true,
-                              shouldDirty: true,
-                            });
-                          }}
-                          onBlur={field.onBlur}
-                        />
-                        {t("bookings.form.customPackage")}
-                      </label>
-                    </div>
-                  )}
-                />
-              ) : (
-                <p className="text-app-xs text-rn-text-body">
-                  {noPackagesHintParts.beforePricing}
-                  <Link
-                    href="/app/pricing"
-                    className="font-semibold text-success underline-offset-2 hover:underline"
-                  >
-                    {t("navigation.pricing")}
-                  </Link>
-                  {noPackagesHintParts.middle}
-                  <span className="font-medium">
-                    {t("bookings.form.customPackageLabel")}
-                  </span>
-                  {noPackagesHintParts.after}
-                </p>
-              )}
-              {errors.packageSource ? (
-                <p className="text-app-xs text-destructive">
-                  {errors.packageSource.message}
-                </p>
-              ) : null}
-              {packageSource === "catalog" && sortedPackages.length > 0 ? (
-                <div className="flex flex-col gap-3">
-                  {sortedPackages.map((pkg) => {
-                    const blurb = bookingPackageListBlurb(pkg.description);
-                    return (
-                      <label
-                        key={pkg.id}
-                        className={cn(
-                          "flex cursor-pointer items-center rounded-md border-2 p-4 transition-colors",
-                          selectedPackageId === pkg.id
-                            ? "border-success bg-success/5 shadow-sm"
-                            : "border-rn-border-strong hover:bg-rn-surface-row-hover",
-                        )}
-                      >
-                        <input
-                          type="radio"
-                          value={pkg.id}
-                          className="size-5 accent-success"
-                          {...register("selectedPackageId")}
-                        />
-                        <div className="ml-4 min-w-0 flex-1">
-                          <span className="block font-semibold text-rn-text-heading">
-                            {pkg.name}
-                          </span>
-                          {blurb ? (
-                            <span className="text-app-xs text-muted-foreground">
-                              {blurb}
-                            </span>
-                          ) : null}
-                          <span className="mt-0.5 block text-app-xs font-semibold tabular-nums text-rn-text-slate">
-                            {Number(pkg.price) <= 0
-                              ? t("bookings.form.priceOnAgreement")
-                              : formatCurrency(Number(pkg.price))}
-                          </span>
-                        </div>
-                      </label>
-                    );
-                  })}
-                </div>
-              ) : null}
-              {packageSource === "custom" || sortedPackages.length === 0 ? (
-                <div className="space-y-3 rounded-md border-2 border-rn-border-strong bg-rn-surface-wash/40 p-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-booking-custom-pkg-name" className={labelClass}>
-                      {t("bookings.form.customPackageName")}
-                      <RequiredMark />
-                    </Label>
-                    <Input
-                      id="new-booking-custom-pkg-name"
-                      className={cn(
-                        fieldClass,
-                        errors.customPackageName && "border-destructive",
-                      )}
-                      placeholder={t("bookings.form.customPackageNamePlaceholder")}
-                      {...register("customPackageName")}
-                      aria-invalid={!!errors.customPackageName}
-                    />
-                    {errors.customPackageName ? (
-                      <p className="text-app-xs text-destructive">
-                        {errors.customPackageName.message}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new-booking-custom-pkg-price" className={labelClass}>
-                      {t("bookings.form.packagePrice")}
-                    </Label>
-                    <div className="relative">
-                      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-app-sm font-semibold text-rn-text-slate md:left-4">
-                        kr
-                      </span>
-                      <PriceInput
-                        id="new-booking-custom-pkg-price"
-                        className={cn(
-                          fieldClass,
-                          "pl-10 md:pl-11",
-                          errors.customPackagePrice && "border-destructive",
-                        )}
-                        {...register("customPackagePrice")}
-                        aria-invalid={!!errors.customPackagePrice}
-                      />
-                    </div>
-                    <p className="text-app-xs text-muted-foreground">
-                      {t("bookings.form.packagePriceHint")}
-                    </p>
-                    {errors.customPackagePrice ? (
-                      <p className="text-app-xs text-destructive">
-                        {errors.customPackagePrice.message}
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-              ) : null}
-              {errors.selectedPackageId ? (
-                <p className="text-app-xs text-destructive">
-                  {errors.selectedPackageId.message}
-                </p>
-              ) : null}
-            </div>
-            <div className="space-y-4">
-              <Label className={labelClass}>{t("bookings.form.addons")}</Label>
-              <p className="text-app-xs text-rn-text-body">
-                {t("bookings.form.addonsHint")}
-              </p>
-              {bookingAddons.length === 0 ? (
-                <p className="rounded-md border border-dashed border-rn-border-strong bg-rn-surface-wash/30 px-3 py-2 text-app-xs text-rn-text-body">
-                  {noCatalogAddonsHintParts.beforePricing}
-                  <Link
-                    href="/app/pricing"
-                    className="font-semibold text-success underline-offset-2 hover:underline"
-                  >
-                    {t("navigation.pricing")}
-                  </Link>
-                  {noCatalogAddonsHintParts.after}
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 lg:gap-3">
-                  {bookingAddons.map((addon) => {
-                    const checked = selectedAddonIds.includes(addon.id);
-                    return (
-                      <label
-                        key={addon.id}
-                        className="flex cursor-pointer items-start gap-3 rounded-md border-2 border-transparent p-3 transition-colors hover:border-rn-border-strong hover:bg-rn-surface-row-hover"
-                      >
-                        <input
-                          type="checkbox"
-                          className="size-5 shrink-0 rounded accent-success"
-                          checked={checked}
-                          onChange={(e) => {
-                            const next = e.target.checked
-                              ? [...selectedAddonIds, addon.id]
-                              : selectedAddonIds.filter((id) => id !== addon.id);
-                            setValue("selectedAddonIds", next, {
-                              shouldValidate: true,
-                              shouldDirty: true,
-                            });
-                          }}
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-app-sm font-medium leading-snug text-rn-text-heading">
-                            {addon.name}
-                          </span>
-                          <span className="mt-0.5 block text-app-xs tabular-nums text-rn-text-slate">
-                            +{formatCurrency(addon.price)}
-                          </span>
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
-              {errors.selectedAddonIds ? (
-                <p className="text-app-xs text-destructive">
-                  {errors.selectedAddonIds.message}
-                </p>
-              ) : null}
-              <div className="space-y-3 border-t border-rn-border-strong pt-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className={labelClass}>{t("bookings.form.customAddons")}</span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0 gap-1.5 rounded-md font-semibold"
-                    onClick={() => appendCustomAddon({ name: "", priceNok: 0 })}
-                    disabled={customAddonFields.length >= 24}
-                  >
-                    <Plus className="size-4" aria-hidden />
-                    {t("bookings.form.addLine")}
-                  </Button>
-                </div>
-                {customAddonFields.length === 0 ? (
-                  <p className="text-app-xs text-muted-foreground">
-                    {t("bookings.form.noCustomAddons")}
-                  </p>
-                ) : (
-                  <ul className="space-y-3">
-                    {customAddonFields.map((field, index) => (
-                      <li
-                        key={field.id}
-                        className="flex flex-col gap-2 rounded-md border-2 border-rn-border-strong bg-background p-3 sm:flex-row sm:items-end"
-                      >
-                        <div className="min-w-0 flex-1 space-y-2">
-                          <Label
-                            className="text-[11px] font-semibold uppercase tracking-wider text-rn-text-slate"
-                            htmlFor={`custom-addon-name-${field.id}`}
-                          >
-                            {t("common.fields.name")}
-                          </Label>
-                          <Input
-                            id={`custom-addon-name-${field.id}`}
-                            className={cn(
-                              fieldClass,
-                              errors.customAddonLines?.[index]?.name &&
-                                "border-destructive",
-                            )}
-                            placeholder={t("bookings.extraServingPlaceholder")}
-                            {...register(`customAddonLines.${index}.name`)}
-                            aria-invalid={!!errors.customAddonLines?.[index]?.name}
-                          />
-                          {errors.customAddonLines?.[index]?.name ? (
-                            <p className="text-app-xs text-destructive">
-                              {errors.customAddonLines[index]?.name?.message}
-                            </p>
-                          ) : null}
-                        </div>
-                        <div className="w-full space-y-2 sm:w-40">
-                          <Label
-                            className="text-[11px] font-semibold uppercase tracking-wider text-rn-text-slate"
-                            htmlFor={`custom-addon-price-${field.id}`}
-                          >
-                            {t("bookings.form.priceNok")}
-                          </Label>
-                          <PriceInput
-                            id={`custom-addon-price-${field.id}`}
-                            step={50}
-                            className={cn(
-                              fieldClass,
-                              errors.customAddonLines?.[index]?.priceNok &&
-                                "border-destructive",
-                            )}
-                            {...register(`customAddonLines.${index}.priceNok`, {
-                              valueAsNumber: true,
-                            })}
-                            aria-invalid={
-                              !!errors.customAddonLines?.[index]?.priceNok
-                            }
-                          />
-                          {errors.customAddonLines?.[index]?.priceNok ? (
-                            <p className="text-app-xs text-destructive">
-                              {errors.customAddonLines[index]?.priceNok?.message}
-                            </p>
-                          ) : null}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => removeCustomAddon(index)}
-                          aria-label={t("bookings.form.removeAddonLine")}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          </div>
+          <BookingPackageAddonsFields
+            control={control}
+            register={register}
+            setValue={setValue}
+            errors={errors}
+            packages={sortedPackages}
+            addons={bookingAddons}
+            fieldClass={fieldClass}
+            labelClass={labelClass}
+            idPrefix="new-booking"
+          />
         </div>
 
         <div className="bg-card p-6 md:p-8">

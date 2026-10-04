@@ -34,10 +34,8 @@ export function LanguageSwitcher({
   const segment = (
     <div
       className={cn(
-        "flex gap-1 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment p-1",
-        compact && "h-9 sm:h-10",
-        !compact && !segmentStyle && "w-full",
-        segmentStyle && "w-full",
+        "grid gap-1 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment p-1",
+        compact ? "inline-grid h-9 grid-flow-col sm:h-10" : "w-full min-w-0 grid-cols-2",
       )}
     >
       {localeOptions.map((value) => {
@@ -53,19 +51,19 @@ export function LanguageSwitcher({
             title={localeLabel(value, t, false)}
             onClick={() => setLocale(value)}
             className={cn(
-              "flex items-center justify-center rounded-[calc(var(--app-radius)-2px)] font-heading font-semibold transition-colors",
+              "flex min-w-0 items-center justify-center rounded-[calc(var(--app-radius)-2px)] font-heading font-semibold transition-colors",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               compact
                 ? "min-w-[2.5rem] px-2.5 text-app-xs sm:min-w-[2.75rem] sm:px-3"
                 : segmentStyle
-                  ? "flex-1 px-3 py-2 text-app-sm"
-                  : "flex-1 px-2 py-2 text-app-xs",
+                  ? "px-3 py-2 text-app-sm"
+                  : "px-2 py-2.5 text-app-xs",
               active
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {label}
+            <span className="truncate">{label}</span>
           </button>
         );
       })}

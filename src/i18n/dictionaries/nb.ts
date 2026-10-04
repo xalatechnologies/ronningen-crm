@@ -31,6 +31,7 @@ import { authNb, formsNb, rolesNb, statusesNb } from "@/i18n/dictionaries/parts/
 import { validationNb } from "@/i18n/dictionaries/parts/validation";
 import { integrationsNb } from "@/i18n/dictionaries/parts/integrations";
 import { serverErrorsNb } from "@/i18n/dictionaries/parts/serverErrors";
+import { contractsNb } from "@/i18n/dictionaries/parts/contracts";
 
 export const nb = {
   admin: adminNb,
@@ -66,4 +67,5 @@ export const nb = {
   billing: billingNb,
   integrations: integrationsNb,
   serverErrors: serverErrorsNb,
+  contracts: contractsNb,
 } as const;

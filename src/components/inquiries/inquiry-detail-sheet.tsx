@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   bookingInquiryFormSchema,
   inquiryActivityNoteSchema,
+  sortBookingPackagesByCatalogOrder,
   type BookingInquiryFormInput,
   type BookingInquiryFormStatus,
   type BookingInquiryStatus,
@@ -28,6 +29,14 @@ import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import {
+  emptyPackageAddonFormValues,
+  parseInquiryCommercial,
+  type BookingAddonOption,
+  type BookingPackageOption,
+} from "@/lib/bookings/commercial-lines";
+import { loadInquiryCommercialEditor } from "@/lib/contracts/actions";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { Pencil, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -83,6 +92,7 @@ function inquiryToFormDefaults(inquiry: InquiryListRow): BookingInquiryFormInput
     preferredEventEndDate: inquiry.preferredEventEndDateIso ?? "",
     guestCount: inquiry.guestCount,
     estimatedTotal: inquiry.estimatedTotal ?? undefined,
+    ...emptyPackageAddonFormValues,
     status: statusForForm(inquiry.status),
     nextFollowUpAt: toDatetimeLocalValue(inquiry.nextFollowUpAtIso),
     internalNotes: inquiry.internalNotes ?? "",
@@ -133,6 +143,7 @@ export function InquiryDetailSheet({
 }) {
   const { t, locale, formatDate } = useTranslation();
   const supabase = useSupabase();
+  const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateInquiries } = useTenantDataInvalidation();
   const [activities, setActivities] = useState<InquiryActivityRow[]>([]);
   const [loadingActivities, setLoadingActivities] = useState(false);
@@ -143,6 +154,9 @@ export function InquiryDetailSheet({
   const [editingNoteBusy, setEditingNoteBusy] = useState(false);
   const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null);
   const [deleteNoteBusy, setDeleteNoteBusy] = useState(false);
+  const [packages, setPackages] = useState<BookingPackageOption[]>([]);
+  const [addons, setAddons] = useState<BookingAddonOption[]>([]);
+  const [catalogReady, setCatalogReady] = useState(false);
 
   const dateOptions = useMemo(
     (): Intl.DateTimeFormatOptions => ({
@@ -177,6 +191,7 @@ export function InquiryDetailSheet({
           preferredEventEndDate: "",
           guestCount: 0,
           estimatedTotal: undefined,
+          ...emptyPackageAddonFormValues,
           status: "new",
           nextFollowUpAt: "",
           internalNotes: "",
@@ -199,11 +214,36 @@ export function InquiryDetailSheet({
   });
 
   useEffect(() => {
-    if (!inquiry || !open) {
+    if (!inquiry || !open || !currentOrganizationId) {
+      setCatalogReady(false);
       return;
     }
     form.reset(inquiryToFormDefaults(inquiry));
-  }, [inquiry, open, form]);
+    setCatalogReady(false);
+    let cancelled = false;
+    void (async () => {
+      const result = await loadInquiryCommercialEditor({
+        organizationId: currentOrganizationId,
+        inquiryId: inquiry.id,
+      });
+      if (cancelled) return;
+      if (!result.ok) {
+        setCatalogReady(true);
+        return;
+      }
+      const nextPackages = sortBookingPackagesByCatalogOrder(result.packages);
+      setPackages(nextPackages);
+      setAddons(result.addons);
+      form.reset({
+        ...inquiryToFormDefaults(inquiry),
+        ...parseInquiryCommercial(result.commercial),
+      });
+      setCatalogReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [inquiry, open, form, currentOrganizationId]);
 
   useEffect(() => {
     if (!inquiry || !open || !supabase) {
@@ -305,6 +345,14 @@ export function InquiryDetailSheet({
         status: data.status,
         next_follow_up_at: fromDatetimeLocalValue(data.nextFollowUpAt),
         internal_notes: data.internalNotes?.trim() || null,
+        commercial: {
+          packageSource: data.packageSource,
+          selectedPackageId: data.selectedPackageId,
+          customPackageName: data.customPackageName,
+          customPackagePrice: data.customPackagePrice,
+          selectedAddonIds: data.selectedAddonIds,
+          customAddonLines: data.customAddonLines,
+        },
       })
       .eq("id", inquiry.id);
 
@@ -439,36 +487,66 @@ export function InquiryDetailSheet({
         className="flex h-full max-h-dvh w-[min(100%,92vw)] max-w-2xl flex-col gap-0 overflow-hidden p-0 lg:max-w-3xl"
         showCloseButton
       >
-        <SheetHeader className="shrink-0 border-b-2 border-rn-border-strong bg-rn-surface-table-head px-6 py-5 sm:px-8 sm:py-6">
-          <SheetTitle className="font-heading text-left text-xl font-bold tracking-tight text-rn-text-heading">
-            {inquiry.customerName}
-          </SheetTitle>
+        <SheetHeader className="shrink-0 border-b-2 border-rn-border-strong bg-rn-surface-table-head py-5 pl-6 pr-14 sm:py-6 sm:pl-8 sm:pr-16">
+          <div className="flex items-start justify-between gap-3">
+            <SheetTitle className="min-w-0 flex-1 font-heading text-left text-xl font-bold tracking-tight text-rn-text-heading">
+              {inquiry.customerName}
+            </SheetTitle>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              <span
+                className={cn(
+                  "rounded-md border-2 px-3 py-1 text-sm font-semibold",
+                  isConverted
+                    ? "border-success/50 bg-success/15 text-success"
+                    : inquiry.status === "lost"
+                      ? "border-muted-foreground/40 bg-muted/40"
+                      : "border-rn-border-strong bg-card",
+                )}
+              >
+                {inquiryStatusLabel(inquiry.status, t)}
+              </span>
+              {inquiry.convertedBookingId ? (
+                <span className="app-meta text-muted-foreground">
+                  {t("inquiries.bookingId")}{" "}
+                  <span className="font-mono text-foreground">
+                    {inquiry.convertedBookingId.slice(0, 8)}…
+                  </span>
+                </span>
+              ) : null}
+            </div>
+          </div>
           <SheetDescription className="text-left text-base text-muted-foreground">
             {t("inquiries.sheetDescription", {
               date: formatAppDateTime(inquiry.updatedAtIso, locale),
             })}
           </SheetDescription>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span
-              className={cn(
-                "rounded-md border-2 px-3 py-1 text-sm font-semibold",
-                isConverted
-                  ? "border-success/50 bg-success/15 text-success"
-                  : inquiry.status === "lost"
-                    ? "border-muted-foreground/40 bg-muted/40"
-                    : "border-rn-border-strong bg-card",
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-left font-heading text-base font-bold text-rn-text-heading">
+            <p>
+              {t("inquiries.phoneLabel")}{" "}
+              {inquiry.customerPhone ? (
+                <a
+                  href={`tel:${inquiry.customerPhone}`}
+                  className="underline-offset-2 hover:underline"
+                >
+                  {inquiry.customerPhone}
+                </a>
+              ) : (
+                "—"
               )}
-            >
-              {inquiryStatusLabel(inquiry.status, t)}
-            </span>
-            {inquiry.convertedBookingId ? (
-              <span className="app-meta text-muted-foreground">
-                {t("inquiries.bookingId")}{" "}
-                <span className="font-mono text-foreground">
-                  {inquiry.convertedBookingId.slice(0, 8)}…
-                </span>
-              </span>
-            ) : null}
+            </p>
+            <p>
+              {t("inquiries.emailLabel")}{" "}
+              {inquiry.customerEmail ? (
+                <a
+                  href={`mailto:${inquiry.customerEmail}`}
+                  className="underline-offset-2 hover:underline"
+                >
+                  {inquiry.customerEmail}
+                </a>
+              ) : (
+                "—"
+              )}
+            </p>
           </div>
         </SheetHeader>
 
@@ -537,6 +615,9 @@ export function InquiryDetailSheet({
                     errors={form.formState.errors}
                     properties={properties}
                     customers={customers}
+                    packages={packages}
+                    addons={addons}
+                    catalogLoading={!catalogReady}
                     disabled={!canManage}
                     lockCustomer
                   />

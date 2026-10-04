@@ -109,7 +109,7 @@ export function ThemeToggle({
         <p className="mb-2 font-heading text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {t("common.theme.label")}
         </p>
-        <div className="flex gap-1 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment p-1">
+        <div className="grid w-full min-w-0 grid-cols-3 gap-1 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment p-1">
           {options.map(({ value, label, icon: Icon }) => {
             const active = theme === value;
             return (
@@ -118,17 +118,21 @@ export function ThemeToggle({
                 type="button"
                 role="radio"
                 aria-checked={active}
+                aria-label={label}
+                title={label}
                 onClick={() => setTheme(value)}
                 className={cn(
-                  "flex flex-1 items-center justify-center gap-1.5 rounded-[calc(var(--app-radius)-2px)] px-2 py-2 font-heading text-app-xs font-semibold transition-colors",
+                  "flex min-w-0 flex-col items-center justify-center gap-1 rounded-[calc(var(--app-radius)-2px)] px-1 py-2 font-heading text-app-xs font-semibold transition-colors",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   active
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className="size-3.5 shrink-0" aria-hidden />
-                <span>{label}</span>
+                <Icon className="size-4 shrink-0" aria-hidden />
+                <span className="w-full truncate text-center leading-tight">
+                  {label}
+                </span>
               </button>
             );
           })}

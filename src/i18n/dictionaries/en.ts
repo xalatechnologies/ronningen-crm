@@ -14,6 +14,7 @@ import { supportEn } from "@/i18n/dictionaries/parts/support";
 import { validationEn } from "@/i18n/dictionaries/parts/validation";
 import { integrationsEn } from "@/i18n/dictionaries/parts/integrations";
 import { serverErrorsEn } from "@/i18n/dictionaries/parts/serverErrors";
+import { contractsEn } from "@/i18n/dictionaries/parts/contracts";
 
 export const en = {
   admin: adminEn,
@@ -205,6 +206,10 @@ export const en = {
       description:
         "Calendar feed and external integrations for booking sync.",
     },
+    contracts: {
+      title: "Rental contracts",
+      description: "Templates and sending of digital rental agreements.",
+    },
     hubTitle: "Settings",
   },
   adminNav: {
@@ -226,6 +231,9 @@ export const en = {
     },
     platformAdmin: "Platform admin",
     backToApp: "Back to app",
+    switchAria: "Switch between app and platform",
+    switchApp: "App",
+    switchPlatform: "Platform",
     menuAria: "Platform admin menu",
     overviewAria: "{appName} platform admin — go to overview",
     openTicketsAria: "{count} open tickets",
@@ -803,6 +811,11 @@ export const en = {
       referencePlaceholder: "Custom ID / case number",
       customer: "Customer",
       event: "Event",
+      packageAndAddons: "Package and add-ons",
+      noLineItems: "No package or add-ons are saved on this reservation.",
+      packageEditHint:
+        "Changes are saved on the reservation. A sent contract updates only when you create a new version.",
+      updatePackageFailed: "Could not update package and add-ons",
       dateRangeHint: "Leave «To date» empty for a single day. Time is optional (24h).",
       toDateOptional: "To date",
       finance: "Finance (NOK)",
@@ -870,6 +883,7 @@ export const en = {
         "{label} you can enter the last event day and optional start/end time (e.g. {example}).",
       periodLabel: "Period:",
       packageAndAddons: "Package and add-ons",
+      noPackageSelected: "No package selected",
       servicePackage: "Service package",
       packageSourceAria: "Package source",
       fromCatalog: "From price catalog",
@@ -1049,6 +1063,8 @@ export const en = {
       preferredEndDateOptional: "Last day of preferred period (optional)",
       guestCountSuggestion: "Guest count (suggestion)",
       estimatedBudgetOptional: "Estimated budget (NOK, optional)",
+      packageHint:
+        "Optional. Same package and add-ons as on the reservation — carried over when you convert.",
       nextFollowUpOptional: "Next follow-up (optional)",
       internalNotes: "Internal notes",
       internalNotesPlaceholder:
@@ -1669,4 +1685,5 @@ export const en = {
   billing: billingEn,
   integrations: integrationsEn,
   serverErrors: serverErrorsEn,
+  contracts: contractsEn,
 } satisfies Dictionary;

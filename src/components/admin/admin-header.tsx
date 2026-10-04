@@ -142,9 +142,9 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
         <DropdownMenuContent
           align="end"
           sideOffset={8}
-          className="min-w-64 max-w-[min(100vw-1.5rem,20rem)] rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-2.5 text-app-base shadow-rn-card"
+          className="w-72 max-w-[min(100vw-1.5rem,18rem)] rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-2.5 text-app-base shadow-rn-card"
         >
-          <DropdownMenuGroup>
+          <DropdownMenuGroup className="min-w-0">
             <DropdownMenuLabel className="px-3 py-2 font-heading text-app-sm font-semibold md:px-3.5 md:py-2.5 md:text-app-md">
               <span className="block truncate">{displayName}</span>
               {user?.email && displayName !== user.email ? (

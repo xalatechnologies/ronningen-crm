@@ -22,6 +22,7 @@ export type PropertySelectFieldProps<T extends FieldValues> = {
   placeholder?: string;
   /** When true, copy explains lokale is optional but still guides setup. */
   optional?: boolean;
+  loading?: boolean;
 };
 
 export function PropertySelectField<T extends FieldValues>({
@@ -33,11 +34,20 @@ export function PropertySelectField<T extends FieldValues>({
   className,
   placeholder,
   optional = false,
+  loading = false,
 }: PropertySelectFieldProps<T>) {
   const { t } = useTranslation();
   const { role } = useOrganizationPermissions();
   const canManageProperties = canManageBookings(role);
   const resolvedPlaceholder = placeholder ?? t("properties.notSelected");
+
+  if (loading) {
+    return (
+      <p className="text-sm text-muted-foreground" role="status">
+        {t("common.actions.loading")}
+      </p>
+    );
+  }
 
   if (properties.length === 0) {
     return (

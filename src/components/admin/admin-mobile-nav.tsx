@@ -2,6 +2,7 @@
 
 import { useTranslation } from "@/i18n/client";
 import { AdminNavLinks } from "@/components/admin/admin-nav-links";
+import { AdminContextSwitch } from "@/components/layout/admin-context-switch";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -19,6 +20,7 @@ import { useState } from "react";
 export function AdminMobileNav({ supportOpenCount = 0 }: { supportOpenCount?: number }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -49,15 +51,20 @@ export function AdminMobileNav({ supportOpenCount = 0 }: { supportOpenCount?: nu
             {APP_NAME} — Admin
           </SheetTitle>
         </SheetHeader>
-        <nav
-          className="flex flex-col gap-[length:var(--spacing-app-gap)] px-[length:calc(var(--app-card-padding)*0.35)] pt-3 pb-4 md:px-[length:calc(var(--app-card-padding)*0.45)]"
-          aria-label={t("admin.mobil_plattformadmin_meny")}
-        >
-          <AdminNavLinks
-            onNavigate={() => setOpen(false)}
-            supportOpenCount={supportOpenCount}
-          />
-        </nav>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <nav
+            className="flex flex-col gap-[length:var(--spacing-app-gap)] px-[length:calc(var(--app-card-padding)*0.35)] pt-3 pb-4 md:px-[length:calc(var(--app-card-padding)*0.45)]"
+            aria-label={t("admin.mobil_plattformadmin_meny")}
+          >
+            <AdminNavLinks
+              onNavigate={close}
+              supportOpenCount={supportOpenCount}
+            />
+          </nav>
+          <div className="mt-auto border-t border-rn-border-strong/50 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)]">
+            <AdminContextSwitch active="platform" onNavigate={close} />
+          </div>
+        </div>
       </SheetContent>
     </Sheet>
   );
