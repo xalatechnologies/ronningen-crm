@@ -4,6 +4,7 @@ export const inquiriesNb = {
   showList: "Vis liste",
   followUpCalendar: "Oppfølgingskalender",
   searchFilterAria: "Søk og filtrer forespørsler",
+  search: "Søk",
   searchAria: "Søk blant forespørsler",
   searchPlaceholder: "Kunde, telefon, lokale eller type …",
   dateFrom: "Fra dato",

@@ -24,21 +24,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/i18n/client";
 import { formatAppDateTime } from "@/lib/format-datetime";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
-  APP_TABLE_CELL_BODY,
-  APP_TABLE_CELL_DATE,
-  APP_TABLE_CELL_PRIMARY,
+  APP_DATA_BODY,
+  APP_DATA_DATE,
+  APP_DATA_PRIMARY,
   APP_TABLE_HEAD,
 } from "@/lib/table-typography";
 import {
@@ -46,27 +39,30 @@ import {
 } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { isBefore } from "date-fns";
-import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Inbox, ListFilter, Plus, Search } from "lucide-react";
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Inbox, ListFilter, Mail, Phone, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
+const filterEyebrowClass =
+  "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
+
 const inquiriesTableHeadClass = cn("bookings-list-table-head", APP_TABLE_HEAD);
 
 const inquiriesTableCellPrimaryClass = cn(
-  APP_TABLE_CELL_PRIMARY,
-  "inquiries-list-row-title",
+  APP_DATA_PRIMARY,
+  "inquiries-list-row-title break-words",
 );
 
 const inquiriesTableCellBodyClass = cn(
-  APP_TABLE_CELL_BODY,
-  "inquiries-list-row-cell",
+  APP_DATA_BODY,
+  "inquiries-list-row-cell break-words",
 );
 
 const inquiriesTableCellDateClass = cn(
-  APP_TABLE_CELL_DATE,
-  "inquiries-list-row-meta",
+  APP_DATA_DATE,
+  "inquiries-list-row-meta break-words",
 );
 
 const listDateOptions: Intl.DateTimeFormatOptions = {
@@ -279,13 +275,13 @@ export function InquiriesSection({
             surface="default"
             title={t("inquiries.title")}
             actions={
-              <div className="flex flex-wrap items-center justify-end gap-2">
+              <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
                 {!loadError ? (
                   <Button
                     type="button"
                     variant="outline"
                     size="cta"
-                    className="gap-2 border-2 border-rn-border-strong font-semibold"
+                    className="w-full gap-2 border-2 border-rn-border-strong px-4 font-semibold sm:w-auto md:px-8"
                     aria-expanded={showCalendarView}
                     onClick={() => setShowCalendarView((v) => !v)}
                   >
@@ -300,7 +296,7 @@ export function InquiriesSection({
                     href="/app/inquiries/new"
                     className={cn(
                       buttonVariants({ variant: "success", size: "cta" }),
-                      "inline-flex items-center justify-center gap-2",
+                      "inline-flex w-full items-center justify-center gap-2 px-4 sm:w-auto md:px-8",
                     )}
                   >
                     <Plus className="size-5" aria-hidden />
@@ -328,10 +324,13 @@ export function InquiriesSection({
             className="border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6"
             aria-label={t("inquiries.searchFilterAria")}
           >
-            <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
-              <div className="relative min-w-0 flex-1">
+            <div className="flex min-w-0 flex-col gap-4">
+              <div className="relative min-w-0 w-full">
+                <Label htmlFor="inquiries-search" className={filterEyebrowClass}>
+                  {t("inquiries.search")}
+                </Label>
                 <Search
-                  className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
+                  className="pointer-events-none absolute top-[calc(50%+0.625rem)] left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
                   aria-hidden
                 />
                 <Input
@@ -345,38 +344,39 @@ export function InquiriesSection({
                 />
               </div>
 
-              <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 lg:ml-auto">
-                <div className="w-full shrink-0 sm:w-40 md:w-44">
-                  <label htmlFor="inquiries-date-from" className="sr-only">
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+                <div className="min-w-0">
+                  <Label htmlFor="inquiries-date-from" className={filterEyebrowClass}>
                     {t("inquiries.dateFrom")}
-                  </label>
+                  </Label>
                   <DatePickerField
                     id="inquiries-date-from"
                     value={dateFrom}
                     onChange={setDateFrom}
                     maxYmd={dateTo || undefined}
                     variant="toolbar"
-                    className="h-12 min-h-12 text-sm md:h-14 md:min-h-14 md:text-base"
+                    className="h-12 min-h-12 w-full min-w-0 text-sm md:h-14 md:min-h-14 md:text-base"
                   />
                 </div>
-                <div className="w-full shrink-0 sm:w-40 md:w-44">
-                  <label htmlFor="inquiries-date-to" className="sr-only">
+                <div className="min-w-0">
+                  <Label htmlFor="inquiries-date-to" className={filterEyebrowClass}>
                     {t("inquiries.dateTo")}
-                  </label>
+                  </Label>
                   <DatePickerField
                     id="inquiries-date-to"
                     value={dateTo}
                     onChange={setDateTo}
                     minYmd={dateFrom || undefined}
                     variant="toolbar"
-                    className="h-12 min-h-12 text-sm md:h-14 md:min-h-14 md:text-base"
+                    className="h-12 min-h-12 w-full min-w-0 text-sm md:h-14 md:min-h-14 md:text-base"
                   />
                 </div>
+                <div className="min-w-0 sm:col-span-2 lg:col-span-1">
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     className={cn(
                       buttonVariants({ variant: "outline" }),
-                      "h-12 min-h-12 gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-sm font-semibold shadow-sm md:h-14 md:min-h-14 md:px-5 md:text-base",
+                      "h-12 min-h-12 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-sm font-semibold shadow-sm lg:min-w-[11rem] md:h-14 md:min-h-14 md:px-5 md:text-base",
                       menuFilterCount > 0 &&
                         "border-success/50 bg-success/5 text-foreground",
                     )}
@@ -458,6 +458,7 @@ export function InquiriesSection({
                     ) : null}
                   </DropdownMenuContent>
                 </DropdownMenu>
+                </div>
               </div>
             </div>
 
@@ -495,81 +496,133 @@ export function InquiriesSection({
         ) : null}
 
         {!loadError && filtered.length > 0 && !showCalendarView ? (
-          <div className="overflow-x-auto">
-            <Table className="min-w-[920px]">
-              <TableHeader>
-                <TableRow className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
-                  <TableHead className={cn(inquiriesTableHeadClass, "pl-6 md:pl-8")}>
-                    {t("inquiries.tableCustomer")}
-                  </TableHead>
-                  <TableHead className={inquiriesTableHeadClass}>
-                    {t("inquiries.tableVenue")}
-                  </TableHead>
-                  <TableHead className={inquiriesTableHeadClass}>
-                    {t("inquiries.tablePreferredDate")}
-                  </TableHead>
-                  <TableHead className={inquiriesTableHeadClass}>
-                    {t("common.fields.status")}
-                  </TableHead>
-                  <TableHead className={inquiriesTableHeadClass}>
-                    {t("inquiries.tableNextFollowUp")}
-                  </TableHead>
-                  <TableHead
-                    className={cn(inquiriesTableHeadClass, "pr-6 text-right md:pr-8")}
-                  >
-                    {t("inquiries.tableUpdated")}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pageRows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className="group cursor-pointer border-rn-border-strong/40 hover:bg-rn-surface-row-hover"
-                    onClick={() => openRow(row)}
-                    aria-label={t("inquiries.openAria", { name: row.customerName })}
-                  >
-                    <TableCell className={inquiriesTableCellPrimaryClass}>
+          <div>
+            <div className="hidden border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head px-6 py-4 md:grid md:grid-cols-12 md:items-center md:px-8 md:py-5">
+              <div className={cn("col-span-3", inquiriesTableHeadClass, "py-0")}>
+                {t("inquiries.tableCustomer")}
+              </div>
+              <div className={cn("col-span-2", inquiriesTableHeadClass, "py-0")}>
+                {t("inquiries.tableVenue")}
+              </div>
+              <div className={cn("col-span-2", inquiriesTableHeadClass, "py-0")}>
+                {t("inquiries.tablePreferredDate")}
+              </div>
+              <div className={cn("col-span-2", inquiriesTableHeadClass, "py-0")}>
+                {t("common.fields.status")}
+              </div>
+              <div className={cn("col-span-2", inquiriesTableHeadClass, "py-0")}>
+                {t("inquiries.tableNextFollowUp")}
+              </div>
+              <div
+                className={cn(
+                  "col-span-1 text-right",
+                  inquiriesTableHeadClass,
+                  "py-0",
+                )}
+              >
+                {t("inquiries.tableUpdated")}
+              </div>
+            </div>
+            <div className="divide-y divide-rn-border-strong/50">
+              {pageRows.map((row) => (
+                <button
+                  key={row.id}
+                  type="button"
+                  className={cn(
+                    "grid w-full grid-cols-1 gap-3 px-4 py-4 text-left font-inherit text-foreground transition-colors sm:px-6 md:grid-cols-12 md:items-center md:gap-4 md:px-8 md:py-5",
+                    "cursor-pointer border-0 bg-transparent outline-none hover:bg-rn-surface-row-hover",
+                    "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-inset",
+                  )}
+                  onClick={() => openRow(row)}
+                  aria-label={t("inquiries.openAria", { name: row.customerName })}
+                >
+                  <div className="min-w-0 md:col-span-3">
+                    <h3 className={inquiriesTableCellPrimaryClass}>
                       {row.customerName}
-                    </TableCell>
-                    <TableCell className={inquiriesTableCellBodyClass}>
+                    </h3>
+                    {row.customerPhone?.trim() ? (
+                      <p className="inquiries-list-row-meta mt-0.5 flex items-center gap-1.5 text-app-sm text-muted-foreground">
+                        <Phone
+                          className="size-3.5 shrink-0 text-rn-text-slate"
+                          aria-hidden
+                        />
+                        <span className="tabular-nums break-words">
+                          {row.customerPhone.trim()}
+                        </span>
+                      </p>
+                    ) : null}
+                    {row.customerEmail?.trim() ? (
+                      <p className="inquiries-list-row-meta mt-0.5 flex items-start gap-1.5 text-app-sm text-muted-foreground">
+                        <Mail
+                          className="mt-0.5 size-3.5 shrink-0 text-rn-text-slate"
+                          aria-hidden
+                        />
+                        <span className="min-w-0 break-words">
+                          {row.customerEmail.trim()}
+                        </span>
+                      </p>
+                    ) : null}
+                    <p className="inquiries-list-row-meta mt-1 text-muted-foreground md:hidden">
                       {row.propertyName ?? "—"}
-                    </TableCell>
-                    <TableCell className={inquiriesTableCellDateClass}>
+                      {" · "}
                       {formatInquiryPreferredDate(row)}
-                    </TableCell>
-                    <TableCell className={inquiriesTableCellBodyClass}>
-                      <span
-                        className={cn(
-                          "inline-flex rounded-md border-2 px-2.5 py-0.5 text-xs font-semibold md:text-sm",
-                          statusBadgeClass(row.status),
-                        )}
-                      >
-                        {inquiryStatusLabel(row.status, t)}
-                      </span>
-                    </TableCell>
-                    <TableCell className={inquiriesTableCellDateClass}>
-                      {row.nextFollowUpAtIso
-                        ? formatAppDateTime(row.nextFollowUpAtIso, locale)
-                        : "—"}
-                    </TableCell>
-                    <TableCell
-                      className={cn(inquiriesTableCellDateClass, "text-right")}
+                    </p>
+                  </div>
+                  <div
+                    className={cn(
+                      "hidden min-w-0 md:col-span-2 md:block",
+                      inquiriesTableCellBodyClass,
+                    )}
+                  >
+                    {row.propertyName ?? "—"}
+                  </div>
+                  <div
+                    className={cn(
+                      "hidden min-w-0 md:col-span-2 md:block",
+                      inquiriesTableCellDateClass,
+                    )}
+                  >
+                    {formatInquiryPreferredDate(row)}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 md:col-span-2">
+                    <span
+                      className={cn(
+                        "inline-flex rounded-md border-2 px-2.5 py-0.5 text-xs font-semibold md:text-sm",
+                        statusBadgeClass(row.status),
+                      )}
                     >
+                      {inquiryStatusLabel(row.status, t)}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 md:col-span-3 md:grid-cols-2">
+                    <div className="min-w-0">
+                      <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground md:hidden">
+                        {t("inquiries.tableNextFollowUp")}
+                      </p>
+                      <p className={inquiriesTableCellDateClass}>
+                        {row.nextFollowUpAtIso
+                          ? formatAppDateTime(row.nextFollowUpAtIso, locale)
+                          : "—"}
+                      </p>
+                    </div>
+                    <div className="min-w-0 text-right">
+                      <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground md:hidden">
+                        {t("inquiries.tableUpdated")}
+                      </p>
                       <span className="inline-flex w-full items-center justify-end gap-2">
-                        <span>
+                        <span className={inquiriesTableCellDateClass}>
                           {formatInquiryListDate(row.updatedAtIso)}
                         </span>
                         <ChevronRight
-                          className="size-4 shrink-0 text-muted-foreground/75 transition-colors group-hover:text-rn-text-heading group-hover:opacity-100 opacity-80"
+                          className="size-4 shrink-0 text-muted-foreground/75"
                           aria-hidden
                         />
                       </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
             {filtered.length > TENANT_LIST_PAGE_SIZE ? (
               <div className="flex flex-col items-stretch justify-between gap-4 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
                 <span className="text-app-sm font-medium text-rn-footer-text md:text-app-base">

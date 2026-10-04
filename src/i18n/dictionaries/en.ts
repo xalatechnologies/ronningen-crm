@@ -957,6 +957,7 @@ export const en = {
     showList: "Show list",
     followUpCalendar: "Follow-up calendar",
     searchFilterAria: "Search and filter inquiries",
+    search: "Search",
     searchAria: "Search inquiries",
     searchPlaceholder: "Customer, phone, venue or type …",
     dateFrom: "From date",
