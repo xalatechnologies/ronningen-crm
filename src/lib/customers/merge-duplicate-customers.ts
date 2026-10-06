@@ -15,9 +15,9 @@ type CustomerRow = {
 export { normalizeCustomerEmail as normCustomerEmail };
 
 /**
- * Auto-merge key: normalized email only.
- * Phone-only merge is intentionally disabled — shared venue numbers
- * (e.g. 96665001) previously caused unrelated customers/bookings to collapse.
+ * Auto-merge key for the optional admin merge tool: normalized email only.
+ * Create paths must not use this — staff reservations always insert a new
+ * customer unless an existing customer is explicitly selected.
  */
 export function customerMergeKey(c: Pick<CustomerRow, "email">) {
   const e = normalizeCustomerEmail(c.email);

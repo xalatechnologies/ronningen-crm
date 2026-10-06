@@ -141,7 +141,7 @@ describe("createAccommodationReservationAtomic", () => {
 });
 
 describe("same display name different emails", () => {
-  it("documents that identity is email-scoped not name-scoped", async () => {
+  it("keeps separate bookings when names match but emails differ", async () => {
     const created: string[] = [];
     const supabase = mockSupabaseRpc(async (_name, args) => {
       const payload = (args as { payload: Record<string, unknown> }).payload;

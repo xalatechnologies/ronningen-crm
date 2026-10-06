@@ -2,9 +2,9 @@
  * Shared customer identity normalization for lookup / merge.
  *
  * Lookup keys:
- * - Primary: normalized email (org-scoped unique when present).
- * - Secondary (inbound attach only): phone + name must both match.
- * - Never: name alone, or phone alone (venue shared phones caused production damage).
+ * - Explicit customer id only (staff picked an existing customer, or convert).
+ * - Never auto-attach by email, phone, or name — same contact details on a new
+ *   reservasjon/forespørsel create a new customer row so the typed name stays.
  */
 
 export function normalizeCustomerEmail(email: string | null | undefined): string | null {
