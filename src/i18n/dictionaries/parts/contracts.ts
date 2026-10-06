@@ -113,7 +113,7 @@ export const contractsNb = {
     contact: "Trenger du en rettelse? Kontakt utleier direkte.",
     notFound: "Lenken er ugyldig eller utløpt.",
     assurance:
-      "Dette er en elektronisk aksept med e-postbekreftelse, ikke en kvalifisert elektronisk signatur.",
+      "Dette er en elektronisk aksept, ikke en kvalifisert elektronisk signatur.",
   },
 } as const;
 
@@ -231,6 +231,6 @@ export const contractsEn = {
     contact: "Need a correction? Contact the lessor directly.",
     notFound: "This link is invalid or has expired.",
     assurance:
-      "This is an electronic acceptance with email confirmation, not a qualified electronic signature.",
+      "This is an electronic acceptance, not a qualified electronic signature.",
   },
 } as const;

@@ -12,7 +12,6 @@ type CurrentPayload = {
   status: string;
   processingStatus: string;
   contentHash: string;
-  otpVerified: boolean;
   accepted: boolean;
   acceptance?: { fullName: string; acceptedAt: string } | null;
   document: FrozenContractDocument;
@@ -26,7 +25,6 @@ export function ContractPortal({ token }: { token: string }) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [authority, setAuthority] = useState(false);
   const [name, setName] = useState("");
-  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -67,32 +65,6 @@ export function ContractPortal({ token }: { token: string }) {
   }
 
   const doc = current.document;
-
-  async function requestCode() {
-    setBusy(true);
-    try {
-      await fetch("/api/contracts/verification/request", { method: "POST" });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function confirm() {
-    setBusy(true);
-    try {
-      const res = await fetch("/api/contracts/verification/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
-      });
-      if (res.ok) {
-        const next = await fetch("/api/contracts/current");
-        setCurrent((await next.json()) as CurrentPayload);
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function accept() {
     const snapshot = current;
@@ -178,29 +150,19 @@ export function ContractPortal({ token }: { token: string }) {
             <label className="text-sm font-medium">{t("contracts.portal.fullName")}</label>
             <Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1" />
           </div>
-          {!current.otpVerified ? (
-            <div className="space-y-2">
-              <Button type="button" variant="outline" disabled={busy} onClick={() => void requestCode()}>
-                {t("contracts.portal.requestCode")}
-              </Button>
-              <Input
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder={t("contracts.portal.code")}
-              />
-              <Button type="button" disabled={busy} onClick={() => void confirm()}>
-                {t("contracts.portal.confirmCode")}
-              </Button>
-            </div>
-          ) : (
-            <Button
-              type="button"
-              disabled={busy || !read || !acceptTerms || name.trim().length < 2}
-              onClick={() => void accept()}
-            >
-              {t("contracts.portal.submit")}
-            </Button>
-          )}
+          <Button
+            type="button"
+            disabled={
+              busy ||
+              !read ||
+              !acceptTerms ||
+              name.trim().length < 2 ||
+              (Boolean(doc.customer.companyName) && !authority)
+            }
+            onClick={() => void accept()}
+          >
+            {t("contracts.portal.submit")}
+          </Button>
         </section>
       )}
     </main>
