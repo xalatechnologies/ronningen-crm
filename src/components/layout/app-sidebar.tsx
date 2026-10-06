@@ -163,10 +163,7 @@ export function AppSidebar({ className }: { className?: string }) {
       <footer
         className="shrink-0 border-t border-rn-border-strong/50 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)] md:py-5"
       >
-        <AdminContextSwitch active="app" className="mb-3" />
-        <p className="text-app-xs leading-snug text-muted-foreground">
-          © {new Date().getFullYear()} {APP_NAME}
-        </p>
+        <AdminContextSwitch active="app" />
       </footer>
     </aside>
   );

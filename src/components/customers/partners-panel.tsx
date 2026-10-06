@@ -3,6 +3,7 @@
 import type { PartnerRow } from "@/components/customers/types";
 import { CustomersPageSearchToolbar } from "@/components/customers/customers-page-search-toolbar";
 import { AppPageHeader } from "@/components/layout/app-page-header";
+import { usePageSearch } from "@/providers/page-search-provider";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,7 @@ import type { Translator } from "@/i18n/types";
 import {
   RN_PAGE_SEARCH_ACTIONS,
 } from "@/lib/rn-ui";
+import { APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
@@ -40,8 +42,7 @@ import { toast } from "sonner";
 
 import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
-const partnersTableHeadClass =
-  "customers-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+const partnersTableHeadClass = cn("customers-table-head", APP_TABLE_HEAD_CELL);
 
 const fieldClass =
   "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
@@ -164,15 +165,11 @@ function PartnerFields({
 export function PartnersPanel({
   partners,
   showHeader = true,
-  query: queryProp,
-  onQueryChange: onQueryChangeProp,
   addOpen: addOpenProp,
   onAddOpenChange: onAddOpenChangeProp,
 }: {
   partners: PartnerRow[];
   showHeader?: boolean;
-  query?: string;
-  onQueryChange?: (value: string) => void;
   addOpen?: boolean;
   onAddOpenChange?: (open: boolean) => void;
 }) {
@@ -180,7 +177,7 @@ export function PartnersPanel({
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateCustomers } = useTenantDataInvalidation();
-  const [internalQuery, setInternalQuery] = useState("");
+  const { query } = usePageSearch();
   const [partnersPage, setPartnersPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [internalAddOpen, setInternalAddOpen] = useState(false);
@@ -190,14 +187,8 @@ export function PartnersPanel({
     name: string;
   } | null>(null);
 
-  const query = queryProp ?? internalQuery;
-  const setQuery = onQueryChangeProp ?? setInternalQuery;
   const addOpen = addOpenProp ?? internalAddOpen;
   const setAddOpen = onAddOpenChangeProp ?? setInternalAddOpen;
-
-  function handleQueryChange(value: string) {
-    setQuery(value);
-  }
 
   useEffect(() => {
     setPartnersPage(1);
@@ -379,11 +370,6 @@ export function PartnersPanel({
               actionsClassName={RN_PAGE_SEARCH_ACTIONS}
               actions={
                 <CustomersPageSearchToolbar
-                  searchId="partners-search"
-                  searchAriaLabel={t("customers.searchPartnersAria")}
-                  searchPlaceholder={t("customers.searchPartnersPlaceholder")}
-                  query={query}
-                  onQueryChange={handleQueryChange}
                   addLabel={t("customers.newPartner")}
                   onAdd={() => setAddOpen(true)}
                   toolbarAriaLabel={t("customers.toolbarPartnersAria")}

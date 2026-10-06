@@ -24,7 +24,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import { usePageSearch } from "@/providers/page-search-provider";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/i18n/client";
 import { formatAppDateTime } from "@/lib/format-datetime";
@@ -34,13 +34,14 @@ import {
   APP_DATA_DATE,
   APP_DATA_PRIMARY,
   APP_TABLE_HEAD,
+  APP_TABLE_HEAD_BAR,
 } from "@/lib/table-typography";
 import {
   type BookingInquiryStatus,
 } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { isBefore } from "date-fns";
-import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Inbox, ListFilter, Mail, Phone, Plus, Search } from "lucide-react";
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Inbox, ListFilter, Mail, Phone, Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -49,7 +50,10 @@ import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 const filterEyebrowClass =
   "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
 
-const inquiriesTableHeadClass = cn("bookings-list-table-head", APP_TABLE_HEAD);
+const inquiriesTableHeadClass = cn(
+  "bookings-list-table-head",
+  APP_TABLE_HEAD,
+);
 
 const inquiriesTableCellPrimaryClass = cn(
   APP_DATA_PRIMARY,
@@ -142,7 +146,7 @@ export function InquiriesSection({
   loadError,
 }: InquiriesSectionProps) {
   const { t, locale, formatDate } = useTranslation();
-  const [query, setQuery] = useState("");
+  const { query, setQuery } = usePageSearch();
   const [statusFilter, setStatusFilter] = useState<InquiryStatusFilter>("all");
   const [dueOnly, setDueOnly] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
@@ -270,43 +274,45 @@ export function InquiriesSection({
   return (
     <div className="inquiries-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div className="border-b-2 border-rn-border-strong bg-card/80 px-[length:var(--app-card-padding)] py-6 md:py-7">
-          <AppPageHeader
-            className="mb-0 gap-3 md:gap-4"
-            surface="default"
-            title={t("inquiries.title")}
-            actions={
-              <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
-                {!loadError ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="cta"
-                    className="w-full gap-2 border-2 border-rn-border-strong px-4 font-semibold sm:w-auto md:px-8"
-                    aria-expanded={showCalendarView}
-                    onClick={() => setShowCalendarView((v) => !v)}
-                  >
-                    <Calendar className="size-5 shrink-0" aria-hidden />
-                    {showCalendarView
-                      ? t("inquiries.showList")
-                      : t("inquiries.followUpCalendar")}
-                  </Button>
-                ) : null}
-                {canManageInquiries ? (
-                  <Link
-                    href="/app/inquiries/new"
-                    className={cn(
-                      buttonVariants({ variant: "success", size: "cta" }),
-                      "inline-flex w-full items-center justify-center gap-2 px-4 sm:w-auto md:px-8",
-                    )}
-                  >
-                    <Plus className="size-5" aria-hidden />
-                    {t("inquiries.new")}
-                  </Link>
-                ) : null}
-              </div>
-            }
-          />
+        <div className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
+          <div className="inquiries-list-hero">
+            <AppPageHeader
+              className="mb-0"
+              surface="default"
+              title={t("inquiries.title")}
+              actions={
+                <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
+                  {!loadError ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="cta"
+                      className="w-full gap-2 border-2 border-rn-border-strong px-4 font-semibold sm:w-auto md:px-8"
+                      aria-expanded={showCalendarView}
+                      onClick={() => setShowCalendarView((v) => !v)}
+                    >
+                      <Calendar className="size-5 shrink-0" aria-hidden />
+                      {showCalendarView
+                        ? t("inquiries.showList")
+                        : t("inquiries.followUpCalendar")}
+                    </Button>
+                  ) : null}
+                  {canManageInquiries ? (
+                    <Link
+                      href="/app/inquiries/new"
+                      className={cn(
+                        buttonVariants({ variant: "success", size: "cta" }),
+                        "inline-flex w-full items-center justify-center gap-2 px-4 sm:w-auto md:px-8",
+                      )}
+                    >
+                      <Plus className="size-5" aria-hidden />
+                      {t("inquiries.new")}
+                    </Link>
+                  ) : null}
+                </div>
+              }
+            />
+          </div>
         </div>
 
         {loadError ? (
@@ -322,29 +328,10 @@ export function InquiriesSection({
 
         {!loadError ? (
           <section
-            className="border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6"
+            className="inquiries-list-filters border-t border-rn-border-strong/35 px-4 py-5 sm:px-6 md:px-8 md:py-6"
             aria-label={t("inquiries.searchFilterAria")}
           >
             <div className="flex min-w-0 flex-col gap-4">
-              <div className="relative min-w-0 w-full">
-                <Label htmlFor="inquiries-search" className={filterEyebrowClass}>
-                  {t("inquiries.search")}
-                </Label>
-                <Search
-                  className="pointer-events-none absolute top-[calc(50%+0.625rem)] left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
-                  aria-hidden
-                />
-                <Input
-                  id="inquiries-search"
-                  aria-label={t("inquiries.searchAria")}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={t("inquiries.searchPlaceholder")}
-                  autoComplete="off"
-                  className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-                />
-              </div>
-
               <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
                 <div className="min-w-0">
                   <Label htmlFor="inquiries-date-from" className={filterEyebrowClass}>
@@ -356,7 +343,7 @@ export function InquiriesSection({
                     onChange={setDateFrom}
                     maxYmd={dateTo || undefined}
                     variant="toolbar"
-                    className="h-12 min-h-12 w-full min-w-0 text-sm md:h-14 md:min-h-14 md:text-base"
+                    className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
                   />
                 </div>
                 <div className="min-w-0">
@@ -369,15 +356,18 @@ export function InquiriesSection({
                     onChange={setDateTo}
                     minYmd={dateFrom || undefined}
                     variant="toolbar"
-                    className="h-12 min-h-12 w-full min-w-0 text-sm md:h-14 md:min-h-14 md:text-base"
+                    className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
                   />
                 </div>
                 <div className="min-w-0 sm:col-span-2 lg:col-span-1">
+                <p className={cn(filterEyebrowClass, "hidden lg:block")} aria-hidden>
+                  {"\u00a0"}
+                </p>
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     className={cn(
                       buttonVariants({ variant: "outline" }),
-                      "h-12 min-h-12 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-sm font-semibold shadow-sm lg:min-w-[11rem] md:h-14 md:min-h-14 md:px-5 md:text-base",
+                      "h-11 min-h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold shadow-sm sm:h-12 sm:min-h-12 sm:text-app-base lg:min-w-[11.5rem]",
                       menuFilterCount > 0 &&
                         "border-success/50 bg-success/5 text-foreground",
                     )}
@@ -386,7 +376,7 @@ export function InquiriesSection({
                     <ListFilter className="size-4 shrink-0" aria-hidden />
                     <span>{filterButtonLabel}</span>
                     {menuFilterCount > 0 ? (
-                      <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-md bg-success px-1.5 py-0.5 text-xs font-bold text-white tabular-nums">
+                      <span className="inquiries-list-filter-count inline-flex min-w-[1.25rem] items-center justify-center rounded-md bg-success px-1.5 py-0.5 font-bold text-white tabular-nums">
                         {menuFilterCount}
                       </span>
                     ) : null}
@@ -464,7 +454,7 @@ export function InquiriesSection({
             </div>
 
             {hasActiveFilters ? (
-              <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
+              <p className="mt-2 text-app-sm text-muted-foreground">
                 {t("inquiries.showingCount", {
                   shown: filtered.length,
                   total: activeInquiries.length,
@@ -498,29 +488,28 @@ export function InquiriesSection({
 
         {!loadError && filtered.length > 0 && !showCalendarView ? (
           <div>
-            <div className="hidden border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head px-6 py-4 md:grid md:grid-cols-12 md:items-center md:px-8 md:py-5">
-              <div className={cn("col-span-3", inquiriesTableHeadClass, "py-0")}>
+            <div
+              className={cn(
+                "hidden grid-cols-12 md:grid",
+                APP_TABLE_HEAD_BAR,
+              )}
+            >
+              <div className={cn("col-span-3", inquiriesTableHeadClass)}>
                 {t("inquiries.tableCustomer")}
               </div>
-              <div className={cn("col-span-2", inquiriesTableHeadClass, "py-0")}>
+              <div className={cn("col-span-2", inquiriesTableHeadClass)}>
                 {t("inquiries.tableVenue")}
               </div>
-              <div className={cn("col-span-2", inquiriesTableHeadClass, "py-0")}>
+              <div className={cn("col-span-2", inquiriesTableHeadClass)}>
                 {t("inquiries.tablePreferredDate")}
               </div>
-              <div className={cn("col-span-2", inquiriesTableHeadClass, "py-0")}>
+              <div className={cn("col-span-2", inquiriesTableHeadClass)}>
                 {t("common.fields.status")}
               </div>
-              <div className={cn("col-span-2", inquiriesTableHeadClass, "py-0")}>
+              <div className={cn("col-span-2", inquiriesTableHeadClass)}>
                 {t("inquiries.tableNextFollowUp")}
               </div>
-              <div
-                className={cn(
-                  "col-span-1 text-right",
-                  inquiriesTableHeadClass,
-                  "py-0",
-                )}
-              >
+              <div className={cn("col-span-1 text-right", inquiriesTableHeadClass)}>
                 {t("inquiries.tableUpdated")}
               </div>
             </div>
@@ -538,9 +527,9 @@ export function InquiriesSection({
                   aria-label={t("inquiries.openAria", { name: row.customerName })}
                 >
                   <div className="min-w-0 md:col-span-3">
-                    <h3 className={inquiriesTableCellPrimaryClass}>
+                    <h4 className={inquiriesTableCellPrimaryClass}>
                       {row.customerName}
-                    </h3>
+                    </h4>
                     {row.customerPhone?.trim() ? (
                       <p className="inquiries-list-row-meta mt-0.5 flex items-center gap-1.5 text-app-sm text-muted-foreground">
                         <Phone
@@ -588,7 +577,7 @@ export function InquiriesSection({
                   <div className="flex flex-wrap items-center gap-2 md:col-span-2">
                     <span
                       className={cn(
-                        "inline-flex rounded-md border-2 px-2.5 py-0.5 text-xs font-semibold md:text-sm",
+                        "inquiries-list-status-pill inline-flex rounded-md border-2 px-2.5 py-0.5 font-semibold",
                         statusBadgeClass(row.status),
                       )}
                     >
@@ -626,7 +615,7 @@ export function InquiriesSection({
             </div>
             {filtered.length > TENANT_LIST_PAGE_SIZE ? (
               <div className="flex flex-col items-stretch justify-between gap-4 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
-                <span className="text-app-sm font-medium text-rn-footer-text md:text-app-base">
+                <span className="inquiries-list-footer-caption font-medium text-rn-footer-text">
                   {t("inquiries.footer.showingRange", {
                     from: (currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1,
                     to: Math.min(
@@ -649,7 +638,7 @@ export function InquiriesSection({
                   >
                     <ChevronLeft className="size-[18px]" />
                   </Button>
-                  <span className="min-w-[5.5rem] text-center text-app-sm font-semibold tabular-nums text-muted-foreground">
+                    <span className="min-w-[5.5rem] text-center text-app-sm font-semibold tabular-nums text-muted-foreground md:text-app-base">
                     {t("common.pagination.pageOf", {
                       current: currentPage,
                       total: totalPages,

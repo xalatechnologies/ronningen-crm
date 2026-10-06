@@ -493,10 +493,6 @@
     }
   }
 
-  .bookings-list-workspace #bookings-search {
-    font-size: calc(15px * var(--app-read-type-scale));
-  }
-
   .bookings-list-workspace .bookings-list-filters span.font-heading.text-app-base {
     font-size: calc(15px * var(--app-type-scale));
   }
@@ -508,10 +504,6 @@
   /**
    * Overnatting (reservasjoner) — samme filterstørrelse som Reservasjoner.
    */
-  .overnatting-page-workspace .overnatting-list-search {
-    font-size: calc(15px * var(--app-read-type-scale));
-  }
-
   .overnatting-page-workspace .overnatting-list-filters span.font-heading.text-app-base {
     font-size: calc(15px * var(--app-type-scale));
   }
@@ -547,8 +539,24 @@
   }
 
   /**
-   * Forespørsler (liste) — samme radstørrelse og typografi som Reservasjoner.
+   * Forespørsler (liste) — samme tittel, filter og radtypografi som Reservasjoner.
    */
+  .inquiries-page-workspace .bookings-list-table-head {
+    font-size: calc(15px * var(--app-type-scale));
+  }
+
+  .inquiries-page-workspace .inquiries-list-hero .app-title {
+    font-size: calc(24px * var(--app-type-scale));
+  }
+
+  .inquiries-page-workspace .inquiries-list-filters span.font-heading.text-app-base {
+    font-size: calc(15px * var(--app-type-scale));
+  }
+
+  .inquiries-page-workspace .inquiries-list-filter-count {
+    font-size: calc(15px * var(--app-type-scale));
+  }
+
   .inquiries-page-workspace .inquiries-list-row-title {
     font-size: calc(21px * var(--app-type-scale));
     line-height: 1.25;
@@ -567,6 +575,20 @@
   .inquiries-page-workspace .inquiries-list-row-meta {
     font-size: calc(14px * var(--app-read-type-scale));
     line-height: 1.45;
+  }
+
+  .inquiries-page-workspace .inquiries-list-footer-caption {
+    font-size: calc(15px * var(--app-read-type-scale));
+  }
+
+  .inquiries-page-workspace .inquiries-list-status-pill {
+    font-size: calc(13px * var(--app-type-scale));
+  }
+
+  @media (min-width: 768px) {
+    .inquiries-page-workspace .inquiries-list-status-pill {
+      font-size: calc(14px * var(--app-type-scale));
+    }
   }
 
   .bookings-list-workspace .bookings-list-footer-caption {
@@ -606,11 +628,6 @@
   .customers-page-workspace .customers-page-hero .app-title,
   .customers-page-workspace .customers-partners-hero.app-title {
     font-size: calc(24px * var(--app-type-scale));
-  }
-
-  .customers-page-workspace #customers-search,
-  .customers-page-workspace #partners-search {
-    font-size: calc(15px * var(--app-read-type-scale));
   }
 
   .customers-page-workspace .customers-row-name,
@@ -1043,7 +1060,6 @@
     }
   }
 
-  .assets-page-workspace .assets-search-input,
   .assets-page-workspace .assets-filter-select {
     font-size: calc(15px * var(--app-read-type-scale));
   }
@@ -1190,6 +1206,7 @@
     font-weight: 700;
     letter-spacing: 0.07em;
     color: var(--foreground);
+    padding-block: 0.625rem;
   }
 
   .admin-page-workspace [data-slot="table-header"] [data-slot="table-row"] {

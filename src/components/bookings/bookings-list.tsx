@@ -16,7 +16,7 @@ import { AppPageHeader } from "@/components/layout/app-page-header";
 import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
-import { Input } from "@/components/ui/input";
+import { usePageSearch } from "@/providers/page-search-provider";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/ui/form-select";
 import { BOOKING_PAYMENT_STATUS_VALUES, bookingPaymentStatusLabel } from "@/constants/booking-payment-status";
@@ -24,7 +24,7 @@ import { useTranslation } from "@/i18n/client";
 import { statusLabel } from "@/lib/navigation/nav-labels";
 import { sortBookingsByUpcomingFirst } from "@/lib/bookings/list-sort";
 import { cn } from "@/lib/utils";
-import { APP_LIST_ROW_DATE } from "@/lib/table-typography";
+import { APP_LIST_ROW_DATE, APP_TABLE_HEAD, APP_TABLE_HEAD_BAR } from "@/lib/table-typography";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -35,7 +35,6 @@ import {
   Phone,
   Plus,
   RotateCcw,
-  Search,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -49,8 +48,10 @@ import { useSupabase } from "@/providers/supabase-provider";
 import { RN_CARD_SHELL, RN_SEGMENT_CONTROL } from "@/lib/rn-ui";
 import { computeBookingsQuickStats } from "@/lib/bookings/quick-stats";
 
-const bookingsTableHeadClass =
-  "bookings-list-table-head font-semibold tracking-wider text-rn-text-column uppercase";
+const bookingsTableHeadClass = cn(
+  "bookings-list-table-head",
+  APP_TABLE_HEAD,
+);
 
 import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
@@ -158,27 +159,7 @@ function BookingsFiltersSection({
       aria-label={t("bookings.searchFilterAria")}
     >
       <div className="flex min-w-0 flex-col gap-4">
-        <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-end xl:gap-5">
-          <div className="relative min-w-0 w-full xl:max-w-md 2xl:max-w-xl">
-            <Label htmlFor="bookings-search" className={filterEyebrowClass}>
-              {t("bookings.search")}
-            </Label>
-            <Search
-              className="pointer-events-none absolute top-[calc(50%+0.625rem)] left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
-              aria-hidden
-            />
-            <Input
-              id="bookings-search"
-              aria-label={t("bookings.searchAria")}
-              className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-              placeholder={t("bookings.searchPlaceholder")}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              autoComplete="off"
-            />
-          </div>
-
-          <div className="min-w-0 w-full flex-1">
+        <div className="min-w-0 w-full">
             <p className={filterEyebrowClass}>{t("common.fields.status")}</p>
             <div
               className="grid min-w-0 w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3"
@@ -235,7 +216,6 @@ function BookingsFiltersSection({
               })}
             </div>
           </div>
-        </div>
 
         <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
           <div className="min-w-0">
@@ -442,7 +422,7 @@ export function BookingsList({
   const supabase = useSupabase();
   const { invalidateBookings } = useTenantDataInvalidation();
   const [view, setView] = useState<"list" | "calendar">("list");
-  const [query, setQuery] = useState("");
+  const { query, setQuery } = usePageSearch();
   const [filter, setFilter] = useState<BookingStatusFilter>("all");
   const [paymentFilter, setPaymentFilter] = useState<BookingPaymentFilter>("");
   const [audienceFilter, setAudienceFilter] = useState<BookingAudienceFilter>("");
@@ -655,21 +635,14 @@ export function BookingsList({
               filterCounts={filterCounts}
             />
 
-            <div className="grid grid-cols-12 border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head px-6 py-4 sm:px-8 sm:py-5">
-              <div
-                className={cn(
-                  "col-span-12 sm:col-span-4",
-                  bookingsTableHeadClass,
-                  "py-0",
-                )}
-              >
+            <div className={cn("grid grid-cols-12", APP_TABLE_HEAD_BAR)}>
+              <div className={cn("col-span-12 sm:col-span-4", bookingsTableHeadClass)}>
                 {t("bookings.tableCustomerEvent")}
               </div>
               <div
                 className={cn(
                   "col-span-12 hidden sm:col-span-2 sm:block",
                   bookingsTableHeadClass,
-                  "py-0",
                 )}
               >
                 {t("bookings.tableGuests")}
@@ -678,7 +651,6 @@ export function BookingsList({
                 className={cn(
                   "col-span-12 hidden px-3 text-right sm:col-span-2 sm:block",
                   bookingsTableHeadClass,
-                  "py-0",
                 )}
               >
                 {t("bookings.tableFinance")}
@@ -687,7 +659,6 @@ export function BookingsList({
                 className={cn(
                   "col-span-12 hidden text-right sm:col-span-2 sm:block",
                   bookingsTableHeadClass,
-                  "py-0",
                 )}
               >
                 {t("bookings.tableStatus")}
@@ -696,7 +667,6 @@ export function BookingsList({
                 className={cn(
                   "col-span-12 hidden text-right sm:col-span-2 sm:block",
                   bookingsTableHeadClass,
-                  "py-0",
                 )}
               >
                 {t("bookings.tableContract")}

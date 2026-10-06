@@ -20,6 +20,7 @@ import type {
 } from "@/lib/admin/queries/system-health";
 import { adminSettingsHref } from "@/lib/admin/settings-links";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { APP_TABLE_HEAD_CELL_ADMIN } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { getDateFnsLocale } from "@/i18n/formatters";
@@ -36,8 +37,7 @@ import type { LucideIcon } from "lucide-react";
 const kpiTileClass =
   "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
 
-const tableHeadClass =
-  "px-4 py-3 text-left text-app-sm font-semibold tracking-wider text-rn-text-column uppercase sm:px-6 sm:py-4 sm:text-app-base md:px-8 md:py-5";
+const tableHeadClass = APP_TABLE_HEAD_CELL_ADMIN;
 const tableCellClass =
   "px-4 py-4 align-middle sm:px-6 sm:py-5 md:px-8 md:py-6";
 

@@ -28,6 +28,7 @@ import {
 import { fetchAdminOverviewStats } from "@/lib/admin/queries/overview";
 import { formatNok } from "@/lib/admin/revenue-metrics";
 import { RN_ADMIN_DETAIL_LINK, RN_CARD_SHELL } from "@/lib/rn-ui";
+import { APP_TABLE_HEAD } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
@@ -50,8 +51,11 @@ const sectionPad =
 const kpiTileClass =
   "admin-overview-kpi-tile flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong bg-muted/25 p-5 shadow-sm dark:bg-white/[0.06] sm:p-6";
 
-const tableHeadClass =
-  "admin-overview-table-head px-4 py-3.5 text-app-sm font-bold tracking-[0.07em] text-foreground uppercase sm:px-6 sm:py-4 sm:text-app-base md:px-8 md:py-5";
+const tableHeadClass = cn(
+  "admin-overview-table-head",
+  APP_TABLE_HEAD,
+  "px-4 text-app-sm font-bold tracking-[0.07em] text-foreground sm:px-6 sm:text-app-base md:px-8",
+);
 const tableCellClass =
   "px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6";
 

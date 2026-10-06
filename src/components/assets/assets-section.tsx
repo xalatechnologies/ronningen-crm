@@ -2,6 +2,7 @@
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AppPageHeader } from "@/components/layout/app-page-header";
+import { usePageSearch } from "@/providers/page-search-provider";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import {
   Dialog,
@@ -29,7 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
-import { APP_DATA_BODY, APP_DATA_PRIMARY } from "@/lib/table-typography";
+import { APP_DATA_BODY, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import {
   type AssetStatusBucket,
   assetInsuranceBucket,
@@ -54,7 +55,6 @@ import {
   Package,
   Pencil,
   Plus,
-  Search,
   Snowflake,
   Trash2,
   Wrench,
@@ -65,6 +65,7 @@ import { useTranslation } from "@/i18n/client";
 import type { Translator } from "@/i18n/types";
 import {
   useCallback,
+  useEffect,
   useId,
   useMemo,
   useState,
@@ -74,8 +75,7 @@ import { toast } from "sonner";
 
 import type { AssetListItem } from "./types";
 
-const assetsTableHeadClass =
-  "assets-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+const assetsTableHeadClass = cn("assets-table-head", APP_TABLE_HEAD_CELL);
 const assetsTableCellClass = "px-6 py-5 md:px-8 md:py-6";
 const assetsKpiCompactStatClass =
   "flex min-w-0 flex-col gap-1.5 rounded-md border border-rn-border-strong/55 bg-background px-4 py-3 sm:gap-2 sm:px-4 sm:py-3.5";
@@ -599,7 +599,7 @@ export function AssetsSection({
   const supabase = useSupabase();
   const { invalidateAssets } = useTenantDataInvalidation();
 
-  const [query, setQuery] = useState("");
+  const { query, setQuery } = usePageSearch();
   const [propertyId, setPropertyId] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "all" | AssetStatusBucket
@@ -692,7 +692,11 @@ export function AssetsSection({
     setStatusFilter("all");
     setQuery("");
     setPage(1);
-  }, []);
+  }, [setQuery]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
 
   async function confirmDeleteAsset() {
     if (!deleteTarget) return;
@@ -808,24 +812,6 @@ export function AssetsSection({
                 )}
               </div>
             ) : null}
-
-            <div className="relative min-w-[10rem] flex-1 basis-48">
-              <Search
-                className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground md:left-5"
-                aria-hidden
-              />
-              <Input
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setPage(1);
-                }}
-                placeholder={t("assets.searchPlaceholder")}
-                title={t("assets.searchTitle")}
-                className="assets-search-input h-12 min-h-12 w-full min-w-[10rem] rounded-md border-2 border-rn-border-strong bg-background pl-12 focus-visible:border-success focus-visible:ring-success/25 md:h-14 md:min-h-14 md:pl-14"
-                aria-label={t("assets.searchAria")}
-              />
-            </div>
 
             <div className="relative w-48 shrink-0 sm:w-56 md:w-60">
               <Building2
@@ -951,7 +937,7 @@ export function AssetsSection({
                 </TableHead>
                 <TableHead
                   className={cn(
-                    "min-w-[5.5rem] px-3 py-4 text-right sm:min-w-28 md:px-8 md:py-5",
+                    "min-w-[5.5rem] px-3 py-2.5 text-right sm:min-w-28 md:px-8",
                     assetsTableHeadClass,
                   )}
                 >

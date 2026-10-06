@@ -8,6 +8,7 @@ import type {
 } from "@/components/overnatting/types";
 import { statusLabel } from "@/lib/navigation/nav-labels";
 import type { AccommodationReservationStatus } from "@/lib/validations";
+import { usePageSearch } from "@/providers/page-search-provider";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
@@ -70,7 +71,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { enGB } from "date-fns/locale/en-GB";
 import { nb } from "date-fns/locale/nb";
-import { BedDouble, Building2, Calendar, Plus, RotateCcw, Search, Users, ArrowDownRight, ArrowUpRight, TrendingUp, Wallet } from "lucide-react";
+import { BedDouble, Building2, Calendar, Plus, RotateCcw, Users, ArrowDownRight, ArrowUpRight, TrendingUp, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -223,7 +224,7 @@ export function OvernattingSection({
   const [deleteResConfirmOpen, setDeleteResConfirmOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [query, setQuery] = useState("");
+  const { query, setQuery } = usePageSearch();
   const [statusFilter, setStatusFilter] = useState<AccommodationStatusFilter>("all");
   const [unitFilter, setUnitFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -822,27 +823,7 @@ export function OvernattingSection({
               aria-label={t("overnatting.filterReservationsAria")}
             >
               <div className="flex min-w-0 flex-col gap-4">
-                <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-end xl:gap-5">
-                  <div className="relative min-w-0 w-full xl:max-w-md 2xl:max-w-xl">
-                    <Label htmlFor={`${rid}-res-search`} className={filterEyebrowClass}>
-                      {t("common.actions.search")}
-                    </Label>
-                    <Search
-                      className="pointer-events-none absolute top-[calc(50%+0.625rem)] left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
-                      aria-hidden
-                    />
-                    <Input
-                      id={`${rid}-res-search`}
-                      aria-label={t("overnatting.searchAria")}
-                      className="overnatting-list-search h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-                      placeholder={t("overnatting.searchPlaceholder")}
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      autoComplete="off"
-                    />
-                  </div>
-
-                  <div className="min-w-0 w-full flex-1">
+                <div className="min-w-0 w-full">
                     <p className={filterEyebrowClass}>{t("common.fields.status")}</p>
                     <div
                       className="grid min-w-0 w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3"
@@ -914,7 +895,6 @@ export function OvernattingSection({
                       })}
                     </div>
                   </div>
-                </div>
 
                 <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
                   <div className="min-w-0">

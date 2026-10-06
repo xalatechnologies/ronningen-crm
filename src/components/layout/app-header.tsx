@@ -18,6 +18,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { AppHeaderSearch } from "@/components/layout/app-header-search";
 import { OrganizationSwitcher } from "@/components/organizations/organization-switcher";
 import { APP_NAME } from "@/config/app";
 import { useAuthUser } from "@/hooks/use-auth-user";
@@ -135,6 +136,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
             </div>
           </SheetContent>
         </Sheet>
+        <AppHeaderSearch />
       </div>
 
       <div className="flex min-w-0 items-center gap-2 md:gap-3">

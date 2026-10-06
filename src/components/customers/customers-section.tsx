@@ -18,12 +18,13 @@ import {
 } from "@/lib/validations";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { CustomersPageSearchToolbar } from "@/components/customers/customers-page-search-toolbar";
+import { usePageSearch } from "@/providers/page-search-provider";
 import { CustomersPageTabBar } from "@/components/customers/customers-page-tab-bar";
 import { useCustomersPageTab } from "@/components/customers/use-customers-page-tab";
 import { useTranslation } from "@/i18n/client";
 import type { TranslationKey } from "@/i18n/types";
 import { RN_CARD_SHELL, RN_PAGE_SEARCH_ACTIONS } from "@/lib/rn-ui";
-import { APP_DATA_AMOUNT, APP_DATA_BODY, APP_DATA_PRIMARY } from "@/lib/table-typography";
+import { APP_DATA_AMOUNT, APP_DATA_BODY, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import { deleteCustomerWithClient } from "@/lib/customers/delete-customer";
 import { createCustomerAtomic } from "@/lib/reservations/atomic-create";
@@ -33,7 +34,7 @@ import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -47,8 +48,7 @@ import type {
 
 import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
-const customersTableHeadClass =
-  "customers-table-head whitespace-nowrap px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+const customersTableHeadClass = cn("customers-table-head", APP_TABLE_HEAD_CELL);
 
 const TAB_TITLE_KEYS = {
   customers: "customers.title",
@@ -91,8 +91,7 @@ export function CustomersSection({
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateCustomers, invalidateInquiries } = useTenantDataInvalidation();
-  const [query, setQuery] = useState("");
-  const [partnersQuery, setPartnersQuery] = useState("");
+  const { query } = usePageSearch();
   const [customersPage, setCustomersPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -113,6 +112,10 @@ export function CustomersSection({
       return hay.includes(q);
     });
   }, [customers, query]);
+
+  useEffect(() => {
+    setCustomersPage(1);
+  }, [query]);
 
   const pagination = useMemo(() => {
     const totalPages = Math.max(
@@ -282,25 +285,12 @@ export function CustomersSection({
                     />
                     {tab === "customers" ? (
                       <CustomersPageSearchToolbar
-                        searchId="customers-search"
-                        searchAriaLabel={t("customers.searchCustomersAria")}
-                        searchPlaceholder={t("customers.searchCustomersPlaceholder")}
-                        query={query}
-                        onQueryChange={(v) => {
-                          setQuery(v);
-                          setCustomersPage(1);
-                        }}
                         addLabel={t("customers.newCustomer")}
                         onAdd={() => setAddOpen(true)}
                         toolbarAriaLabel={t("customers.toolbarCustomersAria")}
                       />
                     ) : (
                       <CustomersPageSearchToolbar
-                        searchId="partners-search"
-                        searchAriaLabel={t("customers.searchPartnersAria")}
-                        searchPlaceholder={t("customers.searchPartnersPlaceholder")}
-                        query={partnersQuery}
-                        onQueryChange={setPartnersQuery}
                         addLabel={t("customers.newPartner")}
                         onAdd={() => setPartnersAddOpen(true)}
                         toolbarAriaLabel={t("customers.toolbarPartnersAria")}
@@ -481,8 +471,6 @@ export function CustomersSection({
             <PartnersPanel
               partners={partners}
               showHeader={false}
-              query={partnersQuery}
-              onQueryChange={setPartnersQuery}
               addOpen={partnersAddOpen}
               onAddOpenChange={setPartnersAddOpen}
             />

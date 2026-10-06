@@ -14,6 +14,8 @@ export const commonNb = {
     back: "Tilbake",
     next: "Neste",
     search: "Søk",
+    headerSearchAria: "Søk i listen på denne siden",
+    headerSearchPlaceholder: "Søk …",
     filter: "Filter",
     export: "Eksporter",
     print: "Skriv ut",

@@ -34,6 +34,7 @@ import { formatNok } from "@/lib/admin/revenue-metrics";
 import { SAAS_MONTHLY_PRICE_NOK } from "@/lib/billing/constants";
 import { resolveTenantAccess } from "@/lib/subscriptions/subscription-utils";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { getDateFnsLocale } from "@/i18n/formatters";
@@ -51,8 +52,7 @@ import { toast } from "sonner";
 const kpiTileClass =
   "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
 
-const tableHeadClass =
-  "px-6 py-4 text-left text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+const tableHeadClass = cn(APP_TABLE_HEAD_CELL, "text-left text-app-base");
 const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
 
 function SubscriptionsKpiTile({

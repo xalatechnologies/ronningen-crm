@@ -5,7 +5,7 @@ import { useTranslation } from "@/i18n/client";
 import { FileDown } from "lucide-react";
 
 const labelClass =
-  "bookings-list-status-pill px-0 py-0 font-bold uppercase tracking-wide text-foreground";
+  "bookings-list-status-pill px-0 py-0 text-right font-bold leading-tight tracking-wide text-foreground";
 
 export function BookingListContractAction({
   bookingId,

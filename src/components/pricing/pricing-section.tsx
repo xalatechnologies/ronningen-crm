@@ -3,7 +3,7 @@
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
-import { APP_DATA_AMOUNT, APP_DATA_PRIMARY } from "@/lib/table-typography";
+import { APP_DATA_AMOUNT, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import {
   Dialog,
   DialogContent,
@@ -63,8 +63,7 @@ export type PricingSectionProps = {
   loadError: string | null;
 };
 
-const pricingTableHeadClass =
-  "pricing-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-4";
+const pricingTableHeadClass = cn("pricing-table-head", APP_TABLE_HEAD_CELL);
 const pricingTableCellClass = "px-6 py-5 md:px-8 md:py-6";
 
 /** Liste-tegn brukere skriver foran punkter (-, –, —, •, *). */

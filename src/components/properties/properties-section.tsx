@@ -31,9 +31,10 @@ import { cn } from "@/lib/utils";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, MapPin, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Building2, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { usePageSearch } from "@/providers/page-search-provider";
 import { useForm, type Resolver, type UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -252,7 +253,7 @@ export function PropertiesSection({
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const router = useRouter();
-  const [query, setQuery] = useState("");
+  const { query } = usePageSearch();
   const [dialog, setDialog] = useState<{
     open: boolean;
     row: PropertyListRow | null;
@@ -418,26 +419,6 @@ export function PropertiesSection({
           ) : null
         }
       />
-
-      {!loadError && properties.length > 0 ? (
-        <div className={cn("min-w-0", RN_CARD_SHELL)}>
-          <div className="px-5 py-4 md:px-6">
-            <div className="relative min-w-0 w-full max-w-md">
-              <Search
-                className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t("properties.searchPlaceholder")}
-                className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base focus-visible:border-success focus-visible:ring-success/25"
-                aria-label={t("properties.searchAria")}
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {loadError ? (
         <div className={cn(RN_CARD_SHELL, "px-5 py-4 md:px-6")} role="alert">

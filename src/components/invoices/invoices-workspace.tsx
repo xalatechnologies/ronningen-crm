@@ -16,7 +16,7 @@ import {
   suggestInkassoReview,
 } from "@/lib/invoice-row-utils";
 import { cn } from "@/lib/utils";
-import { APP_DATA_BODY, APP_DATA_DATE } from "@/lib/table-typography";
+import { APP_DATA_BODY, APP_DATA_DATE, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useSupabase } from "@/providers/supabase-provider";
 import {
@@ -30,8 +30,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-const invoicesTableHeadClass =
-  "invoices-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+const invoicesTableHeadClass = cn("invoices-table-head", APP_TABLE_HEAD_CELL);
 const invoicesTableCellClass =
   "px-6 py-5 align-top md:px-8 md:py-6";
 

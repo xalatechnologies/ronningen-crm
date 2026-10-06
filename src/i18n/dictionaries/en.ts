@@ -36,6 +36,8 @@ export const en = {
       back: "Back",
       next: "Next",
       search: "Search",
+      headerSearchAria: "Search the list on this page",
+      headerSearchPlaceholder: "Search …",
       filter: "Filter",
       export: "Export",
       print: "Print",

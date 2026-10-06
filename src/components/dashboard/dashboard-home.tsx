@@ -26,6 +26,7 @@ import { useTranslation } from "@/i18n/client";
 import { defaultCalendarYearOptions } from "@/lib/calendar/year-range";
 import { statusLabel } from "@/lib/navigation/nav-labels";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import {
   AlertCircle,
@@ -98,8 +99,7 @@ function DashboardUpcomingStatusBadge({
   );
 }
 
-const tableHeadClass =
-  "px-6 py-4 text-app-base font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+const tableHeadClass = APP_TABLE_HEAD_CELL;
 const tableCellClass = "px-6 py-5 md:px-8 md:py-6";
 
 export function DashboardHome({ data }: { data: DashboardHomeData }) {

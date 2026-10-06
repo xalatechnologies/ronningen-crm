@@ -30,7 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { RN_SEGMENT_CONTROL, RN_MODAL_FOOTER, RN_MODAL_MAX_HEIGHT, RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
-import { APP_DATA_BODY, APP_DATA_DATE, APP_DATA_PRIMARY } from "@/lib/table-typography";
+import { APP_DATA_BODY, APP_DATA_DATE, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import {
   transactionFormSchema,
   type TransactionFormInput,
@@ -70,8 +70,7 @@ import { toast } from "sonner";
 
 import type { TransactionListItem } from "./types";
 
-const financeTableHeadClass =
-  "finance-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+const financeTableHeadClass = cn("finance-table-head", APP_TABLE_HEAD_CELL);
 const financeTableCellClass = "px-6 py-5 md:px-8 md:py-6";
 
 const txDialogFieldLabel =
@@ -1056,7 +1055,7 @@ export function FinanceSection({
                   {t("finance.tableAmount")}
                 </TableHead>
                 {canManageTransactions ? (
-                  <TableHead className="min-w-[5.5rem] px-3 py-4 text-right sm:min-w-28 md:py-5">
+                  <TableHead className="min-w-[5.5rem] px-3 py-2.5 text-right sm:min-w-28">
                     <span className="sr-only">{t("finance.editOrDelete")}</span>
                   </TableHead>
                 ) : null}
