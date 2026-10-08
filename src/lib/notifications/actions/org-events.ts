@@ -10,6 +10,7 @@ import {
 } from "@/lib/notifications/notification-events";
 import { notifyOrgMembers, notifyUser } from "@/lib/notifications/notify";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import { getDefaultT } from "@/lib/i18n/default-messages";
 import { getServerT } from "@/lib/i18n/server-messages";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -44,7 +45,9 @@ export async function notifyContractAccepted(input: {
   signerName: string;
   bookingReference?: string | null;
 }) {
-  const t = await getServerT();
+  // Guest accept runs without staff session; never store the guest/browser
+  // locale on org notifications (default product locale is Norwegian).
+  const t = getDefaultT();
   const label = input.bookingReference?.trim() || input.bookingId.slice(0, 8);
   await notifyOrgMembers({
     organizationId: input.organizationId,
