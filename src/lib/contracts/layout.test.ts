@@ -172,7 +172,11 @@ describe("package inclusions", () => {
       "Adresse",
       "Telefon",
       "E-post",
+      "Kontonummer",
     ]);
+    expect(facts.lessor.find((row) => row.label === "Kontonummer")?.value).toBe(
+      "1520.31.97583",
+    );
     expect(facts.lessee.map((row) => row.label)).toContain("Lokale");
     expect(facts.lessee.find((row) => row.label === "Dato")?.value).toBe("05.06.2027");
   });
@@ -255,7 +259,7 @@ describe("accepted PDF", () => {
     expect(decoded).toContain("wahid");
     expect(decoded).toContain("Heonaz Hosseini");
     expect(decoded).toContain("Hameed Rahmani");
-    expect(decoded).toContain("1520.3197583");
+    expect(decoded).toContain("1520.31.97583");
     expect(decoded).not.toMatch(/\? (Lokale|Sluttrenhold|Reservasjon)/);
     expect(raw.toString("latin1")).toContain("/Subtype /Image");
   });

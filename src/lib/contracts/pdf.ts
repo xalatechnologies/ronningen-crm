@@ -8,6 +8,7 @@ import { sha256Hex } from "@/lib/contracts/crypto";
 import {
   CONTRACT_CLOSING_LINE,
   LESSOR_SIGNATURE_NAME,
+  formatContractBankAccount,
   formatContractDateTime,
   formatContractLineAmount,
   formatContractNok,
@@ -461,7 +462,9 @@ export async function buildAcceptedPdf(args: {
     formatContractNok(tableTotal),
   );
   if (d.issuer.bankAccount) {
-    writer.text(`Kontonummer for betaling: ${d.issuer.bankAccount}`, { size: 9.5 });
+    const bank =
+      formatContractBankAccount(d.issuer.bankAccount) ?? d.issuer.bankAccount;
+    writer.text(`Kontonummer for betaling: ${bank}`, { size: 9.5 });
   }
   writer.text(d.terms.paymentTerms || "Merk betaling med: Arrangementsdato og navn", {
     size: 9,

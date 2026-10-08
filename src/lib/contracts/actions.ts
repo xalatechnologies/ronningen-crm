@@ -736,7 +736,7 @@ async function composeVersionDocument(args: {
       city: args.org.city,
       phone: issuer.contactPhone || null,
       email: issuer.contactEmail || null,
-      bankAccount: args.org.bank_account ?? null,
+      bankAccount: args.org.bank_account?.trim() || null,
       tagline: args.org.tagline ?? issuer.tagline,
       paymentInstructions: args.org.payment_instructions ?? null,
     },

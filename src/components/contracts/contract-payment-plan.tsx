@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  formatContractBankAccount,
   formatContractNok,
   formatInstallmentDue,
 } from "@/lib/contracts/layout";
@@ -164,7 +165,10 @@ export function ContractPaymentPlan(props: {
         </Button>
       ) : null}
       {props.bankAccount ? (
-        <p>Kontonummer for betaling: {props.bankAccount}</p>
+        <p>
+          Kontonummer for betaling:{" "}
+          {formatContractBankAccount(props.bankAccount) ?? props.bankAccount}
+        </p>
       ) : null}
       {props.editable ? (
         <Textarea

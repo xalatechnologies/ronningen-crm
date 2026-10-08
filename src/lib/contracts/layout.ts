@@ -73,6 +73,19 @@ function fact(label: string, value: string | null | undefined): ContractFactRow 
   return { label, value: trimmed };
 }
 
+/** Format an 11-digit Norwegian kontonummer as XXXX.XX.XXXXX when possible. */
+export function formatContractBankAccount(
+  value: string | null | undefined,
+): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits.length === 11) {
+    return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6)}`;
+  }
+  return trimmed;
+}
+
 export function contractPartyFacts(doc: FrozenContractDocument): {
   lessor: ContractFactRow[];
   lessee: ContractFactRow[];
@@ -87,6 +100,7 @@ export function contractPartyFacts(doc: FrozenContractDocument): {
       fact("Adresse", doc.issuer.addressLines.filter(Boolean).join(", ")),
       fact("Telefon", doc.issuer.phone),
       fact("E-post", doc.issuer.email),
+      fact("Kontonummer", formatContractBankAccount(doc.issuer.bankAccount)),
     ].filter((row): row is ContractFactRow => Boolean(row)),
     lessee: [
       fact("Navn", doc.customer.name),

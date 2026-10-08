@@ -150,9 +150,5 @@ export function letterheadBrandLine(doc: FrozenContractDocument): string {
 }
 
 export function contractHeadingIssuerName(doc: FrozenContractDocument): string {
-  const legal = doc.issuer.legalName.trim();
-  if (!legal || /selskapslokale/i.test(legal)) {
-    return "Rønningen Gård og Event AS";
-  }
-  return legal;
+  return doc.issuer.legalName.trim();
 }
