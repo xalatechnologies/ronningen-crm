@@ -369,8 +369,8 @@ class ContractPdf {
 
 export async function buildAcceptedPdf(args: {
   document: FrozenContractDocument;
-  acceptedAtIso: string;
-  acceptedFullName: string;
+  acceptedAtIso?: string;
+  acceptedFullName?: string;
 }): Promise<{ bytes: Uint8Array; pdfHash: string }> {
   const pdf = await PDFDocument.create();
   const writer = new ContractPdf(pdf);
@@ -530,7 +530,7 @@ export async function buildAcceptedPdf(args: {
     width: colWidth,
   });
   writer.gap(28);
-  writer.text(args.acceptedFullName, {
+  writer.text(args.acceptedFullName ?? "", {
     size: 12,
     bold: true,
     x: MARGIN + colWidth + 24,
@@ -541,7 +541,7 @@ export async function buildAcceptedPdf(args: {
     x: MARGIN + colWidth + 24,
     width: colWidth,
   });
-  writer.text(`Sted/Dato: ${formatContractDateTime(args.acceptedAtIso)}`, {
+  writer.text(`Sted/Dato: ${args.acceptedAtIso ? formatContractDateTime(args.acceptedAtIso) : ""}`, {
     size: 9.5,
     x: MARGIN + colWidth + 24,
     width: colWidth,

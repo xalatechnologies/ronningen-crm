@@ -4,6 +4,8 @@ import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { contractFrom } from "@/lib/contracts/db";
 import { downloadAcceptedPdfBytes } from "@/lib/contracts/jobs";
+import { previewContractDocument } from "@/lib/contracts/actions";
+import { buildAcceptedPdf } from "@/lib/contracts/pdf";
 
 export const runtime = "nodejs";
 
@@ -55,8 +57,29 @@ export async function GET(request: Request) {
     versionId && z.string().uuid().safeParse(versionId).success
       ? list.find((row) => row.id === versionId)
       : list.find((row) => row.status === "accepted") ?? list[0];
-  if (!requested || requested.status !== "accepted") {
-    return new NextResponse("Not Found", { status: 404 });
+  if (!requested) return new NextResponse("Not Found", { status: 404 });
+
+  if (requested.status !== "accepted") {
+    try {
+      const preview = await previewContractDocument({
+        organizationId: booking.organization_id,
+        bookingId,
+        versionId: requested.id,
+      });
+      if (!preview.ok) return new NextResponse("Not Found", { status: 404 });
+      const pdf = await buildAcceptedPdf({ document: preview.document });
+      return new NextResponse(Buffer.from(pdf.bytes), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="ronningen-leieavtale-utkast.pdf"`,
+          "Cache-Control": "no-store",
+        },
+      });
+    } catch (error) {
+      console.error("[contracts] staff draft pdf failed", error);
+      return NextResponse.json({ error: "pdf_failed" }, { status: 500 });
+    }
   }
 
   try {

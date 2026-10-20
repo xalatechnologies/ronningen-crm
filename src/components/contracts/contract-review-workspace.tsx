@@ -337,14 +337,12 @@ export function ContractReviewWorkspace(props: {
                 {t("contracts.copyInviteLink")}
               </Button>
             ) : null}
-            {acceptedVersion ? (
-              <a
-                className={buttonVariants({ variant: "outline" })}
-                href={`/api/contracts/staff-pdf?bookingId=${props.bookingId}&versionId=${acceptedVersion.id}`}
-              >
-                {t("contracts.downloadPdf")}
-              </a>
-            ) : null}
+            <a
+              className={buttonVariants({ variant: "outline" })}
+              href={`/api/contracts/staff-pdf?bookingId=${props.bookingId}&versionId=${(acceptedVersion ?? current).id}`}
+            >
+              {t("contracts.downloadPdf")}
+            </a>
           </>
         }
         toolbar={
@@ -516,18 +514,14 @@ export function ContractReviewWorkspace(props: {
           {props.versions.map((version) => (
             <li key={version.id}>
               v{version.version_number} · {t(`contracts.status.${version.status}`)}
-              {version.status === "accepted" ? (
-                <>
-                  {" "}
-                  ·{" "}
-                  <a
-                    className="underline"
-                    href={`/api/contracts/staff-pdf?bookingId=${props.bookingId}&versionId=${version.id}`}
-                  >
-                    {t("contracts.downloadPdf")}
-                  </a>
-                </>
-              ) : null}
+              {" "}
+              ·{" "}
+              <a
+                className="underline"
+                href={`/api/contracts/staff-pdf?bookingId=${props.bookingId}&versionId=${version.id}`}
+              >
+                {t("contracts.downloadPdf")}
+              </a>
             </li>
           ))}
         </ul>
