@@ -35,6 +35,7 @@ function toFields(input: TemplateInput): Fields {
 
 export function ContractTemplateEditor(props: {
   organizationId: string;
+  templateId: string;
   versionNumber: number;
   initial: TemplateInput;
 }) {
@@ -61,6 +62,8 @@ export function ContractTemplateEditor(props: {
         return t("contracts.template.errors.signature_too_large");
       case "signature_type":
         return t("contracts.template.errors.signature_type");
+      case "invalid_name":
+        return t("contracts.template.errors.invalid_name");
       case "forbidden":
         return t("contracts.template.errors.forbidden");
       default:
@@ -73,6 +76,7 @@ export function ContractTemplateEditor(props: {
     try {
       const result = await saveTemplateVersion({
         organizationId: props.organizationId,
+        templateId: props.templateId,
         ...fields,
       });
       if (!result.ok) {

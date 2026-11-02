@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hashTemplateContent, templateInputSchema } from "@/lib/contracts/template-schema";
+import { hashTemplateContent, templateInputSchema, templateNameSchema } from "@/lib/contracts/template-schema";
 
 const base = {
   legalTerms: "4. Betingelser\n• Test",
@@ -58,5 +58,16 @@ describe("hashTemplateContent", () => {
       const changed = templateInputSchema.parse({ ...base, [key]: `${base[key]}!` });
       expect(hashTemplateContent(changed)).not.toBe(hashTemplateContent(a));
     }
+  });
+});
+
+describe("templateNameSchema", () => {
+  it("trims and accepts 1-80 characters", () => {
+    expect(templateNameSchema.parse("  Bryllup  ")).toBe("Bryllup");
+  });
+
+  it("rejects empty and over-long names", () => {
+    expect(templateNameSchema.safeParse("   ").success).toBe(false);
+    expect(templateNameSchema.safeParse("a".repeat(81)).success).toBe(false);
   });
 });

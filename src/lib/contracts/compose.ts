@@ -54,3 +54,12 @@ export function pickTemplateVersionId(input: {
   if (input.status === "draft") return input.latestVersionId ?? input.pinnedVersionId;
   return input.pinnedVersionId;
 }
+
+export function pickPackageTemplateId(
+  lines: { kind: string; catalogId: string | null }[],
+  packageTemplates: Map<string, string | null>,
+): string | null {
+  const line = lines.find((row) => row.kind === "package" && row.catalogId);
+  if (!line?.catalogId) return null;
+  return packageTemplates.get(line.catalogId) ?? null;
+}

@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 
 import { isFeatureEnabled } from "@/lib/feature-flags";
-import { composeFrozenDocument, kitchenAccessFrom, pickTemplateVersionId } from "@/lib/contracts/compose";
+import {
+  composeFrozenDocument,
+  kitchenAccessFrom,
+  pickPackageTemplateId,
+  pickTemplateVersionId,
+} from "@/lib/contracts/compose";
 import { asJson, contractFrom } from "@/lib/contracts/db";
 import { hashFrozenDocument } from "@/lib/contracts/document";
 import { applyOverrides, diffOverrides, sanitizeOverrides } from "@/lib/contracts/overrides";
@@ -234,6 +239,37 @@ export async function ensureDefaultContractTemplate(
   return { ok: true, templateId: String(data) };
 }
 
+async function templateIdForBookingPackage(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  organizationId: string,
+  bookingId: string,
+): Promise<string | null> {
+  const { data: lines } = await contractFrom(supabase, "booking_line_items")
+    .select("kind, catalog_id")
+    .eq("booking_id", bookingId)
+    .eq("organization_id", organizationId)
+    .order("sort_order");
+  const rows = (lines as { kind: string; catalog_id: string | null }[] | null) ?? [];
+  const ids = rows.filter((row) => row.kind === "package" && row.catalog_id).map((row) => row.catalog_id!);
+  if (!ids.length) return null;
+  const { data: pkgs, error } = await contractFrom(supabase, "packages")
+    .select("id, contract_template_id")
+    .eq("organization_id", organizationId)
+    .in("id", ids);
+  // The column only exists once the package-template migration is applied.
+  if (error) return null;
+  const map = new Map(
+    ((pkgs as { id: string; contract_template_id: string | null }[] | null) ?? []).map((row) => [
+      row.id,
+      row.contract_template_id,
+    ]),
+  );
+  return pickPackageTemplateId(
+    rows.map((row) => ({ kind: row.kind, catalogId: row.catalog_id })),
+    map,
+  );
+}
+
 export async function createDraft(input: {
   organizationId: string;
   bookingId: string;
@@ -251,12 +287,19 @@ export async function createDraft(input: {
   );
   if (!snapshot.ok) return snapshot;
 
+  const packageTemplateId = await templateIdForBookingPackage(
+    staff.supabase,
+    input.organizationId,
+    input.bookingId,
+  );
+
   const { data, error } = await staff.supabase.rpc(
     "contract_create_draft" as never,
     {
       payload: asJson({
         organization_id: input.organizationId,
         booking_id: input.bookingId,
+        template_id: packageTemplateId,
         source_snapshot: snapshot.snapshot,
         special_terms: input.specialTerms ?? "",
         include_internal_notes: Boolean(input.includeInternalNotes),

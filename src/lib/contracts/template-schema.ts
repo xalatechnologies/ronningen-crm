@@ -45,3 +45,5 @@ export function hashTemplateContent(input: TemplateInput): string {
     ),
   );
 }
+
+export const templateNameSchema = z.string().trim().min(1).max(80);

@@ -1,8 +1,9 @@
 import { FileText } from "lucide-react";
 
 import { AppPageHeader } from "@/components/layout/app-page-header";
+import { ContractTemplateList } from "@/components/contracts/contract-template-list";
 import { ContractTemplateEditor } from "@/components/contracts/contract-template-editor";
-import { loadDefaultTemplate } from "@/lib/contracts/templates";
+import { listTemplates, loadTemplate } from "@/lib/contracts/templates";
 import { ContractSettingsForm } from "@/components/contracts/contract-settings-form";
 import { getServerTranslation } from "@/i18n/server";
 import { contractFrom } from "@/lib/contracts/db";
@@ -12,7 +13,12 @@ import { isEmailConfigured } from "@/lib/notifications/email-client";
 
 export const dynamic = "force-dynamic";
 
-export default async function ContractSettingsPage() {
+export default async function ContractSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mal?: string }>;
+}) {
+  const { mal } = await searchParams;
   const { t } = await getServerTranslation();
   const [supabase, { orgId }] = await Promise.all([
     getCachedServerSupabaseClient(),
@@ -31,7 +37,10 @@ export default async function ContractSettingsPage() {
     .eq("is_default", true)
     .maybeSingle();
 
-  const loaded = await loadDefaultTemplate(orgId);
+  const [loaded, listed] = await Promise.all([
+    loadTemplate(orgId, mal && /^[0-9a-f-]{36}$/.test(mal) ? mal : undefined),
+    listTemplates(orgId),
+  ]);
   const templateData = loaded.ok ? loaded.template : null;
 
   return (
@@ -53,9 +62,18 @@ export default async function ContractSettingsPage() {
       />
       {templateData ? (
         <ContractTemplateEditor
+          key={templateData.templateId}
           organizationId={orgId}
+          templateId={templateData.templateId}
           versionNumber={templateData.versionNumber}
           initial={templateData.fields}
+        />
+      ) : null}
+      {templateData && listed.ok ? (
+        <ContractTemplateList
+          organizationId={orgId}
+          templates={listed.templates}
+          activeTemplateId={templateData.templateId}
         />
       ) : null}
       {!isEmailConfigured() ? (

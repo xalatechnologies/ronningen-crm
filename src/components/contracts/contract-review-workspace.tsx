@@ -84,10 +84,7 @@ export function ContractReviewWorkspace(props: {
   );
   const [venues, setVenues] = useState<{ id: string; name: string }[]>([]);
   const [propertyId, setPropertyId] = useState("");
-  const [edited, setEdited] = useState<FrozenContractDocument | null>(props.preview);
-  useEffect(() => {
-    setEdited(props.preview);
-  }, [props.preview]);
+  const [edited, setEdited] = useState<FrozenContractDocument | null>(null);
   const [editing, setEditing] = useState(false);
   const doc = edited ?? props.preview;
   const editable = current.status === "draft";
@@ -226,11 +223,12 @@ export function ContractReviewWorkspace(props: {
         customerFacingNotes: facing,
         paymentTerms,
         installments,
-        editedDocument: edited,
+        editedDocument: edited ?? undefined,
       });
       if (!result.ok) showActionError(result.error);
       else {
         toast.success(t("common.toasts.saved"));
+        setEdited(null);
         setEditing(false);
         router.refresh();
       }
@@ -240,7 +238,7 @@ export function ContractReviewWorkspace(props: {
   }
 
   function discardEdits() {
-    setEdited(props.preview);
+    setEdited(null);
     setSpecial(current.special_terms);
     setIncludeNotes(current.include_internal_notes);
     setFacing(current.customer_facing_notes ?? "");
@@ -265,7 +263,10 @@ export function ContractReviewWorkspace(props: {
         editedDocument: null,
       });
       if (!result.ok) showActionError(result.error);
-      else router.refresh();
+      else {
+        setEdited(null);
+        router.refresh();
+      }
     } finally {
       setBusy(false);
     }
@@ -284,7 +285,7 @@ export function ContractReviewWorkspace(props: {
           customerFacingNotes: facing,
           paymentTerms,
           installments,
-          editedDocument: edited,
+          editedDocument: edited ?? undefined,
         });
         if (!saved.ok) {
           showActionError(saved.error);

@@ -3,6 +3,11 @@
 import Link from "next/link";
 
 import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  getPackageContractTemplate,
+  listTemplates,
+  setPackageContractTemplate,
+} from "@/lib/contracts/templates";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { APP_DATA_AMOUNT, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
@@ -50,7 +55,7 @@ import {
 } from "lucide-react";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useTranslation } from "@/i18n/client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 import { parsePackageDescription } from "@/lib/pricing/parse-package-description";
@@ -128,6 +133,27 @@ function PricingCatalogFields({
 
   const { register, handleSubmit, formState } = form;
 
+  const [templates, setTemplates] = useState<{ id: string; name: string; isDefault: boolean }[]>([]);
+  const [templateId, setTemplateId] = useState("");
+  const [initialTemplateId, setInitialTemplateId] = useState("");
+  useEffect(() => {
+    if (kind !== "packages" || !row || !currentOrganizationId) return;
+    let cancelled = false;
+    void (async () => {
+      const [listed, current] = await Promise.all([
+        listTemplates(currentOrganizationId),
+        getPackageContractTemplate(currentOrganizationId, row.id),
+      ]);
+      if (cancelled || !listed.ok || !current.ok) return;
+      setTemplates(listed.templates);
+      setTemplateId(current.templateId ?? "");
+      setInitialTemplateId(current.templateId ?? "");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [kind, row, currentOrganizationId]);
+
   async function onSubmit(data: PricingPackageFormInput) {
     const payload = {
       name: data.name.trim(),
@@ -144,6 +170,17 @@ function PricingCatalogFields({
       if (error) {
         toast.error(t("pricing.updateFailed"), { description: error.message });
         return;
+      }
+      if (kind === "packages" && currentOrganizationId && templateId !== initialTemplateId) {
+        const linked = await setPackageContractTemplate({
+          organizationId: currentOrganizationId,
+          packageId: row.id,
+          templateId: templateId || null,
+        });
+        if (!linked.ok) {
+          toast.error(t("pricing.updateFailed"), { description: linked.error });
+          return;
+        }
       }
       toast.success(
         kind === "packages" ? t("pricing.packageUpdated") : t("pricing.serviceUpdated"),
@@ -241,6 +278,25 @@ function PricingCatalogFields({
             </p>
           ) : null}
         </div>
+        {kind === "packages" && isEdit && templates.length > 1 ? (
+          <div className="space-y-2">
+            <Label>{t("contracts.template.forPackage")}</Label>
+            <select
+              className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background px-3 text-base"
+              value={templateId}
+              onChange={(e) => setTemplateId(e.target.value)}
+            >
+              <option value="">{t("contracts.template.forPackageDefault")}</option>
+              {templates
+                .filter((template) => !template.isDefault)
+                .map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+        ) : null}
         <label className="flex cursor-pointer items-center gap-2 text-base text-foreground">
           <input
             type="checkbox"
