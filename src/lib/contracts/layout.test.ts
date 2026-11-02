@@ -293,11 +293,16 @@ describe("template-driven closing, signer and signature", () => {
     );
   });
 
-  it("treats blank values as missing", () => {
+  it("shows nothing of the legacy defaults when the template explicitly has no value", () => {
     const doc = sampleDoc();
-    doc.terms.closingLine = "   ";
-    doc.terms.signerName = "";
-    expect(contractClosingLine(doc)).toBe(CONTRACT_CLOSING_LINE);
-    expect(contractSignerName(doc)).toBe(LESSOR_SIGNATURE_NAME);
+    doc.terms.closingLine = null;
+    doc.terms.signerName = "   ";
+    doc.terms.signaturePath = null;
+    expect(contractClosingLine(doc)).toBe("");
+    expect(contractSignerName(doc)).toBe("");
+    expect(contractSignatureUrl(doc)).toBeNull();
+    for (const text of [contractClosingLine(doc), contractSignerName(doc)]) {
+      expect(text).not.toMatch(/Rønningen|Hameed/);
+    }
   });
 });

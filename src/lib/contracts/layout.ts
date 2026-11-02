@@ -10,19 +10,22 @@ export const CONTRACT_CLOSING_LINE =
 export const LESSOR_SIGNATURE_NAME = "Hameed Rahmani";
 export const LESSOR_SIGNATURE_SRC = "/contracts/utleier-signatur.png";
 
+// Documents frozen before templates carried these fields have no key at all (undefined) and
+// keep the original Rønningen defaults. A key that is present but empty means "none".
 export function contractClosingLine(doc: FrozenContractDocument): string {
-  return doc.terms.closingLine?.trim() || CONTRACT_CLOSING_LINE;
+  if (doc.terms.closingLine === undefined) return CONTRACT_CLOSING_LINE;
+  return doc.terms.closingLine?.trim() ?? "";
 }
 
 export function contractSignerName(doc: FrozenContractDocument): string {
-  return doc.terms.signerName?.trim() || LESSOR_SIGNATURE_NAME;
+  if (doc.terms.signerName === undefined) return LESSOR_SIGNATURE_NAME;
+  return doc.terms.signerName?.trim() ?? "";
 }
 
-export function contractSignatureUrl(doc: FrozenContractDocument): string {
+export function contractSignatureUrl(doc: FrozenContractDocument): string | null {
+  if (doc.terms.signaturePath === undefined) return LESSOR_SIGNATURE_SRC;
   const path = doc.terms.signaturePath?.trim();
-  return path
-    ? `/api/contracts/signature?path=${encodeURIComponent(path)}`
-    : LESSOR_SIGNATURE_SRC;
+  return path ? `/api/contracts/signature?path=${encodeURIComponent(path)}` : null;
 }
 
 export function packageHeadline(name: string): string {

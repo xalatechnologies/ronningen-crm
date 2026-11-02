@@ -47,7 +47,10 @@ async function loadBundledSignaturePng(): Promise<Uint8Array> {
 
 async function loadLessorSignatureImage(
   doc: FrozenContractDocument,
-): Promise<{ bytes: Uint8Array; kind: "png" | "jpg" }> {
+): Promise<{ bytes: Uint8Array; kind: "png" | "jpg" } | null> {
+  if (doc.terms.signaturePath === undefined) {
+    return { bytes: await loadBundledSignaturePng(), kind: "png" };
+  }
   const path = doc.terms.signaturePath?.trim();
   if (path && isSignaturePath(path)) {
     try {
@@ -65,7 +68,7 @@ async function loadLessorSignatureImage(
       // fall through to the bundled signature
     }
   }
-  return { bytes: await loadBundledSignaturePng(), kind: "png" };
+  return null;
 }
 
 function toWinAnsi(text: string): string {
@@ -543,7 +546,13 @@ export async function buildAcceptedPdf(args: {
   const signTop = writer.y;
   writer.text("UTLEIER", { size: 9, bold: true, width: colWidth });
   const signature = await loadLessorSignatureImage(d);
-  await writer.image(signature.bytes, 160, signature.kind);
+  if (signature) {
+    try {
+      await writer.image(signature.bytes, 160, signature.kind);
+    } catch {
+      // an unreadable signature image must never block the contract PDF
+    }
+  }
   writer.text(contractSignerName(d), { size: 10, bold: true, width: colWidth });
   writer.text(`Sted/Dato: ${lessorPlaceDate(d)}`, { size: 9.5, width: colWidth });
   const leftSignEnd = writer.y;

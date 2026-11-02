@@ -352,11 +352,14 @@ export function ContractDocumentView(props: {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-1">
             <p className="text-sm font-bold uppercase tracking-wide">Utleier</p>
-            <img
-              src={contractSignatureUrl(doc)}
-              alt={contractSignerName(doc)}
-              className="h-14 w-auto max-w-[16rem] object-contain object-left"
-            />
+{contractSignatureUrl(doc) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={contractSignatureUrl(doc) ?? undefined}
+                alt={contractSignerName(doc)}
+                className="h-14 w-auto max-w-[16rem] object-contain object-left"
+              />
+            ) : null}
             <p className="font-medium">{contractSignerName(doc)}</p>
             <p>{contractHeadingIssuerName(doc)}</p>
             <p>Sted/Dato: {lessorPlaceDate(doc)}</p>
