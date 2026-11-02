@@ -227,7 +227,7 @@ export async function ensureDefaultContractTemplate(
   const staff = await requireStaff(organizationId);
   if (!staff.ok) return staff;
   const { data, error } = await staff.supabase.rpc(
-    "seed_default_contract_template" as never,
+    "seed_starter_contract_template" as never,
     { p_org: organizationId } as never,
   );
   if (error) return { ok: false, error: rpcError(error.message) };

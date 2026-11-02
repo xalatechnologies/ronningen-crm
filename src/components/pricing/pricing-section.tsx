@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
@@ -396,6 +398,13 @@ export function PricingSection({
             surface="default"
             title={t("pricing.title")}
             actions={
+              <>
+              <Link
+                href="/app/settings/kontrakter#mal"
+                className={cn(buttonVariants({ variant: "outline", size: "cta" }))}
+              >
+                {t("contracts.template.title")}
+              </Link>
               <Button
                 type="button"
                 onClick={() => setPackageDialog({ open: true, row: null })}
@@ -408,6 +417,7 @@ export function PricingSection({
                 <Plus className="size-5" aria-hidden />
                 {t("pricing.newPackage")}
               </Button>
+              </>
             }
           />
         </div>
