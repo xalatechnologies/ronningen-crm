@@ -16,6 +16,7 @@ import {
   updateDraft,
   withdrawOffer,
 } from "@/lib/contracts/actions";
+import { ContractDocumentEditor } from "@/components/contracts/contract-document-editor";
 import { useTranslation } from "@/i18n/client";
 import { parseSendBlockedError, sendBlockingGaps } from "@/lib/contracts/rules";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
@@ -84,7 +85,11 @@ export function ContractReviewWorkspace(props: {
   );
   const [venues, setVenues] = useState<{ id: string; name: string }[]>([]);
   const [propertyId, setPropertyId] = useState("");
-  const doc = props.preview;
+  const [edited, setEdited] = useState<FrozenContractDocument | null>(props.preview);
+  useEffect(() => {
+    setEdited(props.preview);
+  }, [props.preview]);
+  const doc = edited ?? props.preview;
   const editable = current.status === "draft";
 
   const sendGaps = doc
@@ -221,6 +226,7 @@ export function ContractReviewWorkspace(props: {
         customerFacingNotes: facing,
         paymentTerms,
         installments,
+        editedDocument: edited,
       });
       if (!result.ok) showActionError(result.error);
       else {
@@ -245,6 +251,7 @@ export function ContractReviewWorkspace(props: {
           customerFacingNotes: facing,
           paymentTerms,
           installments,
+          editedDocument: edited,
         });
         if (!saved.ok) {
           showActionError(saved.error);
@@ -479,6 +486,35 @@ export function ContractReviewWorkspace(props: {
           paymentTerms={paymentTerms}
           onInstallmentsChange={setInstallments}
           onPaymentTermsChange={setPaymentTerms}
+        />
+      ) : null}
+
+      {doc && editable ? (
+        <ContractDocumentEditor
+          document={doc}
+          disabled={busy}
+          onChange={setEdited}
+          onReset={() => {
+            void (async () => {
+              setBusy(true);
+              try {
+                const result = await updateDraft({
+                  organizationId: props.organizationId,
+                  bookingId: props.bookingId,
+                  versionId: current.id,
+                  specialTerms: special,
+                  includeInternalNotes: includeNotes,
+                  customerFacingNotes: facing,
+                  paymentTerms,
+                  editedDocument: null,
+                });
+                if (!result.ok) showActionError(result.error);
+                else router.refresh();
+              } finally {
+                setBusy(false);
+              }
+            })();
+          }}
         />
       ) : null}
 

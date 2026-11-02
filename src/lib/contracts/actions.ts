@@ -6,6 +6,7 @@ import { isFeatureEnabled } from "@/lib/feature-flags";
 import { composeFrozenDocument, kitchenAccessFrom } from "@/lib/contracts/compose";
 import { asJson, contractFrom } from "@/lib/contracts/db";
 import { hashFrozenDocument } from "@/lib/contracts/document";
+import { applyOverrides, diffOverrides, sanitizeOverrides } from "@/lib/contracts/overrides";
 import { generateSecretToken, hashSecretToken } from "@/lib/contracts/crypto";
 import { sendBlockingGaps } from "@/lib/contracts/rules";
 import { frozenPackageDescription, resolvedLegalTerms } from "@/lib/contracts/paper-copy";
@@ -284,6 +285,8 @@ export async function updateDraft(input: {
   customerFacingNotes: string;
   paymentTerms?: string;
   installments?: { label: string; amountNok: number; dueDate: string | null }[];
+  /** Full edited document, or null to drop all manual edits. */
+  editedDocument?: FrozenContractDocument | null;
 }): Promise<ActionResult> {
   const staff = await requireStaff(input.organizationId);
   if (!staff.ok) return staff;
@@ -339,6 +342,43 @@ export async function updateDraft(input: {
       .update({ payment_terms: input.paymentTerms } as never)
       .eq("id", input.versionId)
       .eq("organization_id", input.organizationId);
+  }
+  if (input.editedDocument !== undefined) {
+    let overrides = {};
+    if (input.editedDocument) {
+      const { data: org } = await staff.supabase
+        .from("organizations")
+        .select(
+          "legal_name, org_number, address_line1, address_line2, postal_code, city, name, tagline, contact_email, contact_phone, bank_account, payment_instructions",
+        )
+        .eq("id", input.organizationId)
+        .maybeSingle();
+      if (!org) return { ok: false, error: "organization_not_found" };
+      const base = await composeVersionDocument({
+        supabase: staff.supabase,
+        organizationId: input.organizationId,
+        bookingId: input.bookingId,
+        versionId: input.versionId,
+        org,
+        skipOverrides: true,
+      });
+      if (!base.ok) return base;
+      overrides = diffOverrides(base.document, input.editedDocument);
+    }
+    // Staff only have SELECT on versions (writes go through RPCs), so persist via the
+    // admin client now that requireStaff has verified role and organization.
+    const { createSupabaseAdminClient } = await import("@/lib/admin/supabase-admin");
+    const { data: updated, error: overrideError } = await contractFrom(
+      createSupabaseAdminClient(),
+      "rental_contract_versions",
+    )
+      .update({ document_overrides: overrides } as never)
+      .eq("id", input.versionId)
+      .eq("organization_id", input.organizationId)
+      .eq("status", "draft")
+      .select("id");
+    if (overrideError) return { ok: false, error: rpcError(overrideError.message) };
+    if (!updated?.length) return { ok: false, error: "version_not_editable" };
   }
   revalidatePath(`/app/bookings/${input.bookingId}/contract`);
   return { ok: true };
@@ -573,6 +613,7 @@ async function composeVersionDocument(args: {
   bookingId: string;
   versionId: string;
   org: OrgSlice;
+  skipOverrides?: boolean;
 }): Promise<ActionResult<{ document: FrozenContractDocument; contentHash: string }>> {
   const { data: version } = await contractFrom(args.supabase, "rental_contract_versions")
     .select("*")
@@ -719,7 +760,7 @@ async function composeVersionDocument(args: {
       ? Number(v.version_number) - 1
       : null;
 
-  const document = composeFrozenDocument({
+  const composedDocument = composeFrozenDocument({
     agreementId: String(v.id),
     contractId: String(v.contract_id),
     versionId: String(v.id),
@@ -813,6 +854,9 @@ async function composeVersionDocument(args: {
     },
   });
 
+  const document = args.skipOverrides
+    ? composedDocument
+    : applyOverrides(composedDocument, sanitizeOverrides(v.document_overrides));
   return { ok: true, document, contentHash: hashFrozenDocument(document) };
 }
 
