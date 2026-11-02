@@ -65,6 +65,7 @@ import {
   resolveBookingPaymentForPersist,
   resolveStandardBookingPaymentFromAmounts,
 } from "@/constants/booking-payment-status";
+import { deleteBookingWithContracts } from "@/lib/bookings/delete-booking";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
@@ -88,18 +89,6 @@ function RequiredMark() {
       {" *"}
     </span>
   );
-}
-
-function isBookingContractHistoryError(error: {
-  message?: string;
-  details?: string;
-  hint?: string;
-  code?: string;
-}): boolean {
-  return [error.message, error.details, error.hint, error.code]
-    .filter(Boolean)
-    .join(" ")
-    .includes("booking_has_contract_history");
 }
 
 function bookingDetailDefaultsFromRow(
@@ -595,18 +584,13 @@ export function BookingDetailSheet({
     if (!currentOrganizationId) return;
     setDeleteBusy(true);
     try {
-      const { error } = await supabase
-        .from("bookings")
-        .delete()
-        .eq("id", bookingRow.id)
-        .eq("organization_id", currentOrganizationId);
+      const result = await deleteBookingWithContracts({
+        organizationId: currentOrganizationId,
+        bookingId: bookingRow.id,
+      });
 
-      if (error) {
-        toast.error(t("bookings.detail.deleteFailed"), {
-          description: isBookingContractHistoryError(error)
-            ? t("bookings.detail.deleteBlockedByContract")
-            : error.message,
-        });
+      if (!result.ok) {
+        toast.error(t("bookings.detail.deleteFailed"), { description: result.error });
         return;
       }
 
@@ -1234,7 +1218,7 @@ export function BookingDetailSheet({
                 {t("bookings.detail.moveToPending")}
               </Button>
             ) : null}
-            {canDeleteBooking && !hasContractHistory ? (
+            {canDeleteBooking ? (
               <Button
                 type="button"
                 variant="outline"
@@ -1271,6 +1255,11 @@ export function BookingDetailSheet({
                 customer: bookingRow.customer,
                 date: bookingRow.date,
               })}
+              {hasContractHistory ? (
+                <span className="mt-2 block font-semibold text-destructive">
+                  {t("bookings.detail.deleteContractWarning")}
+                </span>
+              ) : null}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col-reverse gap-3 sm:flex-row sm:justify-end">

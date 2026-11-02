@@ -157,8 +157,8 @@ export const bookingsNb = {
     removeMarkingFailed: "Kunne ikke fjerne markering",
     markingRemoved: "Markering fjernet",
     deleteFailed: "Kunne ikke slette booking",
-    deleteBlockedByContract:
-      "Denne bookingen har en leieavtale og kan ikke slettes. Bruk Avbestill for å arkivere den.",
+    deleteContractWarning:
+      "Reservasjonen har en leieavtale. Avtalen, signaturen og PDF-en slettes permanent sammen med reservasjonen.",
     deleted: "Booking slettet",
   },
   form: {

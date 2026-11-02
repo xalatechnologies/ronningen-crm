@@ -16,7 +16,6 @@ import {
   updateDraft,
   withdrawOffer,
 } from "@/lib/contracts/actions";
-import { ContractDocumentEditor } from "@/components/contracts/contract-document-editor";
 import { useTranslation } from "@/i18n/client";
 import { parseSendBlockedError, sendBlockingGaps } from "@/lib/contracts/rules";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
@@ -89,6 +88,7 @@ export function ContractReviewWorkspace(props: {
   useEffect(() => {
     setEdited(props.preview);
   }, [props.preview]);
+  const [editing, setEditing] = useState(false);
   const doc = edited ?? props.preview;
   const editable = current.status === "draft";
 
@@ -231,8 +231,29 @@ export function ContractReviewWorkspace(props: {
       if (!result.ok) showActionError(result.error);
       else {
         toast.success(t("common.toasts.saved"));
+        setEditing(false);
         router.refresh();
       }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resetEdits() {
+    setBusy(true);
+    try {
+      const result = await updateDraft({
+        organizationId: props.organizationId,
+        bookingId: props.bookingId,
+        versionId: current.id,
+        specialTerms: special,
+        includeInternalNotes: includeNotes,
+        customerFacingNotes: facing,
+        paymentTerms,
+        editedDocument: null,
+      });
+      if (!result.ok) showActionError(result.error);
+      else router.refresh();
     } finally {
       setBusy(false);
     }
@@ -287,10 +308,31 @@ export function ContractReviewWorkspace(props: {
         backLink={{ href: "/app/bookings", label: t("bookings.backToBookings") }}
         actions={
           <>
-            {editable ? (
+            {editable && editing ? (
               <>
-                <Button type="button" variant="outline" disabled={busy} onClick={() => void save()}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => {
+                    setEdited(props.preview);
+                    setEditing(false);
+                    router.refresh();
+                  }}
+                >
+                  {t("contracts.editCancel")}
+                </Button>
+                <Button type="button" variant="outline" disabled={busy} onClick={() => void resetEdits()}>
+                  {t("contracts.editReset")}
+                </Button>
+                <Button type="button" disabled={busy} onClick={() => void save()}>
                   {t("common.actions.save")}
+                </Button>
+              </>
+            ) : editable ? (
+              <>
+                <Button type="button" variant="outline" disabled={busy} onClick={() => setEditing(true)}>
+                  {t("contracts.editStart")}
                 </Button>
                 <Button type="button" disabled={busy} onClick={() => void send()}>
                   {t("contracts.sendToCustomer")}
@@ -481,40 +523,13 @@ export function ContractReviewWorkspace(props: {
         <ContractDocumentView
           document={doc}
           acceptance={props.acceptance}
-          paymentPlanEditable={editable}
+          paymentPlanEditable={editable && editing}
+          editing={editable && editing}
+          onDocumentChange={setEdited}
           installments={installments}
           paymentTerms={paymentTerms}
           onInstallmentsChange={setInstallments}
           onPaymentTermsChange={setPaymentTerms}
-        />
-      ) : null}
-
-      {doc && editable ? (
-        <ContractDocumentEditor
-          document={doc}
-          disabled={busy}
-          onChange={setEdited}
-          onReset={() => {
-            void (async () => {
-              setBusy(true);
-              try {
-                const result = await updateDraft({
-                  organizationId: props.organizationId,
-                  bookingId: props.bookingId,
-                  versionId: current.id,
-                  specialTerms: special,
-                  includeInternalNotes: includeNotes,
-                  customerFacingNotes: facing,
-                  paymentTerms,
-                  editedDocument: null,
-                });
-                if (!result.ok) showActionError(result.error);
-                else router.refresh();
-              } finally {
-                setBusy(false);
-              }
-            })();
-          }}
         />
       ) : null}
 
@@ -526,21 +541,21 @@ export function ContractReviewWorkspace(props: {
         <Textarea
           value={special}
           onChange={(e) => setSpecial(e.target.value)}
-          disabled={!editable}
+          disabled={!editable || !editing}
           rows={6}
         />
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={includeNotes}
-            disabled={!editable}
+            disabled={!editable || !editing}
             onChange={(e) => setIncludeNotes(e.target.checked)}
           />
           {t("contracts.includeNotes")}
         </label>
         <p className="text-xs text-muted-foreground">{t("contracts.notesStayPrivate")}</p>
         {includeNotes ? (
-          <Textarea value={facing} onChange={(e) => setFacing(e.target.value)} disabled={!editable} />
+          <Textarea value={facing} onChange={(e) => setFacing(e.target.value)} disabled={!editable || !editing} />
         ) : null}
       </div>
 
