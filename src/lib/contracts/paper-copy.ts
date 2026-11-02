@@ -125,11 +125,7 @@ export function resolvePackageInclusions(
 }
 
 export function resolvedLegalTerms(legalTerms: string | null | undefined): string {
-  const text = legalTerms?.trim() ?? "";
-  if (text.includes("Informasjonsskriv og husregler") && text.includes("4. Betingelser")) {
-    return legalTerms!.trim();
-  }
-  return DEFAULT_CONTRACT_LEGAL_TERMS;
+  return legalTerms?.trim() ?? "";
 }
 
 export function issuerWebsite(doc: FrozenContractDocument): string | null {

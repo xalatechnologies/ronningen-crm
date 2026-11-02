@@ -234,8 +234,10 @@ describe("frozen package snapshot", () => {
 
 describe("accepted PDF", () => {
   it("includes package title and signed name", async () => {
+    const document = sampleDoc();
+    document.terms.legalTerms = "4. Betingelser\n• Test\n\n6. Informasjonsskriv og husregler\n• Test";
     const { bytes } = await buildAcceptedPdf({
-      document: sampleDoc(),
+      document,
       acceptedAtIso: "2026-05-18T13:21:00.000Z",
       acceptedFullName: "wahid",
     });
