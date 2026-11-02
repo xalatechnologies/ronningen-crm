@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import {
   computeAdminUserFilterCounts,
@@ -7,6 +7,16 @@ import {
   matchesAdminUserFilter,
 } from "@/components/admin/admin-user-filters";
 import type { AdminUserRow } from "@/lib/admin/queries/users-billing-audit";
+
+// "Inactive" is measured against today's date; pin the clock so the fixtures' fixed sign-in
+// dates keep their meaning.
+beforeAll(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-07-01T00:00:00.000Z"));
+});
+afterAll(() => {
+  vi.useRealTimers();
+});
 
 function user(
   overrides: Partial<AdminUserRow> & Pick<AdminUserRow, "id">,

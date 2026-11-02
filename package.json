@@ -19,7 +19,11 @@
     "stripe:setup": "node --env-file=.env.local scripts/stripe-setup.mjs",
     "billing:verify-env": "node --env-file=.env.local scripts/verify-billing-env.mjs",
     "stitch:export": "node --env-file=.env.local scripts/stitch-export.mjs",
-    "i18n:audit": "node scripts/i18n-audit.mjs"
+    "i18n:audit": "node scripts/i18n-audit.mjs",
+    "test:unit": "vitest run",
+    "test:security": "vitest run src/lib/admin src/lib/billing src/lib/organizations src/app/api/webhooks src/app/api/cron src/app/api/auth",
+    "test:e2e": "playwright test",
+    "test:all": "npm run typecheck && npm run lint && npm run test:unit && npm run test:e2e"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -48,13 +52,18 @@
   },
   "devDependencies": {
     "@google/stitch-sdk": "^0.1.1",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "eslint-config-prettier": "^10.1.8",
+    "jsdom": "^29.1.1",
     "prettier": "^3.8.3",
     "tailwindcss": "^4",
     "typescript": "^5",
