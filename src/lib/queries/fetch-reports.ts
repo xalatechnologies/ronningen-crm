@@ -408,7 +408,7 @@ export async function fetchReportsPageData(
     },
   };
 
-  let monthlyRevenue: MonthlyRevenuePoint[] = [];
+  const monthlyRevenue: MonthlyRevenuePoint[] = [];
 
   if (allYears) {
     const yearAmounts = buildYearlyInvoicedSeries({
