@@ -72,14 +72,14 @@ export function ContractPaymentPlan(props: {
           </thead>
           <tbody>
             {rows.map((row, index) => (
-              <tr key={`${row.label}-${index}`}>
+              <tr key={index}>
                 <td className={cell}>{index + 1}</td>
                 <td className={cell}>
                   {props.editable ? (
                     <Input
                       value={row.label}
                       onChange={(e) => updateRow(index, { label: e.target.value })}
-                      className="h-9 border-0 bg-transparent px-0 shadow-none"
+                      className="h-9 bg-background px-2"
                     />
                   ) : (
                     row.label
@@ -95,7 +95,7 @@ export function ContractPaymentPlan(props: {
                           dueDate: e.target.value.trim() ? e.target.value : null,
                         })
                       }
-                      className="h-9 border-0 bg-transparent px-0 shadow-none"
+                      className="h-9 bg-background px-2"
                     />
                   ) : (
                     formatInstallmentDue(row.dueDate, props.eventStart)
@@ -110,7 +110,7 @@ export function ContractPaymentPlan(props: {
                       onChange={(e) =>
                         updateRow(index, { amountNok: Number(e.target.value) || 0 })
                       }
-                      className="h-9 border-0 bg-transparent px-0 text-right shadow-none"
+                      className="h-9 bg-background px-2 text-right"
                     />
                   ) : (
                     formatContractNok(row.amountNok)

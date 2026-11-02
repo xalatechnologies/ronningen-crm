@@ -239,6 +239,18 @@ export function ContractReviewWorkspace(props: {
     }
   }
 
+  function discardEdits() {
+    setEdited(props.preview);
+    setSpecial(current.special_terms);
+    setIncludeNotes(current.include_internal_notes);
+    setFacing(current.customer_facing_notes ?? "");
+    setPaymentTerms(
+      props.preview?.terms.paymentTerms || "Merk betaling med: Arrangementsdato og navn",
+    );
+    setInstallments(props.preview?.booking.installments ?? []);
+    setEditing(false);
+  }
+
   async function resetEdits() {
     setBusy(true);
     try {
@@ -314,11 +326,7 @@ export function ContractReviewWorkspace(props: {
                   type="button"
                   variant="outline"
                   disabled={busy}
-                  onClick={() => {
-                    setEdited(props.preview);
-                    setEditing(false);
-                    router.refresh();
-                  }}
+                  onClick={discardEdits}
                 >
                   {t("contracts.editCancel")}
                 </Button>
