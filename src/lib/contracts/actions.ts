@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { isFeatureEnabled } from "@/lib/feature-flags";
-import { composeFrozenDocument, kitchenAccessFrom } from "@/lib/contracts/compose";
+import { composeFrozenDocument, kitchenAccessFrom, pickTemplateVersionId } from "@/lib/contracts/compose";
 import { asJson, contractFrom } from "@/lib/contracts/db";
 import { hashFrozenDocument } from "@/lib/contracts/document";
 import { applyOverrides, diffOverrides, sanitizeOverrides } from "@/lib/contracts/overrides";
@@ -482,6 +482,16 @@ export async function sendContract(input: {
   );
   if (error) return { ok: false, error: rpcError(error.message) };
 
+  // Pin the template version the contract was sent with, so later template edits never
+  // change how this (now frozen) contract is composed.
+  if (composed.document.terms.templateVersionId) {
+    const { createSupabaseAdminClient: adminForPin } = await import("@/lib/admin/supabase-admin");
+    await contractFrom(adminForPin(), "rental_contract_versions")
+      .update({ template_version_id: composed.document.terms.templateVersionId } as never)
+      .eq("id", input.versionId)
+      .eq("organization_id", input.organizationId);
+  }
+
   const { sendContractInviteEmail } = await import("@/lib/contracts/mail");
   const mailed = await sendContractInviteEmail({
     to: composed.document.customer.email ?? "",
@@ -746,20 +756,46 @@ async function composeVersionDocument(args: {
   let legalTerms = "";
   let paymentTerms = "";
   let acceptanceDeclaration = "";
-  const templateVersionId = (v.template_version_id as string | null) ?? null;
+  let closingLine: string | null = null;
+  let signerName: string | null = null;
+  let signaturePath: string | null = null;
+  const pinnedTemplateVersionId = (v.template_version_id as string | null) ?? null;
+  const templateId = (v.template_id as string | null) ?? null;
+  let latestTemplateVersionId: string | null = null;
+  if (templateId) {
+    const { data: latest } = await contractFrom(args.supabase, "contract_template_versions")
+      .select("id")
+      .eq("template_id", templateId)
+      .eq("organization_id", args.organizationId)
+      .order("version_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    latestTemplateVersionId = (latest as { id: string } | null)?.id ?? null;
+  }
+  const templateVersionId = pickTemplateVersionId({
+    status: String(v.status ?? ""),
+    pinnedVersionId: pinnedTemplateVersionId,
+    latestVersionId: latestTemplateVersionId,
+  });
   if (templateVersionId) {
     const { data: tv } = await contractFrom(args.supabase, "contract_template_versions")
-      .select("legal_terms, payment_terms, acceptance_declaration, id")
+      .select("legal_terms, payment_terms, acceptance_declaration, closing_line, signer_name, signature_path, id")
       .eq("id", templateVersionId)
       .maybeSingle();
     const terms = tv as {
       legal_terms?: string;
       payment_terms?: string;
       acceptance_declaration?: string;
+      closing_line?: string | null;
+      signer_name?: string | null;
+      signature_path?: string | null;
     } | null;
     legalTerms = terms?.legal_terms ?? "";
     paymentTerms = terms?.payment_terms ?? "";
     acceptanceDeclaration = terms?.acceptance_declaration ?? "";
+    closingLine = terms?.closing_line ?? null;
+    signerName = terms?.signer_name ?? null;
+    signaturePath = terms?.signature_path ?? null;
   }
   const versionPaymentTerms = String(v.payment_terms ?? "").trim();
   if (versionPaymentTerms) paymentTerms = versionPaymentTerms;
@@ -902,6 +938,9 @@ async function composeVersionDocument(args: {
       acceptanceDeclaration:
         acceptanceDeclaration.trim() ||
         "Jeg bekrefter å ha lest og forstått leieavtalen, informasjonsskrivet og ryddeplanen.",
+      closingLine,
+      signerName,
+      signaturePath,
     },
   });
 

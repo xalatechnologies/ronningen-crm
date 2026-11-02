@@ -45,3 +45,12 @@ export function kitchenAccessFrom(value: string | null | undefined): KitchenAcce
   if (value === "included" || value === "excluded") return value;
   return "unknown";
 }
+
+export function pickTemplateVersionId(input: {
+  status: string;
+  pinnedVersionId: string | null;
+  latestVersionId: string | null;
+}): string | null {
+  if (input.status === "draft") return input.latestVersionId ?? input.pinnedVersionId;
+  return input.pinnedVersionId;
+}
