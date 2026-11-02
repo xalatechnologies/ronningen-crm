@@ -3,9 +3,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { lineItemsTotalNok } from "@/lib/contracts/overrides";
 import { ContractPaymentPlan, type EditableInstallment } from "@/components/contracts/contract-payment-plan";
 import {
-  CONTRACT_CLOSING_LINE,
-  LESSOR_SIGNATURE_NAME,
-  LESSOR_SIGNATURE_SRC,
+  contractClosingLine,
+  contractSignatureUrl,
+  contractSignerName,
   contractPartyFacts,
   formatContractDateTime,
   formatContractLineAmount,
@@ -353,11 +353,11 @@ export function ContractDocumentView(props: {
           <div className="space-y-1">
             <p className="text-sm font-bold uppercase tracking-wide">Utleier</p>
             <img
-              src={LESSOR_SIGNATURE_SRC}
-              alt={LESSOR_SIGNATURE_NAME}
+              src={contractSignatureUrl(doc)}
+              alt={contractSignerName(doc)}
               className="h-14 w-auto max-w-[16rem] object-contain object-left"
             />
-            <p className="font-medium">{LESSOR_SIGNATURE_NAME}</p>
+            <p className="font-medium">{contractSignerName(doc)}</p>
             <p>{contractHeadingIssuerName(doc)}</p>
             <p>Sted/Dato: {lessorPlaceDate(doc)}</p>
           </div>
@@ -376,7 +376,7 @@ export function ContractDocumentView(props: {
             )}
           </div>
         </div>
-        <p className="italic">{CONTRACT_CLOSING_LINE}</p>
+        <p className="italic">{contractClosingLine(doc)}</p>
       </section>
     </article>
   );

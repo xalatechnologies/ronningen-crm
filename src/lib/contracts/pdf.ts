@@ -5,9 +5,10 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf
 
 import type { FrozenContractDocument } from "@/lib/contracts/types";
 import { sha256Hex } from "@/lib/contracts/crypto";
+import { isSignaturePath } from "@/lib/contracts/signature";
 import {
-  CONTRACT_CLOSING_LINE,
-  LESSOR_SIGNATURE_NAME,
+  contractClosingLine,
+  contractSignerName,
   formatContractBankAccount,
   formatContractDateTime,
   formatContractLineAmount,
@@ -35,13 +36,36 @@ const INK = rgb(0.07, 0.12, 0.1);
 const RULE = rgb(0.72, 0.76, 0.74);
 const MUTED = rgb(0.32, 0.36, 0.34);
 
-async function loadLessorSignaturePng(): Promise<Uint8Array> {
+async function loadBundledSignaturePng(): Promise<Uint8Array> {
   const nearby = join(dirname(fileURLToPath(import.meta.url)), "assets/utleier-signatur.png");
   try {
     return await readFile(nearby);
   } catch {
     return await readFile(join(process.cwd(), "public/contracts/utleier-signatur.png"));
   }
+}
+
+async function loadLessorSignatureImage(
+  doc: FrozenContractDocument,
+): Promise<{ bytes: Uint8Array; kind: "png" | "jpg" }> {
+  const path = doc.terms.signaturePath?.trim();
+  if (path && isSignaturePath(path)) {
+    try {
+      const { createSupabaseAdminClient } = await import("@/lib/admin/supabase-admin");
+      const downloaded = await createSupabaseAdminClient()
+        .storage.from("contract-signatures")
+        .download(path);
+      if (!downloaded.error && downloaded.data) {
+        return {
+          bytes: new Uint8Array(await downloaded.data.arrayBuffer()),
+          kind: path.endsWith(".jpg") ? "jpg" : "png",
+        };
+      }
+    } catch {
+      // fall through to the bundled signature
+    }
+  }
+  return { bytes: await loadBundledSignaturePng(), kind: "png" };
 }
 
 function toWinAnsi(text: string): string {
@@ -337,8 +361,9 @@ class ContractPdf {
     this.amountRow("TOTALT", total, true);
   }
 
-  async image(bytes: Uint8Array, width: number) {
-    const image = await this.pdf.embedPng(bytes);
+  async image(bytes: Uint8Array, width: number, kind: "png" | "jpg" = "png") {
+    const image =
+      kind === "jpg" ? await this.pdf.embedJpg(bytes) : await this.pdf.embedPng(bytes);
     const height = (image.height / image.width) * width;
     this.ensure(height + 8);
     this.page.drawImage(image, {
@@ -517,8 +542,9 @@ export async function buildAcceptedPdf(args: {
   writer.ensure(140);
   const signTop = writer.y;
   writer.text("UTLEIER", { size: 9, bold: true, width: colWidth });
-  await writer.image(await loadLessorSignaturePng(), 160);
-  writer.text(LESSOR_SIGNATURE_NAME, { size: 10, bold: true, width: colWidth });
+  const signature = await loadLessorSignatureImage(d);
+  await writer.image(signature.bytes, 160, signature.kind);
+  writer.text(contractSignerName(d), { size: 10, bold: true, width: colWidth });
   writer.text(`Sted/Dato: ${lessorPlaceDate(d)}`, { size: 9.5, width: colWidth });
   const leftSignEnd = writer.y;
 
@@ -547,7 +573,7 @@ export async function buildAcceptedPdf(args: {
     width: colWidth,
   });
   writer.y = Math.min(leftSignEnd, writer.y) - 10;
-  writer.text(CONTRACT_CLOSING_LINE, { size: 9, align: "center" });
+  writer.text(contractClosingLine(d), { size: 9, align: "center" });
 
   writer.numberPages();
   const bytes = await pdf.save();
