@@ -1,6 +1,8 @@
 import { FileText } from "lucide-react";
 
 import { AppPageHeader } from "@/components/layout/app-page-header";
+import { ContractTemplateEditor } from "@/components/contracts/contract-template-editor";
+import { loadDefaultTemplate } from "@/lib/contracts/templates";
 import { ContractSettingsForm } from "@/components/contracts/contract-settings-form";
 import { getServerTranslation } from "@/i18n/server";
 import { contractFrom } from "@/lib/contracts/db";
@@ -29,6 +31,9 @@ export default async function ContractSettingsPage() {
     .eq("is_default", true)
     .maybeSingle();
 
+  const loaded = await loadDefaultTemplate(orgId);
+  const templateData = loaded.ok ? loaded.template : null;
+
   return (
     <div className="flex flex-col gap-6">
       <AppPageHeader
@@ -46,6 +51,13 @@ export default async function ContractSettingsPage() {
         )}
         hasTemplate={Boolean(template)}
       />
+      {templateData ? (
+        <ContractTemplateEditor
+          organizationId={orgId}
+          versionNumber={templateData.versionNumber}
+          initial={templateData.fields}
+        />
+      ) : null}
       {!isEmailConfigured() ? (
         <p className="rounded-lg border-2 border-amber-500/40 bg-amber-500/10 p-4 text-sm">
           {t("contracts.emailNotConfigured")}
