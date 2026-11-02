@@ -358,7 +358,11 @@ export function ContractReviewWorkspace(props: {
                     versionId: current.id,
                   }).then((r) => {
                     if (!r.ok) showActionError(r.error);
-                    else router.refresh();
+                    else {
+                      if (r.notified) toast.success(t("contracts.withdrawnNotified"));
+                      else toast.warning(t("contracts.withdrawnNotNotified"));
+                      router.refresh();
+                    }
                   })
                 }
               >

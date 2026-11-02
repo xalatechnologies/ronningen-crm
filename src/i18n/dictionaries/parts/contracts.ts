@@ -29,6 +29,8 @@ export const contractsNb = {
   specialTerms: "Særlige avtalevilkår",
   editStart: "Rediger",
   editCancel: "Avbryt",
+  withdrawnNotified: "Tilbudet er trukket tilbake og kunden er varslet på e-post.",
+  withdrawnNotNotified: "Tilbudet er trukket tilbake, men kunden ble ikke varslet på e-post.",
   editReset: "Tilbakestill",
   includeNotes: "Ta med valgt kundetekst fra notater",
   notesStayPrivate: "Interne notater vises ikke i avtalen med mindre du huker av.",
@@ -114,7 +116,8 @@ export const contractsNb = {
     pdf: "Last ned PDF",
     pdfPending: "PDF klargjøres. Last ned om et øyeblikk.",
     contact: "Trenger du en rettelse? Kontakt utleier direkte.",
-    notFound: "Lenken er ugyldig eller utløpt.",
+    notFound:
+      "Lenken er ugyldig, utløpt eller avtalen er trukket tilbake. Kontakt utleier hvis du venter en avtale.",
     assurance:
       "Dette er en elektronisk aksept, ikke en kvalifisert elektronisk signatur.",
   },
@@ -151,6 +154,8 @@ export const contractsEn = {
   specialTerms: "Special terms",
   editStart: "Edit",
   editCancel: "Cancel",
+  withdrawnNotified: "Offer withdrawn and the customer was notified by email.",
+  withdrawnNotNotified: "Offer withdrawn, but the customer could not be notified by email.",
   editReset: "Reset edits",
   includeNotes: "Include selected customer-facing notes",
   notesStayPrivate: "Internal notes stay private unless you opt in.",
@@ -235,7 +240,8 @@ export const contractsEn = {
     pdf: "Download PDF",
     pdfPending: "The PDF is being prepared. Try again shortly.",
     contact: "Need a correction? Contact the lessor directly.",
-    notFound: "This link is invalid or has expired.",
+    notFound:
+      "This link is invalid, has expired or the agreement was withdrawn. Contact the lessor if you are expecting an agreement.",
     assurance:
       "This is an electronic acceptance, not a qualified electronic signature.",
   },

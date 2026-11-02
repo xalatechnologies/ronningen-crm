@@ -267,6 +267,34 @@ export async function createDraft(input: {
   );
   if (error) return { ok: false, error: rpcError(error.message) };
   const row = data as { contractId: string; versionId: string; versionNumber: number };
+  if (row.versionNumber > 1) {
+    // Carry the previous version's manual edits over so a revision starts where it left off.
+    const { createSupabaseAdminClient } = await import("@/lib/admin/supabase-admin");
+    const admin = createSupabaseAdminClient();
+    const { data: previous } = await contractFrom(admin, "rental_contract_versions")
+      .select("document_overrides, payment_terms, special_terms, customer_facing_notes, include_internal_notes")
+      .eq("contract_id", row.contractId)
+      .eq("organization_id", input.organizationId)
+      .eq("version_number", row.versionNumber - 1)
+      .maybeSingle();
+    if (previous) {
+      const prev = previous as Record<string, unknown>;
+      await contractFrom(admin, "rental_contract_versions")
+        .update({
+          document_overrides: prev.document_overrides ?? {},
+          payment_terms: prev.payment_terms ?? "",
+          ...(input.specialTerms === undefined
+            ? {
+                special_terms: prev.special_terms ?? "",
+                customer_facing_notes: prev.customer_facing_notes ?? "",
+                include_internal_notes: prev.include_internal_notes ?? false,
+              }
+            : {}),
+        } as never)
+        .eq("id", row.versionId)
+        .eq("status", "draft");
+    }
+  }
   revalidatePath(BOOKINGS_PATH);
   return {
     ok: true,
@@ -512,9 +540,18 @@ export async function withdrawOffer(input: {
   organizationId: string;
   bookingId: string;
   versionId: string;
-}): Promise<ActionResult> {
+}): Promise<ActionResult<{ notified: boolean }>> {
   const staff = await requireStaff(input.organizationId);
   if (!staff.ok) return staff;
+
+  const { data: version } = await contractFrom(staff.supabase, "rental_contract_versions")
+    .select("frozen_document")
+    .eq("id", input.versionId)
+    .eq("organization_id", input.organizationId)
+    .maybeSingle();
+  const frozen = (version as { frozen_document: FrozenContractDocument | null } | null)
+    ?.frozen_document;
+
   const { error } = await staff.supabase.rpc(
     "contract_withdraw_offer" as never,
     {
@@ -525,8 +562,22 @@ export async function withdrawOffer(input: {
     } as never,
   );
   if (error) return { ok: false, error: rpcError(error.message) };
+
+  let notified = false;
+  if (frozen?.customer.email) {
+    const { sendContractWithdrawnEmail } = await import("@/lib/contracts/mail");
+    const mailed = await sendContractWithdrawnEmail({
+      to: frozen.customer.email,
+      organizationName: frozen.issuer.legalName,
+      versionId: input.versionId,
+      bookingReference: frozen.booking.reference,
+      replyTo: frozen.issuer.email,
+    });
+    notified = mailed.ok;
+    if (!mailed.ok) console.warn("[contracts] withdraw email not delivered", mailed.error);
+  }
   revalidatePath(`/app/bookings/${input.bookingId}/contract`);
-  return { ok: true };
+  return { ok: true, notified };
 }
 
 export async function createRevision(input: {

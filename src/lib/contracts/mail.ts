@@ -99,6 +99,41 @@ export async function sendContractInviteEmail(input: {
   });
 }
 
+export async function sendContractWithdrawnEmail(input: {
+  to: string;
+  organizationName: string;
+  versionId: string;
+  bookingReference?: string | null;
+  replyTo?: string | null;
+}) {
+  if (!input.to) return { ok: false as const, error: "missing_recipient" };
+  const org = escapeHtml(input.organizationName);
+  const ref = input.bookingReference?.trim()
+    ? `<p>Reservasjon: ${escapeHtml(input.bookingReference.trim())}</p>`
+    : "";
+  const html = layout(`
+    <p>Leieavtalen vi sendte dere fra <strong>${org}</strong> er trukket tilbake. Lenken du fikk tidligere virker derfor ikke lenger.</p>
+    ${ref}
+    <p>Du vil motta en ny avtale hvis den skal endres. Har du spørsmål, svar på denne e-posten.</p>
+  `);
+  const text = [
+    `Leieavtalen vi sendte dere fra ${input.organizationName} er trukket tilbake. Lenken du fikk tidligere virker derfor ikke lenger.`,
+    input.bookingReference?.trim() ? `Reservasjon: ${input.bookingReference.trim()}` : "",
+    "Du vil motta en ny avtale hvis den skal endres. Har du spørsmål, svar på denne e-posten.",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+  return sendEmail({
+    to: input.to,
+    from: brandedFromAddress(input.organizationName),
+    replyTo: input.replyTo?.trim() || undefined,
+    subject: `Leieavtale trukket tilbake · ${input.organizationName}`,
+    html,
+    text,
+    idempotencyKey: `withdrawn:${input.versionId}:${input.to}`,
+  });
+}
+
 export async function sendContractOtpEmail(input: { to: string; code: string }) {
   const html = layout(
     `<p>Din bekreftelseskode er <strong>${escapeHtml(input.code)}</strong>.</p>
