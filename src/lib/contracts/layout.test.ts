@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { composeFrozenDocument } from "@/lib/contracts/compose";
 import {
+  CONTRACT_CLOSING_LINE,
+  LESSOR_SIGNATURE_NAME,
+  LESSOR_SIGNATURE_SRC,
+  contractClosingLine,
+  contractSignatureUrl,
+  contractSignerName,
   contractExtraLines,
   contractPartyFacts,
   emphasizeWifiPassword,
@@ -262,5 +268,34 @@ describe("accepted PDF", () => {
     expect(decoded).toContain("1520.31.97583");
     expect(decoded).not.toMatch(/\? (Lokale|Sluttrenhold|Reservasjon)/);
     expect(raw.toString("latin1")).toContain("/Subtype /Image");
+  });
+});
+
+describe("template-driven closing, signer and signature", () => {
+  it("falls back to the legacy constants when the terms carry none", () => {
+    const doc = sampleDoc();
+    expect(contractClosingLine(doc)).toBe(CONTRACT_CLOSING_LINE);
+    expect(contractSignerName(doc)).toBe(LESSOR_SIGNATURE_NAME);
+    expect(contractSignatureUrl(doc)).toBe(LESSOR_SIGNATURE_SRC);
+  });
+
+  it("uses and trims the values stored on the terms", () => {
+    const doc = sampleDoc();
+    doc.terms.closingLine = "  Velkommen til oss!  ";
+    doc.terms.signerName = " Kari Nordmann ";
+    doc.terms.signaturePath = "org-1/sig-1.png";
+    expect(contractClosingLine(doc)).toBe("Velkommen til oss!");
+    expect(contractSignerName(doc)).toBe("Kari Nordmann");
+    expect(contractSignatureUrl(doc)).toBe(
+      "/api/contracts/signature?path=org-1%2Fsig-1.png",
+    );
+  });
+
+  it("treats blank values as missing", () => {
+    const doc = sampleDoc();
+    doc.terms.closingLine = "   ";
+    doc.terms.signerName = "";
+    expect(contractClosingLine(doc)).toBe(CONTRACT_CLOSING_LINE);
+    expect(contractSignerName(doc)).toBe(LESSOR_SIGNATURE_NAME);
   });
 });

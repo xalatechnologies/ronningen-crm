@@ -10,6 +10,21 @@ export const CONTRACT_CLOSING_LINE =
 export const LESSOR_SIGNATURE_NAME = "Hameed Rahmani";
 export const LESSOR_SIGNATURE_SRC = "/contracts/utleier-signatur.png";
 
+export function contractClosingLine(doc: FrozenContractDocument): string {
+  return doc.terms.closingLine?.trim() || CONTRACT_CLOSING_LINE;
+}
+
+export function contractSignerName(doc: FrozenContractDocument): string {
+  return doc.terms.signerName?.trim() || LESSOR_SIGNATURE_NAME;
+}
+
+export function contractSignatureUrl(doc: FrozenContractDocument): string {
+  const path = doc.terms.signaturePath?.trim();
+  return path
+    ? `/api/contracts/signature?path=${encodeURIComponent(path)}`
+    : LESSOR_SIGNATURE_SRC;
+}
+
 export function packageHeadline(name: string): string {
   const trimmed = name.trim();
   if (!trimmed) return "";

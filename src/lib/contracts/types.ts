@@ -93,6 +93,9 @@ export type FrozenContractDocument = {
     specialTerms: string;
     selectedClauses: string[];
     acceptanceDeclaration: string;
+    closingLine?: string | null;
+    signerName?: string | null;
+    signaturePath?: string | null;
   };
 };
 
