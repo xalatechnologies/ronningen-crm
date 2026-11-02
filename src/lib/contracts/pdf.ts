@@ -72,10 +72,11 @@ async function loadLessorSignatureImage(
 }
 
 function toWinAnsi(text: string): string {
-  return Array.from(text.normalize("NFC"))
+  return Array.from(text.normalize("NFC").replace(/\r\n?/g, "\n"))
     .map((ch) => {
       const code = ch.codePointAt(0) ?? 0;
-      if (code === 9 || code === 10 || code === 13) return ch;
+      if (code === 9) return " ";
+      if (code === 10) return ch;
       if (code >= 32 && code <= 126) return ch;
       if (code >= 160 && code <= 255) return ch;
       if (ch === "\u2013" || ch === "\u2014" || ch === "\u2212" || ch === "\u2010") return "-";

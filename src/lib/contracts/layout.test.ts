@@ -232,6 +232,22 @@ describe("frozen package snapshot", () => {
   });
 });
 
+describe("PDF text encoding", () => {
+  it("does not throw on tabs and lone carriage returns pasted into template text", async () => {
+    const document = sampleDoc();
+    document.terms.legalTerms = "4. Betingelser\n•\tMed tab\rog CR\r\nOg CRLF";
+    document.terms.closingLine = "Takk\tfor\roppholdet";
+    document.terms.acceptanceDeclaration = "Jeg\tbekrefter";
+    await expect(
+      buildAcceptedPdf({
+        document,
+        acceptedAtIso: "2026-05-18T13:21:00.000Z",
+        acceptedFullName: "Test Person",
+      }),
+    ).resolves.toBeTruthy();
+  });
+});
+
 describe("accepted PDF", () => {
   it("includes package title and signed name", async () => {
     const document = sampleDoc();

@@ -12,6 +12,7 @@ import {
   templateNameSchema,
   type TemplateInput,
 } from "@/lib/contracts/template-schema";
+import { canEmbedSignature, signaturePathBelongsToOrg } from "@/lib/contracts/signature";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type TemplateResult<T = object> =
@@ -110,6 +111,12 @@ export async function saveTemplateVersion(
   if (!staff.ok) return staff;
   const parsed = templateInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid_template" };
+  if (
+    parsed.data.signaturePath &&
+    !signaturePathBelongsToOrg(parsed.data.signaturePath, input.organizationId)
+  ) {
+    return { ok: false, error: "invalid_template" };
+  }
 
   const templateId = await findTemplateId(staff.supabase, input.organizationId, input.templateId);
   if (!templateId) return { ok: false, error: "no_template" };
@@ -159,7 +166,9 @@ export async function uploadSignature(formData: FormData): Promise<TemplateResul
   if (file.size > MAX_SIGNATURE_BYTES) return { ok: false, error: "signature_too_large" };
   const bytes = new Uint8Array(await file.arrayBuffer());
   const kind = imageKind(bytes);
-  if (!kind) return { ok: false, error: "signature_type" };
+  if (!kind || !(await canEmbedSignature(bytes, kind))) {
+    return { ok: false, error: "signature_type" };
+  }
   const path = `${organizationId}/${randomUUID()}.${kind}`;
   const uploaded = await createSupabaseAdminClient()
     .storage.from("contract-signatures")
