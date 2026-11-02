@@ -63,3 +63,12 @@ export function pickPackageTemplateId(
   if (!line?.catalogId) return null;
   return packageTemplates.get(line.catalogId) ?? null;
 }
+
+export function pickPreviewDocument(input: {
+  status: string;
+  frozen: FrozenContractDocument | null;
+  composed: FrozenContractDocument;
+}): FrozenContractDocument {
+  if (input.status !== "draft" && input.frozen) return input.frozen;
+  return input.composed;
+}

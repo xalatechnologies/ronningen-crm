@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { pickPackageTemplateId, pickTemplateVersionId } from "@/lib/contracts/compose";
+import { pickPackageTemplateId, pickPreviewDocument, pickTemplateVersionId } from "@/lib/contracts/compose";
 
 describe("pickTemplateVersionId", () => {
   it("lets a draft follow the newest template version", () => {
@@ -53,5 +53,21 @@ describe("pickPackageTemplateId", () => {
     expect(pickPackageTemplateId([{ kind: "addon", catalogId: "pkg-a" }], templates)).toBeNull();
     expect(pickPackageTemplateId([{ kind: "package", catalogId: "nope" }], templates)).toBeNull();
     expect(pickPackageTemplateId([{ kind: "package", catalogId: null }], templates)).toBeNull();
+  });
+});
+
+describe("pickPreviewDocument", () => {
+  const frozen = { id: "frozen" } as never;
+  const composed = { id: "composed" } as never;
+
+  it("shows the frozen document for a version that has been sent", () => {
+    for (const status of ["sent", "viewed", "accepted", "cancelled", "expired", "superseded"]) {
+      expect(pickPreviewDocument({ status, frozen, composed })).toBe(frozen);
+    }
+  });
+
+  it("composes live for a draft, or when nothing was frozen", () => {
+    expect(pickPreviewDocument({ status: "draft", frozen, composed })).toBe(composed);
+    expect(pickPreviewDocument({ status: "sent", frozen: null, composed })).toBe(composed);
   });
 });

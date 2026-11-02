@@ -7,6 +7,7 @@ import {
   composeFrozenDocument,
   kitchenAccessFrom,
   pickPackageTemplateId,
+  pickPreviewDocument,
   pickTemplateVersionId,
 } from "@/lib/contracts/compose";
 import { asJson, contractFrom } from "@/lib/contracts/db";
@@ -529,10 +530,11 @@ export async function sendContract(input: {
   // change how this (now frozen) contract is composed.
   if (composed.document.terms.templateVersionId) {
     const { createSupabaseAdminClient: adminForPin } = await import("@/lib/admin/supabase-admin");
-    await contractFrom(adminForPin(), "rental_contract_versions")
+    const { error: pinError } = await contractFrom(adminForPin(), "rental_contract_versions")
       .update({ template_version_id: composed.document.terms.templateVersionId } as never)
       .eq("id", input.versionId)
       .eq("organization_id", input.organizationId);
+    if (pinError) console.warn("[contracts] could not pin template version", pinError.message);
   }
 
   const { sendContractInviteEmail } = await import("@/lib/contracts/mail");
@@ -987,9 +989,17 @@ async function composeVersionDocument(args: {
     },
   });
 
-  const document = args.skipOverrides
+  const composedWithOverrides = args.skipOverrides
     ? composedDocument
     : applyOverrides(composedDocument, sanitizeOverrides(v.document_overrides));
+  // Once a version has been sent its frozen document is the truth; never recompose it.
+  const document = args.skipOverrides
+    ? composedWithOverrides
+    : pickPreviewDocument({
+        status: String(v.status ?? ""),
+        frozen: (v.frozen_document as FrozenContractDocument | null) ?? null,
+        composed: composedWithOverrides,
+      });
   return { ok: true, document, contentHash: hashFrozenDocument(document) };
 }
 
