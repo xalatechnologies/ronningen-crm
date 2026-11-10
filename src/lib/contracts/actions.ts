@@ -15,6 +15,11 @@ import { hashFrozenDocument } from "@/lib/contracts/document";
 import { applyOverrides, diffOverrides, sanitizeOverrides } from "@/lib/contracts/overrides";
 import { generateSecretToken, hashSecretToken } from "@/lib/contracts/crypto";
 import { sendBlockingGaps } from "@/lib/contracts/rules";
+import {
+  contractOutOfSync,
+  syncOutcomeForStatus,
+  type ContractSyncOutcome,
+} from "@/lib/contracts/sync";
 import { frozenPackageDescription, resolvedLegalTerms } from "@/lib/contracts/paper-copy";
 import { mapOrganizationToInvoiceIssuer } from "@/lib/organizations/organization-profile";
 import { replaceBookingCommercialChildren } from "@/lib/reservations/atomic-create";
@@ -720,6 +725,8 @@ async function composeVersionDocument(args: {
   versionId: string;
   org: OrgSlice;
   skipOverrides?: boolean;
+  /** Compose from the current booking even for a sent version (read-only comparison). */
+  ignoreFrozen?: boolean;
 }): Promise<ActionResult<{ document: FrozenContractDocument; contentHash: string }>> {
   const { data: version } = await contractFrom(args.supabase, "rental_contract_versions")
     .select("*")
@@ -993,7 +1000,7 @@ async function composeVersionDocument(args: {
     ? composedDocument
     : applyOverrides(composedDocument, sanitizeOverrides(v.document_overrides));
   // Once a version has been sent its frozen document is the truth; never recompose it.
-  const document = args.skipOverrides
+  const document = args.skipOverrides || args.ignoreFrozen
     ? composedWithOverrides
     : pickPreviewDocument({
         status: String(v.status ?? ""),
@@ -1025,4 +1032,131 @@ export async function previewContractDocument(input: {
     versionId: input.versionId,
     org,
   });
+}
+
+const ORG_COMPOSE_COLUMNS =
+  "legal_name, org_number, address_line1, address_line2, postal_code, city, name, tagline, contact_email, contact_phone, bank_account, payment_instructions";
+
+type LatestVersionCheck =
+  | { kind: "no_contract" | "draft_is_live" | "inactive" | "unchanged" }
+  | { kind: "out_of_sync"; versionNumber: number; versionId: string; hasDraft: boolean };
+
+/** Read-only: is the latest sent/signed version still equal to what the booking says now? */
+async function checkLatestVersion(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  organizationId: string,
+  bookingId: string,
+): Promise<ActionResult<{ check: LatestVersionCheck }>> {
+  const { data: contract } = await contractFrom(supabase, "rental_contracts")
+    .select("id")
+    .eq("booking_id", bookingId)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  if (!contract) return { ok: true, check: { kind: "no_contract" } };
+
+  const { data: versions, error } = await contractFrom(supabase, "rental_contract_versions")
+    .select("id, version_number, status, frozen_document")
+    .eq("contract_id", (contract as { id: string }).id)
+    .eq("organization_id", organizationId)
+    .order("version_number", { ascending: false });
+  if (error) return { ok: false, error: rpcError(error.message) };
+  const list = (versions ?? []) as {
+    id: string;
+    version_number: number;
+    status: string;
+    frozen_document: FrozenContractDocument | null;
+  }[];
+  const latest = list[0];
+  if (!latest) return { ok: true, check: { kind: "no_contract" } };
+
+  const step = syncOutcomeForStatus(latest.status);
+  if (step !== "compare") return { ok: true, check: { kind: step } };
+  if (!latest.frozen_document) return { ok: true, check: { kind: "unchanged" } };
+
+  const { data: org } = await supabase
+    .from("organizations")
+    .select(ORG_COMPOSE_COLUMNS)
+    .eq("id", organizationId)
+    .maybeSingle();
+  if (!org) return { ok: false, error: "organization_not_found" };
+  const fresh = await composeVersionDocument({
+    supabase,
+    organizationId,
+    bookingId,
+    versionId: latest.id,
+    org,
+    ignoreFrozen: true,
+  });
+  if (!fresh.ok) return fresh;
+  if (!contractOutOfSync(latest.frozen_document, fresh.document)) {
+    return { ok: true, check: { kind: "unchanged" } };
+  }
+  return {
+    ok: true,
+    check: {
+      kind: "out_of_sync",
+      versionId: latest.id,
+      versionNumber: latest.version_number,
+      hasDraft: list.some((row) => row.status === "draft"),
+    },
+  };
+}
+
+/** Read-only, for the contract page banner. */
+export async function contractOutOfSyncForBooking(input: {
+  organizationId: string;
+  bookingId: string;
+}): Promise<ActionResult<{ outOfSync: boolean }>> {
+  const staff = await requireStaff(input.organizationId);
+  if (!staff.ok) return staff;
+  const result = await checkLatestVersion(staff.supabase, input.organizationId, input.bookingId);
+  if (!result.ok) return result;
+  return { ok: true, outOfSync: result.check.kind === "out_of_sync" };
+}
+
+/**
+ * After a booking edit: if the latest sent/signed contract no longer matches the booking,
+ * create a new DRAFT revision. Never touches a sent/signed version and never emails anyone.
+ */
+export async function syncContractWithBooking(input: {
+  organizationId: string;
+  bookingId: string;
+}): Promise<
+  ActionResult<{ outcome: ContractSyncOutcome; versionId?: string; versionNumber?: number }>
+> {
+  try {
+    const staff = await requireStaff(input.organizationId);
+    if (!staff.ok) return staff;
+    const result = await checkLatestVersion(staff.supabase, input.organizationId, input.bookingId);
+    if (!result.ok) return result;
+    const { check } = result;
+    if (check.kind === "draft_is_live") {
+      revalidatePath(`/app/bookings/${input.bookingId}/contract`);
+      return { ok: true, outcome: "draft_is_live" };
+    }
+    if (check.kind !== "out_of_sync") return { ok: true, outcome: check.kind };
+    if (check.hasDraft) {
+      return { ok: true, outcome: "revision_exists", versionNumber: check.versionNumber + 1 };
+    }
+    const created = await createDraft({
+      organizationId: input.organizationId,
+      bookingId: input.bookingId,
+    });
+    if (!created.ok) {
+      // A concurrent sync may have created the draft first; that is fine.
+      if (created.error.includes("draft_already_exists")) {
+        return { ok: true, outcome: "revision_exists" };
+      }
+      return created;
+    }
+    revalidatePath(`/app/bookings/${input.bookingId}/contract`);
+    return {
+      ok: true,
+      outcome: "revision_created",
+      versionId: created.versionId,
+      versionNumber: created.versionNumber,
+    };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "contract_sync_failed" };
+  }
 }

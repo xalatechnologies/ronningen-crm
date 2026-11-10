@@ -4,7 +4,7 @@ import { ContractReviewWorkspace } from "@/components/contracts/contract-review-
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { contractFrom } from "@/lib/contracts/db";
-import { previewContractDocument } from "@/lib/contracts/actions";
+import { contractOutOfSyncForBooking, previewContractDocument } from "@/lib/contracts/actions";
 import { isEmailConfigured } from "@/lib/notifications/email-client";
 import type { ContractStatus } from "@/lib/contracts/types";
 
@@ -49,6 +49,11 @@ export default async function ContractReviewPage({
     versionId: active.id,
   });
 
+  const syncState =
+    active.status === "sent" || active.status === "viewed" || active.status === "accepted"
+      ? await contractOutOfSyncForBooking({ organizationId: orgId, bookingId })
+      : null;
+
   const { data: inviteDelivery } = await contractFrom(supabase, "contract_email_deliveries")
     .select("status, last_error, to_email")
     .eq("version_id", active.id)
@@ -68,6 +73,7 @@ export default async function ContractReviewPage({
       preview={preview.ok ? preview.document : null}
       contentHash={preview.ok ? preview.contentHash : null}
       emailConfigured={isEmailConfigured()}
+      outOfSync={syncState?.ok ? syncState.outOfSync : false}
       inviteDelivery={
         inviteDelivery
           ? {

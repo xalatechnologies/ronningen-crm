@@ -40,6 +40,8 @@ export function ContractReviewWorkspace(props: {
   preview: FrozenContractDocument | null;
   contentHash: string | null;
   emailConfigured: boolean;
+  /** Latest sent/signed version no longer matches the booking (computed server-side). */
+  outOfSync?: boolean;
   inviteDelivery: { status: string; lastError: string | null; toEmail: string } | null;
   acceptance: { fullName: string; acceptedAt: string } | null;
 }) {
@@ -441,6 +443,37 @@ export function ContractReviewWorkspace(props: {
       />
       {inviteUrl ? (
         <p className="text-sm text-muted-foreground">{t("contracts.copyInviteHint")}</p>
+      ) : null}
+
+      {props.outOfSync && current.status !== "draft" ? (
+        <div
+          className="flex flex-col gap-3 rounded-lg border-2 border-amber-500/40 bg-amber-500/10 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+          role="alert"
+        >
+          <p className="font-medium">
+            {t(
+              current.status === "accepted"
+                ? "contracts.outOfSyncSigned"
+                : "contracts.outOfSyncSent",
+            )}
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            disabled={busy}
+            onClick={() =>
+              void createRevision({
+                organizationId: props.organizationId,
+                bookingId: props.bookingId,
+              }).then((r) => {
+                if (!r.ok) showActionError(r.error);
+                else router.refresh();
+              })
+            }
+          >
+            {t("contracts.newVersion")}
+          </Button>
+        </div>
       ) : null}
 
       {!props.emailConfigured && current.status !== "accepted" ? (

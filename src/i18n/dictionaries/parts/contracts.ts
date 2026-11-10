@@ -15,6 +15,16 @@ export const contractsNb = {
   resend: "Send på nytt",
   withdraw: "Trekk tilbake tilbud",
   newVersion: "Ny versjon",
+  outOfSyncSent:
+    "Bookingen er endret etter at denne versjonen ble sendt. Lag en ny versjon for å få endringene inn i avtalen.",
+  outOfSyncSigned:
+    "Bookingen er endret etter at denne versjonen ble signert. Lag en ny versjon for å få endringene inn i avtalen.",
+  syncRevisionCreated:
+    "Leieavtalen er ikke lenger i samsvar med bookingen. Et nytt utkast (versjon {n}) er opprettet — gå gjennom og send på nytt.",
+  syncRevisionExists:
+    "Det finnes allerede et utkast til ny versjon — oppdatert med endringene.",
+  syncOpenContract: "Åpne leieavtale",
+  syncFailed: "Kunne ikke sjekke leieavtalen mot bookingen",
   history: "Historikk",
   downloadPdf: "Last ned PDF",
   listPdf: "PDF",
@@ -171,6 +181,16 @@ export const contractsEn = {
   resend: "Send again",
   withdraw: "Withdraw offer",
   newVersion: "New version",
+  outOfSyncSent:
+    "The booking was changed after this version was sent. Create a new version to bring the changes into the agreement.",
+  outOfSyncSigned:
+    "The booking was changed after this version was signed. Create a new version to bring the changes into the agreement.",
+  syncRevisionCreated:
+    "The rental agreement no longer matches the booking. A new draft (version {n}) has been created — review it and send again.",
+  syncRevisionExists:
+    "A draft for a new version already exists — it reflects the changes.",
+  syncOpenContract: "Open rental agreement",
+  syncFailed: "Could not check the rental agreement against the booking",
   history: "History",
   downloadPdf: "Download PDF",
   listPdf: "PDF",

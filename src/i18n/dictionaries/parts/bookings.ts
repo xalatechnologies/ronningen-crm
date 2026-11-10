@@ -119,7 +119,7 @@ export const bookingsNb = {
     packageAndAddons: "Pakke og tillegg",
     noLineItems: "Ingen pakke eller tillegg er lagret på denne reservasjonen.",
     packageEditHint:
-      "Endringer lagres på reservasjonen. En sendt leieavtale oppdateres først når du lager ny versjon.",
+      "Endringer lagres på reservasjonen. Hvis leieavtalen allerede er sendt eller signert, opprettes automatisk et nytt utkast som du må gå gjennom og sende på nytt.",
     updatePackageFailed: "Kunne ikke oppdatere pakke og tillegg",
     dateRangeHint: "La «Til dato» stå tom for ett døgn. Tid er valgfritt (24t).",
     toDateOptional: "Til dato",

@@ -11,6 +11,7 @@ import { BookingPackageAddonsFields } from "@/components/bookings/booking-packag
 import {
   loadBookingCommercialEditor,
   saveBookingCommercialLines,
+  syncContractWithBooking,
 } from "@/lib/contracts/actions";
 import { PropertySelectField } from "@/components/properties/property-select-field";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -76,6 +77,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Save, Trash2, X, XCircle } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch, Controller } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 const fieldClass =
@@ -141,6 +143,7 @@ export function BookingDetailSheet({
   canDeleteBooking = false,
 }: BookingDetailSheetProps) {
   const { t, formatCurrency, formatDate, locale } = useTranslation();
+  const router = useRouter();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateBookings, invalidateCustomers } = useTenantDataInvalidation();
@@ -389,6 +392,31 @@ export function BookingDetailSheet({
     deleteBusy ||
     !commercialReady;
 
+  /** Keep the contract in step with the booking. Never blocks or fails the save. */
+  async function syncContract(bookingId: string, organizationId: string) {
+    try {
+      const sync = await syncContractWithBooking({ organizationId, bookingId });
+      if (!sync.ok) {
+        console.warn("[contracts] sync after booking edit failed", sync.error);
+        toast.warning(t("contracts.syncFailed"));
+        return;
+      }
+      if (sync.outcome === "revision_created") {
+        toast.warning(t("contracts.syncRevisionCreated", { n: sync.versionNumber ?? "" }), {
+          duration: 10000,
+          action: {
+            label: t("contracts.syncOpenContract"),
+            onClick: () => router.push(`/app/bookings/${bookingId}/contract`),
+          },
+        });
+      } else if (sync.outcome === "revision_exists") {
+        toast.info(t("contracts.syncRevisionExists"));
+      }
+    } catch (error) {
+      console.warn("[contracts] sync after booking edit failed", error);
+    }
+  }
+
   async function onSave(data: BookingDetailEditInput) {
     if (!currentOrganizationId) return;
     setDetailSaving(true);
@@ -529,6 +557,7 @@ export function BookingDetailSheet({
       }
 
       toast.success(t("bookings.detail.changesSaved"));
+      await syncContract(bookingRow.id, currentOrganizationId);
       onOpenChange(false);
       invalidateBookings();
       if (customerFieldsChanged) {

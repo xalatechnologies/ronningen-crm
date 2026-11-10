@@ -894,7 +894,7 @@ export const en = {
       packageAndAddons: "Package and add-ons",
       noLineItems: "No package or add-ons are saved on this reservation.",
       packageEditHint:
-        "Changes are saved on the reservation. A sent contract updates only when you create a new version.",
+        "Changes are saved on the reservation. If the rental agreement is already sent or signed, a new draft is created automatically that you must review and send again.",
       updatePackageFailed: "Could not update package and add-ons",
       dateRangeHint: "Leave «To date» empty for a single day. Time is optional (24h).",
       toDateOptional: "To date",
