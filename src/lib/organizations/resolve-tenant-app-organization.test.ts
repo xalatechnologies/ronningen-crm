@@ -16,6 +16,7 @@ const membership = (
     subscriptionPlan: "starter",
     isSuspended: false,
     suspendedReason: null,
+    billingExempt: false,
     periodEnd: null,
     providerSubscriptionId: null,
   },

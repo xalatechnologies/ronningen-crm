@@ -1,14 +1,19 @@
 "use client";
 
+import { BookingPackageAddonsFields } from "@/components/bookings/booking-package-addons-fields";
+import type {
+  BookingAddonOption,
+  BookingPackageOption,
+} from "@/lib/bookings/commercial-lines";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { DateTimePickerField } from "@/components/ui/datetime-picker-field";
+import { AddressField } from "@/components/forms/address-field";
 import { Input } from "@/components/ui/input";
 import { PriceInput } from "@/components/ui/price-input";
 import { Label } from "@/components/ui/label";
 import {
   FormSelectField,
   toIdNameOptions,
-  toStringOptions,
 } from "@/components/ui/form-select";
 import { PropertySelectField } from "@/components/properties/property-select-field";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,15 +22,17 @@ import {
   NEW_BOOKING_EVENT_TYPES,
 } from "@/lib/validations";
 import type { BookingInquiryFormInput } from "@/lib/validations";
-import { INQUIRY_STATUS_LABELS } from "@/components/inquiries/types";
+import { inquiryStatusLabel, type InquiryCustomerOption } from "@/components/inquiries/types";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
-import { useId } from "react";
+import { useEffect, useId, useMemo, useRef } from "react";
 import {
   Controller,
   type Control,
   type FieldErrors,
   type UseFormRegister,
+  type UseFormSetValue,
   type UseFormWatch,
 } from "react-hook-form";
 
@@ -34,6 +41,10 @@ const fieldClass =
 
 const labelClass =
   "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs";
+
+function RequiredMark() {
+  return <span className="font-bold text-destructive">*</span>;
+}
 
 function FormSection({
   title,
@@ -79,11 +90,15 @@ function FormSection({
 
 export type InquiryFormBodyProps = {
   register: UseFormRegister<BookingInquiryFormInput>;
+  setValue: UseFormSetValue<BookingInquiryFormInput>;
   control: Control<BookingInquiryFormInput>;
   watch: UseFormWatch<BookingInquiryFormInput>;
   errors: FieldErrors<BookingInquiryFormInput>;
   properties: { id: string; name: string }[];
-  customers: { id: string; name: string }[];
+  customers: InquiryCustomerOption[];
+  packages?: BookingPackageOption[];
+  addons?: BookingAddonOption[];
+  catalogLoading?: boolean;
   disabled?: boolean;
   /** Skjul kundevelger (eksisterende forespørsel med låst kunde) */
   lockCustomer?: boolean;
@@ -93,26 +108,67 @@ export type InquiryFormBodyProps = {
 
 export function InquiryFormBody({
   register,
+  setValue,
   control,
   watch,
   errors,
   properties,
   customers,
+  packages = [],
+  addons = [],
+  catalogLoading = false,
   disabled = false,
   lockCustomer = false,
   layout = "default",
 }: InquiryFormBodyProps) {
+  const { t } = useTranslation();
   const rid = useId().replace(/:/g, "");
   const customerId = watch("customerId");
-  const showNewCustomer = !lockCustomer && !customerId;
   const sectioned = layout === "sectioned";
+  const prevCustomerIdRef = useRef("");
+
+  useEffect(() => {
+    if (lockCustomer) return;
+    if (prevCustomerIdRef.current === customerId) return;
+    prevCustomerIdRef.current = customerId;
+    if (!customerId) return;
+    const selected = customers.find((row) => row.id === customerId);
+    if (!selected) return;
+    setValue("newCustomerName", selected.name, { shouldValidate: true });
+    setValue("newCustomerPhone", selected.phone ?? "", { shouldValidate: true });
+    setValue("newCustomerEmail", selected.email ?? "", { shouldValidate: true });
+    setValue("newCustomerAddress", selected.address ?? "", {
+      shouldValidate: true,
+    });
+  }, [customerId, customers, lockCustomer, setValue]);
+
+  const eventTypeOptions = useMemo(
+    () =>
+      NEW_BOOKING_EVENT_TYPES.map((value) => ({
+        value,
+        label:
+          value === "Bedrift"
+            ? t("bookings.corporate")
+            : t("bookings.private"),
+      })),
+    [t],
+  );
+
+  const statusOptions = useMemo(
+    () =>
+      BOOKING_INQUIRY_FORM_STATUSES.map((s) => ({
+        value: s,
+        label: inquiryStatusLabel(s, t),
+      })),
+    [t],
+  );
 
   const customerBlock = (
     <>
       {!lockCustomer ? (
         <div className="space-y-2">
           <Label className={labelClass} htmlFor={`${rid}-customer`}>
-            Eksisterende kunde
+            {t("inquiries.form.existingCustomer")}
           </Label>
           <FormSelectField
             name="customerId"
@@ -120,7 +176,7 @@ export function InquiryFormBody({
             id={`${rid}-customer`}
             disabled={disabled}
             className="font-medium"
-            placeholder="— Registrer som ny kunde (fyll inn under) —"
+            placeholder={t("inquiries.form.newCustomerPlaceholder")}
             options={toIdNameOptions(customers)}
           />
           {errors.customerId ? (
@@ -129,78 +185,83 @@ export function InquiryFormBody({
         </div>
       ) : null}
 
-      {showNewCustomer ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2 sm:col-span-2">
-            <Label className={labelClass} htmlFor={`${rid}-nc-name`}>
-              Kundenavn <span className="font-bold text-destructive">*</span>
-            </Label>
-            <Input
-              id={`${rid}-nc-name`}
-              disabled={disabled}
-              className={fieldClass}
-              autoComplete="name"
-              placeholder="Fullt navn eller firmanavn"
-              {...register("newCustomerName")}
-            />
-            {errors.newCustomerName ? (
-              <p className="text-sm text-destructive">
-                {errors.newCustomerName.message}
-              </p>
-            ) : null}
-          </div>
-          <div className="space-y-2">
-            <Label className={labelClass} htmlFor={`${rid}-nc-phone`}>
-              Telefon <span className="font-bold text-destructive">*</span>
-            </Label>
-            <Input
-              id={`${rid}-nc-phone`}
-              disabled={disabled}
-              className={fieldClass}
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="+47 …"
-              {...register("newCustomerPhone")}
-            />
-            {errors.newCustomerPhone ? (
-              <p className="text-sm text-destructive">
-                {errors.newCustomerPhone.message}
-              </p>
-            ) : null}
-          </div>
-          <div className="space-y-2">
-            <Label className={labelClass} htmlFor={`${rid}-nc-email`}>
-              E-post
-            </Label>
-            <Input
-              id={`${rid}-nc-email`}
-              disabled={disabled}
-              type="email"
-              className={fieldClass}
-              autoComplete="email"
-              placeholder="valgfritt@epost.no"
-              {...register("newCustomerEmail")}
-            />
-            {errors.newCustomerEmail ? (
-              <p className="text-sm text-destructive">
-                {errors.newCustomerEmail.message}
-              </p>
-            ) : null}
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label className={labelClass} htmlFor={`${rid}-nc-addr`}>
-              Adresse (valgfritt)
-            </Label>
-            <Input
-              id={`${rid}-nc-addr`}
-              disabled={disabled}
-              className={fieldClass}
-              autoComplete="street-address"
-              {...register("newCustomerAddress")}
-            />
-          </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2 sm:col-span-2">
+          <Label className={labelClass} htmlFor={`${rid}-nc-name`}>
+            {t("inquiries.form.customerName")} <RequiredMark />
+          </Label>
+          <Input
+            id={`${rid}-nc-name`}
+            disabled={disabled}
+            className={fieldClass}
+            autoComplete="name"
+            placeholder={t("inquiries.form.customerNamePlaceholder")}
+            {...register("newCustomerName")}
+          />
+          {errors.newCustomerName ? (
+            <p className="text-sm text-destructive">
+              {errors.newCustomerName.message}
+            </p>
+          ) : null}
         </div>
-      ) : null}
+        <div className="space-y-2">
+          <Label className={labelClass} htmlFor={`${rid}-nc-phone`}>
+            {t("common.fields.phone")} <RequiredMark />
+          </Label>
+          <Input
+            id={`${rid}-nc-phone`}
+            disabled={disabled}
+            className={fieldClass}
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder={t("bookings.form.phonePlaceholder")}
+            {...register("newCustomerPhone")}
+          />
+          {errors.newCustomerPhone ? (
+            <p className="text-sm text-destructive">
+              {errors.newCustomerPhone.message}
+            </p>
+          ) : null}
+        </div>
+        <div className="space-y-2">
+          <Label className={labelClass} htmlFor={`${rid}-nc-email`}>
+            {t("common.fields.email")} <RequiredMark />
+          </Label>
+          <Input
+            id={`${rid}-nc-email`}
+            disabled={disabled}
+            type="email"
+            className={fieldClass}
+            autoComplete="email"
+            placeholder={t("bookings.form.emailPlaceholder")}
+            {...register("newCustomerEmail")}
+          />
+          {errors.newCustomerEmail ? (
+            <p className="text-sm text-destructive">
+              {errors.newCustomerEmail.message}
+            </p>
+          ) : null}
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label className={labelClass} htmlFor={`${rid}-nc-addr`}>
+            {t("common.fields.address")} <RequiredMark />
+          </Label>
+          <AddressField
+            id={`${rid}-nc-addr`}
+            name="newCustomerAddress"
+            register={register}
+            setValue={setValue}
+            disabled={disabled}
+            className={fieldClass}
+            placeholder={t("common.address.placeholder")}
+          />
+          {errors.newCustomerAddress ? (
+            <p className="text-sm text-destructive">
+              {errors.newCustomerAddress.message}
+            </p>
+          ) : null}
+        </div>
+      </div>
     </>
   );
 
@@ -208,23 +269,25 @@ export function InquiryFormBody({
     <>
       <div className="space-y-2">
         <Label className={labelClass} htmlFor={`${rid}-property`}>
-          Lokale (valgfritt)
+          {t("inquiries.tableVenue")} <RequiredMark />
         </Label>
         <PropertySelectField
           name="propertyId"
           control={control}
           id={`${rid}-property`}
           disabled={disabled}
-          optional
-          placeholder="— Ikke valgt —"
+          placeholder={t("properties.notSelected")}
           properties={properties}
         />
+        {errors.propertyId ? (
+          <p className="text-sm text-destructive">{errors.propertyId.message}</p>
+        ) : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className={labelClass} htmlFor={`${rid}-event-type`}>
-            Bedrift eller privat
+            {t("bookings.form.corporateOrPrivate")}
           </Label>
           <FormSelectField
             name="eventType"
@@ -232,7 +295,7 @@ export function InquiryFormBody({
             id={`${rid}-event-type`}
             disabled={disabled}
             className="font-medium"
-            options={toStringOptions(NEW_BOOKING_EVENT_TYPES)}
+            options={eventTypeOptions}
           />
           {errors.eventType ? (
             <p className="text-sm text-destructive">{errors.eventType.message}</p>
@@ -240,13 +303,13 @@ export function InquiryFormBody({
         </div>
         <div className="space-y-2">
           <Label className={labelClass} htmlFor={`${rid}-fest`}>
-            Type (valgfritt)
+            {t("inquiries.form.typeOptional")}
           </Label>
           <Input
             id={`${rid}-fest`}
             disabled={disabled}
             className={fieldClass}
-            placeholder="F.eks. bryllup, konferanse, jubileum …"
+            placeholder={t("bookings.form.festTypeCustomPlaceholder")}
             {...register("festType")}
           />
         </div>
@@ -255,7 +318,7 @@ export function InquiryFormBody({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className={labelClass} htmlFor={`${rid}-date-start`}>
-            Ønsket dato (valgfritt)
+            {t("inquiries.tablePreferredDate")} <RequiredMark />
           </Label>
           <Controller
             control={control}
@@ -279,7 +342,7 @@ export function InquiryFormBody({
         </div>
         <div className="space-y-2">
           <Label className={labelClass} htmlFor={`${rid}-date-end`}>
-            Siste dag i ønsket periode (valgfritt)
+            {t("inquiries.form.preferredEndDateOptional")}
           </Label>
           <Controller
             control={control}
@@ -306,12 +369,12 @@ export function InquiryFormBody({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className={labelClass} htmlFor={`${rid}-guests`}>
-            Antall gjester (forslag)
+            {t("inquiries.form.guestCount")} <RequiredMark />
           </Label>
           <Input
             id={`${rid}-guests`}
             type="number"
-            min={0}
+            min={1}
             disabled={disabled}
             className={cn(fieldClass, "tabular-nums")}
             {...register("guestCount", { valueAsNumber: false })}
@@ -322,7 +385,7 @@ export function InquiryFormBody({
         </div>
         <div className="space-y-2">
           <Label className={labelClass} htmlFor={`${rid}-est`}>
-            Estimert budsjett (NOK, valgfritt)
+            {t("inquiries.form.estimatedBudgetOptional")}
           </Label>
           <PriceInput
             id={`${rid}-est`}
@@ -342,12 +405,28 @@ export function InquiryFormBody({
     </>
   );
 
+  const packageBlock = (
+    <BookingPackageAddonsFields
+      control={control as never}
+      register={register as never}
+      setValue={setValue as never}
+      errors={errors as never}
+      packages={packages}
+      addons={addons}
+      fieldClass={fieldClass}
+      labelClass={labelClass}
+      idPrefix={`${rid}-pkg`}
+      catalogLoading={catalogLoading}
+      disabled={disabled}
+    />
+  );
+
   const followUpBlock = (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className={labelClass} htmlFor={`${rid}-status`}>
-            Status
+            {t("common.fields.status")}
           </Label>
           <FormSelectField
             name="status"
@@ -355,10 +434,7 @@ export function InquiryFormBody({
             id={`${rid}-status`}
             disabled={disabled}
             className="font-medium"
-            options={BOOKING_INQUIRY_FORM_STATUSES.map((s) => ({
-              value: s,
-              label: INQUIRY_STATUS_LABELS[s],
-            }))}
+            options={statusOptions}
           />
           {errors.status ? (
             <p className="text-sm text-destructive">{errors.status.message}</p>
@@ -366,7 +442,7 @@ export function InquiryFormBody({
         </div>
         <div className="space-y-2">
           <Label className={labelClass} htmlFor={`${rid}-followup`}>
-            Neste oppfølging (valgfritt)
+            {t("inquiries.form.nextFollowUpOptional")}
           </Label>
           <Controller
             control={control}
@@ -393,14 +469,14 @@ export function InquiryFormBody({
 
       <div className="space-y-2">
         <Label className={labelClass} htmlFor={`${rid}-notes`}>
-          Interne merknader
+          {t("inquiries.form.internalNotes")}
         </Label>
         <Textarea
           id={`${rid}-notes`}
           disabled={disabled}
           rows={4}
           className="min-h-[6rem] rounded-md border-2 border-rn-border-strong bg-background p-3 text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25 md:p-4"
-          placeholder="Kort om behov, dialog med kunden, neste steg …"
+          placeholder={t("inquiries.form.internalNotesPlaceholder")}
           {...register("internalNotes")}
         />
         {errors.internalNotes ? (
@@ -415,22 +491,29 @@ export function InquiryFormBody({
       <div className="flex flex-col">
         <FormSection
           variant="flat"
-          title="Kunde"
-          hint="Velg en kunde fra listen, eller la den stå tom og fyll inn kontaktdetaljer for en ny kunde."
+          title={t("inquiries.form.customerSection")}
+          hint={t("inquiries.customerHint")}
         >
           {customerBlock}
         </FormSection>
         <FormSection
           variant="flat"
-          title="Henvendelse"
-          hint="Dette er foreløpig informasjon — du justerer alt når du oppretter reservasjonen."
+          title={t("inquiries.inquirySection")}
+          hint={t("inquiries.tentativeHint")}
         >
           {inquiryBlock}
         </FormSection>
         <FormSection
           variant="flat"
-          title="Oppfølging"
-          hint="Ny forespørsel er vanligvis «Ny». Bruk påminnelse for å huske neste kontakt."
+          title={t("bookings.form.packageAndAddons")}
+          hint={t("inquiries.form.packageHint")}
+        >
+          {packageBlock}
+        </FormSection>
+        <FormSection
+          variant="flat"
+          title={t("inquiries.followUpSection")}
+          hint={t("inquiries.followUpHint")}
         >
           {followUpBlock}
         </FormSection>
@@ -442,6 +525,7 @@ export function InquiryFormBody({
     <div className="flex flex-col gap-5 md:gap-6">
       {customerBlock}
       {inquiryBlock}
+      {packageBlock}
       {followUpBlock}
     </div>
   );

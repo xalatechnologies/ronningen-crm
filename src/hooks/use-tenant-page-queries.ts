@@ -135,10 +135,13 @@ export function useOvernattingQuery(ym?: string) {
 
 export function useReportsQuery(params: { year?: string; month?: string }) {
   const { supabase, orgId, enabled } = useTenantQueryContext();
-  const { reportYear, focusMonth, calendarYearMax } =
-    resolveReportsParams(params);
+  const { reportYear, focusMonth, allYears } = resolveReportsParams(params);
   return useQuery({
-    queryKey: tenantQueryKeys.reports(orgId ?? "", reportYear, focusMonth),
+    queryKey: tenantQueryKeys.reports(
+      orgId ?? "",
+      allYears ? "all" : reportYear,
+      focusMonth,
+    ),
     enabled: enabled && Boolean(orgId),
     staleTime: tenantStaleTimes.reports,
     queryFn: () =>
@@ -147,7 +150,7 @@ export function useReportsQuery(params: { year?: string; month?: string }) {
         orgId!,
         reportYear,
         focusMonth,
-        calendarYearMax,
+        allYears,
       ),
   });
 }

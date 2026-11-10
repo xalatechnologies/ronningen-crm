@@ -1,18 +1,25 @@
-import { FAQ_ITEMS, SECTION_TITLES } from "@/components/landing/landing-content";
+"use client";
+
 import { LandingSectionShell } from "@/components/landing/landing-section-shell";
+import { useTranslation } from "@/i18n/client";
+import { getDictionary } from "@/i18n/dictionaries";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
+import { useMemo } from "react";
 
 export function FaqSection() {
+  const { t, locale } = useTranslation();
+  const items = useMemo(() => getDictionary(locale).landing.faq.items, [locale]);
+
   return (
     <LandingSectionShell
       id="faq"
       titleId="landing-faq-title"
-      title={SECTION_TITLES.faq}
-      description="Svar på det vi oftest blir spurt om før du oppretter konto."
+      title={t("landing.sections.faq")}
+      description={t("landing.faq.description")}
     >
       <div className="overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card shadow-rn-card">
-        {FAQ_ITEMS.map((item, index) => (
+        {items.map((item, index) => (
           <details
             key={item.question}
             className={cn(

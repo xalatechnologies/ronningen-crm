@@ -7,23 +7,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { APP_NAME } from "@/config/app";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
-import { mapAuthErrorToNorwegian } from "@/lib/auth/auth-error-messages";
+import { mapAuthErrorToUserMessage } from "@/lib/auth/auth-error-messages";
+import { useTranslation } from "@/i18n/client";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { loginSchema } from "@/lib/validations";
+import {
+  createLoginSchema,
+  type LoginInput,
+  validationMessagesForLocale,
+} from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
-const forgotSchema = loginSchema.pick({ email: true });
-type ForgotInput = z.infer<typeof forgotSchema>;
+type ForgotInput = Pick<LoginInput, "email">;
 
 export default function ForgotPasswordPage() {
+  const { t, locale } = useTranslation();
   const [formError, setFormError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const supabase = createBrowserSupabaseClient();
+  const forgotSchema = useMemo(
+    () => createLoginSchema(validationMessagesForLocale(locale)).pick({ email: true }),
+    [locale],
+  );
 
   const form = useForm<ForgotInput>({
     resolver: zodResolver(forgotSchema),
@@ -40,12 +48,10 @@ export default function ForgotPasswordPage() {
         : undefined,
     });
     if (error) {
-      setFormError(mapAuthErrorToNorwegian(error));
+      setFormError(mapAuthErrorToUserMessage(error, locale));
       return;
     }
-    setInfo(
-      "Hvis det finnes en konto for denne adressen, har vi sendt en lenke for å nullstille passordet.",
-    );
+    setInfo(t("auth.pages.resetEmailSent"));
   }
 
   return (
@@ -63,11 +69,10 @@ export default function ForgotPasswordPage() {
               <AuthBrandMark />
               <div className="min-w-0 flex-1 space-y-2">
                 <CardTitle className="app-title md:text-app-3xl">
-                  Glemt passord?
+                  {t("auth.forgotPassword")}
                 </CardTitle>
                 <p className="text-app-sm leading-relaxed text-muted-foreground md:text-app-base">
-                  {APP_NAME} — skriv inn e-posten din. Du får en lenke til å velge nytt
-                  passord hvis kontoen finnes.
+                  {t("auth.pages.forgotTagline", { appName: APP_NAME })}
                 </p>
               </div>
             </div>
@@ -84,7 +89,7 @@ export default function ForgotPasswordPage() {
                   htmlFor="email"
                   className="text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]"
                 >
-                  E-post
+                  {t("auth.email")}
                 </Label>
                 <Input
                   id="email"
@@ -118,8 +123,8 @@ export default function ForgotPasswordPage() {
                   className="w-full"
                 >
                 {form.formState.isSubmitting
-                  ? "Sender …"
-                  : "Send tilbakestillingslenke"}
+                  ? t("common.actions.loading")
+                  : t("auth.sendResetLink")}
               </Button>
             </form>
 

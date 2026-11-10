@@ -5,8 +5,10 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { safeInternalRedirect } from "@/lib/security/safe-redirect";
 import { getSupabasePublicEnvForClient } from "@/lib/supabase/public-env";
+import { getServerTranslation } from "@/i18n/server";
 
 export async function GET(request: NextRequest) {
+  const { t } = await getServerTranslation();
   const { searchParams, origin } = new URL(request.url);
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
@@ -21,7 +23,7 @@ export async function GET(request: NextRequest) {
     redirectTo.pathname = "/auth/login";
     redirectTo.searchParams.set(
       "error",
-      "Bekreftelseslenken er ugyldig eller utløpt. Prøv å registrere deg eller logge inn på nytt.",
+      t("serverErrors.auth.confirmLinkInvalid"),
     );
     return NextResponse.redirect(redirectTo);
   }
@@ -51,7 +53,7 @@ export async function GET(request: NextRequest) {
     redirectTo.pathname = "/auth/login";
     redirectTo.searchParams.set(
       "error",
-      "Bekreftelseslenken er ugyldig eller utløpt. Prøv å registrere deg eller logge inn på nytt.",
+      t("serverErrors.auth.confirmLinkInvalid"),
     );
     return NextResponse.redirect(redirectTo);
   }

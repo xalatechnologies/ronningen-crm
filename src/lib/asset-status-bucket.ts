@@ -23,7 +23,6 @@ export function assetStatusBucket(condition: string | null): AssetStatusBucket {
     return "maintenance";
   }
   if (
-    c.includes("dårlig") ||
     c.includes("poor") ||
     c.includes("bytt") ||
     c.includes("replace") ||

@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslation } from "@/i18n/client";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { RN_ADMIN_DETAIL_LINK } from "@/lib/rn-ui";
@@ -17,6 +20,7 @@ export function AdminTableDetailLink({
   subtitle,
   className,
 }: AdminTableDetailLinkProps) {
+  const { t } = useTranslation();
   return (
     <Link
       href={href}
@@ -38,7 +42,7 @@ export function AdminTableDetailLink({
         ) : null}
       </span>
       <span className="flex shrink-0 items-center gap-1 text-app-xs font-semibold text-muted-foreground transition-colors group-hover:text-success dark:group-hover:!text-white">
-        <span className="hidden sm:inline">Åpne</span>
+        <span className="hidden sm:inline">{t("admin.apne")}</span>
         <ChevronRight className="size-4" aria-hidden />
       </span>
     </Link>

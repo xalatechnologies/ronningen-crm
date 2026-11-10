@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
 import { canManageMembers } from "@/lib/organizations/organization-permissions";
+import { getServerT } from "@/lib/i18n/server-messages";
 import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-client";
 
 export async function completeTenantSetup(): Promise<
@@ -15,13 +16,15 @@ export async function completeTenantSetup(): Promise<
   ]);
 
   if (!organizationId || !role) {
-    return { ok: false, error: "Ingen aktiv organisasjon." };
+    const t = await getServerT();
+    return { ok: false, error: t("organizations.noActiveOrg") };
   }
 
   if (!canManageMembers(role)) {
+    const t = await getServerT();
     return {
       ok: false,
-      error: "Kun eier eller administrator kan fullføre oppsettet.",
+      error: t("serverErrors.billing.mustBeOwner"),
     };
   }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { LanguageSwitcher } from "@/components/language/language-switcher";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
 import { AdminSearchShortcut } from "@/components/admin/admin-search-shortcut";
@@ -13,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useTranslation } from "@/i18n/client";
 import { signOutToLogin } from "@/lib/auth/sign-out";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -73,6 +75,7 @@ function HeaderAvatarOrInitials({
 }
 
 export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: number }) {
+  const { t } = useTranslation();
   const { user, loading } = useAuthUser();
   const supabase = useSupabase();
 
@@ -86,7 +89,7 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
   const displayName = useMemo(() => {
     const name = user?.user_metadata?.full_name;
     if (typeof name === "string" && name.trim()) return name.trim();
-    return user?.email ?? "Innlogget";
+    return user?.email ?? t("common.account.loggedIn");
   }, [user]);
 
   async function signOut() {
@@ -106,7 +109,6 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
       </div>
 
       <div className="ml-auto flex shrink-0 items-center gap-2 md:gap-3">
-        <ThemeToggle variant="header" />
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
@@ -115,7 +117,7 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
             "disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-muted/30",
           )}
           disabled={loading}
-          aria-label="Konto og utlogging"
+          aria-label={t("common.account.menuAria")}
         >
           {avatarUrl ? (
             <HeaderAvatarOrInitials
@@ -140,9 +142,9 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
         <DropdownMenuContent
           align="end"
           sideOffset={8}
-          className="min-w-64 max-w-[min(100vw-1.5rem,20rem)] rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-2.5 text-app-base shadow-rn-card"
+          className="w-72 max-w-[min(100vw-1.5rem,18rem)] rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-2.5 text-app-base shadow-rn-card"
         >
-          <DropdownMenuGroup>
+          <DropdownMenuGroup className="min-w-0">
             <DropdownMenuLabel className="px-3 py-2 font-heading text-app-sm font-semibold md:px-3.5 md:py-2.5 md:text-app-md">
               <span className="block truncate">{displayName}</span>
               {user?.email && displayName !== user.email ? (
@@ -156,13 +158,17 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
               className="px-3 py-2.5 font-heading text-app-md md:px-3.5 md:py-3"
               render={<Link href="/app" />}
             >
-              Gå til app
+              {t("common.account.goToApp")}
             </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-2 bg-border" />
+            <ThemeToggle variant="menu" />
+            <LanguageSwitcher variant="menu" />
+            <DropdownMenuSeparator className="my-2 bg-border" />
             <DropdownMenuItem
               className="px-3 py-2.5 font-heading text-app-md font-bold md:px-3.5 md:py-3"
               onSelect={() => void signOut()}
             >
-              Logg ut
+              {t("common.account.logout")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>

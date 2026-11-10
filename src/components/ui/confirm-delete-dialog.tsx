@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,10 +27,13 @@ export function ConfirmDeleteDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "Ja, slett",
+  confirmLabel,
   busy = false,
   onConfirm,
 }: ConfirmDeleteDialogProps) {
+  const { t } = useTranslation();
+  const resolvedConfirm = confirmLabel ?? t("common.confirm.deleteConfirm");
+
   return (
     <Dialog
       open={open}
@@ -58,7 +62,7 @@ export function ConfirmDeleteDialog({
             disabled={busy}
             onClick={() => onOpenChange(false)}
           >
-            Avbryt
+            {t("common.actions.cancel")}
           </Button>
           <Button
             type="button"
@@ -67,7 +71,7 @@ export function ConfirmDeleteDialog({
             className="w-full border-2 border-red-200 bg-red-600 font-heading font-bold !text-white hover:bg-red-700 sm:w-auto"
             onClick={() => void onConfirm()}
           >
-            {busy ? "Sletter…" : confirmLabel}
+            {busy ? t("common.deleting") : resolvedConfirm}
           </Button>
         </DialogFooter>
       </DialogContent>

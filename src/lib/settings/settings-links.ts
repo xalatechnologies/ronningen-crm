@@ -3,7 +3,10 @@ import { canManageMembers } from "@/lib/organizations/organization-permissions";
 import type { LucideIcon } from "lucide-react";
 import {
   Building2,
+  CalendarClock,
   CreditCard,
+  History,
+  FileText,
   LayoutGrid,
   LifeBuoy,
   User,
@@ -23,6 +26,10 @@ export type SettingsSection = {
 
 function canManageOrgSettings(role: UserRole | null): boolean {
   return canManageMembers(role);
+}
+
+function isOrganizationOwner(role: UserRole | null): boolean {
+  return role === "owner";
 }
 
 export const SETTINGS_SECTIONS: SettingsSection[] = [
@@ -61,12 +68,37 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     visible: canManageOrgSettings,
   },
   {
+    id: "activity",
+    href: "/app/settings/activity",
+    title: "Aktivitetslogg",
+    description: "Sporbarhet: hvem som har opprettet, endret eller slettet data.",
+    icon: History,
+    visible: canManageOrgSettings,
+  },
+  {
     id: "billing",
     href: "/app/settings/billing",
     title: "Fakturering",
     description: "Abonnement, plan og betalingsstatus for den aktive organisasjonen.",
     icon: CreditCard,
     visible: () => true,
+  },
+  {
+    id: "integrations",
+    href: "/app/settings/integrations",
+    title: "Integrasjoner",
+    description:
+      "Kalender-feed og eksterne integrasjoner for booking-synk.",
+    icon: CalendarClock,
+    visible: isOrganizationOwner,
+  },
+  {
+    id: "contracts",
+    href: "/app/settings/kontrakter",
+    title: "Leieavtaler",
+    description: "Maler og utsendelse av digitale leieavtaler.",
+    icon: FileText,
+    visible: canManageOrgSettings,
   },
   {
     id: "support",

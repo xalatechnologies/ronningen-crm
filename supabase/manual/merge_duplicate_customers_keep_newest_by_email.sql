@@ -2,7 +2,8 @@
 -- Keeps the NEWEST row (created_at desc) — matches default list order on /app/customers.
 -- Run in Supabase SQL Editor after backing up if needed.
 --
--- Change the email literal to match your duplicates:
+-- Replace BOTH placeholders: the duplicate email and your organization id.
+-- Scoped to one organization so it can never merge customers across tenants.
 
 begin;
 
@@ -10,7 +11,8 @@ create temp table tmp_customer_merge as
 with norm as (
   select id, created_at
   from public.customers
-  where lower(trim(coalesce(email, ''))) = lower(trim('wahid@gmail.com'))
+  where organization_id = '00000000-0000-0000-0000-000000000000' -- REPLACE: organization id
+    and lower(trim(coalesce(email, ''))) = lower(trim('duplicate@example.com')) -- REPLACE: email
 ),
 keeper as (
   select id as keeper_id

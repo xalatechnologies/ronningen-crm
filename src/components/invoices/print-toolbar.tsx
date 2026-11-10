@@ -1,10 +1,13 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { Button } from "@/components/ui/button";
 import { Download, Printer } from "lucide-react";
 import { useCallback } from "react";
 
 export function InvoicePrintToolbar({ documentTitle }: { documentTitle: string }) {
+  const { t } = useTranslation();
+
   const openPrint = useCallback(() => {
     const prev = document.title;
     document.title = documentTitle;
@@ -35,7 +38,7 @@ export function InvoicePrintToolbar({ documentTitle }: { documentTitle: string }
             onClick={openPrint}
           >
             <Download className="size-4 shrink-0" aria-hidden />
-            Lagre som PDF
+            {t("invoices.printToolbar.saveAsPdf")}
           </Button>
           <Button
             type="button"
@@ -44,12 +47,17 @@ export function InvoicePrintToolbar({ documentTitle }: { documentTitle: string }
             onClick={openPrint}
           >
             <Printer className="size-4 shrink-0" aria-hidden />
-            Skriv ut
+            {t("common.actions.print")}
           </Button>
         </div>
         <p className="text-center text-xs leading-snug text-muted-foreground sm:max-w-[240px] sm:text-right">
-          I utskriftsvinduet: velg <span className="font-semibold text-foreground">Lagre som PDF</span>{" "}
-          (Chrome/Edge) eller <span className="font-semibold text-foreground">PDF</span> (Safari).
+          {t("invoices.printToolbar.dialogHintPrefix")}{" "}
+          <span className="font-semibold text-foreground">
+            {t("invoices.printToolbar.saveAsPdf")}
+          </span>{" "}
+          {t("invoices.printToolbar.dialogHintSafari")}{" "}
+          <span className="font-semibold text-foreground">PDF</span>{" "}
+          {t("invoices.printToolbar.dialogHintPdf")}
         </p>
       </div>
     </div>

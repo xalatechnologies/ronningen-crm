@@ -1,18 +1,18 @@
 "use client";
 
 import type { AccommodationReservationRow } from "@/components/overnatting/types";
-import { ACCOMMODATION_RESERVATION_LABELS } from "@/components/overnatting/types";
 import { Button } from "@/components/ui/button";
+import { useCalendarWeekdays } from "@/hooks/use-calendar-weekdays";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { formatAppDateFromParts } from "@/lib/format-datetime";
 import { ymAdd } from "@/lib/overnatting-month";
+import { statusLabel } from "@/lib/navigation/nav-labels";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { BedDouble, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import type { AccommodationReservationStatus } from "@/lib/validations";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-
-const WEEKDAYS_NB = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"] as const;
 
 export function pad2(n: number) {
   return String(n).padStart(2, "0");
@@ -64,6 +64,8 @@ function StayHoverPreview({
   row: AccommodationReservationRow;
   hideFooter?: boolean;
 }) {
+  const { t, locale } = useTranslation();
+
   return (
     <div className="space-y-2 text-left">
       <div>
@@ -76,22 +78,26 @@ function StayHoverPreview({
         </p>
       </div>
       <p className="text-app-xs font-medium text-foreground md:text-app-sm">
-        {ACCOMMODATION_RESERVATION_LABELS[row.status]}
+        {statusLabel(row.status, t)}
       </p>
       <div className="space-y-1 border-t border-border pt-2 text-app-xs md:text-app-sm">
         <p className="tabular-nums">
-          <span className="font-semibold text-rn-text-body">Periode:</span>{" "}
-          {formatAppDateFromParts(row.checkInDate, row.checkInTime)} →{" "}
-          {formatAppDateFromParts(row.checkOutDate, row.checkOutTime)}
+          <span className="font-semibold text-rn-text-body">
+            {t("overnatting.calendar.period")}
+          </span>{" "}
+          {formatAppDateFromParts(row.checkInDate, row.checkInTime, locale)} →{" "}
+          {formatAppDateFromParts(row.checkOutDate, row.checkOutTime, locale)}
         </p>
         <p>
-          <span className="font-semibold text-rn-text-body">Gjester:</span>{" "}
+          <span className="font-semibold text-rn-text-body">
+            {t("overnatting.calendar.guests")}
+          </span>{" "}
           {row.guestCount}
         </p>
       </div>
       {hideFooter ? null : (
         <p className="text-[10px] leading-snug text-muted-foreground md:text-app-xs">
-          Klikk for å redigere
+          {t("overnatting.calendar.clickToEdit")}
         </p>
       )}
     </div>
@@ -103,6 +109,8 @@ function DayStaysHoverContent({
 }: {
   rows: AccommodationReservationRow[];
 }) {
+  const { t } = useTranslation();
+
   if (rows.length === 0) return null;
   if (rows.length === 1) {
     return <StayHoverPreview row={rows[0]} />;
@@ -110,7 +118,7 @@ function DayStaysHoverContent({
   return (
     <div className="max-h-[min(70vh,22rem)] space-y-0 overflow-y-auto text-left">
       <p className="mb-2 text-app-xs font-semibold text-muted-foreground">
-        {rows.length} reservasjoner denne dagen
+        {t("overnatting.calendar.reservationsOnDay", { count: rows.length })}
       </p>
       {rows.map((row, i) => (
         <div
@@ -121,7 +129,7 @@ function DayStaysHoverContent({
         </div>
       ))}
       <p className="mt-3 text-[10px] leading-snug text-muted-foreground md:text-app-xs">
-        Klikk på en rad for å redigere
+        {t("overnatting.calendar.clickRowToEdit")}
       </p>
     </div>
   );
@@ -144,6 +152,9 @@ export function AccommodationMonthCalendar({
   onSelectReservation,
   hasUnits,
 }: AccommodationMonthCalendarProps) {
+  const { t, locale } = useTranslation();
+  const weekdays = useCalendarWeekdays();
+
   const ymMatch = /^(\d{4})-(\d{2})$/.exec(monthYm.trim());
   const year = ymMatch ? Number(ymMatch[1]) : new Date().getFullYear();
   const monthIndex = ymMatch ? Number(ymMatch[2]) - 1 : new Date().getMonth();
@@ -155,10 +166,10 @@ export function AccommodationMonthCalendar({
 
   const monthName = useMemo(
     () =>
-      new Intl.DateTimeFormat("nb-NO", {
+      new Intl.DateTimeFormat(locale === "nb" ? "nb-NO" : "en-GB", {
         month: "long",
       }).format(cursor),
-    [cursor],
+    [cursor, locale],
   );
 
   const ariaMonthYearLabel = useMemo(() => {
@@ -195,13 +206,13 @@ export function AccommodationMonthCalendar({
     }
     for (const list of m.values()) {
       list.sort((a, b) => {
-        const c = a.customerName.localeCompare(b.customerName, "nb");
+        const c = a.customerName.localeCompare(b.customerName, locale);
         if (c !== 0) return c;
-        return a.unitName.localeCompare(b.unitName, "nb");
+        return a.unitName.localeCompare(b.unitName, locale);
       });
     }
     return m;
-  }, [rowsInMonth, year, monthIndex]);
+  }, [rowsInMonth, year, monthIndex, locale]);
 
   const { daysInMonth, startPad, todayYmd } = useMemo(() => {
     const first = new Date(year, monthIndex, 1);
@@ -215,11 +226,11 @@ export function AccommodationMonthCalendar({
   const emptyMonthMessage =
     rowsInMonth.length === 0
       ? !hasUnits
-        ? "Ingen enheter registrert."
-        : "Ingen reservasjoner i denne måneden."
+        ? t("overnatting.calendarEmptyUnits")
+        : t("overnatting.calendarEmptyMonth")
       : null;
 
-  const headerCells = WEEKDAYS_NB.map((wd) => (
+  const headerCells = weekdays.map((wd) => (
     <div
       key={wd}
       className="bg-rn-surface-table-head px-1 py-2 text-center text-[10px] font-bold tracking-wider text-rn-text-column uppercase sm:px-2 md:text-app-xs"
@@ -251,6 +262,11 @@ export function AccommodationMonthCalendar({
       isToday &&
         cn("ring-2 ring-inset ring-success", !hasRows && "bg-success/5"),
     );
+
+    const reservationLabel =
+      dayRows.length === 1
+        ? t("overnatting.calendar.reservationSingular")
+        : t("overnatting.calendar.reservationPlural");
 
     const dayInner = (
       <>
@@ -305,7 +321,11 @@ export function AccommodationMonthCalendar({
             delay={180}
             closeDelay={220}
             nativeButton={false}
-            aria-label={`${dayRows.length} reservasjon${dayRows.length === 1 ? "" : "er"} ${day}. dato`}
+            aria-label={t("overnatting.calendar.reservationCountAria", {
+              count: dayRows.length,
+              label: reservationLabel,
+              day,
+            })}
             render={(props) => (
               <div
                 {...props}
@@ -388,7 +408,7 @@ export function AccommodationMonthCalendar({
               );
             }}
           >
-            I dag
+            {t("calendar.today")}
           </Button>
           <div className="flex items-center gap-1">
             <Button
@@ -397,7 +417,7 @@ export function AccommodationMonthCalendar({
               size="icon-sm"
               className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
               onClick={() => onMonthChange(ymAdd(monthYm, -12))}
-              aria-label="Forrige år"
+              aria-label={t("calendar.prevYear")}
             >
               <ChevronsLeft className="size-[18px]" aria-hidden />
             </Button>
@@ -407,7 +427,7 @@ export function AccommodationMonthCalendar({
               size="icon-sm"
               className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
               onClick={() => onMonthChange(ymAdd(monthYm, -1))}
-              aria-label="Forrige måned"
+              aria-label={t("calendar.prevMonth")}
             >
               <ChevronLeft className="size-[18px]" aria-hidden />
             </Button>
@@ -417,7 +437,7 @@ export function AccommodationMonthCalendar({
               size="icon-sm"
               className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
               onClick={() => onMonthChange(ymAdd(monthYm, 1))}
-              aria-label="Neste måned"
+              aria-label={t("calendar.nextMonth")}
             >
               <ChevronRight className="size-[18px]" aria-hidden />
             </Button>
@@ -427,7 +447,7 @@ export function AccommodationMonthCalendar({
               size="icon-sm"
               className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
               onClick={() => onMonthChange(ymAdd(monthYm, 12))}
-              aria-label="Neste år"
+              aria-label={t("calendar.nextYear")}
             >
               <ChevronsRight className="size-[18px]" aria-hidden />
             </Button>
@@ -438,7 +458,7 @@ export function AccommodationMonthCalendar({
       <div className="overflow-x-auto pb-1">
         <div
           className="min-w-[280px] overflow-hidden rounded-md border-2 border-rn-border-strong bg-border/80 shadow-sm"
-          aria-label={`Overnatting, ${ariaMonthYearLabel}`}
+          aria-label={t("overnatting.calendar.monthAria", { month: ariaMonthYearLabel })}
         >
           <div className="grid grid-cols-7 gap-px">
             {headerCells}

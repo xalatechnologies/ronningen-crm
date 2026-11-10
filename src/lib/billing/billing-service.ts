@@ -20,6 +20,7 @@ import { resolveRemainingTrialDays } from "@/lib/billing/resolve-stripe-trial-da
 import { BLOCKING_STRIPE_SUBSCRIPTION_STATUSES } from "@/lib/billing/stripe-subscription-statuses";
 import { syncSubscriptionFromStripe } from "@/lib/billing/sync-subscription-from-stripe";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import { getServerT } from "@/lib/i18n/server-messages";
 
 const ACTIVE_STATUSES = BLOCKING_STRIPE_SUBSCRIPTION_STATUSES;
 
@@ -28,8 +29,9 @@ export async function createCheckoutSessionForOrganization(input: {
   planId?: BillingPlanId;
   userId: string;
 }): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const t = await getServerT();
   if (!isBillingEnabled()) {
-    return { ok: false, error: "Fakturering er ikke aktivert." };
+    return { ok: false, error: t("serverErrors.billing.billingNotEnabled") };
   }
 
   const billingCheck = assertBillingConfigured();
@@ -40,12 +42,12 @@ export async function createCheckoutSessionForOrganization(input: {
   const planId = input.planId ?? DEFAULT_BILLING_PLAN_ID;
   const plan = getBillingPlan(planId);
   if (!plan) {
-    return { ok: false, error: "Ugyldig abonnementsplan." };
+    return { ok: false, error: t("serverErrors.billing.invalidPlan") };
   }
 
   const priceId = resolvePlanStripePriceId(planId);
   if (!priceId) {
-    return { ok: false, error: "Stripe-pris mangler i miljøvariabler." };
+    return { ok: false, error: t("serverErrors.billing.stripePriceMissing") };
   }
 
   const ownerResult = await requireOrganizationOwner(input.organizationId);
@@ -54,7 +56,7 @@ export async function createCheckoutSessionForOrganization(input: {
   }
 
   if (ownerResult.owner.userId !== input.userId) {
-    return { ok: false, error: "Kun eier kan starte abonnement." };
+    return { ok: false, error: t("serverErrors.billing.ownerCanStart") };
   }
 
   const admin = createSupabaseAdminClient();
@@ -64,12 +66,19 @@ export async function createCheckoutSessionForOrganization(input: {
 
   const { data: org, error: orgError } = await admin
     .from("organizations")
-    .select("id, name, billing_email, contact_email")
+    .select("id, name, billing_email, contact_email, billing_exempt")
     .eq("id", input.organizationId)
     .single();
 
   if (orgError || !org) {
-    return { ok: false, error: "Organisasjonen ble ikke funnet." };
+    return { ok: false, error: t("serverErrors.admin.orgNotFound") };
+  }
+
+  if (org.billing_exempt) {
+    return {
+      ok: false,
+      error: t("serverErrors.billing.billingExempt"),
+    };
   }
 
   const { data: subscription } = await admin
@@ -86,8 +95,7 @@ export async function createCheckoutSessionForOrganization(input: {
   ) {
     return {
       ok: false,
-      error:
-        "Organisasjonen har allerede et aktivt abonnement. Bruk «Administrer abonnement».",
+      error: t("serverErrors.billing.alreadyActiveSubscription"),
     };
   }
 
@@ -141,8 +149,7 @@ export async function createCheckoutSessionForOrganization(input: {
     });
     return {
       ok: false,
-      error:
-        "Organisasjonen har allerede et aktivt abonnement. Bruk «Administrer abonnement».",
+      error: t("serverErrors.billing.alreadyActiveSubscription"),
     };
   }
 
@@ -181,7 +188,7 @@ export async function createCheckoutSessionForOrganization(input: {
   });
 
   if (!session.url) {
-    return { ok: false, error: "Kunne ikke opprette betalingssesjon." };
+    return { ok: false, error: t("serverErrors.billing.checkoutSessionFailed") };
   }
 
   return { ok: true, url: session.url };
@@ -206,8 +213,9 @@ export async function createPortalSessionForOrganization(input: {
   organizationId: string;
   userId: string;
 }): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const t = await getServerT();
   if (!isBillingEnabled()) {
-    return { ok: false, error: "Fakturering er ikke aktivert." };
+    return { ok: false, error: t("serverErrors.billing.billingNotEnabled") };
   }
 
   const billingCheck = assertBillingConfigured();
@@ -221,10 +229,23 @@ export async function createPortalSessionForOrganization(input: {
   }
 
   if (ownerResult.owner.userId !== input.userId) {
-    return { ok: false, error: "Kun eier kan administrere abonnement." };
+    return { ok: false, error: t("serverErrors.billing.ownerOnly") };
   }
 
   const admin = createSupabaseAdminClient();
+  const { data: org } = await admin
+    .from("organizations")
+    .select("billing_exempt")
+    .eq("id", input.organizationId)
+    .maybeSingle();
+
+  if (org?.billing_exempt) {
+    return {
+      ok: false,
+      error: t("serverErrors.billing.billingExempt"),
+    };
+  }
+
   const { data: subscription } = await admin
     .from("subscriptions")
     .select("provider_customer_id")
@@ -234,7 +255,7 @@ export async function createPortalSessionForOrganization(input: {
   if (!subscription?.provider_customer_id) {
     return {
       ok: false,
-      error: "Ingen Stripe-kunde funnet. Start abonnement først.",
+      error: t("serverErrors.billing.noStripeCustomer"),
     };
   }
 

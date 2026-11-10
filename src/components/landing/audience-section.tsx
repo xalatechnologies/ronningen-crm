@@ -1,20 +1,28 @@
+"use client";
+
 import { LandingSectionShell } from "@/components/landing/landing-section-shell";
-import { AUDIENCE, SECTION_TITLES } from "@/components/landing/landing-content";
-import { Building2 } from "lucide-react";
+import { useTranslation } from "@/i18n/client";
+import { getDictionary } from "@/i18n/dictionaries";
+import { useMemo } from "react";
 
 export function AudienceSection() {
+  const { t, locale } = useTranslation();
+  const items = useMemo(
+    () => getDictionary(locale).landing.audience.items,
+    [locale],
+  );
+
   return (
     <LandingSectionShell
       titleId="landing-audience-title"
-      title={SECTION_TITLES.audience}
+      title={t("landing.sections.audience")}
     >
-      <ul className="mx-auto flex w-full flex-wrap justify-center gap-3">
-        {AUDIENCE.map((item) => (
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((item) => (
           <li
             key={item}
-            className="inline-flex items-center gap-2 rounded-full border-2 border-rn-border-strong bg-card px-4 py-2.5 text-sm font-medium text-rn-text-body shadow-sm md:text-base"
+            className="rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card px-5 py-4 font-heading text-base font-semibold text-rn-text-heading shadow-rn-card"
           >
-            <Building2 className="size-4 text-success" aria-hidden />
             {item}
           </li>
         ))}

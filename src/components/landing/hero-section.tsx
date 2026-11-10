@@ -1,10 +1,14 @@
+"use client";
+
 import { HeroDashboardPreview } from "@/components/landing/hero-dashboard-preview";
-import { HERO, LANDING_ROUTES } from "@/components/landing/landing-content";
+import { LANDING_ROUTES } from "@/components/landing/landing-content";
 import {
   LANDING_CONTAINER,
   LANDING_SECTION_X,
 } from "@/components/landing/landing-layout";
+import { APP_NAME } from "@/config/app";
 import { buttonVariants } from "@/components/ui/button";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -19,6 +23,8 @@ const secondaryCtaClass = cn(
 );
 
 export function HeroSection() {
+  const { t } = useTranslation();
+
   return (
     <section
       aria-labelledby="landing-hero-title"
@@ -39,23 +45,25 @@ export function HeroSection() {
               id="landing-hero-title"
               className="landing-hero-headline leading-tight tracking-tight"
             >
-              {HERO.headline}
+              {t("landing.hero.headline")}
             </h1>
             <p className="landing-subhead max-w-2xl leading-relaxed">
-              {HERO.subheadline}
+              {t("landing.hero.subheadline", { appName: APP_NAME })}
             </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link href={LANDING_ROUTES.register} className={primaryCtaClass}>
-              {HERO.primaryCta}
+              {t("landing.hero.primaryCta")}
             </Link>
-            <a href={HERO.secondaryHref} className={secondaryCtaClass}>
-              {HERO.secondaryCta}
+            <a href="#funksjoner" className={secondaryCtaClass}>
+              {t("landing.hero.secondaryCta")}
             </a>
           </div>
 
-          <p className="text-app-sm text-muted-foreground">{HERO.trust}</p>
+          <p className="text-sm text-rn-text-slate md:text-base">
+            {t("landing.hero.trust")}
+          </p>
         </div>
 
         <HeroDashboardPreview />

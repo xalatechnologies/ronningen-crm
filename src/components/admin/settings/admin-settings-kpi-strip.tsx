@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { overallStatusLabel } from "@/components/admin/admin-health-status-badge";
 import { adminSettingsHref } from "@/lib/admin/settings-links";
 import type { AdminSettingsOverview } from "@/lib/admin/queries/settings";
@@ -52,6 +53,7 @@ function SettingsKpiTile({
   iconClassName?: string;
   valueClassName?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <Link
       href={href}
@@ -69,7 +71,7 @@ function SettingsKpiTile({
           {caption}
         </p>
       </div>
-      <span className="sr-only">Gå til {label}</span>
+      <span className="sr-only">{t("admin.overview_go_to", { label })}</span>
     </Link>
   );
 }
@@ -81,12 +83,13 @@ export function AdminSettingsKpiStrip({
   settings: AdminSettingsOverview;
   activeTab: AdminSettingsTabId;
 }) {
+  const { t } = useTranslation();
   const { summary, platformAdmins } = settings;
 
   const missingCaption =
     summary.missingRequiredCount === 0
-      ? "Alle påkrevde variabler satt"
-      : "Miljøvariabler som mangler";
+      ? t("admin.alle_pakrevde_variabler_satt")
+      : t("admin.miljovariabler_som_mangler");
 
   const statusIconContainer =
     summary.overallStatus === "critical"
@@ -105,12 +108,12 @@ export function AdminSettingsKpiStrip({
   return (
     <section
       className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
-      aria-label="Nøkkeltall"
+      aria-label={t("admin.nokkeltall")}
     >
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
         <SettingsKpiTile
-          label="Status"
-          value={overallStatusLabel(summary.overallStatus)}
+          label={t("admin.status")}
+          value={overallStatusLabel(summary.overallStatus, t)}
           caption={`${summary.configuredCount} av ${summary.totalCount} integrasjoner klare`}
           icon={Activity}
           iconContainerClassName={statusIconContainer}
@@ -120,15 +123,15 @@ export function AdminSettingsKpiStrip({
           href={adminSettingsHref("integrations")}
         />
         <SettingsKpiTile
-          label="Integrasjoner"
+          label={t("admin.integrasjoner")}
           value={`${summary.configuredCount}/${summary.totalCount}`}
-          caption="Stripe, e-post, cron og database"
+          caption={t("admin.stripe_e_post_cron_og_database")}
           icon={Plug}
           active={activeTab === "integrations"}
           href={adminSettingsHref("integrations")}
         />
         <SettingsKpiTile
-          label="Administratorer"
+          label={t("admin.administratorer")}
           value={platformAdmins.length}
           caption={`Plattformadministrator${platformAdmins.length === 1 ? "" : "er"}`}
           icon={ShieldCheck}
@@ -136,7 +139,7 @@ export function AdminSettingsKpiStrip({
           href={adminSettingsHref("access")}
         />
         <SettingsKpiTile
-          label="Mangler"
+          label={t("admin.mangler")}
           value={summary.missingRequiredCount}
           caption={missingCaption}
           icon={AlertTriangle}

@@ -1,9 +1,16 @@
 "use client";
 
+import Link from "next/link";
+
 import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  getPackageContractTemplate,
+  listTemplates,
+  setPackageContractTemplate,
+} from "@/lib/contracts/templates";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
-import { APP_DATA_AMOUNT, APP_DATA_PRIMARY } from "@/lib/table-typography";
+import { APP_DATA_AMOUNT, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import {
   Dialog,
   DialogContent,
@@ -47,13 +54,12 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
-import { useMemo, useState } from "react";
+import { useTranslation } from "@/i18n/client";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
-
-const pricingTableHeadClass =
-  "pricing-table-head px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-4";
-const pricingTableCellClass = "px-6 py-5 md:px-8 md:py-6";
+import { parsePackageDescription } from "@/lib/pricing/parse-package-description";
+import { statusLabel } from "@/lib/navigation/nav-labels";
 
 type PackageRow = Database["public"]["Tables"]["packages"]["Row"];
 type ServiceRow = Database["public"]["Tables"]["services"]["Row"];
@@ -64,45 +70,10 @@ export type PricingSectionProps = {
   loadError: string | null;
 };
 
-function formatNok(n: number) {
-  return new Intl.NumberFormat("nb-NO", {
-    style: "currency",
-    currency: "NOK",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
+const pricingTableHeadClass = cn("pricing-table-head", APP_TABLE_HEAD_CELL);
+const pricingTableCellClass = "px-6 py-5 md:px-8 md:py-6";
 
 /** Liste-tegn brukere skriver foran punkter (-, –, —, •, *). */
-const PACKAGE_LIST_BULLET = /^[-•*–—]\s*/;
-
-const PACKAGE_DESCRIPTION_EXAMPLE = `Perfekt for mindre selskap
-– Lokale til 50 gjester
-– Dekket bord og stoler
-– Enkel servering`;
-
-/** Første linje uten innledende liste-tegn (= undertittel under pakkenavn). Resten = punktliste. */
-function parsePackageDescription(description: string | null): {
-  tagline: string | null;
-  features: string[];
-} {
-  if (!description?.trim()) return { tagline: null, features: [] };
-  const rawLines = description
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  let start = 0;
-  let tagline: string | null = null;
-  if (rawLines.length > 0 && !PACKAGE_LIST_BULLET.test(rawLines[0]!)) {
-    tagline = rawLines[0]!;
-    start = 1;
-  }
-  const features = rawLines
-    .slice(start)
-    .map((line) => line.replace(PACKAGE_LIST_BULLET, "").trim())
-    .filter(Boolean);
-  return { tagline, features };
-}
-
 const PACKAGE_TIER_ORDER = [
   "basis",
   "plus",
@@ -142,6 +113,7 @@ function PricingCatalogFields({
   row: PackageRow | ServiceRow | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidatePricing } = useTenantDataInvalidation();
@@ -161,6 +133,27 @@ function PricingCatalogFields({
 
   const { register, handleSubmit, formState } = form;
 
+  const [templates, setTemplates] = useState<{ id: string; name: string; isDefault: boolean }[]>([]);
+  const [templateId, setTemplateId] = useState("");
+  const [initialTemplateId, setInitialTemplateId] = useState("");
+  useEffect(() => {
+    if (kind !== "packages" || !row || !currentOrganizationId) return;
+    let cancelled = false;
+    void (async () => {
+      const [listed, current] = await Promise.all([
+        listTemplates(currentOrganizationId),
+        getPackageContractTemplate(currentOrganizationId, row.id),
+      ]);
+      if (cancelled || !listed.ok || !current.ok) return;
+      setTemplates(listed.templates);
+      setTemplateId(current.templateId ?? "");
+      setInitialTemplateId(current.templateId ?? "");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [kind, row, currentOrganizationId]);
+
   async function onSubmit(data: PricingPackageFormInput) {
     const payload = {
       name: data.name.trim(),
@@ -175,11 +168,22 @@ function PricingCatalogFields({
         .update(payload)
         .eq("id", row.id);
       if (error) {
-        toast.error("Kunne ikke oppdatere", { description: error.message });
+        toast.error(t("pricing.updateFailed"), { description: error.message });
         return;
       }
+      if (kind === "packages" && currentOrganizationId && templateId !== initialTemplateId) {
+        const linked = await setPackageContractTemplate({
+          organizationId: currentOrganizationId,
+          packageId: row.id,
+          templateId: templateId || null,
+        });
+        if (!linked.ok) {
+          toast.error(t("pricing.updateFailed"), { description: linked.error });
+          return;
+        }
+      }
       toast.success(
-        kind === "packages" ? "Pakke oppdatert" : "Tjeneste oppdatert",
+        kind === "packages" ? t("pricing.packageUpdated") : t("pricing.serviceUpdated"),
       );
     } else {
       let orgId: string;
@@ -187,7 +191,7 @@ function PricingCatalogFields({
         orgId = requireOrganizationId(currentOrganizationId);
       } catch (err) {
         toast.error(
-          err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+          err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
         );
         return;
       }
@@ -197,11 +201,11 @@ function PricingCatalogFields({
         organization_id: orgId,
       });
       if (error) {
-        toast.error("Kunne ikke opprette", { description: error.message });
+        toast.error(t("pricing.createFailed"), { description: error.message });
         return;
       }
       toast.success(
-        kind === "packages" ? "Pakke opprettet" : "Tjeneste opprettet",
+        kind === "packages" ? t("pricing.packageCreated") : t("pricing.serviceCreated"),
       );
     }
 
@@ -212,11 +216,11 @@ function PricingCatalogFields({
   const title =
     kind === "packages"
       ? isEdit
-        ? "Rediger pakke"
-        : "Ny pakke"
+        ? t("pricing.editPackage")
+        : t("pricing.newPackage")
       : isEdit
-        ? "Rediger tilleggstjeneste"
-        : "Ny tilleggstjeneste";
+        ? t("pricing.editService")
+        : t("pricing.newService");
 
   return (
     <>
@@ -227,7 +231,7 @@ function PricingCatalogFields({
       </DialogHeader>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
-          <Label>Navn</Label>
+          <Label>{t("common.fields.name")}</Label>
           <Input
             className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
             {...register("name")}
@@ -240,7 +244,9 @@ function PricingCatalogFields({
         </div>
         <div className="space-y-2">
           <Label>
-            {kind === "packages" ? "Beskrivelse / punkter" : "Beskrivelse"}
+            {kind === "packages"
+              ? t("pricing.descriptionPackages")
+              : t("pricing.descriptionServices")}
           </Label>
           <Textarea
             className={cn(
@@ -249,20 +255,19 @@ function PricingCatalogFields({
             )}
             placeholder={
               kind === "packages"
-                ? PACKAGE_DESCRIPTION_EXAMPLE
-                : "Kort beskrivelse av tilleggstjenesten"
+                ? t("pricing.descriptionPackagesPlaceholder")
+                : t("pricing.descriptionServicesPlaceholder")
             }
             {...register("description")}
           />
           {kind === "packages" ? (
             <p className="text-xs leading-relaxed text-muted-foreground md:text-sm">
-              Første linje uten «–» blir undertittel. Linjer med «–» vises som
-              punkter med hake i pakkekortet.
+              {t("pricing.packagesHint")}
             </p>
           ) : null}
         </div>
         <div className="space-y-2">
-          <Label>Pris (NOK)</Label>
+          <Label>{t("pricing.priceNok")}</Label>
           <PriceInput
             className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
             {...register("price")}
@@ -273,20 +278,39 @@ function PricingCatalogFields({
             </p>
           ) : null}
         </div>
+        {kind === "packages" && isEdit && templates.length > 1 ? (
+          <div className="space-y-2">
+            <Label>{t("contracts.template.forPackage")}</Label>
+            <select
+              className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background px-3 text-base"
+              value={templateId}
+              onChange={(e) => setTemplateId(e.target.value)}
+            >
+              <option value="">{t("contracts.template.forPackageDefault")}</option>
+              {templates
+                .filter((template) => !template.isDefault)
+                .map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+        ) : null}
         <label className="flex cursor-pointer items-center gap-2 text-base text-foreground">
           <input
             type="checkbox"
             className="size-4 rounded accent-success md:size-[1.125rem]"
             {...register("active")}
           />
-          <span>Aktiv (synlig i katalog)</span>
+          <span>{t("pricing.activeInCatalog")}</span>
         </label>
         <DialogFooter className="gap-2 sm:justify-end">
           <Button type="button" variant="outline" onClick={onClose}>
-            Avbryt
+            {t("common.actions.cancel")}
           </Button>
           <Button type="submit" variant="success" size="cta">
-            {isEdit ? "Lagre" : "Opprett"}
+            {isEdit ? t("common.actions.save") : t("common.actions.create")}
           </Button>
         </DialogFooter>
       </form>
@@ -326,6 +350,7 @@ export function PricingSection({
   services,
   loadError,
 }: PricingSectionProps) {
+  const { t, formatCurrency, locale } = useTranslation();
   const supabase = useSupabase();
   const { canManageFinance } = useOrganizationPermissions();
   const canEdit = canManageFinance;
@@ -357,13 +382,13 @@ export function PricingSection({
         .delete()
         .eq("id", deleteTarget.id);
       if (error) {
-        toast.error("Kunne ikke slette", { description: error.message });
+        toast.error(t("pricing.deleteFailed"), { description: error.message });
         return;
       }
       toast.success(
         deleteTarget.kind === "packages"
-          ? "Pakke slettet"
-          : "Tjeneste slettet",
+          ? t("pricing.packageDeleted")
+          : t("pricing.serviceDeleted"),
       );
       setDeleteTarget(null);
       invalidatePricing();
@@ -386,9 +411,9 @@ export function PricingSection({
         const da = packageTierSortKey(a.name);
         const db = packageTierSortKey(b.name);
         if (da !== db) return da - db;
-        return a.name.localeCompare(b.name, "nb");
+        return a.name.localeCompare(b.name, locale);
       }),
-    [packages],
+    [packages, locale],
   );
 
   const popularId = useMemo(() => {
@@ -413,7 +438,7 @@ export function PricingSection({
           className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-app-base"
           role="alert"
         >
-          Kunne ikke laste priser: {loadError}
+          {t("pricing.loadError", { error: loadError })}
         </div>
       ) : null}
       <div className={cn("min-w-0 overflow-x-hidden", RN_CARD_SHELL)}>
@@ -427,28 +452,34 @@ export function PricingSection({
           <AppPageHeader
             className="mb-0"
             surface="default"
-            title="Priser"
+            title={t("pricing.title")}
             actions={
+              <>
+              <Link
+                href="/app/settings/kontrakter#mal"
+                className={cn(buttonVariants({ variant: "outline", size: "cta" }))}
+              >
+                {t("contracts.template.title")}
+              </Link>
               <Button
                 type="button"
                 onClick={() => setPackageDialog({ open: true, row: null })}
                 disabled={!canEdit}
                 title={
-                  !canEdit
-                    ? "Krever eier-, admin- eller regnskapstilgang"
-                    : undefined
+                  !canEdit ? t("pricing.requiresFinanceAccess") : undefined
                 }
                 className={cn(buttonVariants({ variant: "success", size: "cta" }))}
               >
                 <Plus className="size-5" aria-hidden />
-                Ny pakke
+                {t("pricing.newPackage")}
               </Button>
+              </>
             }
           />
         </div>
         <div className="min-w-0 px-[length:var(--app-card-padding)] py-[length:calc(var(--app-card-padding)*0.85)] sm:px-[length:calc(var(--app-card-padding)+0.25rem)] sm:py-[length:calc(var(--app-card-padding)*0.95)] md:px-[length:calc(var(--app-card-padding)+0.5rem)] md:py-[length:var(--app-card-padding)] lg:px-[length:calc(var(--app-card-padding)+0.75rem)]">
           <h2 className="pricing-section-title app-section-title mb-6 md:mb-8">
-            Pakkenivåer
+            {t("pricing.packageTiers")}
           </h2>
           <div className="grid min-w-0 grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 md:gap-8 xl:grid-cols-3 xl:gap-10">
         {sortedPackages.map((pkg) => {
@@ -469,7 +500,7 @@ export function PricingSection({
             >
               {isPopular ? (
                 <span className="absolute top-4 right-4 z-10 rounded-full bg-amber-500 px-2.5 py-1 pricing-popular-badge font-bold tracking-wide text-stone-900 shadow-sm">
-                  Mest populær
+                  {t("pricing.mostPopular")}
                 </span>
               ) : null}
               {canEdit ? (
@@ -477,9 +508,9 @@ export function PricingSection({
                   <button
                     type="button"
                     className={catalogActionButtonClass(isPopular)}
-                    title="Rediger pakke"
+                    title={t("pricing.editPackage")}
                     onClick={() => setPackageDialog({ open: true, row: pkg })}
-                    aria-label={`Rediger pakke ${pkg.name}`}
+                    aria-label={t("pricing.editPackageAria", { name: pkg.name })}
                   >
                     <Pencil className="size-5" aria-hidden />
                   </button>
@@ -490,7 +521,7 @@ export function PricingSection({
                       !isPopular && "hover:text-destructive",
                       isPopular && "hover:text-red-300",
                     )}
-                    title="Slett pakke"
+                    title={t("pricing.deleteServiceTitleAttr")}
                     onClick={() =>
                       setDeleteTarget({
                         kind: "packages",
@@ -498,7 +529,7 @@ export function PricingSection({
                         name: pkg.name,
                       })
                     }
-                    aria-label={`Slett pakke ${pkg.name}`}
+                    aria-label={t("pricing.deletePackageAria", { name: pkg.name })}
                   >
                     <Trash2 className="size-5" aria-hidden />
                   </button>
@@ -521,7 +552,7 @@ export function PricingSection({
                         isPopular ? "text-white" : "text-foreground",
                       )}
                     >
-                      Pris etter avtale
+                      {t("pricing.priceOnRequest")}
                     </p>
                   ) : (
                     <p
@@ -530,7 +561,7 @@ export function PricingSection({
                         isPopular ? "text-white" : "text-foreground",
                       )}
                     >
-                      {formatNok(pkg.price)}
+                      {formatCurrency(pkg.price)}
                     </p>
                   )}
                 </div>
@@ -584,8 +615,7 @@ export function PricingSection({
                     isPopular ? "text-stone-400" : "text-muted-foreground",
                   )}
                 >
-                  Legg inn punkter i beskrivelsen (– foran hver linje). Første
-                  linje uten – blir undertittel.
+                  {t("pricing.emptyFeaturesHint")}
                 </p>
               )}
             </div>
@@ -596,16 +626,14 @@ export function PricingSection({
               <div className="mt-8 border-t-2 border-rn-border-strong/80 pt-8 sm:mt-10 sm:pt-10">
                 <div className="flex flex-col gap-4 border-b-2 border-rn-border-strong pb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:pb-8">
                   <h3 className="pricing-services-title app-section-title">
-                    Tilleggstjenester
+                    {t("pricing.addOnServices")}
                   </h3>
                   <Button
                     type="button"
                     onClick={() => setServiceDialog({ open: true, row: null })}
                     disabled={!canEdit}
                     title={
-                      !canEdit
-                        ? "Krever eier-, admin- eller regnskapstilgang"
-                        : undefined
+                      !canEdit ? t("pricing.requiresFinanceAccess") : undefined
                     }
                     className={cn(
                       buttonVariants({ variant: "success", size: "cta" }),
@@ -613,27 +641,25 @@ export function PricingSection({
                     )}
                   >
                     <Plus className="size-5" aria-hidden />
-                    Ny tjeneste
+                    {t("pricing.newServiceButton")}
                   </Button>
                 </div>
 
                 {services.length === 0 ? (
                   <p className="pricing-empty-services py-8 text-center text-muted-foreground md:py-12 lg:py-14">
-                    Ingen tilleggstjenester. Aktive rader her vises som valgfrie
-                    tillegg på Ny booking (navn og pris kan du endre når som
-                    helst).
+                    {t("pricing.emptyServices")}
                   </p>
                 ) : (
                   <Table>
             <TableHeader>
               <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
-                <TableHead className={pricingTableHeadClass}>Tjeneste</TableHead>
-                <TableHead className={pricingTableHeadClass}>Pris</TableHead>
-                <TableHead className={pricingTableHeadClass}>Status</TableHead>
+                <TableHead className={pricingTableHeadClass}>{t("pricing.tableService")}</TableHead>
+                <TableHead className={pricingTableHeadClass}>{t("pricing.tablePrice")}</TableHead>
+                <TableHead className={pricingTableHeadClass}>{t("pricing.tableStatus")}</TableHead>
                 <TableHead
                   className={cn(pricingTableHeadClass, "text-right")}
                 >
-                  Handling
+                  {t("pricing.tableAction")}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -664,7 +690,7 @@ export function PricingSection({
                       )}
                     >
                       <span className={cn("pricing-service-price text-app-base", APP_DATA_AMOUNT)}>
-                        {formatNok(svc.price)}
+                        {formatCurrency(svc.price)}
                       </span>
                       {svc.description?.trim() ? (
                         <span className="pricing-service-desc mt-1 block">
@@ -672,7 +698,7 @@ export function PricingSection({
                         </span>
                       ) : (
                         <span className="pricing-service-desc mt-1 block">
-                          Fast pris
+                          {t("pricing.fixedPrice")}
                         </span>
                       )}
                     </TableCell>
@@ -685,7 +711,9 @@ export function PricingSection({
                             : "bg-muted text-muted-foreground",
                         )}
                       >
-                        {svc.active ? "Aktiv" : "Inaktiv"}
+                        {svc.active
+                          ? statusLabel("active", t)
+                          : statusLabel("inactive", t)}
                       </span>
                     </TableCell>
                     <TableCell
@@ -700,13 +728,13 @@ export function PricingSection({
                           disabled={!canEdit}
                           title={
                             !canEdit
-                              ? "Krever eier-, admin- eller regnskapstilgang"
+                              ? t("pricing.requiresFinanceAccess")
                               : undefined
                           }
                           onClick={() =>
                             setServiceDialog({ open: true, row: svc })
                           }
-                          aria-label={`Rediger ${svc.name}`}
+                          aria-label={t("pricing.editServiceAria", { name: svc.name })}
                         >
                           <Pencil className="size-5 md:size-6" aria-hidden />
                         </Button>
@@ -718,8 +746,8 @@ export function PricingSection({
                           disabled={!canEdit}
                           title={
                             !canEdit
-                              ? "Krever eier-, admin- eller regnskapstilgang"
-                              : "Slett tjeneste"
+                              ? t("pricing.requiresFinanceAccess")
+                              : t("pricing.deleteServiceTitleAttr")
                           }
                           onClick={() =>
                             setDeleteTarget({
@@ -728,7 +756,7 @@ export function PricingSection({
                               name: svc.name,
                             })
                           }
-                          aria-label={`Slett ${svc.name}`}
+                          aria-label={t("pricing.deleteServiceAria", { name: svc.name })}
                         >
                           <Trash2 className="size-5 md:size-6" aria-hidden />
                         </Button>
@@ -772,12 +800,12 @@ export function PricingSection({
         }}
         title={
           deleteTarget?.kind === "packages"
-            ? "Slette pakke?"
-            : "Slette tilleggstjeneste?"
+            ? t("pricing.deletePackageTitle")
+            : t("pricing.deleteServiceTitle")
         }
         description={
           deleteTarget
-            ? `«${deleteTarget.name}» fjernes permanent fra priskatalogen. Dette kan ikke angres.`
+            ? t("pricing.deleteCatalogDescription", { name: deleteTarget.name })
             : ""
         }
         busy={deleteBusy}

@@ -56,7 +56,7 @@ const getTenantAppAccessCached = cache(async function getTenantAppAccessCached(
     const [{ data: org }, { data: subscription }] = await Promise.all([
       supabase
         .from("organizations")
-        .select("is_suspended, subscription_status, suspended_reason")
+        .select("is_suspended, subscription_status, suspended_reason, billing_exempt")
         .eq("id", organizationId)
         .maybeSingle(),
       supabase
@@ -81,6 +81,7 @@ const getTenantAppAccessCached = cache(async function getTenantAppAccessCached(
         subscription_status: org.subscription_status,
         current_period_end: subscription?.current_period_end ?? null,
         provider_subscription_id: subscription?.provider_subscription_id ?? null,
+        billing_exempt: org.billing_exempt ?? false,
       },
       { billingEnabled: isBillingEnabled() },
     );
@@ -128,6 +129,7 @@ const getTenantAppAccessCached = cache(async function getTenantAppAccessCached(
       current_period_end: subscription?.current_period_end ?? org.periodEnd,
       provider_subscription_id:
         subscription?.provider_subscription_id ?? org.providerSubscriptionId,
+      billing_exempt: org.billingExempt,
     },
     { billingEnabled: isBillingEnabled() },
   );

@@ -1,4 +1,5 @@
 import type { OrganizationProfileFormInput } from "@/lib/validations";
+import { getDefaultT } from "@/lib/i18n/default-messages";
 
 export type OrganizationProfileRow = {
   id: string;
@@ -77,9 +78,10 @@ export function formInputToOrganizationUpdate(
 export function mapOrganizationToInvoiceIssuer(
   row: OrganizationProfileRow,
 ): InvoiceIssuerDisplay {
+  const t = getDefaultT();
   const displayName = row.legal_name?.trim() || row.name;
   const tagline =
-    row.tagline?.trim() || "Selskapslokale og arrangement";
+    row.tagline?.trim() || t("organizations.defaultTagline");
   const addressLines: string[] = [];
   if (row.address_line1?.trim()) addressLines.push(row.address_line1.trim());
   if (row.address_line2?.trim()) addressLines.push(row.address_line2.trim());
@@ -99,13 +101,13 @@ export function mapOrganizationToInvoiceIssuer(
     subtitle:
       addressLines.length > 0 || row.org_number?.trim()
         ? ""
-        : "Oppdater virksomhetsadresse og betalingsinformasjon under Innstillinger → Organisasjon.",
+        : t("organizations.profileAddressHint"),
     orgNo: row.org_number?.trim() ?? "",
     addressLines,
     contactEmail: row.contact_email?.trim() ?? "",
     contactPhone: row.contact_phone?.trim() ?? "",
     bankInfo:
       bankParts.join("\n\n") ||
-      "Kontonummer og KID avtales direkte ved fakturering.",
+      t("organizations.profileBankDefault"),
   };
 }

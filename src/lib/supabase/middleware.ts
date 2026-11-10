@@ -13,6 +13,11 @@ import {
   isSupabasePublicConfigured,
 } from "@/lib/supabase/public-env";
 
+import {
+  defaultLocale,
+  localeCookieName,
+} from "@/i18n/config";
+
 import type { Database } from "@/types/database.types";
 
 let missingMiddlewareEnvWarned = false;
@@ -107,6 +112,14 @@ export async function updateSession(request: NextRequest) {
   }
 
   response.headers.set("x-pathname", pathname);
+
+  if (!request.cookies.get(localeCookieName)) {
+    response.cookies.set(localeCookieName, defaultLocale, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
+  }
 
   if (isAdminSupportPath(pathname)) {
     response.cookies.set(

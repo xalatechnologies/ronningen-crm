@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslation } from "@/i18n/client";
 import Link from "next/link";
 
 import {
@@ -24,15 +27,16 @@ export function AdminQueuePanel({
   onViewAll?: () => void;
   embedded?: boolean;
 }) {
-  const empty = emptyMessage ?? emptyLabel ?? "Ingen elementer.";
+  const { t } = useTranslation();
+  const empty = emptyMessage ?? emptyLabel ?? t("admin.ingen_elementer");
 
   const viewAllAction =
     onViewAll != null ? (
       <AdminActionButton type="button" onClick={onViewAll}>
-        Se alle
+        {t("adminLabels.actions.viewAll")}
       </AdminActionButton>
     ) : viewAllHref ? (
-      <AdminLinkButton href={viewAllHref}>Se alle</AdminLinkButton>
+      <AdminLinkButton href={viewAllHref}>{t("adminLabels.actions.viewAll")}</AdminLinkButton>
     ) : undefined;
 
   return (

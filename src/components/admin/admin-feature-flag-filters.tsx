@@ -1,7 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
+import { useTranslation } from "@/i18n/client";
 import {
-  ADMIN_FEATURE_FLAG_FILTER_OPTIONS,
+  getAdminFeatureFlagFilterOptions,
+  featureFlagStatusLabel,
   type AdminFeatureFlagFilter,
 } from "@/lib/admin/feature-flag-status";
 import {
@@ -31,6 +34,11 @@ export function AdminFeatureFlagFilterBar({
   counts,
   embedded = false,
 }: AdminFeatureFlagFilterBarProps) {
+  const { t } = useTranslation();
+  const filterOptions = useMemo(
+    () => getAdminFeatureFlagFilterOptions(t),
+    [t],
+  );
   return (
     <AdminSegmentFilterBar
       className={
@@ -42,14 +50,14 @@ export function AdminFeatureFlagFilterBar({
       <AdminSegmentFilterSearch
         value={search}
         onChange={onSearchChange}
-        placeholder="Søk nøkkel eller beskrivelse…"
-        aria-label="Søk funksjonsflagg"
+        placeholder={t("admin.sok_nokkel_eller_beskrivelse")}
+        aria-label={t("admin.sok_funksjonsflagg")}
       />
 
       <AdminSegmentFilterDivider />
 
-      <AdminSegmentFilterControls aria-label="Filtrer funksjonsflagg etter status">
-        {ADMIN_FEATURE_FLAG_FILTER_OPTIONS.map((option) => {
+      <AdminSegmentFilterControls aria-label={t("admin.filtrer_funksjonsflagg_etter_status")}>
+        {filterOptions.map((option) => {
           const count = counts[option.value];
           const active = filter === option.value;
           return (

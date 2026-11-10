@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminAccessBadge } from "@/components/admin/admin-access-badge";
 import { AdminConfirmActionDialog } from "@/components/admin/admin-confirm-action-dialog";
 import { AdminActionButton } from "@/components/admin/admin-action-button";
@@ -30,6 +31,7 @@ export function OrganizationAccessPanel({
   providerSubscriptionId = null,
   billingEnabled = false,
 }: OrganizationAccessPanelProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [reason, setReason] = useState(suspendedReason ?? "");
   const [busy, setBusy] = useState(false);
@@ -73,9 +75,9 @@ export function OrganizationAccessPanel({
         )}
       >
         <div>
-          <h2 className="app-section-title">Tilgang</h2>
+          <h2 className="app-section-title">{t("admin.tilgang")}</h2>
           <p className="mt-2 app-text text-muted-foreground">
-            Suspendert tilgang overstyrer abonnementsstatus og blokkerer appen.
+            {t("admin.access_suspend_overrides_hint")}
           </p>
           <div className="mt-3">
             <AdminAccessBadge
@@ -89,14 +91,14 @@ export function OrganizationAccessPanel({
 
         {!isSuspended ? (
           <div className="space-y-2">
-            <Label htmlFor="suspend-reason">Grunn (valgfritt, vises til tenant)</Label>
+            <Label htmlFor="suspend-reason">{t("admin.suspend_reason_optional_tenant")}</Label>
             <textarea
               id="suspend-reason"
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               rows={3}
               className="w-full rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-4 py-3 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-              placeholder="F.eks. brudd på vilkår, ubetalt faktura…"
+              placeholder={t("admin.f_eks_brudd_pa_vilkar_ubetalt_faktura")}
             />
             <AdminActionButton
               type="button"
@@ -104,14 +106,14 @@ export function OrganizationAccessPanel({
               disabled={busy}
               onClick={() => setConfirmSuspendOpen(true)}
             >
-              Suspendér organisasjon
+              {t("admin.suspend_organization_button")}
             </AdminActionButton>
           </div>
         ) : (
           <div className="space-y-3">
             {suspendedReason ? (
               <p className="app-text text-muted-foreground">
-                Grunn: {suspendedReason}
+                {t("admin.reason_colon", { reason: suspendedReason })}
               </p>
             ) : null}
             <AdminActionButton
@@ -120,7 +122,7 @@ export function OrganizationAccessPanel({
               disabled={busy}
               onClick={() => void handleUnsuspend()}
             >
-              {busy ? "Opphever…" : "Opphev suspensjon"}
+              {busy ? t("admin.opphever") : t("admin.opphev_suspensjon")}
             </AdminActionButton>
           </div>
         )}
@@ -133,9 +135,9 @@ export function OrganizationAccessPanel({
       <AdminConfirmActionDialog
         open={confirmSuspendOpen}
         onOpenChange={setConfirmSuspendOpen}
-        title="Suspendér organisasjon?"
-        description="Alle brukere i organisasjonen mister tilgang til appen inntil suspensjon oppheves."
-        confirmLabel="Ja, suspendér"
+        title={t("admin.suspend_r_organisasjon")}
+        description={t("admin.alle_brukere_i_organisasjonen_mister_tilgang_til_appen_innti")}
+        confirmLabel={t("admin.ja_suspend_r")}
         confirmVariant="destructive"
         busy={busy}
         onConfirm={handleSuspend}

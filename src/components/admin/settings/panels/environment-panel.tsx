@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminDataPanel } from "@/components/admin/admin-data-panel";
 import {
   AdminSegmentFilterBar,
@@ -19,20 +20,22 @@ import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 
 const GROUP_ORDER: EnvChecklistGroup[] = [
-  "Kjerne",
-  "App",
-  "Fakturering",
-  "E-post",
-  "Cron",
+  "core",
+  "app",
+  "billing",
+  "email",
+  "cron",
 ];
+
+const ENV_GROUP_LABEL_KEYS = {
+  core: "integrations.envGroups.core",
+  app: "integrations.envGroups.app",
+  billing: "integrations.envGroups.billing",
+  email: "integrations.envGroups.email",
+  cron: "integrations.envGroups.cron",
+} as const satisfies Record<EnvChecklistGroup, string>;
 
 type StatusFilter = "all" | "missing" | "required";
-
-const STATUS_FILTERS: { id: StatusFilter; label: string }[] = [
-  { id: "all", label: "Alle" },
-  { id: "missing", label: "Mangler" },
-  { id: "required", label: "Påkrevde" },
-];
 
 function matchesSearch(item: EnvChecklistItem, query: string): boolean {
   if (!query) return true;
@@ -51,11 +54,14 @@ function matchesStatusFilter(
 
 function GroupSection({
   group,
+  label,
   items,
 }: {
   group: EnvChecklistGroup;
+  label: string;
   items: EnvChecklistItem[];
 }) {
+  const { t } = useTranslation();
   const setCount = items.filter((item) => item.isSet).length;
   const missingRequired = items.filter(
     (item) => item.required && !item.isSet,
@@ -64,14 +70,19 @@ function GroupSection({
   return (
     <section>
       <div className="flex items-center justify-between gap-3 border-b border-rn-border-strong/60 bg-muted/25 px-4 py-2.5">
-        <h3 className="font-heading text-app-sm font-semibold">{group}</h3>
+        <h3 className="font-heading text-app-sm font-semibold">{label}</h3>
         <div className="flex items-center gap-2 text-app-xs text-muted-foreground">
           <span>
-            {setCount}/{items.length} satt
+            {t("integrations.envChecklist.groupSetCount", {
+              set: setCount,
+              total: items.length,
+            })}
           </span>
           {missingRequired > 0 ? (
             <span className="font-semibold text-amber-800 dark:text-amber-300">
-              · {missingRequired} mangler
+              {t("integrations.envChecklist.groupMissingCount", {
+                count: missingRequired,
+              })}
             </span>
           ) : null}
         </div>
@@ -90,8 +101,17 @@ export function EnvironmentPanel({
 }: {
   settings: AdminSettingsOverview;
 }) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const statusFilters = useMemo(
+    () => [
+      { id: "all" as const, label: t("admin.alle") },
+      { id: "missing" as const, label: t("admin.mangler") },
+      { id: "required" as const, label: t("admin.pakrevde") },
+    ],
+    [t],
+  );
 
   const normalizedSearch = search.trim().toLowerCase();
 
@@ -111,6 +131,7 @@ export function EnvironmentPanel({
   const filteredGroups = useMemo(() => {
     return GROUP_ORDER.map((group) => ({
       group,
+      label: t(ENV_GROUP_LABEL_KEYS[group]),
       items: settings.envChecklist.filter(
         (item) =>
           item.group === group &&
@@ -118,7 +139,7 @@ export function EnvironmentPanel({
           matchesStatusFilter(item, statusFilter),
       ),
     })).filter((section) => section.items.length > 0);
-  }, [normalizedSearch, settings.envChecklist, statusFilter]);
+  }, [normalizedSearch, settings.envChecklist, statusFilter, t]);
 
   const visibleCount = filteredGroups.reduce(
     (sum, section) => sum + section.items.length,
@@ -131,8 +152,10 @@ export function EnvironmentPanel({
         <div className="rounded-[length:var(--app-radius)] border border-amber-500/35 bg-amber-500/[0.06] px-4 py-3">
           <p className="text-app-sm font-semibold text-foreground">
             {stats.missingRequired.length === 1
-              ? "1 påkrevd variabel mangler"
-              : `${stats.missingRequired.length} påkrevde variabler mangler`}
+              ? t("admin.overview_missing_env_one")
+              : t("admin.overview_missing_env_many", {
+                  count: stats.missingRequired.length,
+                })}
           </p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {stats.missingRequired.map((item) => (
@@ -146,15 +169,15 @@ export function EnvironmentPanel({
         </div>
       ) : null}
 
-      <AdminSegmentFilterBar aria-label="Filtrer miljøvariabler">
+      <AdminSegmentFilterBar aria-label={t("admin.filtrer_miljovariabler")}>
         <AdminSegmentFilterSearch
           value={search}
           onChange={setSearch}
-          placeholder="Søk variabel eller beskrivelse…"
-          aria-label="Søk miljøvariabler"
+          placeholder={t("admin.sok_variabel_eller_beskrivelse")}
+          aria-label={t("admin.sok_miljovariabler")}
         />
-        <AdminSegmentFilterControls aria-label="Statusfilter">
-          {STATUS_FILTERS.map((filter) => (
+        <AdminSegmentFilterControls aria-label={t("admin.statusfilter")}>
+          {statusFilters.map((filter) => (
             <button
               key={filter.id}
               type="button"
@@ -173,13 +196,13 @@ export function EnvironmentPanel({
       <AdminDataPanel className="overflow-hidden p-0 sm:p-0 md:p-0">
         {filteredGroups.length > 0 ? (
           <div>
-            {filteredGroups.map(({ group, items }) => (
-              <GroupSection key={group} group={group} items={items} />
+            {filteredGroups.map(({ group, label, items }) => (
+              <GroupSection key={group} group={group} label={label} items={items} />
             ))}
           </div>
         ) : (
           <div className="px-4 py-12 text-center md:px-6">
-            <p className="app-text-muted">Ingen variabler matcher filteret.</p>
+            <p className="app-text-muted">{t("adminLabels.empty.noVariablesMatch")}</p>
             <button
               type="button"
               className="mt-3 text-app-sm font-semibold text-success hover:underline"
@@ -188,7 +211,7 @@ export function EnvironmentPanel({
                 setStatusFilter("all");
               }}
             >
-              Nullstill filter
+              {t("integrations.envChecklist.resetFilter")}
             </button>
           </div>
         )}
@@ -199,12 +222,15 @@ export function EnvironmentPanel({
           "flex flex-wrap items-center gap-x-3 gap-y-1 text-app-xs text-muted-foreground",
         )}
       >
-        <span>Kun status vises — aldri hemmelige verdier.</span>
+        <span>{t("integrations.envChecklist.securityHint")}</span>
         <span className="hidden sm:inline" aria-hidden>
           ·
         </span>
         <span>
-          {visibleCount} av {stats.total} variabler vises
+          {t("integrations.envChecklist.visibleCount", {
+            visible: visibleCount,
+            total: stats.total,
+          })}
         </span>
       </p>
     </div>

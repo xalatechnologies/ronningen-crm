@@ -1,4 +1,8 @@
+"use client";
+
 import type { BookingStatus } from "@/components/bookings/types";
+import { useTranslation } from "@/i18n/client";
+import { statusLabel } from "@/lib/navigation/nav-labels";
 import { cn } from "@/lib/utils";
 
 const pill =
@@ -11,6 +15,9 @@ export function BookingStatusBadge({
   status: BookingStatus;
   className?: string;
 }) {
+  const { t } = useTranslation();
+  const label = statusLabel(status, t);
+
   if (status === "confirmed") {
     return (
       <span
@@ -21,7 +28,7 @@ export function BookingStatusBadge({
         )}
       >
         <span className="mr-2 size-1.5 rounded-full bg-emerald-600" />
-        Bekreftet
+        {label}
       </span>
     );
   }
@@ -35,7 +42,7 @@ export function BookingStatusBadge({
         )}
       >
         <span className="mr-2 size-1.5 rounded-full bg-amber-500" />
-        Avventer
+        {label}
       </span>
     );
   }
@@ -48,7 +55,7 @@ export function BookingStatusBadge({
       )}
     >
       <span className="mr-2 size-1.5 rounded-full bg-red-600" />
-      Avbestilt
+      {label}
     </span>
   );
 }

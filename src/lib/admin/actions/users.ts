@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { logAdminAction } from "@/lib/admin/audit-log";
 import { requirePlatformAdmin } from "@/lib/admin/require-platform-admin";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import { getServerTranslation } from "@/i18n/server";
 import { adminRoutes } from "@/config/admin-routes";
 import { USER_ROLES, type UserRole } from "@/constants/roles";
 import { isUserRole } from "@/lib/validations";
@@ -64,6 +65,7 @@ export async function removeOrganizationMember(input: {
   organizationId: string;
   userId: string;
 }) {
+  const { t } = await getServerTranslation();
   const adminUser = await requirePlatformAdmin();
   const admin = createSupabaseAdminClient();
 
@@ -88,7 +90,7 @@ export async function removeOrganizationMember(input: {
     if ((count ?? 0) <= 1) {
       return {
         ok: false as const,
-        error: "Kan ikke fjerne siste eier. Overfør eierskap først.",
+        error: t("serverErrors.admin.cannotRemoveLastOwner"),
       };
     }
   }
@@ -118,6 +120,7 @@ export async function updateOrganizationMemberRole(input: {
   userId: string;
   role: UserRole;
 }) {
+  const { t } = await getServerTranslation();
   const adminUser = await requirePlatformAdmin();
 
   if (!isUserRole(input.role) || !USER_ROLES.includes(input.role)) {
@@ -143,7 +146,7 @@ export async function updateOrganizationMemberRole(input: {
     if ((count ?? 0) <= 1) {
       return {
         ok: false as const,
-        error: "Kan ikke endre rolle for siste eier. Overfør eierskap først.",
+        error: t("serverErrors.admin.cannotChangeLastOwnerRole"),
       };
     }
   }
@@ -172,6 +175,7 @@ export async function transferOrganizationOwnership(input: {
   organizationId: string;
   newOwnerUserId: string;
 }) {
+  const { t } = await getServerTranslation();
   const adminUser = await requirePlatformAdmin();
   const admin = createSupabaseAdminClient();
 
@@ -185,7 +189,7 @@ export async function transferOrganizationOwnership(input: {
   if (!newOwnerMember) {
     return {
       ok: false as const,
-      error: "Ny eier må allerede være medlem av organisasjonen.",
+      error: t("serverErrors.admin.newOwnerMustBeMember"),
     };
   }
 

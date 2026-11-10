@@ -3,20 +3,21 @@
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import {
   addDays,
-  addMonths,
   format,
   isSameDay,
   isSameMonth,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { nb } from "date-fns/locale/nb";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
+import { CalendarPopoverMonthNav } from "@/components/ui/calendar-popover-month-nav";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCalendarWeekdays } from "@/hooks/use-calendar-weekdays";
+import { useTranslation } from "@/i18n/client";
 import { formatAppDateTime } from "@/lib/format-datetime";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +89,8 @@ export function DateTimePickerField({
   variant = "toolbar",
   "aria-invalid": ariaInvalid,
 }: DateTimePickerFieldProps) {
+  const { t, locale } = useTranslation();
+  const weekdays = useCalendarWeekdays();
   const [open, setOpen] = React.useState(false);
   const datePart = parseDatePart(value);
   const timePart = parseTimePart(value);
@@ -144,7 +147,9 @@ export function DateTimePickerField({
           aria-hidden
         />
         <span className="tabular-nums">
-          {parsed ? formatAppDateTime(parsed) : "Velg tidspunkt …"}
+          {parsed
+            ? formatAppDateTime(parsed, locale)
+            : t("calendar.picker.selectDateTime")}
         </span>
       </PopoverPrimitive.Trigger>
 
@@ -168,34 +173,13 @@ export function DateTimePickerField({
               "data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
             )}
           >
-            <div className="mb-2 flex h-11 items-center justify-between gap-2 px-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                className="size-11 min-h-[max(2.75rem,var(--app-tap-target-min))] min-w-[max(2.75rem,var(--app-tap-target-min))] shrink-0 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong"
-                aria-label="Forrige måned"
-                onClick={() => setViewMonth((m) => addMonths(m, -1))}
-              >
-                <ChevronLeft className="size-4" aria-hidden />
-              </Button>
-              <span className="min-w-0 truncate px-1 text-center text-app-control font-semibold capitalize">
-                {format(viewMonth, "LLLL yyyy", { locale: nb })}
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                className="size-11 min-h-[max(2.75rem,var(--app-tap-target-min))] min-w-[max(2.75rem,var(--app-tap-target-min))] shrink-0 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong"
-                aria-label="Neste måned"
-                onClick={() => setViewMonth((m) => addMonths(m, 1))}
-              >
-                <ChevronRight className="size-4" aria-hidden />
-              </Button>
-            </div>
+            <CalendarPopoverMonthNav
+              viewMonth={viewMonth}
+              onViewMonthChange={setViewMonth}
+            />
 
             <div className="grid grid-cols-7 gap-1 text-center">
-              {["ma", "ti", "on", "to", "fr", "lø", "sø"].map((d) => (
+              {weekdays.map((d) => (
                 <div
                   key={d}
                   className="flex size-11 items-center justify-center app-meta font-bold tracking-wide text-muted-foreground uppercase"
@@ -254,7 +238,7 @@ export function DateTimePickerField({
                 htmlFor={id ? `${id}-time` : undefined}
                 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
               >
-                Klokkeslett
+                {t("calendar.picker.timeLabel")}
               </Label>
               <div className="flex items-center gap-2">
                 <Input
@@ -276,12 +260,12 @@ export function DateTimePickerField({
                   className="h-11 shrink-0 rounded-md border-2 border-rn-border-strong px-4 text-app-control font-semibold md:h-12"
                   onClick={() => setOpen(false)}
                 >
-                  Ferdig
+                  {t("calendar.picker.done")}
                 </Button>
               </div>
               {!datePart ? (
                 <p className="text-xs text-muted-foreground">
-                  Velg dato i kalenderen først.
+                  {t("calendar.picker.selectDateFirst")}
                 </p>
               ) : null}
             </div>

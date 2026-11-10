@@ -1,6 +1,12 @@
 import type { BookingPaymentStatus } from "@/constants/booking-payment-status";
+import type { ContractStatus } from "@/lib/contracts/types";
 
 export type BookingStatus = "confirmed" | "pending" | "cancelled";
+
+export type BookingListContract = {
+  versionId: string;
+  status: ContractStatus;
+};
 
 export type BookingListRow = {
   id: string;
@@ -37,6 +43,8 @@ export type BookingListRow = {
   collectionNoticeSentAt: string | null;
   /** Manuell betalingsstatus (utledes fra DB eller beløp). */
   paymentStatus: BookingPaymentStatus;
+  propertyId: string | null;
+  contract: BookingListContract | null;
 };
 
 export type BookingsQuickStats = {

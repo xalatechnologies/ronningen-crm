@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminLinkButton } from "@/components/admin/admin-action-button";
 import { AdminStatusBadge } from "@/components/admin/admin-badges";
 import {
@@ -19,6 +20,7 @@ export function AdminSubscriptionStatusPanel({
   className?: string;
   embedded?: boolean;
 }) {
+  const { t } = useTranslation();
   const entries = Object.entries(statusCounts).sort(
     ([, a], [, b]) => b - a,
   );
@@ -36,11 +38,13 @@ export function AdminSubscriptionStatusPanel({
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 className="app-section-title">Abonnementsstatus</h2>
-        <AdminLinkButton href={adminSubscriptionsHref()}>Alle abonnement</AdminLinkButton>
+        <h2 className="app-section-title">{t("adminLabels.sections.subscriptionStatus")}</h2>
+        <AdminLinkButton href={adminSubscriptionsHref()}>
+          {t("adminLabels.sections.allSubscriptions")}
+        </AdminLinkButton>
       </div>
       {entries.length === 0 ? (
-        <p className="mt-4 app-text-muted">Ingen organisasjoner registrert.</p>
+        <p className="mt-4 app-text-muted">{t("adminLabels.empty.noOrgsRegistered")}</p>
       ) : (
         <ul className="mt-5 space-y-2">
           {entries.map(([status, count]) => {

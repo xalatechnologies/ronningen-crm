@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminLinkButton } from "@/components/admin/admin-action-button";
 import { AdminPlanBadge } from "@/components/admin/admin-badges";
 import { adminOrganizationsHref } from "@/lib/admin/dashboard-links";
@@ -23,6 +24,7 @@ export function AdminPlanDistributionPanel({
   className?: string;
   embedded?: boolean;
 }) {
+  const { t } = useTranslation();
   const entries = Object.entries(planCounts).sort(([, a], [, b]) => b - a);
 
   return (
@@ -38,13 +40,11 @@ export function AdminPlanDistributionPanel({
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 className="app-section-title">Planfordeling</h2>
-        <AdminLinkButton href={adminOrganizationsHref()}>
-          Alle organisasjoner
-        </AdminLinkButton>
+        <h2 className="app-section-title">{t("adminLabels.sections.planDistribution")}</h2>
+        <AdminLinkButton href={adminOrganizationsHref()}>{t("admin.alle_organisasjoner")}</AdminLinkButton>
       </div>
       {entries.length === 0 ? (
-        <p className="mt-4 app-text-muted">Ingen organisasjoner registrert.</p>
+        <p className="mt-4 app-text-muted">{t("adminLabels.empty.noOrgsRegistered")}</p>
       ) : (
         <ul className="mt-5 space-y-2">
           {entries.map(([plan, count]) => {

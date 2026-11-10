@@ -24,6 +24,7 @@ export type Database = {
           unit_id: string;
           customer_id: string;
           organization_id: string;
+          client_request_id: string | null;
           check_in_date: string;
           check_out_date: string;
           check_in_time: string | null;
@@ -40,6 +41,7 @@ export type Database = {
           unit_id: string;
           customer_id: string;
           organization_id: string;
+          client_request_id?: string | null;
           check_in_date: string;
           check_out_date: string;
           check_in_time?: string | null;
@@ -56,6 +58,7 @@ export type Database = {
           unit_id?: string;
           customer_id?: string;
           organization_id?: string;
+          client_request_id?: string | null;
           check_in_date?: string;
           check_out_date?: string;
           check_in_time?: string | null;
@@ -131,6 +134,56 @@ export type Database = {
           },
         ];
       };
+      audit_log: {
+        Row: {
+          id: number;
+          organization_id: string;
+          table_name: string;
+          row_id: string;
+          op: string;
+          actor_user_id: string | null;
+          actor_role: string;
+          changed_fields: string[] | null;
+          old_data: Json | null;
+          new_data: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          organization_id: string;
+          table_name: string;
+          row_id: string;
+          op: string;
+          actor_user_id?: string | null;
+          actor_role?: string | null;
+          changed_fields?: string[] | null;
+          old_data?: Json | null;
+          new_data?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          organization_id?: string;
+          table_name?: string;
+          row_id?: string;
+          op?: string;
+          actor_user_id?: string | null;
+          actor_role?: string | null;
+          changed_fields?: string[] | null;
+          old_data?: Json | null;
+          new_data?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       assets: {
         Row: {
           condition: string | null;
@@ -181,6 +234,7 @@ export type Database = {
       bookings: {
         Row: {
           booking_reference: string | null;
+          client_request_id: string | null;
           collection_notice_sent_at: string | null;
           created_at: string;
           customer_id: string;
@@ -202,9 +256,18 @@ export type Database = {
           status: string;
           total_price: number;
           updated_at: string;
+          kitchen_access: string;
+          rental_start_date: string | null;
+          rental_end_date: string | null;
+          rental_start_time: string | null;
+          rental_end_time: string | null;
+          timezone: string;
+          signer_name: string | null;
+          signer_title: string | null;
         };
         Insert: {
           booking_reference?: string | null;
+          client_request_id?: string | null;
           collection_notice_sent_at?: string | null;
           created_at?: string;
           customer_id: string;
@@ -226,9 +289,18 @@ export type Database = {
           status: string;
           total_price?: number;
           updated_at?: string;
+          kitchen_access?: string;
+          rental_start_date?: string | null;
+          rental_end_date?: string | null;
+          rental_start_time?: string | null;
+          rental_end_time?: string | null;
+          timezone?: string;
+          signer_name?: string | null;
+          signer_title?: string | null;
         };
         Update: {
           booking_reference?: string | null;
+          client_request_id?: string | null;
           collection_notice_sent_at?: string | null;
           created_at?: string;
           customer_id?: string;
@@ -250,6 +322,14 @@ export type Database = {
           status?: string;
           total_price?: number;
           updated_at?: string;
+          kitchen_access?: string;
+          rental_start_date?: string | null;
+          rental_end_date?: string | null;
+          rental_start_time?: string | null;
+          rental_end_time?: string | null;
+          timezone?: string;
+          signer_name?: string | null;
+          signer_title?: string | null;
         };
         Relationships: [
           {
@@ -274,6 +354,7 @@ export type Database = {
           customer_id: string;
           property_id: string | null;
           organization_id: string;
+          client_request_id: string | null;
           event_type: string;
           fest_type: string | null;
           preferred_event_date: string | null;
@@ -287,12 +368,14 @@ export type Database = {
           converted_at: string | null;
           created_at: string;
           updated_at: string;
+          commercial: Json | null;
         };
         Insert: {
           id?: string;
           customer_id: string;
           property_id?: string | null;
           organization_id: string;
+          client_request_id?: string | null;
           event_type?: string;
           fest_type?: string | null;
           preferred_event_date?: string | null;
@@ -306,12 +389,14 @@ export type Database = {
           converted_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          commercial?: Json | null;
         };
         Update: {
           id?: string;
           customer_id?: string;
           property_id?: string | null;
           organization_id?: string;
+          client_request_id?: string | null;
           event_type?: string;
           fest_type?: string | null;
           preferred_event_date?: string | null;
@@ -325,6 +410,7 @@ export type Database = {
           converted_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          commercial?: Json | null;
         };
         Relationships: [
           {
@@ -406,9 +492,14 @@ export type Database = {
           suspended_reason: string | null;
           admin_notes: string | null;
           billing_email: string | null;
+          billing_exempt: boolean;
           last_activity_at: string | null;
           trial_ends_at: string | null;
           tenant_setup_completed_at: string | null;
+          legal_terms_approved_at: string | null;
+          contracts_enabled: boolean;
+          default_contract_expiry_days: number;
+          default_timezone: string;
           created_at: string;
           updated_at: string;
         };
@@ -435,9 +526,14 @@ export type Database = {
           suspended_reason?: string | null;
           admin_notes?: string | null;
           billing_email?: string | null;
+          billing_exempt?: boolean;
           last_activity_at?: string | null;
           trial_ends_at?: string | null;
           tenant_setup_completed_at?: string | null;
+          legal_terms_approved_at?: string | null;
+          contracts_enabled?: boolean;
+          default_contract_expiry_days?: number;
+          default_timezone?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -464,13 +560,59 @@ export type Database = {
           suspended_reason?: string | null;
           admin_notes?: string | null;
           billing_email?: string | null;
+          billing_exempt?: boolean;
           last_activity_at?: string | null;
           trial_ends_at?: string | null;
           tenant_setup_completed_at?: string | null;
+          legal_terms_approved_at?: string | null;
+          contracts_enabled?: boolean;
+          default_contract_expiry_days?: number;
+          default_timezone?: string;
           created_at?: string;
           updated_at?: string;
         };
         Relationships: [];
+      };
+      organization_calendar_feeds: {
+        Row: {
+          id: string;
+          organization_id: string;
+          token: string;
+          created_at: string;
+          updated_at: string;
+          last_accessed_at: string | null;
+          created_by_user_id: string | null;
+          rotated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          token: string;
+          created_at?: string;
+          updated_at?: string;
+          last_accessed_at?: string | null;
+          created_by_user_id?: string | null;
+          rotated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          token?: string;
+          created_at?: string;
+          updated_at?: string;
+          last_accessed_at?: string | null;
+          created_by_user_id?: string | null;
+          rotated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_calendar_feeds_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: true;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       platform_email_templates: {
         Row: {
@@ -811,6 +953,10 @@ export type Database = {
           notes: string | null;
           organization_id: string;
           phone: string | null;
+          company_name: string | null;
+          company_org_number: string | null;
+          signing_representative_name: string | null;
+          signing_representative_title: string | null;
           updated_at: string;
         };
         Insert: {
@@ -1213,6 +1359,606 @@ export type Database = {
         };
         Relationships: [];
       };
+      booking_line_items: {
+        Row: {
+          id: string;
+          organization_id: string;
+          booking_id: string;
+          kind: string;
+          catalog_id: string | null;
+          name: string;
+          quantity: number;
+          unit_amount_nok: number;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+          description: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          booking_id: string;
+          kind: string;
+          catalog_id?: string | null;
+          name: string;
+          quantity?: number;
+          unit_amount_nok?: number;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+          description?: string | null;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          booking_id?: string;
+          kind?: string;
+          catalog_id?: string | null;
+          name?: string;
+          quantity?: number;
+          unit_amount_nok?: number;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+          description?: string | null;
+        };
+        Relationships: [];
+      };
+      booking_payment_installments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          booking_id: string;
+          label: string;
+          amount_nok: number;
+          due_date: string | null;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          booking_id: string;
+          label: string;
+          amount_nok: number;
+          due_date?: string | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          booking_id?: string;
+          label?: string;
+          amount_nok?: number;
+          due_date?: string | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      contract_acceptances: {
+        Row: {
+          id: string;
+          organization_id: string;
+          contract_id: string;
+          version_id: string;
+          reservation_id: string;
+          customer_id: string;
+          customer_name: string;
+          customer_email: string | null;
+          company_name: string | null;
+          accepted_full_name: string;
+          signing_method: string;
+          declaration_version: string;
+          document_language: string;
+          terms_version_id: string | null;
+          contract_version_number: number;
+          content_hash: string;
+          mailbox_verified: boolean;
+          accepted_at: string;
+          ip: string | null;
+          user_agent: string | null;
+          idempotency_key: string | null;
+          metadata: Json;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          contract_id: string;
+          version_id: string;
+          reservation_id: string;
+          customer_id: string;
+          customer_name: string;
+          customer_email?: string | null;
+          company_name?: string | null;
+          accepted_full_name: string;
+          signing_method?: string;
+          declaration_version: string;
+          document_language: string;
+          terms_version_id?: string | null;
+          contract_version_number: number;
+          content_hash: string;
+          mailbox_verified?: boolean;
+          accepted_at?: string;
+          ip?: string | null;
+          user_agent?: string | null;
+          idempotency_key?: string | null;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          contract_id?: string;
+          version_id?: string;
+          reservation_id?: string;
+          customer_id?: string;
+          customer_name?: string;
+          customer_email?: string | null;
+          company_name?: string | null;
+          accepted_full_name?: string;
+          signing_method?: string;
+          declaration_version?: string;
+          document_language?: string;
+          terms_version_id?: string | null;
+          contract_version_number?: number;
+          content_hash?: string;
+          mailbox_verified?: boolean;
+          accepted_at?: string;
+          ip?: string | null;
+          user_agent?: string | null;
+          idempotency_key?: string | null;
+          metadata?: Json;
+        };
+        Relationships: [];
+      };
+      contract_access_tokens: {
+        Row: {
+          id: string;
+          organization_id: string;
+          version_id: string;
+          token_hash: string;
+          purpose: string;
+          expires_at: string;
+          revoked_at: string | null;
+          last_used_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          version_id: string;
+          token_hash: string;
+          purpose: string;
+          expires_at: string;
+          revoked_at?: string | null;
+          last_used_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          version_id?: string;
+          token_hash?: string;
+          purpose?: string;
+          expires_at?: string;
+          revoked_at?: string | null;
+          last_used_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      contract_artifacts: {
+        Row: {
+          id: string;
+          organization_id: string;
+          version_id: string;
+          storage_path: string;
+          pdf_hash: string;
+          byte_size: number;
+          generated_at: string;
+          generation_metadata: Json;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          version_id: string;
+          storage_path: string;
+          pdf_hash: string;
+          byte_size: number;
+          generated_at?: string;
+          generation_metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          version_id?: string;
+          storage_path?: string;
+          pdf_hash?: string;
+          byte_size?: number;
+          generated_at?: string;
+          generation_metadata?: Json;
+        };
+        Relationships: [];
+      };
+      contract_email_deliveries: {
+        Row: {
+          id: string;
+          organization_id: string;
+          job_id: string | null;
+          version_id: string;
+          to_email: string;
+          template_key: string;
+          provider: string;
+          provider_message_id: string | null;
+          idempotency_key: string;
+          status: string;
+          last_error: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          job_id?: string | null;
+          version_id: string;
+          to_email: string;
+          template_key: string;
+          provider?: string;
+          provider_message_id?: string | null;
+          idempotency_key: string;
+          status?: string;
+          last_error?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          job_id?: string | null;
+          version_id?: string;
+          to_email?: string;
+          template_key?: string;
+          provider?: string;
+          provider_message_id?: string | null;
+          idempotency_key?: string;
+          status?: string;
+          last_error?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      contract_events: {
+        Row: {
+          id: string;
+          organization_id: string;
+          contract_id: string;
+          version_id: string | null;
+          event_type: string;
+          actor_type: string;
+          actor_user_id: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          contract_id: string;
+          version_id?: string | null;
+          event_type: string;
+          actor_type: string;
+          actor_user_id?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          contract_id?: string;
+          version_id?: string | null;
+          event_type?: string;
+          actor_type?: string;
+          actor_user_id?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      contract_jobs: {
+        Row: {
+          id: string;
+          organization_id: string;
+          version_id: string;
+          job_type: string;
+          unique_key: string;
+          status: string;
+          attempts: number;
+          max_attempts: number;
+          run_after: string;
+          leased_until: string | null;
+          last_error: string | null;
+          payload: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          version_id: string;
+          job_type: string;
+          unique_key: string;
+          status?: string;
+          attempts?: number;
+          max_attempts?: number;
+          run_after?: string;
+          leased_until?: string | null;
+          last_error?: string | null;
+          payload?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          version_id?: string;
+          job_type?: string;
+          unique_key?: string;
+          status?: string;
+          attempts?: number;
+          max_attempts?: number;
+          run_after?: string;
+          leased_until?: string | null;
+          last_error?: string | null;
+          payload?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      contract_signing_sessions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          version_id: string;
+          session_token_hash: string;
+          email: string;
+          otp_hash: string | null;
+          otp_expires_at: string | null;
+          otp_verified_at: string | null;
+          expires_at: string;
+          consumed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          version_id: string;
+          session_token_hash: string;
+          email: string;
+          otp_hash?: string | null;
+          otp_expires_at?: string | null;
+          otp_verified_at?: string | null;
+          expires_at: string;
+          consumed_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          version_id?: string;
+          session_token_hash?: string;
+          email?: string;
+          otp_hash?: string | null;
+          otp_expires_at?: string | null;
+          otp_verified_at?: string | null;
+          expires_at?: string;
+          consumed_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      contract_template_versions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          template_id: string;
+          version_number: number;
+          legal_terms: string;
+          payment_terms: string;
+          acceptance_declaration: string;
+          content_hash: string;
+          published_at: string;
+          created_by: string | null;
+          closing_line: string | null;
+          signer_name: string | null;
+          signature_path: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          template_id: string;
+          version_number: number;
+          legal_terms: string;
+          payment_terms?: string;
+          acceptance_declaration: string;
+          content_hash: string;
+          published_at?: string;
+          created_by?: string | null;
+          closing_line?: string | null;
+          signer_name?: string | null;
+          signature_path?: string | null;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          template_id?: string;
+          version_number?: number;
+          legal_terms?: string;
+          payment_terms?: string;
+          acceptance_declaration?: string;
+          content_hash?: string;
+          published_at?: string;
+          created_by?: string | null;
+          closing_line?: string | null;
+          signer_name?: string | null;
+          signature_path?: string | null;
+        };
+        Relationships: [];
+      };
+      contract_templates: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          locale: string;
+          is_default: boolean;
+          optional_clauses: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          locale?: string;
+          is_default?: boolean;
+          optional_clauses?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          name?: string;
+          locale?: string;
+          is_default?: boolean;
+          optional_clauses?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      rental_contract_versions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          contract_id: string;
+          version_number: number;
+          status: string;
+          processing_status: string;
+          template_id: string | null;
+          template_version_id: string | null;
+          expected_base_accepted_version_id: string | null;
+          replaces_version_id: string | null;
+          source_snapshot: Json;
+          frozen_document: Json | null;
+          content_hash: string | null;
+          special_terms: string;
+          include_internal_notes: boolean;
+          customer_facing_notes: string | null;
+          language: string;
+          expires_at: string | null;
+          sent_at: string | null;
+          first_viewed_at: string | null;
+          accepted_at: string | null;
+          withdrawn_at: string | null;
+          superseded_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          document_overrides: Json;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          contract_id: string;
+          version_number: number;
+          status: string;
+          processing_status?: string;
+          template_id?: string | null;
+          template_version_id?: string | null;
+          expected_base_accepted_version_id?: string | null;
+          replaces_version_id?: string | null;
+          source_snapshot?: Json;
+          frozen_document?: Json | null;
+          content_hash?: string | null;
+          special_terms?: string;
+          include_internal_notes?: boolean;
+          customer_facing_notes?: string | null;
+          language?: string;
+          expires_at?: string | null;
+          sent_at?: string | null;
+          first_viewed_at?: string | null;
+          accepted_at?: string | null;
+          withdrawn_at?: string | null;
+          superseded_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          document_overrides?: Json;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          contract_id?: string;
+          version_number?: number;
+          status?: string;
+          processing_status?: string;
+          template_id?: string | null;
+          template_version_id?: string | null;
+          expected_base_accepted_version_id?: string | null;
+          replaces_version_id?: string | null;
+          source_snapshot?: Json;
+          frozen_document?: Json | null;
+          content_hash?: string | null;
+          special_terms?: string;
+          include_internal_notes?: boolean;
+          customer_facing_notes?: string | null;
+          language?: string;
+          expires_at?: string | null;
+          sent_at?: string | null;
+          first_viewed_at?: string | null;
+          accepted_at?: string | null;
+          withdrawn_at?: string | null;
+          superseded_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          document_overrides?: Json;
+        };
+        Relationships: [];
+      };
+      rental_contracts: {
+        Row: {
+          id: string;
+          organization_id: string;
+          booking_id: string;
+          customer_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          booking_id: string;
+          customer_id: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          booking_id?: string;
+          customer_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1226,12 +1972,102 @@ export type Database = {
         Args: { since_at: string };
         Returns: number;
       };
+      contract_accept: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
+      contract_append_event: {
+        Args: {
+          p_actor: string;
+          p_actor_type: string;
+          p_contract: string;
+          p_metadata: Json;
+          p_org: string;
+          p_type: string;
+          p_version: string;
+        };
+        Returns: undefined;
+      };
+      contract_confirm_otp: {
+        Args: { p_otp_hash: string; p_session_token_hash: string };
+        Returns: boolean;
+      };
+      contract_create_draft: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
+      contract_expire_outstanding: { Args: never; Returns: number };
+      contract_lookup_invite: {
+        Args: { p_token_hash: string };
+        Returns: Json;
+      };
+      contract_open_session: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
+      contract_record_view: {
+        Args: { p_session_token_hash: string };
+        Returns: Json;
+      };
+      contract_send_version: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
+      contract_store_otp: {
+        Args: {
+          p_expires_at: string;
+          p_otp_hash: string;
+          p_session_token_hash: string;
+        };
+        Returns: boolean;
+      };
+      contract_update_draft: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
+      contract_withdraw_offer: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
+      create_accommodation_reservation_atomic: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
+      create_booking_atomic: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
+      create_customer_atomic: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
+      create_inquiry_atomic: {
+        Args: { payload: Json };
+        Returns: Json;
+      };
       current_profile_role: { Args: never; Returns: string };
+      delete_booking_with_contracts: {
+        Args: { p_booking: string; p_org: string };
+        Returns: string[];
+      };
       find_user_id_by_email: {
         Args: { lookup_email: string };
         Returns: string | null;
       };
       is_current_user_platform_admin: { Args: never; Returns: boolean };
+      organization_has_no_members: {
+        Args: { p_org: string };
+        Returns: boolean;
+      };
+      replace_booking_commercial_children: {
+        Args: {
+          p_booking: string;
+          p_installments: Json;
+          p_line_items: Json;
+          p_org: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       [_ in never]: never;

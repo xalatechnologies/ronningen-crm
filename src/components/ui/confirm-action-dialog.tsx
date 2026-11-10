@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,14 +31,18 @@ export function ConfirmActionDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "Bekreft",
-  cancelLabel = "Avbryt",
+  confirmLabel,
+  cancelLabel,
   busy = false,
   busyLabel,
   confirmClassName,
   contentClassName,
   onConfirm,
 }: ConfirmActionDialogProps) {
+  const { t } = useTranslation();
+  const resolvedConfirm = confirmLabel ?? t("common.actions.confirm");
+  const resolvedCancel = cancelLabel ?? t("common.actions.cancel");
+
   return (
     <Dialog
       open={open}
@@ -67,7 +72,7 @@ export function ConfirmActionDialog({
             disabled={busy}
             onClick={() => onOpenChange(false)}
           >
-            {cancelLabel}
+            {resolvedCancel}
           </Button>
           <Button
             type="button"
@@ -80,7 +85,7 @@ export function ConfirmActionDialog({
             )}
             onClick={() => void onConfirm()}
           >
-            {busy ? (busyLabel ?? "Lagrer…") : confirmLabel}
+            {busy ? (busyLabel ?? t("common.saving")) : resolvedConfirm}
           </Button>
         </DialogFooter>
       </DialogContent>

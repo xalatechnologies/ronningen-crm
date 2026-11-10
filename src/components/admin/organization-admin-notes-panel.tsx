@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminActionButton } from "@/components/admin/admin-action-button";
 import { Label } from "@/components/ui/label";
 import { updateOrganizationAdminNotes } from "@/lib/admin/actions/organizations";
@@ -15,6 +16,7 @@ export function OrganizationAdminNotesPanel({
   organizationId: string;
   initialNotes: string | null;
 }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [notes, setNotes] = useState(initialNotes ?? "");
   const [busy, setBusy] = useState(false);
@@ -51,21 +53,21 @@ export function OrganizationAdminNotesPanel({
       )}
     >
       <div>
-        <h2 className="app-section-title">Interne notater</h2>
+        <h2 className="app-section-title">{t("adminLabels.sections.internalNotes")}</h2>
         <p className="mt-2 app-text text-muted-foreground">
-          Kun synlig for plattformadministratorer.
+          {t("admin.admin_notes_visible_hint")}
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="admin-notes">Notater</Label>
+        <Label htmlFor="admin-notes">{t("adminLabels.fields.notes")}</Label>
         <textarea
           id="admin-notes"
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           rows={5}
           className="w-full rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-4 py-3 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-          placeholder="Interne observasjoner, support-saker, avtaler…"
+          placeholder={t("admin.interne_observasjoner_support_saker_avtaler")}
         />
       </div>
 
@@ -73,11 +75,11 @@ export function OrganizationAdminNotesPanel({
         <p className="text-app-sm font-medium text-destructive">{error}</p>
       ) : null}
       {saved ? (
-        <p className="text-app-sm font-medium text-success">Lagret.</p>
+        <p className="text-app-sm font-medium text-success">{t("adminLabels.saved")}</p>
       ) : null}
 
       <AdminActionButton type="submit" variant="default" disabled={busy}>
-        {busy ? "Lagrer…" : "Lagre notater"}
+        {busy ? t("admin.lagrer") : t("admin.lagre_notater")}
       </AdminActionButton>
     </form>
   );

@@ -11,16 +11,18 @@ import {
 import { requirePlatformAdmin } from "@/lib/admin/require-platform-admin";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { adminRoutes } from "@/config/admin-routes";
+import { getServerTranslation } from "@/i18n/server";
 
 export async function startImpersonation(input: {
   organizationId: string;
   reason: string;
 }) {
+  const { t } = await getServerTranslation();
   const adminUser = await requirePlatformAdmin();
   const reason = input.reason.trim();
 
   if (reason.length < 5) {
-    return { ok: false as const, error: "Begrunnelse må være minst 5 tegn." };
+    return { ok: false as const, error: t("serverErrors.admin.reasonMinLengthShort") };
   }
 
   const admin = createSupabaseAdminClient();

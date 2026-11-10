@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { getDictionary } from "@/i18n/dictionaries";
+import { createTranslator } from "@/i18n/translate";
 import {
   evaluateAccountDeletionEligibility,
   normalizeConfirmEmail,
 } from "@/lib/auth/account-deletion-eligibility";
+
+const t = createTranslator(getDictionary("nb"));
 
 describe("normalizeConfirmEmail", () => {
   it("trims and lowercases email", () => {
@@ -25,7 +29,7 @@ describe("evaluateAccountDeletionEligibility", () => {
       ],
       isPlatformAdmin: false,
       platformAdminCount: 2,
-    });
+    }, t);
 
     expect(result.eligible).toBe(false);
     expect(result.blockers).toHaveLength(1);
@@ -45,7 +49,7 @@ describe("evaluateAccountDeletionEligibility", () => {
       ],
       isPlatformAdmin: false,
       platformAdminCount: 2,
-    });
+    }, t);
 
     expect(result.eligible).toBe(false);
     expect(result.blockers[0]?.code).toBe("sole_owner_only_member");
@@ -64,7 +68,7 @@ describe("evaluateAccountDeletionEligibility", () => {
       ],
       isPlatformAdmin: false,
       platformAdminCount: 2,
-    });
+    }, t);
 
     expect(result.eligible).toBe(true);
     expect(result.blockers).toHaveLength(0);
@@ -83,7 +87,7 @@ describe("evaluateAccountDeletionEligibility", () => {
       ],
       isPlatformAdmin: false,
       platformAdminCount: 2,
-    });
+    }, t);
 
     expect(result.eligible).toBe(true);
   });
@@ -93,7 +97,7 @@ describe("evaluateAccountDeletionEligibility", () => {
       memberships: [],
       isPlatformAdmin: true,
       platformAdminCount: 1,
-    });
+    }, t);
 
     expect(result.eligible).toBe(false);
     expect(result.blockers[0]?.code).toBe("sole_platform_admin");
@@ -104,7 +108,7 @@ describe("evaluateAccountDeletionEligibility", () => {
       memberships: [],
       isPlatformAdmin: true,
       platformAdminCount: 2,
-    });
+    }, t);
 
     expect(result.eligible).toBe(true);
   });

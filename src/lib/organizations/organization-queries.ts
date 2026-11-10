@@ -7,6 +7,7 @@ import {
   isBillingEnabled,
 } from "@/lib/billing/constants";
 import type { SubscriptionPlan, SubscriptionStatus, UserRole } from "@/constants/roles";
+import { getDefaultT } from "@/lib/i18n/default-messages";
 import { isUserRole } from "@/lib/validations";
 import type { Database } from "@/types/database.types";
 
@@ -41,6 +42,7 @@ function mapOrganization(
     subscription_plan: string;
     is_suspended?: boolean;
     suspended_reason?: string | null;
+    billing_exempt?: boolean;
   },
   subscription?: {
     current_period_end: string | null;
@@ -56,6 +58,7 @@ function mapOrganization(
     subscriptionPlan: row.subscription_plan as SubscriptionPlan,
     isSuspended: row.is_suspended ?? false,
     suspendedReason: row.suspended_reason ?? null,
+    billingExempt: row.billing_exempt ?? false,
     periodEnd: subscription?.current_period_end ?? null,
     providerSubscriptionId: subscription?.provider_subscription_id ?? null,
   };
@@ -116,7 +119,7 @@ export async function fetchUserOrganizations(
       supabase
         .from("organizations")
         .select(
-          "id, name, slug, logo_url, subscription_status, subscription_plan, is_suspended, suspended_reason",
+          "id, name, slug, logo_url, subscription_status, subscription_plan, is_suspended, suspended_reason, billing_exempt",
         )
         .in("id", orgIds),
       supabase
@@ -330,7 +333,5 @@ export async function createOrganizationForUser(
     );
   }
 
-  throw new Error(
-    "Navnet er allerede tatt. Prøv et annet organisasjonsnavn.",
-  );
+  throw new Error(getDefaultT()("serverErrors.billing.orgNameTaken"));
 }

@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getServerTranslation } from "@/i18n/server";
 
 export type OrganizationOwnerContext = {
   userId: string;
@@ -11,13 +12,14 @@ export async function requireOrganizationOwner(
   | { ok: true; owner: OrganizationOwnerContext }
   | { ok: false; error: string }
 > {
+  const { t } = await getServerTranslation();
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: "Du må være innlogget." };
+    return { ok: false, error: t("serverErrors.auth.mustBeLoggedIn") };
   }
 
   const { data: member, error } = await supabase
@@ -32,7 +34,7 @@ export async function requireOrganizationOwner(
   }
 
   if (!member || member.role !== "owner") {
-    return { ok: false, error: "Kun organisasjonseier kan administrere abonnement." };
+    return { ok: false, error: t("serverErrors.billing.ownerOnly") };
   }
 
   return {

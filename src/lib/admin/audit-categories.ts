@@ -1,3 +1,5 @@
+import type { Translator } from "@/i18n/types";
+
 export type AdminAuditCategory =
   | "all"
   | "organization"
@@ -6,17 +8,24 @@ export type AdminAuditCategory =
   | "support"
   | "platform";
 
-export const ADMIN_AUDIT_CATEGORY_OPTIONS: {
+const ADMIN_AUDIT_CATEGORY_VALUES: AdminAuditCategory[] = [
+  "all",
+  "organization",
+  "subscription",
+  "users",
+  "support",
+  "platform",
+];
+
+export function getAdminAuditCategoryOptions(t: Translator): {
   value: AdminAuditCategory;
   label: string;
-}[] = [
-  { value: "all", label: "Alle" },
-  { value: "organization", label: "Organisasjon" },
-  { value: "subscription", label: "Abonnement" },
-  { value: "users", label: "Brukere" },
-  { value: "support", label: "Support" },
-  { value: "platform", label: "Plattform" },
-];
+}[] {
+  return ADMIN_AUDIT_CATEGORY_VALUES.map((value) => ({
+    value,
+    label: t(`audit.categories.${value}`),
+  }));
+}
 
 export const PLATFORM_AUDIT_ACTION_PREFIXES = [
   "impersonation.",

@@ -1,10 +1,12 @@
 /** Whether the org must complete Stripe Checkout (blocks app access). */
 export function needsStripeCheckout(input: {
   billingEnabled: boolean;
+  billingExempt?: boolean;
   hasStripeSubscription: boolean;
   status: string;
   trialExpired: boolean;
 }): boolean {
+  if (input.billingExempt) return false;
   if (!input.billingEnabled || input.hasStripeSubscription) {
     return false;
   }
@@ -33,10 +35,12 @@ export function needsStripeCheckout(input: {
 /** Whether owner may connect Stripe voluntarily during local trial. */
 export function canOfferStripeCheckout(input: {
   billingEnabled: boolean;
+  billingExempt?: boolean;
   hasStripeSubscription: boolean;
   status: string;
   trialExpired: boolean;
 }): boolean {
+  if (input.billingExempt) return false;
   if (!input.billingEnabled || input.hasStripeSubscription) {
     return false;
   }

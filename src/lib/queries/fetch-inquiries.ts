@@ -1,4 +1,4 @@
-import { isActiveInquiry, type InquiryListRow } from "@/components/inquiries/types";
+import { isActiveInquiry, type InquiryCustomerOption, type InquiryListRow } from "@/components/inquiries/types";
 import type { TenantSupabaseClient } from "@/lib/queries/types";
 import { canManageBookings } from "@/lib/role-access";
 import type { UserRole } from "@/constants/roles";
@@ -20,14 +20,14 @@ type RawInquiry = {
   converted_booking_id: string | null;
   converted_at: string | null;
   updated_at: string;
-  customers: { name: string; phone: string | null; email: string | null } | null;
+  customers: { name: string; phone: string | null; email: string | null; address: string | null } | null;
   properties: { name: string } | null;
 };
 
 export type InquiriesPageData = {
   inquiries: InquiryListRow[];
   properties: { id: string; name: string }[];
-  customers: { id: string; name: string }[];
+  customers: InquiryCustomerOption[];
   canManageInquiries: boolean;
   loadError: string | null;
 };
@@ -62,14 +62,14 @@ export async function fetchInquiriesPageData(
 
   const { data: customers, error: cErr } = await supabase
     .from("customers")
-    .select("id, name")
+    .select("id, name, phone, email, address")
     .eq("organization_id", orgId)
     .order("name");
 
   const { data: rawList, error: iErr } = await supabase
     .from("booking_inquiries")
     .select(
-      "id, customer_id, property_id, event_type, fest_type, preferred_event_date, preferred_event_end_date, guest_count, estimated_total, status, next_follow_up_at, internal_notes, converted_booking_id, converted_at, updated_at, customers(name, phone, email), properties(name)",
+      "id, customer_id, property_id, event_type, fest_type, preferred_event_date, preferred_event_end_date, guest_count, estimated_total, status, next_follow_up_at, internal_notes, converted_booking_id, converted_at, updated_at, customers(name, phone, email, address), properties(name)",
     )
     .eq("organization_id", orgId)
     .is("converted_booking_id", null)
@@ -89,6 +89,7 @@ export async function fetchInquiriesPageData(
         customerName: r.customers?.name?.trim() || "Ukjent kunde",
         customerPhone: r.customers?.phone ?? null,
         customerEmail: r.customers?.email ?? null,
+        customerAddress: r.customers?.address ?? null,
         propertyId: r.property_id,
         propertyName: r.properties?.name ?? null,
         eventType: r.event_type?.trim() || "Privat",
@@ -111,7 +112,13 @@ export async function fetchInquiriesPageData(
   return {
     inquiries,
     properties: properties ?? [],
-    customers: customers ?? [],
+    customers: (customers ?? []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      phone: row.phone ?? null,
+      email: row.email ?? null,
+      address: row.address ?? null,
+    })),
     canManageInquiries,
     loadError,
   };

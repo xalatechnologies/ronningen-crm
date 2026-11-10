@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useTranslation } from "@/i18n/client";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -26,6 +27,7 @@ export function AccountSettingsForm({
   initialFullName: string;
   email: string;
 }) {
+  const { t } = useTranslation();
   const supabase = useSupabase();
   const router = useRouter();
   const { user } = useAuthUser();
@@ -48,11 +50,13 @@ export function AccountSettingsForm({
         .eq("id", user.id);
 
       if (error) {
-        toast.error("Kunne ikke lagre", { description: error.message });
+        toast.error(t("settings.accountForm.saveFailed"), {
+          description: error.message,
+        });
         return;
       }
 
-      toast.success("Profil oppdatert");
+      toast.success(t("settings.accountForm.profileUpdated"));
       router.refresh();
     } finally {
       setBusy(false);
@@ -67,10 +71,12 @@ export function AccountSettingsForm({
         redirectTo: `${window.location.origin}/auth/login`,
       });
       if (error) {
-        toast.error("Kunne ikke sende e-post", { description: error.message });
+        toast.error(t("settings.accountForm.sendResetFailed"), {
+          description: error.message,
+        });
         return;
       }
-      toast.success("Sjekk e-posten din for lenke til å endre passord");
+      toast.success(t("settings.accountForm.passwordResetSent"));
     } finally {
       setResetBusy(false);
     }
@@ -89,10 +95,10 @@ export function AccountSettingsForm({
           </div>
           <div>
             <h2 className="font-heading text-lg font-semibold text-foreground md:text-xl">
-              Profil
+              {t("settings.accountForm.profile")}
             </h2>
             <p className="mt-1 text-app-sm text-muted-foreground">
-              Navnet vises i appen og på dokumenter du sender.
+              {t("settings.accountForm.profileDescription")}
             </p>
           </div>
         </div>
@@ -100,7 +106,7 @@ export function AccountSettingsForm({
         <div className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="acct-name" className={labelClass}>
-              Fullt navn
+              {t("settings.accountForm.fullName")}
             </Label>
             <Input
               id="acct-name"
@@ -112,7 +118,7 @@ export function AccountSettingsForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="acct-email" className={labelClass}>
-              E-post
+              {t("settings.accountForm.email")}
             </Label>
             <Input
               id="acct-email"
@@ -122,14 +128,14 @@ export function AccountSettingsForm({
               className={cn(fieldClass, "bg-muted/40 text-muted-foreground")}
             />
             <p className="text-app-sm leading-relaxed text-muted-foreground">
-              E-post endres via innloggingstjenesten.{" "}
+              {t("settings.accountForm.emailChangeHint")}{" "}
               <Link
                 href="/app/settings/support"
                 className="font-semibold text-success hover:underline"
               >
-                Gå til support
+                {t("settings.accountForm.goToSupport")}
               </Link>{" "}
-              ved behov.
+              {t("settings.accountForm.emailChangeSuffix")}
             </p>
           </div>
         </div>
@@ -142,7 +148,7 @@ export function AccountSettingsForm({
             disabled={busy}
             className="w-full sm:w-auto"
           >
-            {busy ? "Lagrer…" : "Lagre navn"}
+            {busy ? t("settings.accountForm.saving") : t("settings.accountForm.saveName")}
           </Button>
         </div>
       </form>
@@ -154,18 +160,18 @@ export function AccountSettingsForm({
           </div>
           <div>
             <h2 className="font-heading text-lg font-semibold text-foreground md:text-xl">
-              Passord
+              {t("settings.accountForm.password")}
             </h2>
             <p className="mt-1 text-app-sm text-muted-foreground">
-              Endre passordet ditt via en sikker lenke på e-post.
+              {t("settings.accountForm.passwordDescription")}
             </p>
           </div>
         </div>
 
         <p className="text-app-sm leading-relaxed text-muted-foreground">
-          Vi sender en engangslenke til{" "}
+          {t("settings.accountForm.passwordEmailHint")}{" "}
           <span className="font-medium text-foreground">{displayEmail}</span>.
-          Lenken åpner en side der du kan sette et nytt passord.
+          {t("settings.accountForm.passwordLinkHint")}
         </p>
 
         <div className="mt-auto border-t border-rn-border-strong/50 pt-5">
@@ -177,7 +183,9 @@ export function AccountSettingsForm({
             disabled={resetBusy || !displayEmail}
             onClick={() => void onPasswordReset()}
           >
-            {resetBusy ? "Sender…" : "Send lenke for nytt passord"}
+            {resetBusy
+              ? t("settings.accountForm.sending")
+              : t("settings.accountForm.sendResetLink")}
           </Button>
         </div>
       </section>

@@ -4,8 +4,14 @@ import {
   CUSTOMERS_PAGE_TABS,
   type CustomersPageTabId,
 } from "@/components/customers/tabs";
+import { useTranslation } from "@/i18n/client";
 import { RN_SEGMENT_CONTROL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
+
+const TAB_LABEL_KEYS: Record<CustomersPageTabId, "customers.title" | "customers.partners"> = {
+  customers: "customers.title",
+  partners: "customers.partners",
+};
 
 export function CustomersPageTabBar({
   activeTab,
@@ -18,6 +24,7 @@ export function CustomersPageTabBar({
   customerCount?: number;
   partnerCount?: number;
 }) {
+  const { t } = useTranslation();
   const counts: Record<CustomersPageTabId, number | undefined> = {
     customers: customerCount,
     partners: partnerCount,
@@ -27,13 +34,13 @@ export function CustomersPageTabBar({
     <div
       className={cn(RN_SEGMENT_CONTROL, "inline-flex shrink-0 gap-1.5 p-1.5")}
       role="tablist"
-      aria-label="Kunder og partnere"
+      aria-label={t("customers.tabsAria")}
     >
       {CUSTOMERS_PAGE_TABS.map((tab) => {
         const active = activeTab === tab.id;
         const count = counts[tab.id];
-        const label =
-          count != null ? `${tab.label} (${count})` : tab.label;
+        const baseLabel = t(TAB_LABEL_KEYS[tab.id]);
+        const label = count != null ? `${baseLabel} (${count})` : baseLabel;
 
         return (
           <button

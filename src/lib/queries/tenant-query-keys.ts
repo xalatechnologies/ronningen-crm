@@ -15,7 +15,7 @@ export const tenantQueryKeys = {
     ["tenant", "assets", orgId, role] as const,
   overnatting: (orgId: string, ym: string, role: string | null) =>
     ["tenant", "overnatting", orgId, ym, role] as const,
-  reports: (orgId: string, year: number, month: number | null) =>
+  reports: (orgId: string, year: number | "all", month: number | null) =>
     ["tenant", "reports", orgId, year, month] as const,
 };
 

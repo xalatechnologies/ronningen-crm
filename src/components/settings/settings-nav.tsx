@@ -1,8 +1,10 @@
 "use client";
 
+import { useOrganizationPermissions } from "@/hooks/use-organization-permissions";
+import { useTranslation } from "@/i18n/client";
+import { settingsSectionTitle } from "@/lib/navigation/nav-labels";
 import type { SettingsSection } from "@/lib/settings/settings-links";
 import { visibleSettingsSections } from "@/lib/settings/settings-links";
-import { useOrganizationPermissions } from "@/hooks/use-organization-permissions";
 import { RN_NAV_LINK_ACTIVE, RN_NAV_LINK_ACTIVE_ICON } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -16,6 +18,7 @@ function SettingsNavLink({
   section: SettingsSection;
   isActive: boolean;
 }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const Icon = section.icon;
@@ -62,19 +65,20 @@ function SettingsNavLink({
         )}
         aria-hidden
       />
-      {section.title}
+      {settingsSectionTitle(section.id, t)}
     </Link>
   );
 }
 
 export function SettingsNav() {
   const pathname = usePathname();
+  const { t } = useTranslation();
   const { role } = useOrganizationPermissions();
   const sections = visibleSettingsSections(role);
 
   return (
     <nav
-      aria-label="Innstillinger"
+      aria-label={t("navigation.settings")}
       className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:pb-0"
     >
       {sections.map((section) => {

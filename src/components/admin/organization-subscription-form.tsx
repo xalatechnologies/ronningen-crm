@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminPlanBadge, AdminStatusBadge } from "@/components/admin/admin-badges";
 import { AdminActionButton } from "@/components/admin/admin-action-button";
 import { FormSelect } from "@/components/ui/form-select";
@@ -12,13 +13,13 @@ import {
 } from "@/constants/roles";
 import { updateOrganizationSubscription } from "@/lib/admin/actions/organization-subscription";
 import {
-  SUBSCRIPTION_PLAN_LABELS,
-  SUBSCRIPTION_STATUS_LABELS,
+  subscriptionPlanLabel,
+  subscriptionStatusLabel,
 } from "@/lib/admin/subscription-labels";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 type OrganizationSubscriptionFormProps = {
   organizationId: string;
@@ -31,12 +32,29 @@ export function OrganizationSubscriptionForm({
   subscriptionStatus,
   subscriptionPlan,
 }: OrganizationSubscriptionFormProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [status, setStatus] = useState(subscriptionStatus);
   const [plan, setPlan] = useState(subscriptionPlan);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const statusOptions = useMemo(
+    () =>
+      ADMIN_SETTABLE_SUBSCRIPTION_STATUSES.map((value) => ({
+        value,
+        label: subscriptionStatusLabel(value, t),
+      })),
+    [t],
+  );
+  const planOptions = useMemo(
+    () =>
+      SUBSCRIPTION_PLANS.map((value) => ({
+        value,
+        label: subscriptionPlanLabel(value, t),
+      })),
+    [t],
+  );
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -70,9 +88,9 @@ export function OrganizationSubscriptionForm({
       )}
     >
       <div>
-        <h2 className="app-section-title">Abonnement</h2>
+        <h2 className="app-section-title">{t("admin.abonnement")}</h2>
         <p className="mt-2 app-text text-muted-foreground">
-          Overstyr status og plan for denne organisasjonen.
+          {t("admin.org_subscription_override_hint")}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <AdminStatusBadge status={subscriptionStatus} />
@@ -82,27 +100,21 @@ export function OrganizationSubscriptionForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="subscription-status">Status</Label>
+          <Label htmlFor="subscription-status">{t("admin.status")}</Label>
           <FormSelect
             id="subscription-status"
             value={status}
             onValueChange={setStatus}
-            options={ADMIN_SETTABLE_SUBSCRIPTION_STATUSES.map((value) => ({
-              value,
-              label: SUBSCRIPTION_STATUS_LABELS[value] ?? value,
-            }))}
+            options={statusOptions}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="subscription-plan">Plan</Label>
+          <Label htmlFor="subscription-plan">{t("admin.plan")}</Label>
           <FormSelect
             id="subscription-plan"
             value={plan}
             onValueChange={setPlan}
-            options={SUBSCRIPTION_PLANS.map((value) => ({
-              value,
-              label: SUBSCRIPTION_PLAN_LABELS[value] ?? value,
-            }))}
+            options={planOptions}
           />
         </div>
       </div>
@@ -111,12 +123,12 @@ export function OrganizationSubscriptionForm({
         <p className="text-app-sm font-medium text-destructive">{error}</p>
       ) : null}
       {saved ? (
-        <p className="text-app-sm font-medium text-success">Lagret.</p>
+        <p className="text-app-sm font-medium text-success">{t("adminLabels.saved")}</p>
       ) : null}
 
       <div>
         <AdminActionButton type="submit" variant="default" disabled={saving}>
-          {saving ? "Lagrer…" : "Lagre abonnement"}
+          {saving ? t("admin.lagrer") : t("admin.lagre_abonnement")}
         </AdminActionButton>
       </div>
     </form>

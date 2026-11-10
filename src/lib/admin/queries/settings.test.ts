@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { getDictionary } from "@/i18n/dictionaries";
+import { createTranslator } from "@/i18n/translate";
 import {
   buildAllIntegrationStatuses,
   buildEnvChecklist,
@@ -8,6 +10,8 @@ import {
   countMissingRequiredEnv,
 } from "@/lib/admin/platform-integration-status";
 import { fetchAdminSettingsOverview } from "@/lib/admin/queries/settings";
+
+const t = createTranslator(getDictionary("nb"));
 
 describe("buildStripeConfigStatus", () => {
   afterEach(() => {
@@ -18,7 +22,7 @@ describe("buildStripeConfigStatus", () => {
     vi.stubEnv("NEXT_PUBLIC_BILLING_ENABLED", "false");
     vi.stubEnv("BILLING_ENABLED", "false");
 
-    const result = buildStripeConfigStatus();
+    const result = buildStripeConfigStatus(t);
     expect(result.status).toBe("info");
   });
 
@@ -26,7 +30,7 @@ describe("buildStripeConfigStatus", () => {
     vi.stubEnv("NEXT_PUBLIC_BILLING_ENABLED", "true");
     vi.stubEnv("STRIPE_SECRET_KEY", "");
 
-    const result = buildStripeConfigStatus();
+    const result = buildStripeConfigStatus(t);
     expect(result.status).toBe("critical");
   });
 });
@@ -37,7 +41,7 @@ describe("computeIntegrationSummary", () => {
   });
 
   it("counts healthy and info as configured", () => {
-    const integrations = buildAllIntegrationStatuses();
+    const integrations = buildAllIntegrationStatuses(t);
     const summary = computeIntegrationSummary(integrations);
 
     expect(summary.totalCount).toBe(5);
@@ -61,7 +65,7 @@ describe("computeIntegrationSummary", () => {
     vi.stubEnv("RESEND_API_KEY", "");
     vi.stubEnv("RESEND_FROM_EMAIL", "");
 
-    const integrations = buildAllIntegrationStatuses();
+    const integrations = buildAllIntegrationStatuses(t);
     const summary = computeIntegrationSummary(integrations);
     const email = integrations.find((item) => item.id === "email");
 
@@ -71,7 +75,7 @@ describe("computeIntegrationSummary", () => {
       totalCount: 5,
     });
     expect(email?.status).toBe("warning");
-    expect(countMissingRequiredEnv(buildEnvChecklist())).toBe(0);
+    expect(countMissingRequiredEnv(buildEnvChecklist(t))).toBe(0);
   });
 });
 
@@ -84,7 +88,7 @@ describe("buildEnvChecklist", () => {
     vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_super_secret");
     vi.stubEnv("CRON_SECRET", "cron_super_secret");
 
-    const items = buildEnvChecklist();
+    const items = buildEnvChecklist(t);
     const serialized = JSON.stringify(items);
 
     expect(serialized).not.toContain("sk_test_super_secret");
@@ -103,7 +107,7 @@ describe("buildEnvChecklist", () => {
     vi.stubEnv("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", "");
     vi.stubEnv("CRON_SECRET", "");
 
-    const items = buildEnvChecklist();
+    const items = buildEnvChecklist(t);
     expect(countMissingRequiredEnv(items)).toBeGreaterThan(0);
   });
 });

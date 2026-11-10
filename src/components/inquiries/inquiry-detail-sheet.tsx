@@ -1,8 +1,8 @@
 "use client";
 
 import { InquiryFormBody } from "@/components/inquiries/inquiry-form-body";
-import type { InquiryActivityRow, InquiryListRow } from "@/components/inquiries/types";
-import { INQUIRY_STATUS_LABELS } from "@/components/inquiries/types";
+import type { InquiryActivityRow, InquiryCustomerOption, InquiryListRow } from "@/components/inquiries/types";
+import { inquiryStatusLabel } from "@/components/inquiries/types";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { Label } from "@/components/ui/label";
@@ -17,21 +17,29 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   bookingInquiryFormSchema,
   inquiryActivityNoteSchema,
+  sortBookingPackagesByCatalogOrder,
   type BookingInquiryFormInput,
   type BookingInquiryFormStatus,
   type BookingInquiryStatus,
 } from "@/lib/validations";
 import { formatAppDateTime } from "@/lib/format-datetime";
+import { useTranslation } from "@/i18n/client";
 import { RN_MODAL_FOOTER } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
 import Link from "next/link";
+import {
+  emptyPackageAddonFormValues,
+  parseInquiryCommercial,
+  type BookingAddonOption,
+  type BookingPackageOption,
+} from "@/lib/bookings/commercial-lines";
+import { loadInquiryCommercialEditor } from "@/lib/contracts/actions";
+import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { Pencil, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -73,10 +81,10 @@ function inquiryToFormDefaults(inquiry: InquiryListRow): BookingInquiryFormInput
       : "Privat";
   return {
     customerId: inquiry.customerId,
-    newCustomerName: "",
-    newCustomerPhone: "",
-    newCustomerEmail: "",
-    newCustomerAddress: "",
+    newCustomerName: inquiry.customerName,
+    newCustomerPhone: inquiry.customerPhone ?? "",
+    newCustomerEmail: inquiry.customerEmail ?? "",
+    newCustomerAddress: inquiry.customerAddress ?? "",
     propertyId: inquiry.propertyId ?? "",
     eventType: et,
     festType: inquiry.festType ?? "",
@@ -84,6 +92,7 @@ function inquiryToFormDefaults(inquiry: InquiryListRow): BookingInquiryFormInput
     preferredEventEndDate: inquiry.preferredEventEndDateIso ?? "",
     guestCount: inquiry.guestCount,
     estimatedTotal: inquiry.estimatedTotal ?? undefined,
+    ...emptyPackageAddonFormValues,
     status: statusForForm(inquiry.status),
     nextFollowUpAt: toDatetimeLocalValue(inquiry.nextFollowUpAtIso),
     internalNotes: inquiry.internalNotes ?? "",
@@ -108,6 +117,15 @@ function mapRawActivities(data: RawActivity[]): InquiryActivityRow[] {
   }));
 }
 
+function eventTypeDisplayLabel(
+  eventType: string,
+  t: ReturnType<typeof useTranslation>["t"],
+): string {
+  if (eventType === "Bedrift") return t("bookings.corporate");
+  if (eventType === "Privat") return t("bookings.private");
+  return eventType;
+}
+
 export function InquiryDetailSheet({
   inquiry,
   open,
@@ -120,11 +138,13 @@ export function InquiryDetailSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   properties: { id: string; name: string }[];
-  customers: { id: string; name: string }[];
+  customers: InquiryCustomerOption[];
   canManage: boolean;
 }) {
+  const { t, locale, formatDate } = useTranslation();
   const supabase = useSupabase();
-  const { invalidateInquiries, invalidateBookings } = useTenantDataInvalidation();
+  const { currentOrganizationId } = useCurrentOrganization();
+  const { invalidateInquiries } = useTenantDataInvalidation();
   const [activities, setActivities] = useState<InquiryActivityRow[]>([]);
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -134,6 +154,18 @@ export function InquiryDetailSheet({
   const [editingNoteBusy, setEditingNoteBusy] = useState(false);
   const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null);
   const [deleteNoteBusy, setDeleteNoteBusy] = useState(false);
+  const [packages, setPackages] = useState<BookingPackageOption[]>([]);
+  const [addons, setAddons] = useState<BookingAddonOption[]>([]);
+  const [catalogReady, setCatalogReady] = useState(false);
+
+  const dateOptions = useMemo(
+    (): Intl.DateTimeFormatOptions => ({
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }),
+    [],
+  );
 
   const isConverted =
     inquiry?.status === "converted" || !!inquiry?.convertedBookingId;
@@ -159,6 +191,7 @@ export function InquiryDetailSheet({
           preferredEventEndDate: "",
           guestCount: 0,
           estimatedTotal: undefined,
+          ...emptyPackageAddonFormValues,
           status: "new",
           nextFollowUpAt: "",
           internalNotes: "",
@@ -181,11 +214,36 @@ export function InquiryDetailSheet({
   });
 
   useEffect(() => {
-    if (!inquiry || !open) {
+    if (!inquiry || !open || !currentOrganizationId) {
+      setCatalogReady(false);
       return;
     }
     form.reset(inquiryToFormDefaults(inquiry));
-  }, [inquiry, open, form]);
+    setCatalogReady(false);
+    let cancelled = false;
+    void (async () => {
+      const result = await loadInquiryCommercialEditor({
+        organizationId: currentOrganizationId,
+        inquiryId: inquiry.id,
+      });
+      if (cancelled) return;
+      if (!result.ok) {
+        setCatalogReady(true);
+        return;
+      }
+      const nextPackages = sortBookingPackagesByCatalogOrder(result.packages);
+      setPackages(nextPackages);
+      setAddons(result.addons);
+      form.reset({
+        ...inquiryToFormDefaults(inquiry),
+        ...parseInquiryCommercial(result.commercial),
+      });
+      setCatalogReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [inquiry, open, form, currentOrganizationId]);
 
   useEffect(() => {
     if (!inquiry || !open || !supabase) {
@@ -202,7 +260,7 @@ export function InquiryDetailSheet({
         .order("created_at", { ascending: false });
       if (!cancelled) {
         if (error) {
-          toast.error("Kunne ikke laste aktiviteter", {
+          toast.error(t("inquiries.loadActivitiesFailed"), {
             description: error.message,
           });
           setActivities([]);
@@ -215,7 +273,7 @@ export function InquiryDetailSheet({
     return () => {
       cancelled = true;
     };
-  }, [inquiry?.id, open, supabase]);
+  }, [inquiry?.id, open, supabase, t]);
 
   useEffect(() => {
     if (!open) {
@@ -233,11 +291,13 @@ export function InquiryDetailSheet({
       .eq("inquiry_id", inquiry.id)
       .order("created_at", { ascending: false });
     if (error) {
-      toast.error("Kunne ikke laste aktiviteter", { description: error.message });
+      toast.error(t("inquiries.loadActivitiesFailed"), {
+        description: error.message,
+      });
       return;
     }
     setActivities(mapRawActivities((data ?? []) as RawActivity[]));
-  }, [inquiry, supabase]);
+  }, [inquiry, supabase, t]);
 
   async function insertActivityNote(body: string): Promise<boolean> {
     if (!inquiry || !supabase || !canManage) return false;
@@ -246,7 +306,7 @@ export function InquiryDetailSheet({
 
     const parsed = inquiryActivityNoteSchema.safeParse({ body: trimmed });
     if (!parsed.success) {
-      toast.error("Kunne ikke lagre notat", {
+      toast.error(t("inquiries.saveNoteFailed"), {
         description: parsed.error.issues[0]?.message,
       });
       return false;
@@ -258,7 +318,7 @@ export function InquiryDetailSheet({
       kind: "note",
     });
     if (error) {
-      toast.error("Kunne ikke lagre notat", { description: error.message });
+      toast.error(t("inquiries.saveNoteFailed"), { description: error.message });
       return false;
     }
     return true;
@@ -268,6 +328,31 @@ export function InquiryDetailSheet({
     if (!inquiry || !supabase || isConverted || !canManage) return;
 
     const pendingNote = getNoteValues("body");
+
+    if (!currentOrganizationId) {
+      toast.error(t("common.toasts.noActiveOrg"));
+      return;
+    }
+
+    const { error: custErr } = await supabase
+      .from("customers")
+      .update({
+        name: data.newCustomerName.trim(),
+        phone: data.newCustomerPhone.trim() || null,
+        email: data.newCustomerEmail.trim() ? data.newCustomerEmail.trim() : null,
+        address: data.newCustomerAddress.trim()
+          ? data.newCustomerAddress.trim()
+          : null,
+      })
+      .eq("id", inquiry.customerId)
+      .eq("organization_id", currentOrganizationId);
+
+    if (custErr) {
+      toast.error(t("bookings.detail.updateCustomerFailed"), {
+        description: custErr.message,
+      });
+      return;
+    }
 
     const { error } = await supabase
       .from("booking_inquiries")
@@ -285,18 +370,27 @@ export function InquiryDetailSheet({
         status: data.status,
         next_follow_up_at: fromDatetimeLocalValue(data.nextFollowUpAt),
         internal_notes: data.internalNotes?.trim() || null,
+        commercial: {
+          packageSource: data.packageSource,
+          selectedPackageId: data.selectedPackageId,
+          customPackageName: data.customPackageName,
+          customPackagePrice: data.customPackagePrice,
+          customPackageFeatures: data.customPackageFeatures,
+          selectedAddonIds: data.selectedAddonIds,
+          customAddonLines: data.customAddonLines,
+        },
       })
       .eq("id", inquiry.id);
 
     if (error) {
-      toast.error("Kunne ikke lagre", { description: error.message });
+      toast.error(t("common.toasts.saveFailed"), { description: error.message });
       return;
     }
 
     if (pendingNote.trim()) {
       const noteSaved = await insertActivityNote(pendingNote);
       if (!noteSaved) {
-        toast.success("Forespørsel oppdatert");
+        toast.success(t("inquiries.updated"));
         invalidateInquiries();
         return;
       }
@@ -305,8 +399,8 @@ export function InquiryDetailSheet({
 
     toast.success(
       pendingNote.trim()
-        ? "Forespørsel og notat lagret"
-        : "Forespørsel oppdatert",
+        ? t("inquiries.updatedWithNote")
+        : t("inquiries.updated"),
     );
     invalidateInquiries();
     onOpenChange(false);
@@ -321,10 +415,10 @@ export function InquiryDetailSheet({
         .delete()
         .eq("id", inquiry.id);
       if (error) {
-        toast.error("Kunne ikke slette", { description: error.message });
+        toast.error(t("common.toasts.deleteFailed"), { description: error.message });
         return;
       }
-      toast.success("Forespørsel slettet");
+      toast.success(t("inquiries.deleted"));
       setDeleteDialogOpen(false);
       onOpenChange(false);
       invalidateInquiries();
@@ -337,7 +431,7 @@ export function InquiryDetailSheet({
     if (!inquiry || !supabase || !canManage) return;
     const saved = await insertActivityNote(values.body);
     if (!saved) return;
-    toast.success("Notat lagt til");
+    toast.success(t("inquiries.noteAdded"));
     resetNote({ body: "" });
     await refreshActivities();
     invalidateInquiries();
@@ -349,7 +443,7 @@ export function InquiryDetailSheet({
       body: editingNoteBody,
     });
     if (!parsed.success) {
-      toast.error("Kunne ikke oppdatere notat", {
+      toast.error(t("inquiries.updateNoteFailed"), {
         description: parsed.error.issues[0]?.message,
       });
       return;
@@ -361,10 +455,10 @@ export function InquiryDetailSheet({
         .update({ body: parsed.data.body })
         .eq("id", editingNoteId);
       if (error) {
-        toast.error("Kunne ikke oppdatere notat", { description: error.message });
+        toast.error(t("inquiries.updateNoteFailed"), { description: error.message });
         return;
       }
-      toast.success("Notat oppdatert");
+      toast.success(t("inquiries.noteUpdated"));
       setEditingNoteId(null);
       await refreshActivities();
       invalidateInquiries();
@@ -382,10 +476,10 @@ export function InquiryDetailSheet({
         .delete()
         .eq("id", deleteNoteId);
       if (error) {
-        toast.error("Kunne ikke slette notat", { description: error.message });
+        toast.error(t("inquiries.deleteNoteFailed"), { description: error.message });
         return;
       }
-      toast.success("Notat slettet");
+      toast.success(t("inquiries.noteDeleted"));
       if (editingNoteId === deleteNoteId) setEditingNoteId(null);
       setDeleteNoteId(null);
       await refreshActivities();
@@ -393,6 +487,20 @@ export function InquiryDetailSheet({
     } finally {
       setDeleteNoteBusy(false);
     }
+  }
+
+  function formatPreferredDateRange(
+    startIso: string | null,
+    endIso: string | null,
+  ): string {
+    if (!startIso) return "—";
+    const start = startIso.slice(0, 10);
+    const startLabel = formatDate(`${start}T12:00:00`, dateOptions);
+    const end = endIso?.slice(0, 10);
+    if (end && end !== start) {
+      return `${startLabel} – ${formatDate(`${end}T12:00:00`, dateOptions)}`;
+    }
+    return startLabel;
   }
 
   if (!inquiry) return null;
@@ -405,35 +513,66 @@ export function InquiryDetailSheet({
         className="flex h-full max-h-dvh w-[min(100%,92vw)] max-w-2xl flex-col gap-0 overflow-hidden p-0 lg:max-w-3xl"
         showCloseButton
       >
-        <SheetHeader className="shrink-0 border-b-2 border-rn-border-strong bg-rn-surface-table-head px-6 py-5 sm:px-8 sm:py-6">
-          <SheetTitle className="font-heading text-left text-xl font-bold tracking-tight text-rn-text-heading">
-            {inquiry.customerName}
-          </SheetTitle>
-          <SheetDescription className="text-left text-base text-muted-foreground">
-            Forespørsel · Oppdatert{" "}
-            {formatAppDateTime(inquiry.updatedAtIso)}
-          </SheetDescription>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span
-              className={cn(
-                "rounded-md border-2 px-3 py-1 text-sm font-semibold",
-                isConverted
-                  ? "border-success/50 bg-success/15 text-success"
-                  : inquiry.status === "lost"
-                    ? "border-muted-foreground/40 bg-muted/40"
-                    : "border-rn-border-strong bg-card",
-              )}
-            >
-              {INQUIRY_STATUS_LABELS[inquiry.status]}
-            </span>
-            {inquiry.convertedBookingId ? (
-              <span className="app-meta text-muted-foreground">
-                Booking-ID:{" "}
-                <span className="font-mono text-foreground">
-                  {inquiry.convertedBookingId.slice(0, 8)}…
-                </span>
+        <SheetHeader className="shrink-0 border-b-2 border-rn-border-strong bg-rn-surface-table-head py-5 pl-6 pr-14 sm:py-6 sm:pl-8 sm:pr-16">
+          <div className="flex items-start justify-between gap-3">
+            <SheetTitle className="min-w-0 flex-1 font-heading text-left text-xl font-bold tracking-tight text-rn-text-heading">
+              {inquiry.customerName}
+            </SheetTitle>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              <span
+                className={cn(
+                  "rounded-md border-2 px-3 py-1 text-sm font-semibold",
+                  isConverted
+                    ? "border-success/50 bg-success/15 text-success"
+                    : inquiry.status === "lost"
+                      ? "border-muted-foreground/40 bg-muted/40"
+                      : "border-rn-border-strong bg-card",
+                )}
+              >
+                {inquiryStatusLabel(inquiry.status, t)}
               </span>
-            ) : null}
+              {inquiry.convertedBookingId ? (
+                <span className="app-meta text-muted-foreground">
+                  {t("inquiries.bookingId")}{" "}
+                  <span className="font-mono text-foreground">
+                    {inquiry.convertedBookingId.slice(0, 8)}…
+                  </span>
+                </span>
+              ) : null}
+            </div>
+          </div>
+          <SheetDescription className="text-left text-base text-muted-foreground">
+            {t("inquiries.sheetDescription", {
+              date: formatAppDateTime(inquiry.updatedAtIso, locale),
+            })}
+          </SheetDescription>
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-left font-heading text-base font-bold text-rn-text-heading">
+            <p>
+              {t("inquiries.phoneLabel")}{" "}
+              {inquiry.customerPhone ? (
+                <a
+                  href={`tel:${inquiry.customerPhone}`}
+                  className="underline-offset-2 hover:underline"
+                >
+                  {inquiry.customerPhone}
+                </a>
+              ) : (
+                "—"
+              )}
+            </p>
+            <p>
+              {t("inquiries.emailLabel")}{" "}
+              {inquiry.customerEmail ? (
+                <a
+                  href={`mailto:${inquiry.customerEmail}`}
+                  className="underline-offset-2 hover:underline"
+                >
+                  {inquiry.customerEmail}
+                </a>
+              ) : (
+                "—"
+              )}
+            </p>
           </div>
         </SheetHeader>
 
@@ -442,63 +581,53 @@ export function InquiryDetailSheet({
             <div className="flex flex-col gap-6 px-6 py-6 sm:px-8 sm:py-7">
               {isConverted ? (
                 <div className="rounded-md border-2 border-success/35 bg-success/10 px-4 py-3 text-sm text-foreground">
-                  Denne forespørselen er konvertert til reservasjon. Gå til{" "}
+                  {t("inquiries.convertedBannerBefore")}{" "}
                   <Link
                     href="/app/bookings"
                     className="font-semibold text-success underline underline-offset-2"
                   >
-                    Reservasjoner
+                    {t("navigation.bookings")}
                   </Link>{" "}
-                  for å redigere oppdraget.
+                  {t("inquiries.convertedBannerAfter")}
                 </div>
               ) : null}
 
               {isConverted ? (
                 <div className="space-y-3 text-sm">
-                  <p className="font-semibold text-rn-text-heading">Kontakt</p>
-                  <p className="text-muted-foreground">
-                    Telefon: {inquiry.customerPhone ?? "—"}
+                  <p className="font-semibold text-rn-text-heading">
+                    {t("inquiries.contact")}
                   </p>
                   <p className="text-muted-foreground">
-                    E-post: {inquiry.customerEmail ?? "—"}
+                    {t("inquiries.phoneLabel")} {inquiry.customerPhone ?? "—"}
                   </p>
-                  <p className="font-semibold text-rn-text-heading">Ønske</p>
+                  <p className="text-muted-foreground">
+                    {t("inquiries.emailLabel")} {inquiry.customerEmail ?? "—"}
+                  </p>
+                  <p className="font-semibold text-rn-text-heading">
+                    {t("inquiries.wish")}
+                  </p>
                   <p>
-                    {inquiry.eventType}
+                    {eventTypeDisplayLabel(inquiry.eventType, t)}
                     {inquiry.festType ? ` · ${inquiry.festType}` : ""}
                   </p>
                   <p className="text-muted-foreground">
-                    Lokale: {inquiry.propertyName ?? "—"}
+                    {t("inquiries.venueLabel")}{" "}
+                    {inquiry.propertyName ?? "—"}
                   </p>
                   <p className="text-muted-foreground">
-                    Dato:{" "}
-                    {inquiry.preferredEventDateIso
-                      ? format(
-                          new Date(
-                            `${inquiry.preferredEventDateIso}T12:00:00`,
-                          ),
-                          "d. MMM yyyy",
-                          { locale: nb },
-                        )
-                      : "—"}
-                    {inquiry.preferredEventEndDateIso &&
-                    inquiry.preferredEventEndDateIso !==
-                      inquiry.preferredEventDateIso
-                      ? ` – ${format(
-                          new Date(
-                            `${inquiry.preferredEventEndDateIso}T12:00:00`,
-                          ),
-                          "d. MMM yyyy",
-                          { locale: nb },
-                        )}`
-                      : null}
+                    {t("inquiries.dateLabel")}{" "}
+                    {formatPreferredDateRange(
+                      inquiry.preferredEventDateIso,
+                      inquiry.preferredEventEndDateIso,
+                    )}
                   </p>
                   <p className="text-muted-foreground">
-                    Gjestforslag: {inquiry.guestCount}
+                    {t("inquiries.guestSuggestion")} {inquiry.guestCount}
                   </p>
                 </div>
               ) : (
                 <form
+                  noValidate
                   className="space-y-6"
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -507,11 +636,15 @@ export function InquiryDetailSheet({
                 >
                   <InquiryFormBody
                     register={form.register}
+                    setValue={form.setValue}
                     control={form.control}
                     watch={form.watch}
                     errors={form.formState.errors}
                     properties={properties}
                     customers={customers}
+                    packages={packages}
+                    addons={addons}
+                    catalogLoading={!catalogReady}
                     disabled={!canManage}
                     lockCustomer
                   />
@@ -520,7 +653,7 @@ export function InquiryDetailSheet({
 
               <div className="border-t-2 border-rn-border-strong pt-6">
                 <h3 className="font-heading text-lg font-semibold text-rn-text-heading">
-                  Aktivitet
+                  {t("inquiries.activity")}
                 </h3>
                 {canManage ? (
                   <form
@@ -531,7 +664,7 @@ export function InquiryDetailSheet({
                     }}
                   >
                     <Label htmlFor="inq-act-note" className="text-xs uppercase">
-                      Nytt notat
+                      {t("inquiries.newNote")}
                     </Label>
                     <Textarea
                       id="inq-act-note"
@@ -545,7 +678,7 @@ export function InquiryDetailSheet({
                       </p>
                     ) : null}{" "}
                     <Button type="submit" variant="outline" size="sm">
-                      Legg til
+                      {t("common.actions.add")}
                     </Button>
                   </form>
                 ) : null}
@@ -553,11 +686,11 @@ export function InquiryDetailSheet({
                 <ul className="mt-4 flex flex-col gap-3">
                   {loadingActivities ? (
                     <li className="text-sm text-muted-foreground">
-                      Laster aktivitet …
+                      {t("inquiries.loadingActivities")}
                     </li>
                   ) : activities.length === 0 ? (
                     <li className="text-sm text-muted-foreground">
-                      Ingen notater ennå.
+                      {t("inquiries.noNotesYet")}
                     </li>
                   ) : (
                     activities.map((a) => {
@@ -576,7 +709,7 @@ export function InquiryDetailSheet({
                                 value={editingNoteBody}
                                 onChange={(e) => setEditingNoteBody(e.target.value)}
                                 className="rounded-md border-2 border-rn-border-strong bg-background p-3 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-                                aria-label="Rediger notat"
+                                aria-label={t("inquiries.editNoteAria")}
                               />
                               <div className="flex flex-wrap gap-2">
                                 <Button
@@ -585,7 +718,9 @@ export function InquiryDetailSheet({
                                   disabled={editingNoteBusy}
                                   onClick={() => void onSaveNoteEdit()}
                                 >
-                                  {editingNoteBusy ? "Lagrer…" : "Lagre notat"}
+                                  {editingNoteBusy
+                                    ? t("common.saving")
+                                    : t("inquiries.saveNote")}
                                 </Button>
                                 <Button
                                   type="button"
@@ -594,7 +729,7 @@ export function InquiryDetailSheet({
                                   disabled={editingNoteBusy}
                                   onClick={() => setEditingNoteId(null)}
                                 >
-                                  Avbryt
+                                  {t("common.actions.cancel")}
                                 </Button>
                               </div>
                             </div>
@@ -611,7 +746,7 @@ export function InquiryDetailSheet({
                                       variant="ghost"
                                       size="icon-sm"
                                       className="size-8 shrink-0 rounded-md text-muted-foreground hover:text-foreground"
-                                      aria-label="Rediger notat"
+                                      aria-label={t("inquiries.editNoteAria")}
                                       onClick={() => {
                                         setEditingNoteId(a.id);
                                         setEditingNoteBody(a.body);
@@ -624,7 +759,7 @@ export function InquiryDetailSheet({
                                       variant="ghost"
                                       size="icon-sm"
                                       className="size-8 shrink-0 rounded-md text-destructive hover:bg-destructive/10"
-                                      aria-label="Slett notat"
+                                      aria-label={t("inquiries.deleteNoteAria")}
                                       onClick={() => setDeleteNoteId(a.id)}
                                     >
                                       <Trash2 className="size-4" aria-hidden />
@@ -633,8 +768,8 @@ export function InquiryDetailSheet({
                                 ) : null}
                               </div>
                               <p className="mt-1 text-xs text-muted-foreground">
-                                {formatAppDateTime(a.createdAtIso)}
-                                {!isNote ? " · Statusendring" : null}
+                                {formatAppDateTime(a.createdAtIso, locale)}
+                                {!isNote ? ` · ${t("inquiries.statusChange")}` : null}
                               </p>
                             </>
                           )}
@@ -661,7 +796,7 @@ export function InquiryDetailSheet({
                 className="w-full sm:w-auto"
                 onClick={() => setDeleteDialogOpen(true)}
               >
-                Slett forespørsel
+                {t("inquiries.deleteInquiry")}
               </Button>
               <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-end sm:gap-3">
                 <Link
@@ -671,7 +806,7 @@ export function InquiryDetailSheet({
                     "inline-flex w-full justify-center sm:w-auto",
                   )}
                 >
-                  Konverter til reservasjon
+                  {t("inquiries.convertToBooking")}
                 </Link>
                 <Button
                   type="button"
@@ -681,7 +816,7 @@ export function InquiryDetailSheet({
                   disabled={form.formState.isSubmitting}
                   onClick={() => void form.handleSubmit(onSave)()}
                 >
-                  Lagre endringer
+                  {t("inquiries.saveChanges")}
                 </Button>
               </div>
             </div>
@@ -693,13 +828,13 @@ export function InquiryDetailSheet({
     <ConfirmDeleteDialog
       open={deleteDialogOpen}
       onOpenChange={setDeleteDialogOpen}
-      title="Slette forespørsel?"
+      title={t("inquiries.deleteTitle")}
       description={
         inquiry
-          ? `Forespørselen for ${inquiry.customerName} slettes permanent, inkludert notater og aktivitet. Dette kan ikke angres.`
+          ? t("inquiries.deleteDescription", { name: inquiry.customerName })
           : null
       }
-      confirmLabel="Ja, slett forespørsel"
+      confirmLabel={t("inquiries.deleteConfirm")}
       busy={deleteBusy}
       onConfirm={confirmDeleteInquiry}
     />
@@ -709,9 +844,9 @@ export function InquiryDetailSheet({
       onOpenChange={(nextOpen) => {
         if (!nextOpen) setDeleteNoteId(null);
       }}
-      title="Slette notat?"
-      description="Notatet fjernes fra aktivitetsloggen. Dette kan ikke angres."
-      confirmLabel="Ja, slett notat"
+      title={t("inquiries.deleteNoteTitle")}
+      description={t("inquiries.deleteNoteDescription")}
+      confirmLabel={t("inquiries.deleteNoteConfirm")}
       busy={deleteNoteBusy}
       onConfirm={confirmDeleteNote}
     />

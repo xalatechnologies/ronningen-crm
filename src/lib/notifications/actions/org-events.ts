@@ -4,11 +4,14 @@ import {
   buildAccommodationActionUrl,
   buildBillingActionUrl,
   buildBookingActionUrl,
+  buildBookingContractActionUrl,
   buildInquiryActionUrl,
   buildTeamActionUrl,
 } from "@/lib/notifications/notification-events";
 import { notifyOrgMembers, notifyUser } from "@/lib/notifications/notify";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import { getDefaultT } from "@/lib/i18n/default-messages";
+import { getServerT } from "@/lib/i18n/server-messages";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export async function notifyBookingCreated(input: {
@@ -16,6 +19,7 @@ export async function notifyBookingCreated(input: {
   bookingId: string;
   bookingReference?: string | null;
 }) {
+  const t = await getServerT();
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -28,10 +32,35 @@ export async function notifyBookingCreated(input: {
     excludeUserId: user?.id,
     eventKey: "booking.created",
     contextKey: `booking:${input.bookingId}`,
-    title: "Ny reservasjon",
-    body: `En ny reservasjon (${label}) er registrert.`,
+    title: t("serverErrors.notifications.newBooking"),
+    body: t("serverErrors.notifications.newBookingBody", { label }),
     actionUrl: buildBookingActionUrl(input.bookingId),
-    actionLabel: "Se reservasjon",
+    actionLabel: t("serverErrors.notifications.viewBooking"),
+  });
+}
+
+export async function notifyContractAccepted(input: {
+  organizationId: string;
+  bookingId: string;
+  signerName: string;
+  bookingReference?: string | null;
+}) {
+  // Guest accept runs without staff session; never store the guest/browser
+  // locale on org notifications (default product locale is Norwegian).
+  const t = getDefaultT();
+  const label = input.bookingReference?.trim() || input.bookingId.slice(0, 8);
+  await notifyOrgMembers({
+    organizationId: input.organizationId,
+    eventKey: "booking.contract_accepted",
+    contextKey: `contract_accepted:${input.bookingId}`,
+    title: t("serverErrors.notifications.contractAccepted"),
+    body: t("serverErrors.notifications.contractAcceptedBody", {
+      label,
+      signer: input.signerName,
+    }),
+    priority: "high",
+    actionUrl: buildBookingContractActionUrl(input.bookingId),
+    actionLabel: t("serverErrors.notifications.viewContract"),
   });
 }
 
@@ -39,6 +68,7 @@ export async function notifyInquiryCreated(input: {
   organizationId: string;
   inquiryId: string;
 }) {
+  const t = await getServerT();
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -49,10 +79,10 @@ export async function notifyInquiryCreated(input: {
     excludeUserId: user?.id,
     eventKey: "inquiry.created",
     contextKey: `inquiry:${input.inquiryId}`,
-    title: "Ny forespørsel",
-    body: "En ny forespørsel er registrert i systemet.",
+    title: t("serverErrors.notifications.newInquiry"),
+    body: t("serverErrors.notifications.newInquiryBody"),
     actionUrl: buildInquiryActionUrl(input.inquiryId),
-    actionLabel: "Se forespørsel",
+    actionLabel: t("serverErrors.notifications.viewInquiry"),
   });
 }
 
@@ -60,6 +90,7 @@ export async function notifyAccommodationCreated(input: {
   organizationId: string;
   reservationId: string;
 }) {
+  const t = await getServerT();
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -70,10 +101,10 @@ export async function notifyAccommodationCreated(input: {
     excludeUserId: user?.id,
     eventKey: "accommodation.created",
     contextKey: `accommodation:${input.reservationId}`,
-    title: "Ny overnatting",
-    body: "En ny overnattingsreservasjon er registrert.",
+    title: t("serverErrors.notifications.newAccommodation"),
+    body: t("serverErrors.notifications.newAccommodationBody"),
     actionUrl: buildAccommodationActionUrl(input.reservationId),
-    actionLabel: "Se reservasjon",
+    actionLabel: t("serverErrors.notifications.viewBooking"),
   });
 }
 
@@ -81,6 +112,7 @@ export async function notifyTeamMemberAdded(input: {
   organizationId: string;
   userId: string;
 }) {
+  const t = await getServerT();
   const admin = createSupabaseAdminClient();
   const { data: org } = await admin
     .from("organizations")
@@ -93,10 +125,12 @@ export async function notifyTeamMemberAdded(input: {
     organizationId: input.organizationId,
     eventKey: "team.member_added",
     contextKey: `team:${input.organizationId}:${input.userId}`,
-    title: "Du er lagt til i et team",
-    body: `Du har fått tilgang til ${org?.name ?? "organisasjonen"}.`,
+    title: t("serverErrors.notifications.teamMemberAdded"),
+    body: t("serverErrors.notifications.orgAccessGranted", {
+      orgName: org?.name ?? t("serverErrors.notifications.defaultOrgName"),
+    }),
     actionUrl: buildTeamActionUrl(),
-    actionLabel: "Se team",
+    actionLabel: t("serverErrors.notifications.viewTeam"),
   });
 }
 
@@ -104,6 +138,7 @@ export async function notifyBillingAccessSuspended(input: {
   organizationId: string;
   reason?: string | null;
 }) {
+  const t = await getServerT();
   const admin = createSupabaseAdminClient();
   const { data: org } = await admin
     .from("organizations")
@@ -112,18 +147,23 @@ export async function notifyBillingAccessSuspended(input: {
     .maybeSingle();
 
   const reasonText = input.reason?.trim()
-    ? ` Grunn: ${input.reason.trim()}`
+    ? t("serverErrors.notifications.accessRestrictedReason", {
+        reason: input.reason.trim(),
+      })
     : "";
 
   await notifyOrgMembers({
     organizationId: input.organizationId,
     eventKey: "billing.access_suspended",
     contextKey: `billing_suspended:${input.organizationId}`,
-    title: "Tilgang begrenset",
-    body: `Tilgangen til ${org?.name ?? "organisasjonen"} er begrenset på grunn av abonnement.${reasonText}`,
+    title: t("serverErrors.notifications.accessRestricted"),
+    body: t("serverErrors.notifications.orgAccessRestricted", {
+      orgName: org?.name ?? t("serverErrors.notifications.defaultOrgName"),
+      reasonText,
+    }),
     priority: "high",
     actionUrl: buildBillingActionUrl(),
-    actionLabel: "Gå til fakturering",
+    actionLabel: t("serverErrors.billing.goToBilling"),
   });
 }
 
@@ -131,6 +171,7 @@ export async function notifySupportTicketReply(input: {
   ticketId: string;
   bodyPreview: string;
 }) {
+  const t = await getServerT();
   const admin = createSupabaseAdminClient();
   const { data: ticket } = await admin
     .from("platform_support_tickets")
@@ -145,9 +186,12 @@ export async function notifySupportTicketReply(input: {
     organizationId: ticket.organization_id,
     eventKey: "support.ticket_reply",
     contextKey: `support_reply:${input.ticketId}:${Date.now()}`,
-    title: "Svar på supportsak",
-    body: `Nytt svar på «${ticket.subject}»: ${input.bodyPreview.slice(0, 160)}`,
+    title: t("serverErrors.notifications.supportReplyTitle"),
+    body: t("serverErrors.notifications.supportReplyPreview", {
+      subject: ticket.subject,
+      preview: input.bodyPreview.slice(0, 160),
+    }),
     actionUrl: "/app/settings/support",
-    actionLabel: "Åpne support",
+    actionLabel: t("serverErrors.notifications.openSupport"),
   });
 }

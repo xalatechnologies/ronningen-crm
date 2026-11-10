@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n/client";
 import { completeTenantSetup } from "@/lib/organizations/actions/complete-tenant-setup";
 import type { TenantSetupStep } from "@/lib/organizations/tenant-setup";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
@@ -9,24 +10,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-const COPY: Record<
-  TenantSetupStep,
-  { step: string; title: string; description: string }
-> = {
-  organization: {
-    step: "Steg 1 av 2",
-    title: "Fullfør organisasjonsprofilen",
-    description:
-      "Fyll inn virksomhetsinfo som brukes på fakturaer og i appen. Du kommer til lokaler i neste steg.",
-  },
-  lokaler: {
-    step: "Steg 2 av 2",
-    title: "Registrer ditt første lokale",
-    description:
-      "Legg til minst ett lokale for bookinger, forespørsler og økonomi. Deretter kan du bruke dashboardet.",
-  },
-};
-
 export function TenantSetupBanner({
   step,
   className,
@@ -34,9 +17,20 @@ export function TenantSetupBanner({
   step: TenantSetupStep;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [skipping, setSkipping] = useState(false);
-  const content = COPY[step];
+
+  const stepLabel =
+    step === "organization" ? t("settings.setup.step1") : t("settings.setup.step2");
+  const title =
+    step === "organization"
+      ? t("settings.completeProfile.title")
+      : t("settings.registerVenue.title");
+  const description =
+    step === "organization"
+      ? t("settings.completeProfile.description")
+      : t("settings.registerVenue.description");
 
   async function skipForNow() {
     setSkipping(true);
@@ -46,7 +40,7 @@ export function TenantSetupBanner({
         toast.error(result.error);
         return;
       }
-      toast.message("Du kan fullføre oppsettet senere under Innstillinger.");
+      toast.message(t("settings.skipSetup"));
       router.push("/app/dashboard");
       router.refresh();
     } finally {
@@ -64,13 +58,13 @@ export function TenantSetupBanner({
       role="status"
     >
       <p className="text-app-xs font-semibold uppercase tracking-wider text-success">
-        {content.step}
+        {stepLabel}
       </p>
       <h2 className="mt-1 font-heading text-lg font-bold text-foreground">
-        {content.title}
+        {title}
       </h2>
       <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground md:text-base">
-        {content.description}
+        {description}
       </p>
       <div className="mt-4 flex flex-wrap gap-3">
         <Button
@@ -80,7 +74,7 @@ export function TenantSetupBanner({
           disabled={skipping}
           onClick={() => void skipForNow()}
         >
-          {skipping ? "Lagrer …" : "Hopp over og gå til dashboard"}
+          {skipping ? t("settings.skipping") : t("settings.skipToDashboard")}
         </Button>
       </div>
     </div>

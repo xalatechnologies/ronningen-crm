@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 
@@ -20,7 +21,10 @@ import {
   toTenantAccessInput,
 } from "@/lib/subscriptions/subscription-utils";
 
-function GateLoadingState({ label = "Laster …" }: { label?: string }) {
+function GateLoadingState({ label }: { label?: string }) {
+  const { t } = useTranslation();
+  const resolved = label ?? t("common.actions.loading");
+
   return (
     <div
       className="flex min-h-svh flex-col items-center justify-center gap-4 bg-background px-4 py-16 text-foreground"
@@ -28,7 +32,7 @@ function GateLoadingState({ label = "Laster …" }: { label?: string }) {
       aria-live="polite"
     >
       <div className="size-10 animate-spin rounded-full border-4 border-muted border-t-success" />
-      <p className="text-base font-medium text-muted-foreground">{label}</p>
+      <p className="text-base font-medium text-muted-foreground">{resolved}</p>
     </div>
   );
 }

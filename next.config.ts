@@ -75,6 +75,12 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.eventmanager.no" }],
+        destination: "https://eventmanager.no/:path*",
+        permanent: true,
+      },
+      {
         source: "/app",
         destination: "/app/dashboard",
         permanent: false,

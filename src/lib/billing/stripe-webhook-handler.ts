@@ -70,7 +70,12 @@ function sanitizeWebhookPayload(event: Stripe.Event): Json {
 
 type WebhookClaimResult =
   | { action: "process" }
-  | { action: "skip"; reason: "already_processed" };
+  | { action: "skip"; reason: "already_processed" | "in_progress" };
+
+export type ProcessStripeEventResult =
+  | { outcome: "handled" }
+  | { outcome: "ignored" }
+  | { outcome: "unresolved" };
 
 async function claimWebhookEvent(
   eventId: string,
@@ -105,7 +110,8 @@ async function claimWebhookEvent(
       return { action: "skip", reason: "already_processed" };
     }
 
-    return { action: "process" };
+    // Another worker owns this event (processed_at still null). Do not re-enter.
+    return { action: "skip", reason: "in_progress" };
   }
 
   throw new Error(error?.message ?? "Kunne ikke reservere webhook-hendelse.");
@@ -120,6 +126,23 @@ async function markWebhookEventProcessed(eventId: string): Promise<void> {
 
   if (error) {
     throw new Error(error.message);
+  }
+}
+
+/** Release an unfinished claim so Stripe retries can reclaim the event. */
+async function releaseWebhookEventClaim(eventId: string): Promise<void> {
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
+    .from("stripe_webhook_events")
+    .delete()
+    .eq("event_id", eventId)
+    .is("processed_at", null);
+
+  if (error) {
+    console.error("[stripe/webhook] failed to release claim", {
+      eventId,
+      message: error.message,
+    });
   }
 }
 
@@ -147,7 +170,7 @@ async function handleSubscriptionEvent(
 async function processStripeEvent(
   stripe: Stripe,
   event: Stripe.Event,
-): Promise<void> {
+): Promise<ProcessStripeEventResult> {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -161,14 +184,14 @@ async function processStripeEvent(
           ? session.subscription
           : session.subscription?.id;
 
-      if (organizationId && subscriptionId) {
-        const subscription = await stripe.subscriptions.retrieve(
-          subscriptionId,
-          { expand: ["items.data.price.product"] },
-        );
-        await handleSubscriptionEvent(subscription, organizationId);
+      if (!organizationId || !subscriptionId) {
+        return { outcome: "unresolved" };
       }
-      break;
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+        expand: ["items.data.price.product"],
+      });
+      await handleSubscriptionEvent(subscription, organizationId);
+      return { outcome: "handled" };
     }
     case "customer.subscription.created":
     case "customer.subscription.updated": {
@@ -177,10 +200,11 @@ async function processStripeEvent(
         metadata: subscription.metadata,
         stripeCustomerId: resolveStripeCustomerId(subscription.customer),
       });
-      if (organizationId) {
-        await handleSubscriptionEvent(subscription, organizationId);
+      if (!organizationId) {
+        return { outcome: "unresolved" };
       }
-      break;
+      await handleSubscriptionEvent(subscription, organizationId);
+      return { outcome: "handled" };
     }
     case "customer.subscription.deleted": {
       const subscription = event.data.object as Stripe.Subscription;
@@ -188,57 +212,59 @@ async function processStripeEvent(
         metadata: subscription.metadata,
         stripeCustomerId: resolveStripeCustomerId(subscription.customer),
       });
-      if (organizationId) {
-        await markOrganizationCanceled(organizationId);
+      if (!organizationId) {
+        return { outcome: "unresolved" };
       }
-      break;
+      await markOrganizationCanceled(organizationId);
+      return { outcome: "handled" };
     }
     case "invoice.payment_failed":
     case "invoice.paid": {
       const invoice = event.data.object as Stripe.Invoice;
       const subscriptionId = resolveInvoiceSubscriptionId(invoice);
 
-      if (subscriptionId) {
-        const subscription = await stripe.subscriptions.retrieve(
-          subscriptionId,
-          { expand: ["items.data.price.product"] },
-        );
-        const organizationId = await resolveOrganizationIdForWebhook({
-          metadata: subscription.metadata,
-          stripeCustomerId: resolveStripeCustomerId(subscription.customer),
-        });
-        if (organizationId) {
-          if (event.type === "invoice.payment_failed") {
-            await markOrganizationPastDue(organizationId, subscription);
-            const admin = createSupabaseAdminClient();
-            const { data: org } = await admin
-              .from("organizations")
-              .select("name")
-              .eq("id", organizationId)
-              .maybeSingle();
-            try {
-              await sendPaymentFailedNotifications({
-                organizationId,
-                organizationName: org?.name ?? "Organisasjonen din",
-                invoiceId: invoice.id,
-              });
-            } catch (notifyError) {
-              console.error(
-                "[stripe/webhook] payment_failed notification",
-                notifyError,
-              );
-            }
-          } else {
-            await handleSubscriptionEvent(subscription, organizationId);
-          }
-        }
+      if (!subscriptionId) {
+        return { outcome: "unresolved" };
       }
-      break;
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+        expand: ["items.data.price.product"],
+      });
+      const organizationId = await resolveOrganizationIdForWebhook({
+        metadata: subscription.metadata,
+        stripeCustomerId: resolveStripeCustomerId(subscription.customer),
+      });
+      if (!organizationId) {
+        return { outcome: "unresolved" };
+      }
+      if (event.type === "invoice.payment_failed") {
+        await markOrganizationPastDue(organizationId, subscription);
+        const admin = createSupabaseAdminClient();
+        const { data: org } = await admin
+          .from("organizations")
+          .select("name")
+          .eq("id", organizationId)
+          .maybeSingle();
+        try {
+          await sendPaymentFailedNotifications({
+            organizationId,
+            organizationName: org?.name ?? "Organisasjonen din",
+            invoiceId: invoice.id,
+          });
+        } catch (notifyError) {
+          console.error(
+            "[stripe/webhook] payment_failed notification",
+            notifyError,
+          );
+        }
+      } else {
+        await handleSubscriptionEvent(subscription, organizationId);
+      }
+      return { outcome: "handled" };
     }
     case "customer.subscription.trial_will_end":
-      break;
+      return { outcome: "ignored" };
     default:
-      break;
+      return { outcome: "ignored" };
   }
 }
 
@@ -292,20 +318,41 @@ export async function handleStripeWebhookRequest(
   try {
     const claim = await claimWebhookEvent(event.id, event.type, payload);
     if (claim.action === "skip") {
-      return NextResponse.json({ received: true, duplicate: true });
+      return NextResponse.json({
+        received: true,
+        duplicate: true,
+        reason: claim.reason,
+      });
     }
 
-    await processStripeEvent(stripe, event);
+    const result = await processStripeEvent(stripe, event);
+    if (result.outcome === "unresolved") {
+      await releaseWebhookEventClaim(event.id);
+      console.warn("[stripe/webhook] unresolved organization/subscription", {
+        eventId: event.id,
+        eventType: event.type,
+      });
+      return NextResponse.json(
+        { error: "organization_unresolved", eventId: event.id },
+        { status: 503 },
+      );
+    }
+
     await markWebhookEventProcessed(event.id);
 
     revalidatePath("/app/settings/billing");
     revalidatePath("/admin/subscriptions");
 
-    return NextResponse.json({ received: true });
+    return NextResponse.json({ received: true, outcome: result.outcome });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Webhook-behandling feilet.";
     console.error("[stripe/webhook]", message, { eventId: event.id });
+    try {
+      await releaseWebhookEventClaim(event.id);
+    } catch {
+      // best-effort release
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import type { AdminBillingRow } from "@/lib/admin/queries/users-billing-audit";
 import {
   AdminSegmentFilterBar,
@@ -8,6 +9,7 @@ import {
   AdminSegmentFilterSearch,
   adminSegmentFilterButtonClass,
 } from "@/components/admin/admin-segment-filter-bar";
+import type { Translator } from "@/i18n/types";
 
 export type AdminSubscriptionFilter =
   | "all"
@@ -18,18 +20,17 @@ export type AdminSubscriptionFilter =
   | "canceled"
   | "suspended";
 
-export const ADMIN_SUBSCRIPTION_FILTER_OPTIONS: {
-  value: AdminSubscriptionFilter;
-  label: string;
-}[] = [
-  { value: "all", label: "Alle" },
-  { value: "active", label: "Aktiv" },
-  { value: "trialing", label: "Prøve" },
-  { value: "incomplete", label: "Ufullstendig" },
-  { value: "past_due", label: "Forfalt" },
-  { value: "canceled", label: "Avsluttet" },
-  { value: "suspended", label: "Suspendert" },
-];
+export function getAdminSubscriptionFilterOptions(t: Translator) {
+  return [
+    { value: "all" as const, label: t("admin.alle") },
+    { value: "active" as const, label: t("admin.aktiv") },
+    { value: "trialing" as const, label: t("admin.prove") },
+    { value: "incomplete" as const, label: t("admin.ufullstendig") },
+    { value: "past_due" as const, label: t("admin.forfalt") },
+    { value: "canceled" as const, label: t("admin.avsluttet") },
+    { value: "suspended" as const, label: t("admin.suspendert") },
+  ];
+}
 
 type AdminSubscriptionFilterBarProps = {
   search: string;
@@ -56,6 +57,8 @@ export function AdminSubscriptionFilterBar({
   counts,
   embedded = false,
 }: AdminSubscriptionFilterBarProps) {
+  const { t } = useTranslation();
+  const filterOptions = getAdminSubscriptionFilterOptions(t);
   return (
     <AdminSegmentFilterBar
       className={
@@ -67,17 +70,17 @@ export function AdminSubscriptionFilterBar({
       <AdminSegmentFilterSearch
         value={search}
         onChange={onSearchChange}
-        placeholder="Søk navn, slug, e-post, Stripe-ID…"
-        aria-label="Søk abonnement"
+        placeholder={t("admin.sok_navn_slug_e_post_stripe_id")}
+        aria-label={t("admin.sok_abonnement")}
       />
 
       <AdminSegmentFilterDivider />
 
       <AdminSegmentFilterControls
-        aria-label="Filtrer abonnement"
+        aria-label={t("admin.filtrer_abonnement")}
         className="min-w-0 overflow-x-auto pb-0.5"
       >
-        {ADMIN_SUBSCRIPTION_FILTER_OPTIONS.map((option) => {
+        {filterOptions.map((option) => {
           const count = counts[option.value];
           const active = filter === option.value;
           return (

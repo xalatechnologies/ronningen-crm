@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { useMemo } from "react";
 import {
   Select,
@@ -11,6 +12,7 @@ import {
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 
 export function OrganizationSwitcher() {
+  const { t } = useTranslation();
   const {
     organizations,
     currentOrganizationId,
@@ -40,7 +42,7 @@ export function OrganizationSwitcher() {
       items={selectItems}
     >
       <SelectTrigger className="h-9 min-w-[10rem] max-w-[14rem] border-2 border-rn-border-strong bg-card text-app-sm">
-        <SelectValue placeholder="Velg organisasjon" />
+        <SelectValue placeholder={t("admin.velg_organisasjon")} />
       </SelectTrigger>
       <SelectContent align="start" alignItemWithTrigger={false}>
         {organizations.map((membership) => (

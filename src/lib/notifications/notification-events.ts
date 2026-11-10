@@ -1,3 +1,5 @@
+import type { TranslationKey, Translator } from "@/i18n/types";
+
 export type NotificationCategory =
   | "platform"
   | "billing"
@@ -17,6 +19,7 @@ export type NotificationEventKey =
   | "billing.access_suspended"
   | "support.ticket_reply"
   | "booking.created"
+  | "booking.contract_accepted"
   | "inquiry.created"
   | "accommodation.created"
   | "team.member_added";
@@ -34,9 +37,20 @@ const EVENT_DEFAULTS: Record<NotificationEventKey, EventDefaults> = {
   "billing.access_suspended": { category: "billing", priority: "high" },
   "support.ticket_reply": { category: "support", priority: "normal" },
   "booking.created": { category: "booking", priority: "normal" },
+  "booking.contract_accepted": { category: "booking", priority: "high" },
   "inquiry.created": { category: "inquiry", priority: "normal" },
   "accommodation.created": { category: "accommodation", priority: "normal" },
   "team.member_added": { category: "team", priority: "normal" },
+};
+
+const CATEGORY_KEYS: Record<NotificationCategory, TranslationKey> = {
+  platform: "notifications.inbox.categories.platform",
+  billing: "notifications.inbox.categories.billing",
+  booking: "notifications.inbox.categories.booking",
+  inquiry: "notifications.inbox.categories.inquiry",
+  team: "notifications.inbox.categories.team",
+  support: "notifications.inbox.categories.support",
+  accommodation: "notifications.inbox.categories.accommodation",
 };
 
 export function resolveEventDefaults(
@@ -45,22 +59,20 @@ export function resolveEventDefaults(
   return EVENT_DEFAULTS[eventKey as NotificationEventKey] ?? null;
 }
 
-export const NOTIFICATION_CATEGORY_LABELS: Record<NotificationCategory, string> = {
-  platform: "Plattform",
-  billing: "Abonnement",
-  booking: "Reservasjon",
-  inquiry: "Forespørsel",
-  team: "Team",
-  support: "Support",
-  accommodation: "Overnatting",
-};
-
-export function formatNotificationCategory(category: string): string {
-  return NOTIFICATION_CATEGORY_LABELS[category as NotificationCategory] ?? category;
+export function formatNotificationCategory(
+  category: string,
+  t: Translator,
+): string {
+  const key = CATEGORY_KEYS[category as NotificationCategory];
+  return key ? t(key) : category;
 }
 
 export function buildBookingActionUrl(bookingId: string): string {
   return `/app/bookings?booking=${bookingId}`;
+}
+
+export function buildBookingContractActionUrl(bookingId: string): string {
+  return `/app/bookings/${bookingId}/contract`;
 }
 
 export function buildInquiryActionUrl(inquiryId: string): string {

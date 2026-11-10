@@ -1,3 +1,6 @@
+import type { Translator } from "@/i18n/types";
+import type { TranslationKey } from "@/i18n/types";
+
 export type FeatureFlagStatus = "active" | "rollout" | "scheduled" | "off";
 
 export type AdminFeatureFlagFilter =
@@ -15,6 +18,36 @@ export type FeatureFlagLike = {
   enabledAt: string | null;
 };
 
+const FILTER_KEYS: Record<AdminFeatureFlagFilter, TranslationKey> = {
+  all: "adminLabels.featureFlags.filter.all",
+  active: "adminLabels.featureFlags.filter.activeGlobal",
+  rollout: "adminLabels.featureFlags.filter.rollout",
+  off: "adminLabels.featureFlags.filter.off",
+  scheduled: "adminLabels.featureFlags.filter.scheduled",
+};
+
+const STATUS_KEYS: Record<FeatureFlagStatus, TranslationKey> = {
+  active: "adminLabels.featureFlags.status.active",
+  rollout: "adminLabels.featureFlags.status.rollout",
+  scheduled: "adminLabels.featureFlags.status.scheduled",
+  off: "adminLabels.featureFlags.status.off",
+};
+
+export function getAdminFeatureFlagFilterOptions(t: Translator) {
+  return (Object.keys(FILTER_KEYS) as AdminFeatureFlagFilter[]).map((value) => ({
+    value,
+    label: t(FILTER_KEYS[value]),
+  }));
+}
+
+export function featureFlagStatusLabel(
+  status: FeatureFlagStatus,
+  t: Translator,
+): string {
+  return t(STATUS_KEYS[status]);
+}
+
+/** @deprecated Use getAdminFeatureFlagFilterOptions(t) */
 export const ADMIN_FEATURE_FLAG_FILTER_OPTIONS: {
   value: AdminFeatureFlagFilter;
   label: string;
@@ -26,6 +59,7 @@ export const ADMIN_FEATURE_FLAG_FILTER_OPTIONS: {
   { value: "scheduled", label: "Planlagt" },
 ];
 
+/** @deprecated Use featureFlagStatusLabel(status, t) */
 export const FEATURE_FLAG_STATUS_LABELS: Record<FeatureFlagStatus, string> = {
   active: "Aktiv",
   rollout: "Gradvis",

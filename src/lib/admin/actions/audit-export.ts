@@ -6,12 +6,14 @@ import {
   fetchAdminAuditLogPaginated,
   type AdminAuditFilters,
 } from "@/lib/admin/queries/users-billing-audit";
+import { getServerTranslation } from "@/i18n/server";
 import { formatAuditActionLabel } from "@/lib/admin/audit-labels";
 
 export async function exportAuditLogCsv(
   filters: AdminAuditFilters = {},
 ): Promise<{ ok: true; csv: string } | { ok: false; error: string }> {
   const adminUser = await requirePlatformAdmin();
+  const { t } = await getServerTranslation();
 
   const { entries } = await fetchAdminAuditLogPaginated({
     ...filters,
@@ -26,7 +28,7 @@ export async function exportAuditLogCsv(
       e.id,
       e.createdAt,
       e.action,
-      csvEscape(formatAuditActionLabel(e.action)),
+      csvEscape(formatAuditActionLabel(e.action, t)),
       e.targetType,
       e.targetId ?? "",
       csvEscape(e.actorEmail ?? ""),

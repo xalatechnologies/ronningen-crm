@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { upsertEmailTemplate } from "@/lib/admin/actions/notifications";
 import type { AdminEmailTemplate } from "@/lib/admin/queries/notifications";
+import { useTranslation } from "@/i18n/client";
 import { formatEmailTemplateLabel } from "@/lib/notifications/default-email-templates";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -24,6 +25,7 @@ export function NotificationTemplateDetailPanel({
   template,
   onUpdated,
 }: NotificationTemplateDetailPanelProps) {
+  const { t } = useTranslation();
   const [subject, setSubject] = useState(template.subject);
   const [bodyHtml, setBodyHtml] = useState(template.bodyHtml);
   const [saving, setSaving] = useState(false);
@@ -46,13 +48,12 @@ export function NotificationTemplateDetailPanel({
     setSaving(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke lagre mal", { description: result.error });
+      toast.error(t("admin.kunne_ikke_lagre_mal"), { description: result.error });
       return;
     }
 
-    toast.success("Mal lagret", {
-      description:
-        "Maler sendes ikke til brukere før du oppretter en aktiv kampanje og trykker «Send til alle».",
+    toast.success(t("admin.mal_lagret"), {
+      description: t("admin.template_save_hint"),
     });
     onUpdated();
   }
@@ -61,7 +62,7 @@ export function NotificationTemplateDetailPanel({
     <div className="space-y-4 p-1">
       <p className="text-app-sm text-muted-foreground">
         <span className="font-medium text-foreground">
-          {formatEmailTemplateLabel(template.key)}
+          {formatEmailTemplateLabel(template.key, t)}
         </span>
         {TEMPLATE_VARIABLE_HINTS[template.key] ? (
           <>
@@ -74,7 +75,7 @@ export function NotificationTemplateDetailPanel({
         ) : null}
       </p>
       <div className="space-y-2">
-        <Label htmlFor={`subject-${template.key}`}>Emne</Label>
+        <Label htmlFor={`subject-${template.key}`}>{t("adminLabels.fields.subject")}</Label>
         <Input
           id={`subject-${template.key}`}
           value={subject}
@@ -84,7 +85,7 @@ export function NotificationTemplateDetailPanel({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`body-${template.key}`}>HTML-innhold</Label>
+        <Label htmlFor={`body-${template.key}`}>{t("adminLabels.fields.htmlContent")}</Label>
         <textarea
           id={`body-${template.key}`}
           value={bodyHtml}
@@ -96,7 +97,7 @@ export function NotificationTemplateDetailPanel({
 
       <div className="space-y-2">
         <p className="text-app-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Forhåndsvisning
+          {t("admin.notification_preview")}
         </p>
         <div
           className="rounded-md border border-rn-border-strong/60 bg-card p-4 text-app-sm prose prose-sm max-w-none dark:prose-invert"
@@ -109,7 +110,7 @@ export function NotificationTemplateDetailPanel({
         disabled={!dirty || saving}
         onClick={() => void handleSave()}
       >
-        {saving ? "Lagrer…" : "Lagre mal"}
+        {saving ? t("admin.lagrer") : t("admin.lagre_mal")}
       </AdminActionButton>
     </div>
   );

@@ -1,17 +1,19 @@
+import type { Translator, TranslationKey } from "@/i18n/types";
+
 export type CampaignStatus = "draft" | "active" | "paused";
 export type DeliveryStatus = "sent" | "delivered" | "opened" | "failed";
 
-export const CAMPAIGN_STATUS_LABELS: Record<CampaignStatus, string> = {
-  draft: "Utkast",
-  active: "Aktiv",
-  paused: "Pauset",
+const CAMPAIGN_STATUS_KEYS: Record<CampaignStatus, TranslationKey> = {
+  draft: "admin.notification_campaign_draft",
+  active: "admin.notification_campaign_active",
+  paused: "admin.notification_campaign_paused",
 };
 
-export const DELIVERY_STATUS_LABELS: Record<DeliveryStatus, string> = {
-  sent: "Sendt",
-  delivered: "Levert",
-  opened: "Åpnet",
-  failed: "Feilet",
+const DELIVERY_STATUS_KEYS: Record<DeliveryStatus, TranslationKey> = {
+  sent: "admin.notification_delivery_sent",
+  delivered: "admin.notification_delivery_delivered",
+  opened: "admin.notification_delivery_opened",
+  failed: "admin.notification_delivery_failed",
 };
 
 export const CAMPAIGN_SETTABLE_STATUSES: CampaignStatus[] = [
@@ -20,10 +22,12 @@ export const CAMPAIGN_SETTABLE_STATUSES: CampaignStatus[] = [
   "paused",
 ];
 
-export function formatCampaignStatusLabel(status: string): string {
-  return CAMPAIGN_STATUS_LABELS[status as CampaignStatus] ?? status;
+export function formatCampaignStatusLabel(status: string, t: Translator): string {
+  const key = CAMPAIGN_STATUS_KEYS[status as CampaignStatus];
+  return key ? t(key) : status;
 }
 
-export function formatDeliveryStatusLabel(status: string): string {
-  return DELIVERY_STATUS_LABELS[status as DeliveryStatus] ?? status;
+export function formatDeliveryStatusLabel(status: string, t: Translator): string {
+  const key = DELIVERY_STATUS_KEYS[status as DeliveryStatus];
+  return key ? t(key) : status;
 }

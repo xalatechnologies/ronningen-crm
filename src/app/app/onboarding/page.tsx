@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { CreateOrganizationForm } from "@/components/organizations/create-organization-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getServerTranslation } from "@/i18n/server";
 import { fetchUserOrganizations } from "@/lib/organizations/organization-queries";
 import { resolvePostAuthRedirect } from "@/lib/organizations/tenant-setup-queries";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingPage() {
+  const { t } = await getServerTranslation();
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -34,13 +36,12 @@ export default async function OnboardingPage() {
       <Card className={cn(RN_CARD_SHELL)}>
         <CardHeader>
           <CardTitle className="font-heading text-2xl">
-            Opprett organisasjon
+            {t("appPages.onboarding.createOrg")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="mb-6 text-app-base text-muted-foreground">
-            Gi organisasjonen et navn for å starte. Deretter fyller du inn
-            virksomhetsinfo og registrerer lokaler under Innstillinger.
+            {t("appPages.onboarding.createOrgDescription")}
           </p>
           <CreateOrganizationForm />
         </CardContent>

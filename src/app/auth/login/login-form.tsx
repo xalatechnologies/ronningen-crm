@@ -7,14 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { APP_NAME } from "@/config/app";
 import { getDevLoginDefaultValues } from "@/config/dev-login";
+import { useTranslation } from "@/i18n/client";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
-import { mapAuthErrorToNorwegian } from "@/lib/auth/auth-error-messages";
+import { mapAuthErrorToUserMessage } from "@/lib/auth/auth-error-messages";
 import {
   createBrowserSupabaseClient,
   isSupabasePublicConfigured,
 } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { loginSchema, type LoginInput } from "@/lib/validations";
+import {
+  createLoginSchema,
+  type LoginInput,
+  validationMessagesForLocale,
+} from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -26,6 +31,7 @@ import { safeInternalRedirect } from "@/lib/security/safe-redirect";
 import { shouldResolveAuthDestination } from "@/lib/organizations/tenant-setup";
 
 export function LoginForm() {
+  const { t, locale } = useTranslation();
   const searchParams = useSearchParams();
   const redirect = useMemo(
     () => safeInternalRedirect(searchParams.get("redirect") ?? undefined),
@@ -38,6 +44,10 @@ export function LoginForm() {
 
   const loginDefaults = useMemo(() => getDevLoginDefaultValues(), []);
   const showDevLogin = Boolean(loginDefaults.email);
+  const loginSchema = useMemo(
+    () => createLoginSchema(validationMessagesForLocale(locale)),
+    [locale],
+  );
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -47,9 +57,7 @@ export function LoginForm() {
   async function onSubmit(values: LoginInput) {
     setFormError(null);
     if (!isSupabasePublicConfigured()) {
-      setFormError(
-        "Supabase URL og offentlig API-nøkkel mangler. Opprett .env.local med NEXT_PUBLIC_SUPABASE_URL og enten NEXT_PUBLIC_SUPABASE_ANON_KEY (eldre JWT) eller NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (ny «Publishable»-nøkkel) fra Supabase (Settings → API), og start npm run dev på nytt.",
-      );
+      setFormError(t("auth.pages.supabaseConfigMissing"));
       return;
     }
     const { error } = await supabase.auth.signInWithPassword({
@@ -59,8 +67,8 @@ export function LoginForm() {
     if (error) {
       const message =
         error.message === "Failed to fetch" || error.name === "AuthRetryableFetchError"
-          ? "Får ikke kontakt med Supabase. Sjekk NEXT_PUBLIC_SUPABASE_URL i .env.local, nettverk/VPN og at prosjektet ikke er pauset."
-          : mapAuthErrorToNorwegian(error);
+          ? t("auth.pages.supabaseConnectionError")
+          : mapAuthErrorToUserMessage(error, locale);
       setFormError(message);
       return;
     }
@@ -92,7 +100,7 @@ export function LoginForm() {
         >
           <div className="size-10 animate-spin rounded-full border-4 border-muted border-t-success" />
           <p className="text-app-base font-medium text-muted-foreground">
-            Logger inn …
+          {t("auth.pages.loggingIn")}
           </p>
         </div>
       ) : null}
@@ -102,7 +110,7 @@ export function LoginForm() {
           className="inline-flex items-center gap-2 self-start font-heading text-app-sm font-semibold text-rn-text-slate transition-colors hover:text-success md:text-app-base"
         >
           <ArrowLeft className="size-4 shrink-0" aria-hidden />
-          Tilbake til forsiden
+          {t("auth.pages.backToHome")}
         </Link>
 
         <Card
@@ -117,10 +125,10 @@ export function LoginForm() {
               <AuthBrandMark />
               <div className="min-w-0 flex-1 space-y-2">
                 <CardTitle className="app-title md:text-app-3xl">
-                  Logg inn
+                  {t("auth.login")}
                 </CardTitle>
                 <p className="text-app-sm leading-relaxed text-muted-foreground md:text-app-base">
-                  {APP_NAME} — administrasjon av lokaler, bookinger og økonomi.
+                  {t("auth.pages.loginTagline", { appName: APP_NAME })}
                 </p>
               </div>
             </div>
@@ -128,7 +136,7 @@ export function LoginForm() {
             {showDevLogin ? (
               <div className="rounded-md border-2 border-rn-border-strong/60 bg-muted/35 px-4 py-3 text-app-sm md:px-5 md:py-4 md:text-app-base">
                 <p className="font-semibold text-rn-text-heading">
-                  Plattformadmin (lokal utvikling)
+                  {t("auth.platformAdminDev")}
                 </p>
                 <p className="mt-2 text-muted-foreground">
                   Feltene under er fylt ut med{" "}
@@ -142,26 +150,14 @@ export function LoginForm() {
 
             {!isSupabasePublicConfigured() ? (
               <p className="rounded-md border-2 border-amber-500/40 bg-amber-500/10 px-4 py-3 text-app-sm text-amber-950 md:text-app-base dark:text-amber-100">
-                <strong className="font-semibold">Supabase er ikke konfigurert.</strong>{" "}
-                Opprett{" "}
-                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-app-xs md:text-app-sm">
-                  .env.local
-                </code>{" "}
-                i prosjektmappen med{" "}
-                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-app-xs md:text-app-sm">
-                  NEXT_PUBLIC_SUPABASE_URL
-                </code>{" "}
-                og{" "}
-                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-app-xs md:text-app-sm">
-                  NEXT_PUBLIC_SUPABASE_ANON_KEY
-                </code>{" "}
-                (eldre JWT) eller{" "}
-                <code className="rounded-md bg-amber-500/20 px-1.5 py-0.5 font-mono text-app-xs md:text-app-sm">
-                  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-                </code>{" "}
-                (ny «Publishable»-nøkkel fra Supabase), hentet under Settings → API. Deretter{" "}
-                <strong className="font-semibold">start dev-serveren på nytt</strong>{" "}
-                slik at Next.js leser inn variablene.
+                <strong className="font-semibold">{t("auth.pages.supabaseNotConfigured")}</strong>{" "}
+                {t("auth.pages.supabaseConfigBanner", {
+                  envFile: ".env.local",
+                  urlKey: "NEXT_PUBLIC_SUPABASE_URL",
+                  anonKey: "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+                  publishableKey: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+                  restartDev: t("auth.pages.restartDevServer"),
+                })}
               </p>
             ) : null}
           </CardHeader>
@@ -178,7 +174,7 @@ export function LoginForm() {
                   aria-live="polite"
                 >
                   <p className="font-semibold text-foreground">
-                    Plattformadmin
+                    {t("auth.platformAdmin")}
                   </p>
                   <p className="mt-1.5 font-mono text-app-sm text-foreground md:text-app-base">
                     {loginDefaults.email}
@@ -193,7 +189,7 @@ export function LoginForm() {
                   htmlFor="email"
                   className="text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]"
                 >
-                  E-post
+                  {t("auth.email")}
                 </Label>
                 <Controller
                   name="email"
@@ -221,7 +217,7 @@ export function LoginForm() {
                   htmlFor="password"
                   className="text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]"
                 >
-                  Passord
+                  {t("auth.password")}
                 </Label>
                 <Controller
                   name="password"
@@ -255,7 +251,7 @@ export function LoginForm() {
                 disabled={form.formState.isSubmitting}
                 className="w-full"
               >
-                {form.formState.isSubmitting ? "Logger inn …" : "Logg inn"}
+                {form.formState.isSubmitting ? t("auth.pages.loggingIn") : t("auth.login")}
               </Button>
             </form>
 
@@ -264,13 +260,13 @@ export function LoginForm() {
                 href="/auth/forgot-password"
                 className="font-semibold text-success underline decoration-success/40 underline-offset-4 transition-colors hover:text-success/90"
               >
-                Glemt passord?
+                {t("auth.forgotPassword")}
               </Link>
               <Link
                 href="/auth/register"
                 className="font-semibold text-foreground underline decoration-rn-border-strong underline-offset-4 transition-colors hover:text-success"
               >
-                Opprett konto
+                {t("auth.createAccount")}
               </Link>
             </div>
           </CardContent>

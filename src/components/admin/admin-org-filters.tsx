@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import {
   AdminSegmentFilterBar,
   AdminSegmentFilterControls,
@@ -7,6 +8,7 @@ import {
   AdminSegmentFilterSearch,
   adminSegmentFilterButtonClass,
 } from "@/components/admin/admin-segment-filter-bar";
+import type { Translator } from "@/i18n/types";
 
 export type AdminOrgFilterStatus =
   | "all"
@@ -25,15 +27,17 @@ export type AdminOrgOverviewStats = {
   totalVenues: number;
 };
 
-const FILTER_OPTIONS: { value: AdminOrgFilterStatus; label: string }[] = [
-  { value: "all", label: "Alle" },
-  { value: "active", label: "Aktive" },
-  { value: "incomplete", label: "Ufullstendig" },
-  { value: "suspended", label: "Suspendert" },
-  { value: "past_due", label: "Forfalt" },
-  { value: "canceled", label: "Avsluttet" },
-  { value: "enterprise", label: "Enterprise" },
-];
+function getOrgFilterOptions(t: Translator) {
+  return [
+    { value: "all" as const, label: t("admin.alle") },
+    { value: "active" as const, label: t("admin.aktive") },
+    { value: "incomplete" as const, label: t("admin.ufullstendig") },
+    { value: "suspended" as const, label: t("admin.suspendert") },
+    { value: "past_due" as const, label: t("admin.forfalt") },
+    { value: "canceled" as const, label: t("admin.avsluttet") },
+    { value: "enterprise" as const, label: t("admin.enterprise") },
+  ];
+}
 
 type AdminOrgFiltersProps = {
   search: string;
@@ -52,6 +56,8 @@ export function AdminOrgFilters({
   counts,
   embedded = false,
 }: AdminOrgFiltersProps) {
+  const { t } = useTranslation();
+  const filterOptions = getOrgFilterOptions(t);
   return (
     <AdminSegmentFilterBar
       className={
@@ -63,17 +69,17 @@ export function AdminOrgFilters({
       <AdminSegmentFilterSearch
         value={search}
         onChange={onSearchChange}
-        placeholder="Søk navn, slug, e-post, org.nr…"
-        aria-label="Søk organisasjoner"
+        placeholder={t("admin.sok_navn_slug_e_post_org_nr")}
+        aria-label={t("admin.sok_organisasjoner")}
       />
 
       <AdminSegmentFilterDivider />
 
       <AdminSegmentFilterControls
-        aria-label="Filtrer organisasjoner"
+        aria-label={t("admin.filtrer_organisasjoner")}
         className="min-w-0 overflow-x-auto pb-0.5"
       >
-        {FILTER_OPTIONS.map((option) => {
+        {filterOptions.map((option) => {
           const count = counts[option.value];
           const active = status === option.value;
           return (

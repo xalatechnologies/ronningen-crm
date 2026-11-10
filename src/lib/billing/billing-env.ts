@@ -1,3 +1,7 @@
+import type { Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionaries";
+import { createTranslator } from "@/i18n/translate";
+
 export type BillingMode = "sandbox" | "live";
 
 export type BillingConfig = {
@@ -35,8 +39,11 @@ export function isSandboxBilling(): boolean {
   return getBillingMode() !== "live";
 }
 
-export function getStripeModeLabel(): string {
-  return isSandboxBilling() ? "Testmiljø" : "Produksjon";
+export function getStripeModeLabel(locale: Locale = "nb"): string {
+  const t = createTranslator(getDictionary(locale));
+  return isSandboxBilling()
+    ? t("serverErrors.billing.testEnv")
+    : t("serverErrors.billing.production");
 }
 
 export function resolveStripePriceId(): string | null {
@@ -66,7 +73,11 @@ function isValidAppUrl(url: string | null): boolean {
   }
 }
 
-export function validateStripeKeyModes(config: BillingConfig): BillingConfigError | null {
+export function validateStripeKeyModes(
+  config: BillingConfig,
+  locale: Locale = "nb",
+): BillingConfigError | null {
+  const t = createTranslator(getDictionary(locale));
   const secretKey = config.secretKey;
   const publishableKey = config.publishableKey;
 
@@ -83,15 +94,13 @@ export function validateStripeKeyModes(config: BillingConfig): BillingConfigErro
     if (!secretIsTest) {
       return {
         ok: false,
-        error:
-          "BILLING_MODE=sandbox krever STRIPE_SECRET_KEY med sk_test_ (testnøkkel).",
+        error: t("serverErrors.billing.sandboxRequiresTestKey"),
       };
     }
     if (!publishableIsTest) {
       return {
         ok: false,
-        error:
-          "BILLING_MODE=sandbox krever NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY med pk_test_.",
+        error: t("serverErrors.billing.sandboxPublishableKey"),
       };
     }
     return null;
@@ -100,15 +109,13 @@ export function validateStripeKeyModes(config: BillingConfig): BillingConfigErro
   if (!secretIsLive) {
     return {
       ok: false,
-      error:
-        "BILLING_MODE=live krever STRIPE_SECRET_KEY med sk_live_ (produksjonsnøkkel).",
+      error: t("serverErrors.billing.liveRequiresLiveKey"),
     };
   }
   if (!publishableIsLive) {
     return {
       ok: false,
-      error:
-        "BILLING_MODE=live krever NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY med pk_live_.",
+      error: t("serverErrors.billing.livePublishableKey"),
     };
   }
 

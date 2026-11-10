@@ -151,6 +151,7 @@ export type AdminOrganizationDetail = {
   isSuspended: boolean;
   suspendedAt: string | null;
   suspendedReason: string | null;
+  billingExempt: boolean;
   adminNotes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -194,7 +195,7 @@ export async function fetchAdminOrganizationDetail(
   const { data: org, error } = await admin
     .from("organizations")
     .select(
-      "id, name, slug, subscription_status, subscription_plan, is_suspended, suspended_at, suspended_reason, admin_notes, created_at, updated_at, legal_name, org_number, contact_email, billing_email, last_activity_at, trial_ends_at",
+      "id, name, slug, subscription_status, subscription_plan, is_suspended, suspended_at, suspended_reason, admin_notes, created_at, updated_at, legal_name, org_number, contact_email, billing_email, last_activity_at, trial_ends_at, billing_exempt",
     )
     .eq("id", organizationId)
     .maybeSingle();
@@ -283,6 +284,7 @@ export async function fetchAdminOrganizationDetail(
     isSuspended: org.is_suspended,
     suspendedAt: org.suspended_at,
     suspendedReason: org.suspended_reason,
+    billingExempt: org.billing_exempt ?? false,
     adminNotes: org.admin_notes,
     createdAt: org.created_at,
     updatedAt: org.updated_at,

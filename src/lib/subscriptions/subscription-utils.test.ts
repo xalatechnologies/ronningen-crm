@@ -92,6 +92,31 @@ describe("resolveTenantAccess", () => {
       ),
     ).toBe("full");
   });
+
+  it("grants full access for billing-exempt org regardless of trial or Stripe", () => {
+    expect(
+      resolveTenantAccess(
+        {
+          is_suspended: false,
+          subscription_status: "canceled",
+          current_period_end: pastPeriodEnd,
+          provider_subscription_id: null,
+          billing_exempt: true,
+        },
+        { billingEnabled: true },
+      ),
+    ).toBe("full");
+  });
+
+  it("still suspends billing-exempt org when suspended", () => {
+    expect(
+      resolveTenantAccess({
+        is_suspended: true,
+        subscription_status: "active",
+        billing_exempt: true,
+      }),
+    ).toBe("suspended");
+  });
 });
 
 describe("isAllowedWhenBillingBlocked", () => {

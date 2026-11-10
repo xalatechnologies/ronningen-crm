@@ -9,6 +9,7 @@ import {
   type MembershipEligibilityInput,
 } from "@/lib/auth/account-deletion-eligibility";
 import { normalizeEmail } from "@/lib/auth/normalize-email";
+import { getServerTranslation } from "@/i18n/server";
 
 export type {
   AccountDeletionBlocker,
@@ -21,6 +22,7 @@ export { normalizeConfirmEmail } from "@/lib/auth/account-deletion-eligibility";
 export async function getAccountDeletionEligibility(
   userId: string,
 ): Promise<AccountDeletionEligibility> {
+  const { t } = await getServerTranslation();
   const admin = createSupabaseAdminClient();
 
   const [{ data: memberships, error: membershipsError }, { data: profile }] =
@@ -88,7 +90,7 @@ export async function getAccountDeletionEligibility(
       };
       return {
         organizationId: row.organization_id,
-        organizationName: org?.name?.trim() || "Organisasjon",
+        organizationName: org?.name?.trim() || t("organizations.defaultName"),
         role: row.role,
         memberCount: counts.memberCount,
         ownerCount: counts.ownerCount,
@@ -100,13 +102,14 @@ export async function getAccountDeletionEligibility(
     memberships: membershipInputs,
     isPlatformAdmin: profile?.is_platform_admin ?? false,
     platformAdminCount: platformAdminCount ?? 0,
-  });
+  }, t);
 }
 
 export async function deleteUserAccount(input: {
   userId: string;
   confirmEmail: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { t } = await getServerTranslation();
   const admin = createSupabaseAdminClient();
 
   const { data: authData, error: authError } =
@@ -124,7 +127,7 @@ export async function deleteUserAccount(input: {
   if (normalizeConfirmEmail(input.confirmEmail) !== normalizeEmail(accountEmail)) {
     return {
       ok: false,
-      error: "E-postadressen stemmer ikke. Skriv inn e-posten din nøyaktig.",
+      error: t("serverErrors.auth.emailMismatch"),
     };
   }
 
@@ -144,7 +147,7 @@ export async function deleteUserAccount(input: {
   if (!eligibility.eligible) {
     return {
       ok: false,
-      error: eligibility.blockers[0]?.message ?? "Kontoen kan ikke slettes ennå.",
+      error: eligibility.blockers[0]?.message ?? t("serverErrors.auth.accountCannotDeleteYet"),
     };
   }
 

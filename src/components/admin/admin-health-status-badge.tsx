@@ -1,12 +1,20 @@
+"use client";
+
+import { useTranslation } from "@/i18n/client";
 import type { HealthStatus } from "@/lib/admin/queries/system-health";
+import type { Translator } from "@/i18n/types";
 import { cn } from "@/lib/utils";
 
-const STATUS_LABELS: Record<HealthStatus, string> = {
-  healthy: "Sunn",
-  info: "Inaktiv",
-  warning: "Advarsel",
-  critical: "Kritisk",
-};
+const STATUS_KEYS = {
+  healthy: "admin.sunn",
+  info: "admin.inaktiv",
+  warning: "admin.advarsel",
+  critical: "admin.kritisk",
+} as const;
+
+export function overallStatusLabel(status: HealthStatus, t: Translator): string {
+  return t(STATUS_KEYS[status]);
+}
 
 export function AdminHealthStatusBadge({
   status,
@@ -15,6 +23,7 @@ export function AdminHealthStatusBadge({
   status: HealthStatus;
   className?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <span
       className={cn(
@@ -26,11 +35,7 @@ export function AdminHealthStatusBadge({
         className,
       )}
     >
-      {STATUS_LABELS[status]}
+      {t(STATUS_KEYS[status])}
     </span>
   );
-}
-
-export function overallStatusLabel(status: HealthStatus): string {
-  return STATUS_LABELS[status];
 }

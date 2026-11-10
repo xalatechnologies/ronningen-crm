@@ -1,3 +1,6 @@
+import type { Translator } from "@/i18n/types";
+import type { TranslationKey } from "@/i18n/types";
+
 export type PropertyListRow = {
   id: string;
   name: string;
@@ -7,20 +10,12 @@ export type PropertyListRow = {
   updatedAtIso: string;
 };
 
-export function propertyTypeLabel(type: string | null): string {
+export function propertyTypeLabel(
+  type: string | null,
+  t: Translator,
+): string {
   if (!type?.trim()) return "—";
-  switch (type) {
-    case "selskaplokale":
-      return "Selskaplokale";
-    case "gård":
-      return "Gård";
-    case "møterom":
-      return "Møterom";
-    case "festlokale":
-      return "Festlokale";
-    case "annet":
-      return "Annet";
-    default:
-      return type;
-  }
+  const key = `properties.types.${type}` as TranslationKey;
+  const value = t(key);
+  return value === key ? type : value;
 }

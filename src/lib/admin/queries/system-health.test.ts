@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { getDictionary } from "@/i18n/dictionaries";
+import { createTranslator } from "@/i18n/translate";
 import {
   buildCronHealthComponent,
   buildStripeHealthComponent,
@@ -7,6 +9,8 @@ import {
   fetchAdminSystemHealthOverview,
   type SystemHealthComponent,
 } from "@/lib/admin/queries/system-health";
+
+const t = createTranslator(getDictionary("nb"));
 
 describe("computeOverallStatus", () => {
   it("returns healthy when all components are healthy or info", () => {
@@ -37,7 +41,7 @@ describe("buildStripeHealthComponent", () => {
     vi.stubEnv("BILLING_ENABLED", "false");
     vi.stubEnv("STRIPE_SECRET_KEY", "");
 
-    const result = buildStripeHealthComponent(null);
+    const result = buildStripeHealthComponent(null, t);
     expect(result.status).toBe("info");
     expect(result.detail).toContain("deaktivert");
   });
@@ -46,7 +50,7 @@ describe("buildStripeHealthComponent", () => {
     vi.stubEnv("NEXT_PUBLIC_BILLING_ENABLED", "true");
     vi.stubEnv("STRIPE_SECRET_KEY", "");
 
-    const result = buildStripeHealthComponent(null);
+    const result = buildStripeHealthComponent(null, t);
     expect(result.status).toBe("critical");
   });
 
@@ -59,7 +63,7 @@ describe("buildStripeHealthComponent", () => {
     vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
 
-    const result = buildStripeHealthComponent(null);
+    const result = buildStripeHealthComponent(null, t);
     expect(result.status).toBe("warning");
     expect(result.detail).toContain("Ingen webhooks");
   });
@@ -74,7 +78,7 @@ describe("buildCronHealthComponent", () => {
     vi.stubEnv("CRON_SECRET", "");
     vi.stubEnv("NEXT_PUBLIC_BILLING_ENABLED", "false");
 
-    const result = buildCronHealthComponent(null);
+    const result = buildCronHealthComponent(null, t);
     expect(result.status).toBe("warning");
     expect(result.detail).toContain("CRON_SECRET");
   });
@@ -83,13 +87,13 @@ describe("buildCronHealthComponent", () => {
     vi.stubEnv("CRON_SECRET", "");
     vi.stubEnv("NEXT_PUBLIC_BILLING_ENABLED", "true");
 
-    const result = buildCronHealthComponent(null);
+    const result = buildCronHealthComponent(null, t);
     expect(result.status).toBe("critical");
   });
 
   it("warns when waiting for first completed run", () => {
     vi.stubEnv("CRON_SECRET", "secret");
-    const result = buildCronHealthComponent(null);
+    const result = buildCronHealthComponent(null, t);
     expect(result.status).toBe("warning");
     expect(result.detail).toContain("første kjøring");
   });
@@ -99,7 +103,7 @@ describe("buildCronHealthComponent", () => {
     const result = buildCronHealthComponent({
       status: "failed",
       finished_at: new Date().toISOString(),
-    });
+    }, t);
     expect(result.status).toBe("critical");
   });
 
@@ -109,7 +113,7 @@ describe("buildCronHealthComponent", () => {
     const result = buildCronHealthComponent({
       status: "success",
       finished_at: stale,
-    });
+    }, t);
     expect(result.status).toBe("warning");
     expect(result.detail).toContain("for gammel");
   });

@@ -3,8 +3,9 @@
 import { InquiryDetailSheet } from "@/components/inquiries/inquiry-detail-sheet";
 import { InquiriesFollowUpMonthCalendar } from "@/components/inquiries/inquiries-follow-up-calendar";
 import {
-  INQUIRY_STATUS_LABELS,
+  inquiryStatusLabel,
   isActiveInquiry,
+  type InquiryCustomerOption,
   type InquiryListRow,
 } from "@/components/inquiries/types";
 import { AppPageHeader } from "@/components/layout/app-page-header";
@@ -23,69 +24,57 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { usePageSearch } from "@/providers/page-search-provider";
+import { Label } from "@/components/ui/label";
+import { useTranslation } from "@/i18n/client";
 import { formatAppDateTime } from "@/lib/format-datetime";
-import { formatBookingListDateLabel } from "@/lib/booking-period";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
-  APP_TABLE_CELL_BODY,
-  APP_TABLE_CELL_DATE,
-  APP_TABLE_CELL_PRIMARY,
+  APP_DATA_BODY,
+  APP_DATA_DATE,
+  APP_DATA_PRIMARY,
   APP_TABLE_HEAD,
+  APP_TABLE_HEAD_BAR,
 } from "@/lib/table-typography";
 import {
   type BookingInquiryStatus,
 } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { isBefore } from "date-fns";
-import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Inbox, ListFilter, Plus, Search } from "lucide-react";
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Inbox, ListFilter, Mail, Phone, Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
-const inquiriesTableHeadClass = cn("bookings-list-table-head", APP_TABLE_HEAD);
+const filterEyebrowClass =
+  "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
+
+const inquiriesTableHeadClass = cn(
+  "bookings-list-table-head",
+  APP_TABLE_HEAD,
+);
 
 const inquiriesTableCellPrimaryClass = cn(
-  APP_TABLE_CELL_PRIMARY,
-  "inquiries-list-row-title",
+  APP_DATA_PRIMARY,
+  "inquiries-list-row-title break-words",
 );
 
 const inquiriesTableCellBodyClass = cn(
-  APP_TABLE_CELL_BODY,
-  "inquiries-list-row-cell",
+  APP_DATA_BODY,
+  "inquiries-list-row-cell break-words",
 );
 
 const inquiriesTableCellDateClass = cn(
-  APP_TABLE_CELL_DATE,
-  "inquiries-list-row-meta",
+  APP_DATA_DATE,
+  "inquiries-list-row-meta break-words",
 );
 
-function formatInquiryPreferredDate(row: InquiryListRow): string {
-  if (!row.preferredEventDateIso) return "—";
-  return formatBookingListDateLabel({
-    eventDateIso: row.preferredEventDateIso,
-    eventEndDateIso: row.preferredEventEndDateIso,
-    eventStartTime: null,
-    eventEndTime: null,
-  });
-}
-
-function formatInquiryListDate(iso: string): string {
-  return new Intl.DateTimeFormat("nb-NO", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(`${iso.slice(0, 10)}T12:00:00`));
-}
+const listDateOptions: Intl.DateTimeFormatOptions = {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+};
 
 type InquiryStatusFilter = "all" | Exclude<BookingInquiryStatus, "converted">;
 
@@ -144,7 +133,7 @@ function statusBadgeClass(status: BookingInquiryStatus): string {
 export type InquiriesSectionProps = {
   inquiries: InquiryListRow[];
   properties: { id: string; name: string }[];
-  customers: { id: string; name: string }[];
+  customers: InquiryCustomerOption[];
   canManageInquiries: boolean;
   loadError: string | null;
 };
@@ -156,7 +145,8 @@ export function InquiriesSection({
   canManageInquiries,
   loadError,
 }: InquiriesSectionProps) {
-  const [query, setQuery] = useState("");
+  const { t, locale, formatDate } = useTranslation();
+  const { query, setQuery } = usePageSearch();
   const [statusFilter, setStatusFilter] = useState<InquiryStatusFilter>("all");
   const [dueOnly, setDueOnly] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
@@ -165,6 +155,27 @@ export function InquiriesSection({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showCalendarView, setShowCalendarView] = useState(false);
   const [page, setPage] = useState(1);
+
+  function formatInquiryPreferredDate(row: InquiryListRow): string {
+    if (!row.preferredEventDateIso) return "—";
+    const start = row.preferredEventDateIso.slice(0, 10);
+    const startLabel = formatDate(`${start}T12:00:00`, listDateOptions);
+    const end = row.preferredEventEndDateIso?.slice(0, 10);
+    if (end && end !== start) {
+      return `${startLabel} – ${formatDate(`${end}T12:00:00`, listDateOptions)}`;
+    }
+    return startLabel;
+  }
+
+  function formatInquiryListDate(iso: string): string {
+    return formatDate(`${iso.slice(0, 10)}T12:00:00`, listDateOptions);
+  }
+
+  function inquiryWord(count: number): string {
+    return count === 1
+      ? t("inquiries.inquirySingular")
+      : t("inquiries.inquiryPlural");
+  }
 
   useEffect(() => {
     setPage(1);
@@ -207,13 +218,13 @@ export function InquiriesSection({
     (statusFilter !== "all" ? 1 : 0) + (dueOnly ? 1 : 0);
 
   const filterButtonLabel = useMemo(() => {
-    if (statusFilter !== "all" && dueOnly) return "Filter aktiv";
+    if (statusFilter !== "all" && dueOnly) return t("inquiries.filterActive");
     if (statusFilter !== "all") {
-      return INQUIRY_STATUS_LABELS[statusFilter];
+      return inquiryStatusLabel(statusFilter, t);
     }
-    if (dueOnly) return "Forfalt oppfølging";
-    return "Filter";
-  }, [statusFilter, dueOnly]);
+    if (dueOnly) return t("inquiries.overdueFollowUp");
+    return t("common.actions.filter");
+  }, [statusFilter, dueOnly, t]);
 
   const filtered = useMemo(() => {
     return activeInquiries.filter((row) => {
@@ -255,44 +266,53 @@ export function InquiriesSection({
     setSheetOpen(true);
   }
 
+  const footerExtra =
+    filtered.length !== activeInquiries.length
+      ? t("inquiries.footer.extraMatches", { total: activeInquiries.length })
+      : ` ${inquiryWord(filtered.length)}`;
+
   return (
     <div className="inquiries-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div className="border-b-2 border-rn-border-strong bg-card/80 px-[length:var(--app-card-padding)] py-6 md:py-7">
-          <AppPageHeader
-            className="mb-0 gap-3 md:gap-4"
-            surface="default"
-            title="Forespørsler"
-            actions={
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                {!loadError ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="cta"
-                    className="gap-2 border-2 border-rn-border-strong font-semibold"
-                    aria-expanded={showCalendarView}
-                    onClick={() => setShowCalendarView((v) => !v)}
-                  >
-                    <Calendar className="size-5 shrink-0" aria-hidden />
-                    {showCalendarView ? "Vis liste" : "Oppfølgingskalender"}
-                  </Button>
-                ) : null}
-                {canManageInquiries ? (
-                  <Link
-                    href="/app/inquiries/new"
-                    className={cn(
-                      buttonVariants({ variant: "success", size: "cta" }),
-                      "inline-flex items-center justify-center gap-2",
-                    )}
-                  >
-                    <Plus className="size-5" aria-hidden />
-                    Ny forespørsel
-                  </Link>
-                ) : null}
-              </div>
-            }
-          />
+        <div className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
+          <div className="inquiries-list-hero">
+            <AppPageHeader
+              className="mb-0"
+              surface="default"
+              title={t("inquiries.title")}
+              actions={
+                <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
+                  {!loadError ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="cta"
+                      className="w-full gap-2 border-2 border-rn-border-strong px-4 font-semibold sm:w-auto md:px-8"
+                      aria-expanded={showCalendarView}
+                      onClick={() => setShowCalendarView((v) => !v)}
+                    >
+                      <Calendar className="size-5 shrink-0" aria-hidden />
+                      {showCalendarView
+                        ? t("inquiries.showList")
+                        : t("inquiries.followUpCalendar")}
+                    </Button>
+                  ) : null}
+                  {canManageInquiries ? (
+                    <Link
+                      href="/app/inquiries/new"
+                      className={cn(
+                        buttonVariants({ variant: "success", size: "cta" }),
+                        "inline-flex w-full items-center justify-center gap-2 px-4 sm:w-auto md:px-8",
+                      )}
+                    >
+                      <Plus className="size-5" aria-hidden />
+                      {t("inquiries.new")}
+                    </Link>
+                  ) : null}
+                </div>
+              }
+            />
+          </div>
         </div>
 
         {loadError ? (
@@ -301,74 +321,62 @@ export function InquiriesSection({
             role="alert"
           >
             <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive">
-              Kunne ikke laste data: {loadError}
+              {t("inquiries.loadError", { error: loadError })}
             </div>
           </div>
         ) : null}
 
         {!loadError ? (
           <section
-            className="border-t border-rn-border-strong/35 px-6 py-5 md:px-8 md:py-6"
-            aria-label="Søk og filtrer forespørsler"
+            className="inquiries-list-filters border-t border-rn-border-strong/35 px-4 py-5 sm:px-6 md:px-8 md:py-6"
+            aria-label={t("inquiries.searchFilterAria")}
           >
-            <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
-              <div className="relative min-w-0 flex-1">
-                <Search
-                  className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-rn-text-slate md:left-5"
-                  aria-hidden
-                />
-                <Input
-                  id="inquiries-search"
-                  aria-label="Søk blant forespørsler"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Kunde, telefon, lokale eller type …"
-                  autoComplete="off"
-                  className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background pl-12 text-app-base text-foreground shadow-sm md:h-14 md:pl-14 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
-                />
-              </div>
-
-              <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 lg:ml-auto">
-                <div className="w-full shrink-0 sm:w-40 md:w-44">
-                  <label htmlFor="inquiries-date-from" className="sr-only">
-                    Fra dato
-                  </label>
+            <div className="flex min-w-0 flex-col gap-4">
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+                <div className="min-w-0">
+                  <Label htmlFor="inquiries-date-from" className={filterEyebrowClass}>
+                    {t("inquiries.dateFrom")}
+                  </Label>
                   <DatePickerField
                     id="inquiries-date-from"
                     value={dateFrom}
                     onChange={setDateFrom}
                     maxYmd={dateTo || undefined}
                     variant="toolbar"
-                    className="h-12 min-h-12 text-sm md:h-14 md:min-h-14 md:text-base"
+                    className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
                   />
                 </div>
-                <div className="w-full shrink-0 sm:w-40 md:w-44">
-                  <label htmlFor="inquiries-date-to" className="sr-only">
-                    Til dato
-                  </label>
+                <div className="min-w-0">
+                  <Label htmlFor="inquiries-date-to" className={filterEyebrowClass}>
+                    {t("inquiries.dateTo")}
+                  </Label>
                   <DatePickerField
                     id="inquiries-date-to"
                     value={dateTo}
                     onChange={setDateTo}
                     minYmd={dateFrom || undefined}
                     variant="toolbar"
-                    className="h-12 min-h-12 text-sm md:h-14 md:min-h-14 md:text-base"
+                    className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
                   />
                 </div>
+                <div className="min-w-0 sm:col-span-2 lg:col-span-1">
+                <p className={cn(filterEyebrowClass, "hidden lg:block")} aria-hidden>
+                  {"\u00a0"}
+                </p>
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     className={cn(
                       buttonVariants({ variant: "outline" }),
-                      "h-12 min-h-12 gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-sm font-semibold shadow-sm md:h-14 md:min-h-14 md:px-5 md:text-base",
+                      "h-11 min-h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold shadow-sm sm:h-12 sm:min-h-12 sm:text-app-base lg:min-w-[11.5rem]",
                       menuFilterCount > 0 &&
                         "border-success/50 bg-success/5 text-foreground",
                     )}
-                    aria-label="Åpne filtermeny"
+                    aria-label={t("inquiries.openFilterMenu")}
                   >
                     <ListFilter className="size-4 shrink-0" aria-hidden />
                     <span>{filterButtonLabel}</span>
                     {menuFilterCount > 0 ? (
-                      <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-md bg-success px-1.5 py-0.5 text-xs font-bold text-white tabular-nums">
+                      <span className="inquiries-list-filter-count inline-flex min-w-[1.25rem] items-center justify-center rounded-md bg-success px-1.5 py-0.5 font-bold text-white tabular-nums">
                         {menuFilterCount}
                       </span>
                     ) : null}
@@ -381,7 +389,7 @@ export function InquiriesSection({
                   >
                     <DropdownMenuGroup>
                       <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Status
+                        {t("common.fields.status")}
                       </DropdownMenuLabel>
                       <DropdownMenuRadioGroup
                         value={statusFilter}
@@ -406,8 +414,8 @@ export function InquiriesSection({
                             className="font-medium"
                           >
                             {key === "all"
-                              ? "Alle"
-                              : INQUIRY_STATUS_LABELS[key]}
+                              ? t("common.actions.all")
+                              : inquiryStatusLabel(key, t)}
                             <DropdownMenuShortcut>
                               {filterCounts[key]}
                             </DropdownMenuShortcut>
@@ -423,7 +431,7 @@ export function InquiriesSection({
                       onCheckedChange={(checked) => setDueOnly(checked === true)}
                       className="font-medium"
                     >
-                      Forfalt oppfølging
+                      {t("inquiries.overdueFollowUp")}
                       <DropdownMenuShortcut>{overdueCount}</DropdownMenuShortcut>
                     </DropdownMenuCheckboxItem>
 
@@ -435,19 +443,23 @@ export function InquiriesSection({
                           className="font-medium"
                           onSelect={() => resetFilters()}
                         >
-                          Nullstill filter
+                          {t("inquiries.resetFilters")}
                         </DropdownMenuItem>
                       </>
                     ) : null}
                   </DropdownMenuContent>
                 </DropdownMenu>
+                </div>
               </div>
             </div>
 
             {hasActiveFilters ? (
-              <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
-                Viser {filtered.length} av {activeInquiries.length}{" "}
-                {activeInquiries.length === 1 ? "forespørsel" : "forespørsler"}
+              <p className="mt-2 text-app-sm text-muted-foreground">
+                {t("inquiries.showingCount", {
+                  shown: filtered.length,
+                  total: activeInquiries.length,
+                  label: inquiryWord(activeInquiries.length),
+                })}
               </p>
             ) : null}
           </section>
@@ -460,8 +472,8 @@ export function InquiriesSection({
             </div>
             <p className="max-w-sm text-muted-foreground">
               {activeInquiries.length === 0
-                ? "Ingen forespørsler ennå. Bruk «Ny forespørsel» for å registrere første henvendelse."
-                : "Ingen rader samsvarer med filter eller søk."}
+                ? t("inquiries.emptyNone")
+                : t("inquiries.emptyFiltered")}
             </p>
           </div>
         ) : null}
@@ -475,87 +487,144 @@ export function InquiriesSection({
         ) : null}
 
         {!loadError && filtered.length > 0 && !showCalendarView ? (
-          <div className="overflow-x-auto">
-            <Table className="min-w-[920px]">
-              <TableHeader>
-                <TableRow className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
-                  <TableHead className={cn(inquiriesTableHeadClass, "pl-6 md:pl-8")}>
-                    Kunde
-                  </TableHead>
-                  <TableHead className={inquiriesTableHeadClass}>Lokale</TableHead>
-                  <TableHead className={inquiriesTableHeadClass}>Ønsket dato</TableHead>
-                  <TableHead className={inquiriesTableHeadClass}>Status</TableHead>
-                  <TableHead className={inquiriesTableHeadClass}>Neste oppfølging</TableHead>
-                  <TableHead
-                    className={cn(inquiriesTableHeadClass, "pr-6 text-right md:pr-8")}
-                  >
-                    Oppdatert
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pageRows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className="group cursor-pointer border-rn-border-strong/40 hover:bg-rn-surface-row-hover"
-                    onClick={() => openRow(row)}
-                    aria-label={`Åpne forespørsel: ${row.customerName}`}
-                  >
-                    <TableCell className={inquiriesTableCellPrimaryClass}>
+          <div>
+            <div
+              className={cn(
+                "hidden grid-cols-12 md:grid",
+                APP_TABLE_HEAD_BAR,
+              )}
+            >
+              <div className={cn("col-span-3", inquiriesTableHeadClass)}>
+                {t("inquiries.tableCustomer")}
+              </div>
+              <div className={cn("col-span-2", inquiriesTableHeadClass)}>
+                {t("inquiries.tableVenue")}
+              </div>
+              <div className={cn("col-span-2", inquiriesTableHeadClass)}>
+                {t("inquiries.tablePreferredDate")}
+              </div>
+              <div className={cn("col-span-2", inquiriesTableHeadClass)}>
+                {t("common.fields.status")}
+              </div>
+              <div className={cn("col-span-2", inquiriesTableHeadClass)}>
+                {t("inquiries.tableNextFollowUp")}
+              </div>
+              <div className={cn("col-span-1 text-right", inquiriesTableHeadClass)}>
+                {t("inquiries.tableUpdated")}
+              </div>
+            </div>
+            <div className="divide-y divide-rn-border-strong/50">
+              {pageRows.map((row) => (
+                <button
+                  key={row.id}
+                  type="button"
+                  className={cn(
+                    "grid w-full grid-cols-1 gap-3 px-4 py-4 text-left font-inherit text-foreground transition-colors sm:px-6 md:grid-cols-12 md:items-center md:gap-4 md:px-8 md:py-5",
+                    "cursor-pointer border-0 bg-transparent outline-none hover:bg-rn-surface-row-hover",
+                    "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-inset",
+                  )}
+                  onClick={() => openRow(row)}
+                  aria-label={t("inquiries.openAria", { name: row.customerName })}
+                >
+                  <div className="min-w-0 md:col-span-3">
+                    <h4 className={inquiriesTableCellPrimaryClass}>
                       {row.customerName}
-                    </TableCell>
-                    <TableCell className={inquiriesTableCellBodyClass}>
+                    </h4>
+                    {row.customerPhone?.trim() ? (
+                      <p className="inquiries-list-row-meta mt-0.5 flex items-center gap-1.5 text-app-sm text-muted-foreground">
+                        <Phone
+                          className="size-3.5 shrink-0 text-rn-text-slate"
+                          aria-hidden
+                        />
+                        <span className="tabular-nums break-words">
+                          {row.customerPhone.trim()}
+                        </span>
+                      </p>
+                    ) : null}
+                    {row.customerEmail?.trim() ? (
+                      <p className="inquiries-list-row-meta mt-0.5 flex items-start gap-1.5 text-app-sm text-muted-foreground">
+                        <Mail
+                          className="mt-0.5 size-3.5 shrink-0 text-rn-text-slate"
+                          aria-hidden
+                        />
+                        <span className="min-w-0 break-words">
+                          {row.customerEmail.trim()}
+                        </span>
+                      </p>
+                    ) : null}
+                    <p className="inquiries-list-row-meta mt-1 text-muted-foreground md:hidden">
                       {row.propertyName ?? "—"}
-                    </TableCell>
-                    <TableCell className={inquiriesTableCellDateClass}>
+                      {" · "}
                       {formatInquiryPreferredDate(row)}
-                    </TableCell>
-                    <TableCell className={inquiriesTableCellBodyClass}>
-                      <span
-                        className={cn(
-                          "inline-flex rounded-md border-2 px-2.5 py-0.5 text-xs font-semibold md:text-sm",
-                          statusBadgeClass(row.status),
-                        )}
-                      >
-                        {INQUIRY_STATUS_LABELS[row.status]}
-                      </span>
-                    </TableCell>
-                    <TableCell className={inquiriesTableCellDateClass}>
-                      {row.nextFollowUpAtIso
-                        ? formatAppDateTime(row.nextFollowUpAtIso)
-                        : "—"}
-                    </TableCell>
-                    <TableCell
-                      className={cn(inquiriesTableCellDateClass, "text-right")}
+                    </p>
+                  </div>
+                  <div
+                    className={cn(
+                      "hidden min-w-0 md:col-span-2 md:block",
+                      inquiriesTableCellBodyClass,
+                    )}
+                  >
+                    {row.propertyName ?? "—"}
+                  </div>
+                  <div
+                    className={cn(
+                      "hidden min-w-0 md:col-span-2 md:block",
+                      inquiriesTableCellDateClass,
+                    )}
+                  >
+                    {formatInquiryPreferredDate(row)}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 md:col-span-2">
+                    <span
+                      className={cn(
+                        "inquiries-list-status-pill inline-flex rounded-md border-2 px-2.5 py-0.5 font-semibold",
+                        statusBadgeClass(row.status),
+                      )}
                     >
+                      {inquiryStatusLabel(row.status, t)}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 md:col-span-3 md:grid-cols-2">
+                    <div className="min-w-0">
+                      <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground md:hidden">
+                        {t("inquiries.tableNextFollowUp")}
+                      </p>
+                      <p className={inquiriesTableCellDateClass}>
+                        {row.nextFollowUpAtIso
+                          ? formatAppDateTime(row.nextFollowUpAtIso, locale)
+                          : "—"}
+                      </p>
+                    </div>
+                    <div className="min-w-0 text-right">
+                      <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground md:hidden">
+                        {t("inquiries.tableUpdated")}
+                      </p>
                       <span className="inline-flex w-full items-center justify-end gap-2">
-                        <span>
+                        <span className={inquiriesTableCellDateClass}>
                           {formatInquiryListDate(row.updatedAtIso)}
                         </span>
                         <ChevronRight
-                          className="size-4 shrink-0 text-muted-foreground/75 transition-colors group-hover:text-rn-text-heading group-hover:opacity-100 opacity-80"
+                          className="size-4 shrink-0 text-muted-foreground/75"
                           aria-hidden
                         />
                       </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
             {filtered.length > TENANT_LIST_PAGE_SIZE ? (
               <div className="flex flex-col items-stretch justify-between gap-4 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
-                <span className="text-app-sm font-medium text-rn-footer-text md:text-app-base">
-                  Viser {(currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1}–
-                  {Math.min(
-                    currentPage * TENANT_LIST_PAGE_SIZE,
-                    filtered.length,
-                  )}{" "}
-                  av {filtered.length}
-                  {filtered.length !== activeInquiries.length
-                    ? ` treff (${activeInquiries.length} totalt)`
-                    : filtered.length === 1
-                      ? " forespørsel"
-                      : " forespørsler"}
+                <span className="inquiries-list-footer-caption font-medium text-rn-footer-text">
+                  {t("inquiries.footer.showingRange", {
+                    from: (currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1,
+                    to: Math.min(
+                      currentPage * TENANT_LIST_PAGE_SIZE,
+                      filtered.length,
+                    ),
+                    filtered: filtered.length,
+                    extra: footerExtra,
+                  })}
                 </span>
                 <div className="flex items-center justify-center gap-2">
                   <Button
@@ -564,13 +633,16 @@ export function InquiriesSection({
                     size="icon-sm"
                     className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
                     disabled={currentPage <= 1}
-                    aria-label="Forrige side"
+                    aria-label={t("common.pagination.prevPage")}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                   >
                     <ChevronLeft className="size-[18px]" />
                   </Button>
-                  <span className="min-w-[5.5rem] text-center text-app-sm font-semibold tabular-nums text-muted-foreground">
-                    Side {currentPage} / {totalPages}
+                    <span className="min-w-[5.5rem] text-center text-app-sm font-semibold tabular-nums text-muted-foreground md:text-app-base">
+                    {t("common.pagination.pageOf", {
+                      current: currentPage,
+                      total: totalPages,
+                    })}
                   </span>
                   <Button
                     type="button"
@@ -578,7 +650,7 @@ export function InquiriesSection({
                     size="icon-sm"
                     className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
                     disabled={currentPage >= totalPages}
-                    aria-label="Neste side"
+                    aria-label={t("common.pagination.nextPage")}
                     onClick={() =>
                       setPage((p) => Math.min(totalPages, p + 1))
                     }

@@ -11,6 +11,7 @@ export type OrganizationSummary = {
   subscriptionPlan: SubscriptionPlan;
   isSuspended: boolean;
   suspendedReason: string | null;
+  billingExempt: boolean;
   periodEnd: string | null;
   providerSubscriptionId: string | null;
 };

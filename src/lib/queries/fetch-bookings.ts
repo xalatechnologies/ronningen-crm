@@ -1,10 +1,14 @@
 import type {
+  BookingListContract,
   BookingListRow,
   BookingStatus,
 } from "@/components/bookings/types";
 import { effectiveBookingPaymentStatus } from "@/constants/booking-payment-status";
 import { normalizeBookingAudience } from "@/lib/booking-audience";
 import { formatBookingListDateLabel } from "@/lib/booking-period";
+import { sortBookingsByUpcomingFirst } from "@/lib/bookings/list-sort";
+import type { ContractStatus } from "@/lib/contracts/types";
+import { CONTRACT_STATUSES } from "@/lib/contracts/types";
 import type { TenantSupabaseClient } from "@/lib/queries/types";
 import { canManageBookings } from "@/lib/role-access";
 import type { UserRole } from "@/constants/roles";
@@ -28,6 +32,7 @@ type RawBooking = {
   payment_due_date: string | null;
   collection_notice_sent_at: string | null;
   payment_status: string | null;
+  property_id: string | null;
   customers: {
     name: string;
     phone: string | null;
@@ -93,6 +98,66 @@ function paidLabelAndFraction(
   return { paidFraction: frac, paidLabel: label };
 }
 
+function isContractStatus(value: string): value is ContractStatus {
+  return (CONTRACT_STATUSES as readonly string[]).includes(value);
+}
+
+export function summarizeBookingContract(
+  versions: { id: string; status: string; version_number: number }[],
+): BookingListContract | null {
+  if (!versions.length) return null;
+  const ordered = [...versions].sort((a, b) => b.version_number - a.version_number);
+  const accepted = ordered.find((row) => row.status === "accepted");
+  const current = accepted ?? ordered[0];
+  if (!current || !isContractStatus(current.status)) return null;
+  return { versionId: current.id, status: current.status };
+}
+
+async function loadContractsByBookingId(
+  supabase: TenantSupabaseClient,
+  orgId: string,
+  bookingIds: string[],
+): Promise<Map<string, BookingListContract>> {
+  const byBooking = new Map<string, BookingListContract>();
+  if (!bookingIds.length) return byBooking;
+
+  const { data: contracts, error: contractError } = await supabase
+    .from("rental_contracts" as never)
+    .select("id, booking_id")
+    .eq("organization_id", orgId)
+    .in("booking_id", bookingIds);
+  if (contractError || !contracts?.length) return byBooking;
+
+  const rows = contracts as { id: string; booking_id: string }[];
+  const contractIds = rows.map((row) => row.id);
+  const bookingByContract = new Map(rows.map((row) => [row.id, row.booking_id]));
+
+  const { data: versions, error: versionError } = await supabase
+    .from("rental_contract_versions" as never)
+    .select("id, contract_id, status, version_number")
+    .in("contract_id", contractIds);
+  if (versionError || !versions?.length) return byBooking;
+
+  const grouped = new Map<string, { id: string; status: string; version_number: number }[]>();
+  for (const version of versions as {
+    id: string;
+    contract_id: string;
+    status: string;
+    version_number: number;
+  }[]) {
+    const list = grouped.get(version.contract_id) ?? [];
+    list.push(version);
+    grouped.set(version.contract_id, list);
+  }
+
+  for (const [contractId, list] of grouped) {
+    const bookingId = bookingByContract.get(contractId);
+    const summary = summarizeBookingContract(list);
+    if (bookingId && summary) byBooking.set(bookingId, summary);
+  }
+  return byBooking;
+}
+
 export async function fetchBookingsPageData(
   supabase: TenantSupabaseClient,
   orgId: string,
@@ -103,12 +168,17 @@ export async function fetchBookingsPageData(
   const { data: rawList, error } = await supabase
     .from("bookings")
     .select(
-      "id, customer_id, event_type, event_date, event_end_date, event_start_time, event_end_time, guest_count, total_price, paid_amount, remaining_amount, status, fest_type, notes, booking_reference, payment_due_date, collection_notice_sent_at, payment_status, customers(name, phone, email, address)",
+      "id, customer_id, event_type, event_date, event_end_date, event_start_time, event_end_time, guest_count, total_price, paid_amount, remaining_amount, status, fest_type, notes, booking_reference, payment_due_date, collection_notice_sent_at, payment_status, property_id, customers(name, phone, email, address)",
     )
     .eq("organization_id", orgId)
-    .order("event_date", { ascending: false });
+    .order("event_date", { ascending: true });
 
   const loadError = error?.message ?? null;
+  const contractsByBooking = await loadContractsByBookingId(
+    supabase,
+    orgId,
+    (rawList ?? []).map((row) => (row as { id: string }).id),
+  );
 
   const bookings: BookingListRow[] = (rawList ?? []).map((row) => {
     const r = row as unknown as RawBooking;
@@ -165,8 +235,14 @@ export async function fetchBookingsPageData(
         paid,
         remaining,
       ),
+      propertyId: r.property_id,
+      contract: contractsByBooking.get(r.id) ?? null,
     };
   });
 
-  return { bookings, loadError, canDeleteBookings };
+  return {
+    bookings: sortBookingsByUpcomingFirst(bookings),
+    loadError,
+    canDeleteBookings,
+  };
 }

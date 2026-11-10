@@ -18,20 +18,23 @@ import {
 } from "@/lib/validations";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { CustomersPageSearchToolbar } from "@/components/customers/customers-page-search-toolbar";
+import { usePageSearch } from "@/providers/page-search-provider";
 import { CustomersPageTabBar } from "@/components/customers/customers-page-tab-bar";
-import { customersPageTabLabel } from "@/components/customers/tabs";
 import { useCustomersPageTab } from "@/components/customers/use-customers-page-tab";
+import { useTranslation } from "@/i18n/client";
+import type { TranslationKey } from "@/i18n/types";
 import { RN_CARD_SHELL, RN_PAGE_SEARCH_ACTIONS } from "@/lib/rn-ui";
-import { APP_DATA_AMOUNT, APP_DATA_BODY, APP_DATA_PRIMARY } from "@/lib/table-typography";
+import { APP_DATA_AMOUNT, APP_DATA_BODY, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import { deleteCustomerWithClient } from "@/lib/customers/delete-customer";
+import { createCustomerAtomic } from "@/lib/reservations/atomic-create";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -45,8 +48,12 @@ import type {
 
 import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
-const customersTableHeadClass =
-  "customers-table-head whitespace-nowrap px-6 py-4 font-semibold tracking-wider text-rn-text-column uppercase md:px-8 md:py-5";
+const customersTableHeadClass = cn("customers-table-head", APP_TABLE_HEAD_CELL);
+
+const TAB_TITLE_KEYS = {
+  customers: "customers.title",
+  partners: "customers.partners",
+} as const satisfies Record<"customers" | "partners", TranslationKey>;
 
 export type { CustomerBookingListItem, PartnerRow } from "./types";
 
@@ -56,14 +63,6 @@ export type CustomersSectionProps = {
   bookings: CustomerBookingListItem[];
   loadError: string | null;
 };
-
-function formatNok(n: number) {
-  return new Intl.NumberFormat("nb-NO", {
-    style: "currency",
-    currency: "NOK",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
 
 function aggregateByCustomer(bookings: CustomerBookingListItem[]) {
   const map = new Map<
@@ -87,12 +86,12 @@ export function CustomersSection({
   bookings,
   loadError,
 }: CustomersSectionProps) {
+  const { t, formatCurrency } = useTranslation();
   const { tab, setTab } = useCustomersPageTab();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateCustomers, invalidateInquiries } = useTenantDataInvalidation();
-  const [query, setQuery] = useState("");
-  const [partnersQuery, setPartnersQuery] = useState("");
+  const { query } = usePageSearch();
   const [customersPage, setCustomersPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -113,6 +112,10 @@ export function CustomersSection({
       return hay.includes(q);
     });
   }, [customers, query]);
+
+  useEffect(() => {
+    setCustomersPage(1);
+  }, [query]);
 
   const pagination = useMemo(() => {
     const totalPages = Math.max(
@@ -149,41 +152,51 @@ export function CustomersSection({
     ) as Resolver<CustomerUpsertFormInput>,
     defaultValues: { name: "", phone: "", email: "" },
   });
+  const submitInFlightRef = useRef(false);
+  const {
+    formState: { isSubmitting: addIsSubmitting },
+  } = addForm;
 
   async function onAddCustomer(data: CustomerUpsertFormInput) {
+    if (submitInFlightRef.current || addIsSubmitting) return;
+    submitInFlightRef.current = true;
+
     let orgId: string;
     try {
       orgId = requireOrganizationId(currentOrganizationId);
     } catch (err) {
+      submitInFlightRef.current = false;
       toast.error(
-        err instanceof Error ? err.message : "Ingen aktiv organisasjon.",
+        err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
       );
       return;
     }
 
-    const { data: row, error } = await supabase
-      .from("customers")
-      .insert({
-        name: data.name.trim(),
-        phone: data.phone.trim() || null,
-        email: data.email.trim() || null,
+    try {
+      const result = await createCustomerAtomic(supabase, {
         organization_id: orgId,
-      })
-      .select("id")
-      .single();
-
-    if (error || !row) {
-      toast.error("Kunne ikke opprette kunde", {
-        description: error?.message ?? "Ukjent feil",
+        customer_name: data.name.trim(),
+        customer_phone: data.phone.trim() || null,
+        customer_email: data.email.trim() || null,
+        customer_address: null,
       });
-      return;
-    }
 
-    toast.success("Kunde opprettet");
-    addForm.reset();
-    setAddOpen(false);
-    setSelectedId(row.id);
-    invalidateCustomers();
+      toast.success(t("customers.toasts.customerCreated"));
+      addForm.reset();
+      setAddOpen(false);
+      setSelectedId(result.customerId);
+      invalidateCustomers();
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : t("customers.toasts.unknownError");
+      toast.error(t("customers.toasts.customerCreateFailed"), {
+        description: message,
+      });
+    } finally {
+      submitInFlightRef.current = false;
+    }
   }
 
   async function performCustomerDelete(id: string) {
@@ -196,10 +209,12 @@ export function CustomersSection({
         id,
       );
       if (!result.ok) {
-        toast.error("Kan ikke slette kunde", { description: result.error });
+        toast.error(t("customers.delete.blockedTitle"), {
+          description: result.error,
+        });
         return;
       }
-      toast.success("Kunde slettet");
+      toast.success(t("customers.toasts.customerDeleted"));
       if (selectedId === id) setSelectedId(null);
       invalidateCustomers();
       if (result.deletedInquiries > 0) {
@@ -212,8 +227,14 @@ export function CustomersSection({
 
   function requestDeleteCustomer(c: CustomerRow, bookingCount: number) {
     if (bookingCount > 0) {
-      toast.error("Kan ikke slette kunde", {
-        description: `Kunden har ${bookingCount} ${bookingCount === 1 ? "booking" : "bookinger"}. Slett eller flytt dem først.`,
+      toast.error(t("customers.delete.blockedTitle"), {
+        description: t("customers.deleteBlocked", {
+          count: bookingCount,
+          bookingsLabel:
+            bookingCount === 1
+              ? t("customers.bookingSingular")
+              : t("customers.bookingPlural"),
+        }),
       });
       return;
     }
@@ -238,7 +259,7 @@ export function CustomersSection({
           className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
           role="alert"
         >
-          Kunne ikke laste data: {loadError}
+          {t("customers.loadError", { error: loadError })}
         </div>
       ) : null}
 
@@ -249,7 +270,7 @@ export function CustomersSection({
               <AppPageHeader
                 className="mb-0"
                 surface="default"
-                title={customersPageTabLabel(tab)}
+                title={t(TAB_TITLE_KEYS[tab])}
                 titleClassName={
                   tab === "partners" ? "customers-partners-hero" : undefined
                 }
@@ -264,28 +285,15 @@ export function CustomersSection({
                     />
                     {tab === "customers" ? (
                       <CustomersPageSearchToolbar
-                        searchId="customers-search"
-                        searchAriaLabel="Søk kunder"
-                        searchPlaceholder="Søk på navn, e-post eller telefon…"
-                        query={query}
-                        onQueryChange={(v) => {
-                          setQuery(v);
-                          setCustomersPage(1);
-                        }}
-                        addLabel="Ny kunde"
+                        addLabel={t("customers.newCustomer")}
                         onAdd={() => setAddOpen(true)}
-                        toolbarAriaLabel="Kunder — søk og ny kunde"
+                        toolbarAriaLabel={t("customers.toolbarCustomersAria")}
                       />
                     ) : (
                       <CustomersPageSearchToolbar
-                        searchId="partners-search"
-                        searchAriaLabel="Søk partnere"
-                        searchPlaceholder="Søk partner…"
-                        query={partnersQuery}
-                        onQueryChange={setPartnersQuery}
-                        addLabel="Ny partner"
+                        addLabel={t("customers.newPartner")}
                         onAdd={() => setPartnersAddOpen(true)}
-                        toolbarAriaLabel="Partnere — søk og ny partner"
+                        toolbarAriaLabel={t("customers.toolbarPartnersAria")}
                       />
                     )}
                   </div>
@@ -303,7 +311,7 @@ export function CustomersSection({
             {customers.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-4 px-6 py-14 text-center md:px-8 md:py-16">
                 <p className="customers-empty-hint text-muted-foreground">
-                  Ingen kunder ennå. Legg til din første kunde for å komme i gang.
+                  {t("customers.emptyCustomers")}
                 </p>
               </div>
             ) : (
@@ -312,12 +320,12 @@ export function CustomersSection({
                   <table className="w-full min-w-[720px] text-left text-app-base">
                     <thead>
                       <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
-                        <th className={customersTableHeadClass}>Navn</th>
-                        <th className={customersTableHeadClass}>Telefon</th>
-                        <th className={customersTableHeadClass}>E-post</th>
-                        <th className={customersTableHeadClass}>Bookinger</th>
+                        <th className={customersTableHeadClass}>{t("common.fields.name")}</th>
+                        <th className={customersTableHeadClass}>{t("common.fields.phone")}</th>
+                        <th className={customersTableHeadClass}>{t("common.fields.email")}</th>
+                        <th className={customersTableHeadClass}>{t("customers.table.bookings")}</th>
                         <th className={customersTableHeadClass}>
-                          Totalt brukt
+                          {t("customers.table.totalSpent")}
                         </th>
                         <th
                           className={cn(
@@ -325,7 +333,7 @@ export function CustomersSection({
                             "w-12 text-right",
                           )}
                         >
-                          <span className="sr-only">Åpne</span>
+                          <span className="sr-only">{t("customers.open")}</span>
                         </th>
                       </tr>
                     </thead>
@@ -374,7 +382,7 @@ export function CustomersSection({
                             </span>
                           </td>
                           <td className={cn("customers-row-metric px-6 py-5 md:px-8 md:py-6", APP_DATA_AMOUNT, "font-bold text-success")}>
-                            {formatNok(st.spent)}
+                            {formatCurrency(st.spent)}
                           </td>
                           <td className="px-6 py-5 text-right md:px-8 md:py-6">
                             <div className="flex items-center justify-end">
@@ -395,11 +403,22 @@ export function CustomersSection({
                   <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
                     <span>
                       {filtered.length <= TENANT_LIST_PAGE_SIZE
-                        ? `Viser ${filtered.length} ${filtered.length === 1 ? "kunde" : "kunder"}`
-                        : `Viser ${(currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1}–${Math.min(
-                            currentPage * TENANT_LIST_PAGE_SIZE,
-                            filtered.length,
-                          )} av ${filtered.length}`}
+                        ? t("customers.footer.showingCount", {
+                            count: filtered.length,
+                            label:
+                              filtered.length === 1
+                                ? t("customers.footer.customerWord")
+                                : t("customers.footer.customersWord"),
+                          })
+                        : t("customers.footer.showingRange", {
+                            from:
+                              (currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1,
+                            to: Math.min(
+                              currentPage * TENANT_LIST_PAGE_SIZE,
+                              filtered.length,
+                            ),
+                            total: filtered.length,
+                          })}
                     </span>
                     {filtered.length > TENANT_LIST_PAGE_SIZE ? (
                     <div className="flex flex-wrap items-center gap-2">
@@ -413,10 +432,13 @@ export function CustomersSection({
                         }
                       >
                         <ChevronLeft className="size-5" aria-hidden />
-                        Forrige
+                        {t("customers.footer.prev")}
                       </Button>
                       <span className="flex items-center px-2 tabular-nums">
-                        Side {currentPage} / {totalPages}
+                        {t("customers.footer.pageOf", {
+                          current: currentPage,
+                          total: totalPages,
+                        })}
                       </span>
                       <Button
                         type="button"
@@ -429,7 +451,7 @@ export function CustomersSection({
                           )
                         }
                       >
-                        Neste
+                        {t("common.actions.next")}
                         <ChevronRight className="size-5" aria-hidden />
                       </Button>
                     </div>
@@ -449,8 +471,6 @@ export function CustomersSection({
             <PartnersPanel
               partners={partners}
               showHeader={false}
-              query={partnersQuery}
-              onQueryChange={setPartnersQuery}
               addOpen={partnersAddOpen}
               onAddOpenChange={setPartnersAddOpen}
             />
@@ -502,12 +522,12 @@ export function CustomersSection({
             <>
               <DialogHeader className="text-left">
                 <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading">
-                  Slette kunde?
+                  {t("customers.delete.title")}
                 </DialogTitle>
                 <DialogDescription className="text-base leading-relaxed text-muted-foreground">
-                  Du er i ferd med å slette «{customerDeleteTarget.name}». Alle
-                  tilknyttede data som bare finnes på denne kunden forsvinner. Dette kan
-                  ikke angres.
+                  {t("customers.delete.description", {
+                    name: customerDeleteTarget.name,
+                  })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -518,7 +538,7 @@ export function CustomersSection({
                   className="w-full border-2 border-rn-border-strong sm:w-auto"
                   onClick={() => setCustomerDeleteTarget(null)}
                 >
-                  Avbryt
+                  {t("common.actions.cancel")}
                 </Button>
                 <Button
                   type="button"
@@ -527,7 +547,7 @@ export function CustomersSection({
                   className="w-full border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700 sm:w-auto"
                   onClick={() => void confirmCustomerDelete()}
                 >
-                  Ja, slett kunde
+                  {t("customers.delete.confirm")}
                 </Button>
               </DialogFooter>
             </>
@@ -542,7 +562,7 @@ export function CustomersSection({
         >
           <DialogHeader>
             <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading md:text-2xl">
-              Ny kunde
+              {t("customers.newCustomer")}
             </DialogTitle>
           </DialogHeader>
           <form
@@ -550,7 +570,7 @@ export function CustomersSection({
             className="space-y-4"
           >
             <div className="space-y-2">
-              <Label>Navn</Label>
+              <Label>{t("common.fields.name")}</Label>
               <Input
                 {...addForm.register("name")}
                 className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
@@ -562,14 +582,14 @@ export function CustomersSection({
               ) : null}
             </div>
             <div className="space-y-2">
-              <Label>Telefon</Label>
+              <Label>{t("common.fields.phone")}</Label>
               <Input
                 {...addForm.register("phone")}
                 className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
               />
             </div>
             <div className="space-y-2">
-              <Label>E-post</Label>
+              <Label>{t("common.fields.email")}</Label>
               <Input
                 type="email"
                 {...addForm.register("email")}
@@ -582,10 +602,15 @@ export function CustomersSection({
                 variant="outline"
                 onClick={() => setAddOpen(false)}
               >
-                Avbryt
+                {t("common.actions.cancel")}
               </Button>
-              <Button type="submit" variant="success" size="cta">
-                Opprett
+              <Button
+                type="submit"
+                variant="success"
+                size="cta"
+                disabled={addIsSubmitting}
+              >
+                {t("common.actions.create")}
               </Button>
             </DialogFooter>
           </form>

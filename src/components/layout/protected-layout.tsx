@@ -8,6 +8,7 @@ import { UserNotificationListener } from "@/components/notifications/user-notifi
 import { OrganizationGate } from "@/components/organizations/organization-gate";
 import { NotificationProvider } from "@/providers/notification-provider";
 import { OrganizationProvider } from "@/providers/organization-provider";
+import { PageSearchProvider } from "@/providers/page-search-provider";
 import type { ReactNode } from "react";
 
 export function ProtectedLayout({
@@ -21,6 +22,7 @@ export function ProtectedLayout({
     <OrganizationProvider impersonationOrgId={impersonationOrgId}>
       <OrganizationGate>
         <NotificationProvider>
+          <PageSearchProvider>
           <UserNotificationListener />
           <NotificationAckDialog />
           <div className="flex min-h-svh bg-background text-foreground">
@@ -34,6 +36,7 @@ export function ProtectedLayout({
             </main>
           </div>
         </div>
+          </PageSearchProvider>
         </NotificationProvider>
       </OrganizationGate>
     </OrganizationProvider>

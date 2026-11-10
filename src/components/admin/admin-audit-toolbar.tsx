@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminActionButton } from "@/components/admin/admin-action-button";
 import type { AdminAuditCategory } from "@/components/admin/admin-audit-filters";
 import { DatePickerField } from "@/components/ui/date-picker-field";
@@ -70,6 +71,7 @@ export function AdminAuditToolbar({
   onReset,
   embedded = false,
 }: AdminAuditToolbarProps) {
+  const { t } = useTranslation();
   const periodDirty = from !== appliedFrom || to !== appliedTo;
   const hasAppliedPeriod = Boolean(appliedFrom || appliedTo);
 
@@ -103,7 +105,7 @@ export function AdminAuditToolbar({
             maxYmd={to || undefined}
             className="w-[10.5rem]"
             variant="toolbar"
-            aria-label="Fra dato"
+            aria-label={t("admin.fra_dato")}
           />
           <span
             className="hidden text-muted-foreground sm:inline"
@@ -117,14 +119,14 @@ export function AdminAuditToolbar({
             minYmd={from || undefined}
             className="w-[10.5rem]"
             variant="toolbar"
-            aria-label="Til dato"
+            aria-label={t("admin.til_dato")}
           />
         </fieldset>
 
         <div
           className="flex items-center gap-1"
           role="group"
-          aria-label="Hurtigvalg periode"
+          aria-label={t("admin.hurtigvalg_periode")}
         >
           {PERIOD_PRESETS.map((preset) => {
             const active = matchesPreset(from, to, preset.days);
@@ -154,16 +156,14 @@ export function AdminAuditToolbar({
           <div
             className="flex min-w-0 flex-wrap items-center gap-2 sm:w-auto"
             role="group"
-            aria-label="Spesifikk handling"
+            aria-label={t("admin.spesifikk_handling")}
           >
-            <span className="shrink-0 text-app-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Spesifikk handling
-            </span>
+            <span className="shrink-0 text-app-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("admin.spesifikk_handling")}</span>
             <FormSelect
               value={selectedAction}
               onValueChange={onActionChange}
               options={actionOptions}
-              aria-label="Spesifikk handling"
+              aria-label={t("admin.spesifikk_handling")}
               className="min-w-[14rem]"
             />
           </div>
@@ -177,11 +177,11 @@ export function AdminAuditToolbar({
             variant="default"
             onClick={onApplyPeriod}
           >
-            Bruk periode
+            {t("admin.bruk_periode")}
           </AdminActionButton>
         ) : hasAppliedPeriod ? (
           <span className="px-1 text-app-xs text-muted-foreground">
-            Periode aktiv
+            {t("adminLabels.audit.periodActive")}
           </span>
         ) : null}
 
@@ -197,7 +197,7 @@ export function AdminAuditToolbar({
           className="gap-2"
         >
           <Download className="size-4 shrink-0" aria-hidden />
-          {exporting ? "Eksporterer…" : "Eksporter CSV"}
+          {exporting ? t("admin.eksporterer") : t("admin.eksporter_csv")}
         </AdminActionButton>
 
         <AdminActionButton
@@ -207,7 +207,7 @@ export function AdminAuditToolbar({
           className="gap-2"
         >
           <RotateCcw className="size-4 shrink-0" aria-hidden />
-          Nullstill filtre
+          {t("admin.nullstill_filtre")}
         </AdminActionButton>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n/client";
 import { signOutToLogin } from "@/lib/auth/sign-out";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
@@ -9,6 +10,7 @@ import { useSupabase } from "@/providers/supabase-provider";
 import Link from "next/link";
 
 export default function SuspendedPage() {
+  const { t } = useTranslation();
   const { currentOrganization } = useCurrentOrganization();
   const supabase = useSupabase();
 
@@ -18,7 +20,7 @@ export default function SuspendedPage() {
 
   const reason =
     currentOrganization?.suspendedReason?.trim() ||
-    "Organisasjonen er midlertidig suspendert av plattformadministrator.";
+    t("appPages.suspended.defaultReason");
 
   return (
     <div className="flex flex-1 items-center justify-center px-4 py-16">
@@ -29,11 +31,11 @@ export default function SuspendedPage() {
         )}
       >
         <div>
-          <h1 className="app-title">Tilgang suspendert</h1>
+          <h1 className="app-title">{t("appPages.suspended.title")}</h1>
           <p className="mt-3 app-text text-muted-foreground">{reason}</p>
           {currentOrganization ? (
             <p className="mt-2 app-text-secondary">
-              Organisasjon:{" "}
+              {t("appPages.suspended.organization")}{" "}
               <span className="font-semibold text-foreground">
                 {currentOrganization.name}
               </span>
@@ -43,10 +45,10 @@ export default function SuspendedPage() {
 
         <div className="flex flex-wrap gap-3">
           <Button render={<Link href="/app/settings/support" />} size="cta">
-            Kontakt support
+            {t("appPages.suspended.contactSupport")}
           </Button>
           <Button type="button" variant="outline" size="cta" onClick={() => void signOut()}>
-            Logg ut
+            {t("appPages.suspended.logout")}
           </Button>
         </div>
       </div>

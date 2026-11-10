@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { AdminActionButton } from "@/components/admin/admin-action-button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { FormSelect } from "@/components/ui/form-select";
@@ -10,7 +11,7 @@ import { adminAuditHref } from "@/lib/admin/dashboard-links";
 import { resolveFeatureFlagStatus } from "@/lib/admin/feature-flag-status";
 import type { AdminFeatureFlag } from "@/lib/admin/queries/feature-flags";
 import { format } from "date-fns";
-import { nb } from "date-fns/locale/nb";
+import { getDateFnsLocale } from "@/i18n/formatters";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -42,6 +43,7 @@ export function FeatureFlagDetailPanel({
   onRequestGlobalToggle,
   onUpdated,
 }: FeatureFlagDetailPanelProps) {
+  const { t, locale } = useTranslation();
   const [rollout, setRollout] = useState(flag.rolloutPercentage);
   const [scheduledDate, setScheduledDate] = useState(toDateInputValue(flag.enabledAt));
   const [newOrgId, setNewOrgId] = useState("");
@@ -68,11 +70,11 @@ export function FeatureFlagDetailPanel({
     setSaving(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke lagre", { description: result.error });
+      toast.error(t("admin.kunne_ikke_lagre"), { description: result.error });
       return;
     }
 
-    toast.success("Innstillinger lagret");
+    toast.success(t("admin.innstillinger_lagret"));
     onUpdated();
   }
 
@@ -88,18 +90,18 @@ export function FeatureFlagDetailPanel({
     setSaving(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke fjerne unntak", { description: result.error });
+      toast.error(t("admin.kunne_ikke_fjerne_unntak"), { description: result.error });
       return;
     }
 
-    toast.success("Org-unntak fjernet");
+    toast.success(t("admin.org_unntak_fjernet"));
     onUpdated();
   }
 
   async function handleAddOverride() {
     const orgId = newOrgId.trim();
     if (!orgId) {
-      toast.error("Angi organisasjons-ID");
+      toast.error(t("admin.angi_organisasjons_id"));
       return;
     }
 
@@ -116,12 +118,12 @@ export function FeatureFlagDetailPanel({
     setSaving(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke legge til unntak", { description: result.error });
+      toast.error(t("admin.kunne_ikke_legge_til_unntak"), { description: result.error });
       return;
     }
 
     setNewOrgId("");
-    toast.success("Org-unntak lagt til");
+    toast.success(t("admin.org_unntak_lagt_til"));
     onUpdated();
   }
 
@@ -131,17 +133,18 @@ export function FeatureFlagDetailPanel({
     <div className="space-y-6 p-1">
       {flag.key === "billing_enabled" && billingEnvEnabled && !flag.enabledGlobal ? (
         <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-app-sm text-amber-900 dark:text-amber-200">
-          Miljøvariabel aktiverer fakturering uavhengig av dette flagget (
+          {t("adminLabels.billingFlagHint")}
           <code className="font-mono text-app-xs">BILLING_ENABLED</code>).
         </p>
       ) : null}
 
       <section className="space-y-3">
-        <h3 className="text-app-sm font-semibold text-foreground">Global utrulling</h3>
+        <h3 className="text-app-sm font-semibold text-foreground">{t("adminLabels.sections.globalRollout")}</h3>
         <div className="flex flex-wrap items-center gap-3">
           <p className="app-text-secondary">
-            Status: <span className="font-semibold text-foreground">{status}</span>
-            {flag.enabledGlobal ? " (på for alle)" : " (av globalt)"}
+            {t("admin.feature_flag_status_label")}{" "}
+            <span className="font-semibold text-foreground">{status}</span>
+            {flag.enabledGlobal ? t("admin.feature_flag_on_for_all") : t("admin.feature_flag_off_globally")}
           </p>
           <AdminActionButton
             type="button"
@@ -149,16 +152,15 @@ export function FeatureFlagDetailPanel({
             variant={flag.enabledGlobal ? "destructive" : "default"}
             onClick={() => onRequestGlobalToggle(!flag.enabledGlobal)}
           >
-            {flag.enabledGlobal ? "Deaktiver globalt" : "Aktiver globalt"}
+            {flag.enabledGlobal ? t("admin.deaktiver_globalt") : t("admin.aktiver_globalt")}
           </AdminActionButton>
         </div>
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-app-sm font-semibold text-foreground">Gradvis utrulling</h3>
+        <h3 className="text-app-sm font-semibold text-foreground">{t("admin.gradvis_utrulling")}</h3>
         <p className="app-text-muted">
-          Når globalt er av, får omtrent {rollout} % av organisasjonene funksjonen
-          basert på stabil hash per org.
+          {t("admin.feature_flag_rollout_hint", { rollout })}
         </p>
         <div className="flex flex-wrap items-center gap-4">
           <input
@@ -170,7 +172,7 @@ export function FeatureFlagDetailPanel({
             disabled={flag.enabledGlobal || saving}
             onChange={(event) => setRollout(Number(event.target.value))}
             className="h-2 min-w-[12rem] flex-1 accent-success disabled:opacity-50"
-            aria-label="Utrullingsprosent"
+            aria-label={t("admin.utrullingsprosent")}
           />
           <span className="w-12 text-right font-mono text-app-sm tabular-nums">
             {rollout}%
@@ -179,7 +181,7 @@ export function FeatureFlagDetailPanel({
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-app-sm font-semibold text-foreground">Planlagt aktivering</h3>
+        <h3 className="text-app-sm font-semibold text-foreground">{t("adminLabels.sections.scheduledActivation")}</h3>
         <div className="flex flex-wrap items-center gap-2">
           <DatePickerField
             value={scheduledDate}
@@ -187,7 +189,7 @@ export function FeatureFlagDetailPanel({
             className="w-[10.5rem]"
             variant="toolbar"
             disabled={saving}
-            aria-label="Planlagt aktiveringsdato"
+            aria-label={t("admin.planlagt_aktiveringsdato")}
           />
           <AdminActionButton
             type="button"
@@ -195,11 +197,11 @@ export function FeatureFlagDetailPanel({
             disabled={saving || !scheduledDate}
             onClick={() => setScheduledDate("")}
           >
-            Fjern dato
+            {t("admin.fjern_dato")}
           </AdminActionButton>
         </div>
         <p className="app-text-muted">
-          Tom dato betyr umiddelbar aktivering når flagget ellers er på.
+          {t("admin.feature_flag_immediate_activation")}
         </p>
       </section>
 
@@ -209,14 +211,14 @@ export function FeatureFlagDetailPanel({
           disabled={!settingsDirty || saving}
           onClick={() => void handleSaveSettings()}
         >
-          {saving ? "Lagrer…" : "Lagre endringer"}
+          {saving ? t("admin.lagrer") : t("admin.lagre_endringer")}
         </AdminActionButton>
       </div>
 
       <section className="space-y-3 border-t border-border pt-4">
-        <h3 className="text-app-sm font-semibold text-foreground">Org-unntak</h3>
+        <h3 className="text-app-sm font-semibold text-foreground">{t("admin.org_unntak")}</h3>
         {overrideEntries.length === 0 ? (
-          <p className="app-text-muted">Ingen organisasjonsunntak.</p>
+          <p className="app-text-muted">{t("adminLabels.empty.noOrgExceptions")}</p>
         ) : (
           <ul className="space-y-2">
             {overrideEntries.map(([orgId, enabled]) => (
@@ -229,13 +231,13 @@ export function FeatureFlagDetailPanel({
                     href={adminRoutes.organizationDetail(orgId)}
                     className="font-heading font-semibold text-success hover:underline"
                   >
-                    {orgNames[orgId] ?? "Ukjent organisasjon"}
+                    {orgNames[orgId] ?? t("admin.ukjent_organisasjon")}
                   </Link>
                   <p className="font-mono text-app-xs text-muted-foreground">{orgId}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-app-sm font-medium">
-                    {enabled ? "På" : "Av"}
+                    {enabled ? t("admin.feature_flag_on") : t("admin.feature_flag_off")}
                   </span>
                   <AdminActionButton
                     type="button"
@@ -254,12 +256,12 @@ export function FeatureFlagDetailPanel({
         <div className="flex flex-wrap items-end gap-2">
           <div className="min-w-[14rem] flex-1">
             <label className="mb-1.5 block text-app-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Organisasjons-ID
+              {t("adminLabels.fields.organizationId")}
             </label>
             <Input
               value={newOrgId}
               onChange={(event) => setNewOrgId(event.target.value)}
-              placeholder="UUID for organisasjon"
+              placeholder={t("admin.uuid_for_organisasjon")}
               className="border-2 border-rn-border-strong font-mono text-app-sm"
             />
           </div>
@@ -271,10 +273,10 @@ export function FeatureFlagDetailPanel({
               value={newOrgEnabled}
               onValueChange={setNewOrgEnabled}
               options={[
-                { value: "true", label: "På" },
-                { value: "false", label: "Av" },
+                { value: "true", label: t("admin.feature_flag_on") },
+                { value: "false", label: t("admin.feature_flag_off") },
               ]}
-              aria-label="Unntaksverdi"
+              aria-label={t("admin.unntaksverdi")}
             />
           </div>
           <AdminActionButton
@@ -289,12 +291,15 @@ export function FeatureFlagDetailPanel({
 
       <section className="space-y-1 border-t border-border pt-4 app-text-muted">
         <p>
-          <span className="font-medium text-foreground">Nøkkel: </span>
+          <span className="font-medium text-foreground">{t("adminLabels.fields.key")}: </span>
           <code className="font-mono text-app-xs">{flag.key}</code>
         </p>
         <p>
-          Sist endret:{" "}
-          {format(new Date(flag.updatedAt), "d. MMM yyyy HH:mm", { locale: nb })}
+          {t("adminLabels.meta.lastChangedAt", {
+            date: format(new Date(flag.updatedAt), "d. MMM yyyy HH:mm", {
+              locale: getDateFnsLocale(locale),
+            }),
+          })}
         </p>
         <p>
           <Link
@@ -305,7 +310,7 @@ export function FeatureFlagDetailPanel({
             })}
             className="font-semibold text-success hover:underline"
           >
-            Se i revisjonslogg
+            {t("admin.se_i_revisjonslogg")}
           </Link>
         </p>
       </section>

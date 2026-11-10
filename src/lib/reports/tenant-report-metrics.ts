@@ -426,6 +426,44 @@ export function buildFestTypeBreakdown(
     }));
 }
 
+/** Fakturert per år (bookinger etter arrangementsdato + overnatting etter innsjekk). */
+export function buildYearlyInvoicedSeries(input: {
+  bookings: ReportBookingRow[];
+  accommodations: ReportAccommodationRow[];
+  yearMin: number;
+  yearMax: number;
+}): Map<number, number> {
+  const { bookings, accommodations, yearMin, yearMax } = input;
+  const yearAmounts = new Map<number, number>();
+  for (let y = yearMin; y <= yearMax; y++) yearAmounts.set(y, 0);
+
+  for (const b of bookings) {
+    if (isCancelledBookingStatus(b.status)) continue;
+    const d = toComparableYmd(b.event_date);
+    if (!d) continue;
+    const year = Number(d.slice(0, 4));
+    if (year < yearMin || year > yearMax) continue;
+    yearAmounts.set(
+      year,
+      (yearAmounts.get(year) ?? 0) + Number(b.total_price),
+    );
+  }
+
+  for (const row of accommodations) {
+    if (isCancelledAccommodation(row.status)) continue;
+    const d = toComparableYmd(row.check_in_date);
+    if (!d) continue;
+    const year = Number(d.slice(0, 4));
+    if (year < yearMin || year > yearMax) continue;
+    yearAmounts.set(
+      year,
+      (yearAmounts.get(year) ?? 0) + Number(row.total_price ?? 0),
+    );
+  }
+
+  return yearAmounts;
+}
+
 /** Fakturert per måned (bookinger etter arrangementsdato + overnatting etter innsjekk). */
 export function buildMonthlyInvoicedSeries(input: {
   bookings: ReportBookingRow[];

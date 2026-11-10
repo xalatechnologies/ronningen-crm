@@ -1,19 +1,23 @@
+"use client";
+
 import { LandingSectionShell } from "@/components/landing/landing-section-shell";
-import {
-  PRODUCT_PREVIEW,
-  SECTION_TITLES,
-} from "@/components/landing/landing-content";
+import { PRODUCT_PREVIEW_ICONS } from "@/components/landing/landing-content";
+import { useTranslation } from "@/i18n/client";
+import { getDictionary } from "@/i18n/dictionaries";
+import { statusLabel } from "@/lib/navigation/nav-labels";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useMemo } from "react";
 
 const REPORT_CHART_HEIGHTS = [42, 58, 48, 72, 55, 80, 64] as const;
 
 function BookingsMiniPreview() {
+  const { t } = useTranslation();
   const rows = [
-    { event: "Bryllup", status: "Bekreftet", tone: "bg-success/15 text-success" },
-    { event: "Konfirmasjon", status: "Delvis betalt", tone: "bg-amber-500/15 text-amber-900" },
-    { event: "Møte", status: "Forespørsel", tone: "bg-rn-surface-segment text-rn-text-slate" },
+    { event: "Bryllup", status: t("statuses.confirmed"), tone: "bg-success/15 text-success" },
+    { event: "Konfirmasjon", status: t("statuses.partial"), tone: "bg-amber-500/15 text-amber-900" },
+    { event: t("landing.miniPreview.meeting"), status: t("landing.miniPreview.inquiry"), tone: "bg-rn-surface-segment text-rn-text-slate" },
   ] as const;
 
   return (
@@ -109,7 +113,10 @@ const MINI_PREVIEWS = [
   ReportsMiniPreview,
 ] as const;
 
-type ProductPreviewItem = (typeof PRODUCT_PREVIEW)[number];
+type ProductPreviewItem = {
+  title: string;
+  bullets: readonly string[];
+};
 
 function ProductPreviewCard({
   item,
@@ -180,20 +187,26 @@ function ProductPreviewCard({
 }
 
 export function ProductPreviewSection() {
+  const { t, locale } = useTranslation();
+  const items = useMemo(
+    () => getDictionary(locale).landing.productPreview.items,
+    [locale],
+  );
+
   return (
     <LandingSectionShell
       titleId="landing-preview-title"
-      title={SECTION_TITLES.productPreview}
-      description="Tre søyler i produktet — med ekte dashboard-følelse, ikke bare punktlister."
+      title={t("landing.sections.productPreview")}
+      description={t("landing.productPreview.description")}
       tinted
     >
       <div className="grid gap-5 lg:grid-cols-3 lg:items-center lg:gap-6">
-        {PRODUCT_PREVIEW.map((item, index) => (
+        {items.map((item, index) => (
           <ProductPreviewCard
             key={item.title}
             item={item}
             index={index}
-            icon={item.icon}
+            icon={PRODUCT_PREVIEW_ICONS[index]!}
           />
         ))}
       </div>

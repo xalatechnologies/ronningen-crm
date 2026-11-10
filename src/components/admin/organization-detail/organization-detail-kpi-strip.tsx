@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import type { OrganizationDetailTabId } from "@/components/admin/organization-detail/tabs";
 import type { AdminOrganizationDetail } from "@/lib/admin/queries/organizations";
 import { formatNok } from "@/lib/admin/revenue-metrics";
@@ -82,17 +83,18 @@ export function OrganizationDetailKpiStrip({
   tab: OrganizationDetailTabId;
   onTabChange: (tab: OrganizationDetailTabId) => void;
 }) {
+  const { t } = useTranslation();
   const memberCaption =
-    org.members.length === 1 ? "1 medlem i organisasjonen" : "Medlemmer i organisasjonen";
+    org.members.length === 1 ? "1 medlem i organisasjonen" : t("admin.medlemmer_i_organisasjonen");
 
   return (
     <section
       className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
-      aria-label="Nøkkeltall"
+      aria-label={t("admin.nokkeltall")}
     >
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
         <OrganizationDetailKpiTile
-          label="Medlemmer"
+          label={t("admin.medlemmer")}
           value={org.members.length}
           caption={memberCaption}
           icon={Users}
@@ -100,20 +102,20 @@ export function OrganizationDetailKpiStrip({
           onClick={() => onTabChange("members")}
         />
         <OrganizationDetailKpiTile
-          label="Omsetning"
+          label={t("admin.omsetning")}
           value={formatNok(org.totalRevenue)}
-          caption="Total bookinginntekt"
+          caption={t("admin.total_bookinginntekt")}
           icon={TrendingUp}
           active={tab === "usage"}
           onClick={() => onTabChange("usage")}
         />
         <OrganizationDetailKpiTile
-          label="Utestående"
+          label={t("admin.utestaende")}
           value={formatNok(org.unpaidRemaining)}
           caption={
             org.unpaidRemaining > 0
-              ? "Gjenstående beløp i bookinger"
-              : "Ingen utestående beløp"
+              ? t("admin.gjenstaende_belop_i_bookinger")
+              : t("admin.ingen_utestaende_belop")
           }
           icon={Clock}
           iconContainerClassName={
@@ -135,9 +137,9 @@ export function OrganizationDetailKpiStrip({
           onClick={() => onTabChange("billing")}
         />
         <OrganizationDetailKpiTile
-          label="Reservasjoner (30d)"
+          label={t("admin.reservasjoner_30d")}
           value={org.bookingsLast30d}
-          caption="Bookinger siste 30 dager"
+          caption={t("admin.bookinger_siste_30_dager")}
           icon={CalendarCheck}
           active={tab === "usage"}
           onClick={() => onTabChange("usage")}

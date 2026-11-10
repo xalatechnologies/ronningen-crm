@@ -1,8 +1,13 @@
 "use client";
 
-import { isActiveInquiry, type InquiryListRow } from "@/components/inquiries/types";
-import { INQUIRY_STATUS_LABELS } from "@/components/inquiries/types";
+import {
+  inquiryStatusLabel,
+  isActiveInquiry,
+  type InquiryListRow,
+} from "@/components/inquiries/types";
 import { Button } from "@/components/ui/button";
+import { useCalendarWeekdays } from "@/hooks/use-calendar-weekdays";
+import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import type { BookingInquiryStatus } from "@/lib/validations";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
@@ -11,8 +16,6 @@ import { formatAppDateTime } from "@/lib/format-datetime";
 import type { ReactNode } from "react";
 import { useMemo, useRef, useState } from "react";
 import type { PopoverRoot } from "@base-ui/react/popover";
-
-const WEEKDAYS_NB = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"] as const;
 
 function pad2(n: number) {
   return String(n).padStart(2, "0");
@@ -68,6 +71,8 @@ function InquiryHoverPreview({
   hideFooter?: boolean;
   onOpen?: (row: InquiryListRow) => void;
 }) {
+  const { t, locale } = useTranslation();
+
   const inner = (
     <div className="space-y-2 text-left">
       <div>
@@ -80,23 +85,27 @@ function InquiryHoverPreview({
         </p>
       </div>
       <p className="text-xs font-medium text-foreground md:text-sm">
-        {INQUIRY_STATUS_LABELS[row.status]}
+        {inquiryStatusLabel(row.status, t)}
       </p>
       <div className="space-y-1 border-t border-border pt-2 text-xs md:text-sm">
         {row.nextFollowUpAtIso ? (
           <p className="tabular-nums">
-            <span className="font-semibold text-rn-text-body">Oppfølging:</span>{" "}
-            {formatAppDateTime(row.nextFollowUpAtIso)}
+            <span className="font-semibold text-rn-text-body">
+              {t("inquiries.followUp")}
+            </span>{" "}
+            {formatAppDateTime(row.nextFollowUpAtIso, locale)}
           </p>
         ) : null}
         <p>
-          <span className="font-semibold text-rn-text-body">Gjester:</span>{" "}
+          <span className="font-semibold text-rn-text-body">
+            {t("inquiries.guestsLabel")}
+          </span>{" "}
           {row.guestCount}
         </p>
       </div>
       {hideFooter ? null : (
         <p className="text-[10px] leading-snug text-muted-foreground md:text-xs">
-          Klikk for å åpne
+          {t("inquiries.clickToOpen")}
         </p>
       )}
     </div>
@@ -109,7 +118,7 @@ function InquiryHoverPreview({
       type="button"
       className="w-full cursor-pointer rounded-md text-left outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-success/40"
       onClick={() => onOpen(row)}
-      aria-label={`Åpne forespørsel for ${row.customerName}`}
+      aria-label={t("inquiries.openInquiryAria", { name: row.customerName })}
     >
       {inner}
     </button>
@@ -123,6 +132,8 @@ function DayInquiriesHoverContent({
   rows: InquiryListRow[];
   onSelectInquiry: (row: InquiryListRow) => void;
 }) {
+  const { t } = useTranslation();
+
   if (rows.length === 0) return null;
   if (rows.length === 1) {
     return <InquiryHoverPreview row={rows[0]} onOpen={onSelectInquiry} />;
@@ -130,7 +141,7 @@ function DayInquiriesHoverContent({
   return (
     <div className="max-h-[min(70vh,22rem)] space-y-0 overflow-y-auto text-left">
       <p className="mb-2 text-xs font-semibold text-muted-foreground">
-        {rows.length} forespørsler denne dagen
+        {t("inquiries.inquiriesOnDay", { count: rows.length })}
       </p>
       {rows.map((row, i) => (
         <div
@@ -141,7 +152,7 @@ function DayInquiriesHoverContent({
         </div>
       ))}
       <p className="mt-3 text-[10px] leading-snug text-muted-foreground md:text-xs">
-        Klikk på en rad for å åpne
+        {t("inquiries.clickRowToOpen")}
       </p>
     </div>
   );
@@ -160,6 +171,7 @@ function FollowUpDayHoverPopover({
   isToday: boolean;
   onSelectInquiry: (row: InquiryListRow) => void;
 }) {
+  const { t } = useTranslation();
   const popoverActionsRef = useRef<PopoverRoot.Actions | null>(null);
 
   function selectInquiry(row: InquiryListRow) {
@@ -195,7 +207,7 @@ function FollowUpDayHoverPopover({
               r.status === "lost" && "opacity-80",
             )}
             onClick={() => selectInquiry(r)}
-            aria-label={`${r.customerName}, ${INQUIRY_STATUS_LABELS[r.status]}`}
+            aria-label={`${r.customerName}, ${inquiryStatusLabel(r.status, t)}`}
           >
             <span className="line-clamp-2">{r.customerName}</span>
           </button>
@@ -204,6 +216,11 @@ function FollowUpDayHoverPopover({
     </>
   );
 
+  const dayAria =
+    dayRows.length === 1
+      ? t("inquiries.inquiryOnDayAria", { count: dayRows.length, day })
+      : t("inquiries.inquiriesOnDayAria", { count: dayRows.length, day });
+
   return (
     <PopoverPrimitive.Root modal={false} actionsRef={popoverActionsRef}>
       <PopoverPrimitive.Trigger
@@ -211,7 +228,7 @@ function FollowUpDayHoverPopover({
         delay={180}
         closeDelay={220}
         nativeButton={false}
-        aria-label={`${dayRows.length} forespørsel${dayRows.length === 1 ? "" : "er"} ${day}. dato`}
+        aria-label={dayAria}
         render={(props) => (
           <div
             {...props}
@@ -266,6 +283,8 @@ export function InquiriesFollowUpMonthCalendar({
   totalInquiriesCount: number;
   onSelectInquiry: (row: InquiryListRow) => void;
 }) {
+  const { t, locale } = useTranslation();
+  const weekdays = useCalendarWeekdays();
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -276,11 +295,11 @@ export function InquiriesFollowUpMonthCalendar({
 
   const monthLabel = useMemo(
     () =>
-      new Intl.DateTimeFormat("nb-NO", {
+      new Intl.DateTimeFormat(locale === "nb" ? "nb-NO" : "en-GB", {
         month: "long",
         year: "numeric",
       }).format(cursor),
-    [cursor],
+    [cursor, locale],
   );
 
   const withFollowUp = useMemo(
@@ -315,13 +334,14 @@ export function InquiriesFollowUpMonthCalendar({
       list.push(r);
       m.set(ymd, list);
     }
+    const collatorLocale = locale === "nb" ? "nb" : "en";
     for (const list of m.values()) {
       list.sort((a, b) =>
-        a.customerName.localeCompare(b.customerName, "nb"),
+        a.customerName.localeCompare(b.customerName, collatorLocale),
       );
     }
     return m;
-  }, [rowsInMonth, year, monthIndex]);
+  }, [rowsInMonth, year, monthIndex, locale]);
 
   const { daysInMonth, startPad, todayYmd } = useMemo(() => {
     const first = new Date(year, monthIndex, 1);
@@ -358,15 +378,15 @@ export function InquiriesFollowUpMonthCalendar({
   const emptyMonthMessage =
     rowsInMonth.length === 0
       ? totalInquiriesCount === 0
-        ? "Ingen forespørsler ennå."
+        ? t("inquiries.calendarEmptyNone")
         : filteredCount === 0
-          ? "Ingen treff med søk eller filter."
+          ? t("inquiries.calendarEmptyFiltered")
           : withFollowUp.length === 0
-            ? "Ingen forespørsler i filteret har «neste oppfølging» satt."
-            : "Ingen oppfølginger i denne måneden."
+            ? t("inquiries.calendarEmptyNoFollowUp")
+            : t("inquiries.calendarEmptyMonth")
       : null;
 
-  const headerCells = WEEKDAYS_NB.map((wd) => (
+  const headerCells = weekdays.map((wd) => (
     <div
       key={wd}
       className="bg-rn-surface-table-head px-1 py-2 text-center text-[10px] font-bold tracking-wider text-rn-text-column uppercase sm:px-2 md:text-xs"
@@ -439,8 +459,7 @@ export function InquiriesFollowUpMonthCalendar({
   return (
     <div className="border-t border-rn-border-strong/35 px-4 py-5 sm:px-6 md:px-8 md:py-6">
       <p className="mb-4 text-xs leading-snug text-muted-foreground sm:text-sm">
-        Kalenderen viser <span className="font-medium text-foreground">neste oppfølging</span>{" "}
-        per dag (lokal tid). Bruk filter over for å avgrense listen.
+        {t("inquiries.calendarFollowUpHint")}
       </p>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="font-heading text-xl font-bold capitalize tracking-tight text-rn-text-heading md:text-2xl">
@@ -453,7 +472,7 @@ export function InquiriesFollowUpMonthCalendar({
             className="h-10 rounded-md border-2 border-rn-border-strong px-4 text-sm font-semibold"
             onClick={goToday}
           >
-            I dag
+            {t("bookings.today")}
           </Button>
           <div className="flex items-center gap-1">
             <Button
@@ -462,7 +481,7 @@ export function InquiriesFollowUpMonthCalendar({
               size="icon-sm"
               className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
               onClick={prevYear}
-              aria-label="Forrige år"
+              aria-label={t("calendar.prevYear")}
             >
               <ChevronsLeft className="size-[18px]" aria-hidden />
             </Button>
@@ -472,7 +491,7 @@ export function InquiriesFollowUpMonthCalendar({
               size="icon-sm"
               className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
               onClick={prevMonth}
-              aria-label="Forrige måned"
+              aria-label={t("calendar.prevMonth")}
             >
               <ChevronLeft className="size-[18px]" />
             </Button>
@@ -482,7 +501,7 @@ export function InquiriesFollowUpMonthCalendar({
               size="icon-sm"
               className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
               onClick={nextMonth}
-              aria-label="Neste måned"
+              aria-label={t("calendar.nextMonth")}
             >
               <ChevronRight className="size-[18px]" />
             </Button>
@@ -492,7 +511,7 @@ export function InquiriesFollowUpMonthCalendar({
               size="icon-sm"
               className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
               onClick={nextYear}
-              aria-label="Neste år"
+              aria-label={t("calendar.nextYear")}
             >
               <ChevronsRight className="size-[18px]" aria-hidden />
             </Button>
@@ -503,7 +522,7 @@ export function InquiriesFollowUpMonthCalendar({
       <div className="overflow-x-auto pb-1">
         <div
           className="min-w-[280px] overflow-hidden rounded-md border-2 border-rn-border-strong bg-border/80 shadow-sm"
-          aria-label={`Oppfølgingskalender, ${monthLabel}`}
+          aria-label={t("calendar.followUpCalendarAria", { month: monthLabel })}
         >
           <div className="grid grid-cols-7 gap-px">
             {headerCells}

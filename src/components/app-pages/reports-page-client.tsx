@@ -30,8 +30,11 @@ export function ReportsPageClient() {
       festTypeBreakdown={data.festTypeBreakdown}
       facility={data.facility}
       reportYear={data.reportYear}
+      currentCalendarYear={data.currentCalendarYear}
+      calendarYearMin={data.calendarYearMin}
       calendarYearMax={data.calendarYearMax}
       focusMonth={data.focusMonth}
+      allYears={data.allYears}
       reportsPeriodLabel={data.reportsPeriodLabel}
       loadError={data.loadError}
       hasRegisteredActivity={data.hasRegisteredActivity}

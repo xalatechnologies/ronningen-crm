@@ -7,6 +7,7 @@ import type { CampaignStatus } from "@/lib/admin/notification-labels";
 import { requirePlatformAdmin } from "@/lib/admin/require-platform-admin";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { broadcastCampaign } from "@/lib/notifications/send-platform-notification";
+import { getServerTranslation } from "@/i18n/server";
 
 const CAMPAIGN_STATUSES = new Set<CampaignStatus>(["draft", "active", "paused"]);
 
@@ -24,18 +25,19 @@ export async function upsertEmailTemplate(input: {
   subject: string;
   bodyHtml: string;
 }) {
+  const { t } = await getServerTranslation();
   const adminUser = await requirePlatformAdmin();
   const admin = createSupabaseAdminClient();
   const key = input.key.trim();
 
   if (!key) {
-    return { ok: false as const, error: "Nøkkel er påkrevd" };
+    return { ok: false as const, error: t("serverErrors.admin.keyRequired") };
   }
   if (!input.subject.trim()) {
-    return { ok: false as const, error: "Emne er påkrevd" };
+    return { ok: false as const, error: t("serverErrors.admin.subjectRequired") };
   }
   if (!input.bodyHtml.trim()) {
-    return { ok: false as const, error: "Innhold er påkrevd" };
+    return { ok: false as const, error: t("serverErrors.admin.bodyRequired") };
   }
 
   const { data: before } = await admin
@@ -80,12 +82,13 @@ export async function createNotificationCampaign(input: {
   name: string;
   templateKey?: string | null;
 }) {
+  const { t } = await getServerTranslation();
   const adminUser = await requirePlatformAdmin();
   const admin = createSupabaseAdminClient();
   const name = input.name.trim();
 
   if (!name) {
-    return { ok: false as const, error: "Navn er påkrevd" };
+    return { ok: false as const, error: t("serverErrors.admin.nameRequired") };
   }
 
   const { data, error } = await admin
@@ -116,11 +119,12 @@ export async function updateCampaignStatus(input: {
   campaignId: string;
   status: CampaignStatus;
 }) {
+  const { t } = await getServerTranslation();
   const adminUser = await requirePlatformAdmin();
   const admin = createSupabaseAdminClient();
 
   if (!CAMPAIGN_STATUSES.has(input.status)) {
-    return { ok: false as const, error: "Ugyldig kampanjestatus" };
+    return { ok: false as const, error: t("serverErrors.admin.invalidCampaignStatus") };
   }
 
   const { data: before, error: fetchError } = await admin
@@ -131,13 +135,13 @@ export async function updateCampaignStatus(input: {
 
   if (fetchError) return { ok: false as const, error: fetchError.message };
   if (!before) {
-    return { ok: false as const, error: "Kampanje ikke funnet" };
+    return { ok: false as const, error: t("serverErrors.admin.campaignNotFound") };
   }
 
   if (input.status === "active" && !before.template_key) {
     return {
       ok: false as const,
-      error: "Kampanjen må ha en mal før den kan aktiveres",
+      error: t("serverErrors.admin.campaignNeedsTemplate"),
     };
   }
 
@@ -164,6 +168,7 @@ export async function updateCampaignStatus(input: {
 }
 
 export async function sendNotificationCampaign(input: { campaignId: string }) {
+  const { t } = await getServerTranslation();
   const adminUser = await requirePlatformAdmin();
   const admin = createSupabaseAdminClient();
 
@@ -175,16 +180,16 @@ export async function sendNotificationCampaign(input: { campaignId: string }) {
 
   if (fetchError) return { ok: false as const, error: fetchError.message };
   if (!campaign) {
-    return { ok: false as const, error: "Kampanje ikke funnet" };
+    return { ok: false as const, error: t("serverErrors.admin.campaignNotFound") };
   }
   if (campaign.status !== "active") {
     return {
       ok: false as const,
-      error: "Kampanjen må være aktiv før utsending",
+      error: t("serverErrors.admin.campaignMustBeActive"),
     };
   }
   if (!campaign.template_key) {
-    return { ok: false as const, error: "Kampanjen mangler mal" };
+    return { ok: false as const, error: t("serverErrors.admin.campaignMissingTemplate") };
   }
 
   try {

@@ -104,15 +104,19 @@ export type ReportsSectionProps = {
   festTypeBreakdown: FestTypeBreakdown[];
   facility: ReportsFacilityStats;
   reportYear: number;
-  /** Gjeldende kalenderår (øvre grense for årvelger). */
+  /** Today's calendar year — default selection and URL cleanup. */
+  currentCalendarYear: number;
+  /** Lower bound for year picker (data or platform floor). */
+  calendarYearMin: number;
+  /** Upper bound for year picker (planning horizon or latest booking). */
   calendarYearMax: number;
   /** Valgt måned (URL `month`) — nøkkeltall og diagram følger perioden. */
   focusMonth: number | null;
+  allYears: boolean;
   /** Menneskelesbar periode (år eller «mai 2026»). */
   reportsPeriodLabel: string;
   loadError: string | null;
   hasRegisteredActivity: boolean;
 };
 
-/** Laveste år i rapporter-kalenderen. */
-export const REPORTS_CALENDAR_MIN_YEAR = 2020;
+export { REPORTS_CALENDAR_MIN_YEAR } from "@/lib/reports/calendar-range";

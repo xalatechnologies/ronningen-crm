@@ -12,6 +12,7 @@ import { deleteOwnAccount } from "@/lib/auth/actions/delete-account";
 import type { AccountDeletionBlocker } from "@/lib/auth/account-deletion-eligibility";
 import { normalizeConfirmEmail } from "@/lib/auth/account-deletion-eligibility";
 import { signOutToLogin } from "@/lib/auth/sign-out";
+import { useTranslation } from "@/i18n/client";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -26,6 +27,7 @@ export function AccountDeleteSection({
   eligible: boolean;
   blockers: AccountDeletionBlocker[];
 }) {
+  const { t } = useTranslation();
   const supabase = useSupabase();
   const [open, setOpen] = useState(false);
   const [confirmEmail, setConfirmEmail] = useState("");
@@ -37,7 +39,7 @@ export function AccountDeleteSection({
 
   async function handleDelete() {
     if (!emailMatches) {
-      setError("E-postadressen stemmer ikke. Skriv inn e-posten din nøyaktig.");
+      setError(t("settings.account.emailMismatch"));
       return;
     }
 
@@ -51,7 +53,7 @@ export function AccountDeleteSection({
       return;
     }
 
-    toast.success("Kontoen din er slettet");
+    toast.success(t("settings.deleteAccount.deleted"));
     setOpen(false);
 
     if (supabase) {
@@ -75,11 +77,10 @@ export function AccountDeleteSection({
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="font-heading text-lg font-semibold text-destructive md:text-xl">
-              Farlig sone
+              {t("settings.deleteAccount.dangerZone")}
             </h2>
             <p className="mt-1 text-app-sm leading-relaxed text-muted-foreground">
-              Permanent sletting av kontoen din og personlige profildata. Kan ikke
-              angres.
+              {t("settings.deleteAccount.description")}
             </p>
           </div>
         </div>
@@ -87,7 +88,7 @@ export function AccountDeleteSection({
         {!eligible && blockers.length > 0 ? (
           <div className="mt-5 space-y-3 rounded-md border border-rn-border-strong/60 bg-muted/20 p-4">
             <p className="text-app-sm font-semibold text-foreground">
-              Kontoen kan ikke slettes ennå:
+              {t("settings.deleteAccount.cannotDelete")}
             </p>
             <ul className="list-disc space-y-2 pl-5 text-app-sm text-muted-foreground">
               {blockers.map((blocker) => (
@@ -97,28 +98,26 @@ export function AccountDeleteSection({
               ))}
             </ul>
             <p className="text-app-sm text-muted-foreground">
-              Trenger du hjelp?{" "}
+              {t("settings.deleteAccount.needHelp")}{" "}
               <Link
                 href="/app/settings/team"
                 className="font-semibold text-success hover:underline"
               >
-                Gå til Team
+                {t("settings.deleteAccount.goToTeam")}
               </Link>{" "}
-              eller{" "}
+              {t("settings.deleteAccount.or")}{" "}
               <Link
                 href="/app/settings/support"
                 className="font-semibold text-success hover:underline"
               >
-                kontakt support
+                {t("settings.deleteAccount.contactSupport")}
               </Link>
               .
             </p>
           </div>
         ) : (
           <p className="mt-5 text-app-sm leading-relaxed text-muted-foreground">
-            Du mister tilgang til alle organisasjoner, profilen din slettes, og
-            medlemskapene dine fjernes. Organisasjonsdata som andre brukere har
-            tilgang til, beholdes.
+            {t("settings.deleteAccount.eligibleDescription")}
           </p>
         )}
 
@@ -134,7 +133,7 @@ export function AccountDeleteSection({
               setOpen(true);
             }}
           >
-            Slett kontoen min
+            {t("settings.deleteAccount.deleteButton")}
           </Button>
           {error && !open ? (
             <p className="mt-3 text-app-sm font-medium text-destructive">
@@ -149,16 +148,13 @@ export function AccountDeleteSection({
         onOpenChange={(nextOpen) => {
           if (!busy) setOpen(nextOpen);
         }}
-        title="Slett kontoen din permanent?"
+        title={t("settings.deleteAccount.confirmTitle")}
         description={
           <div className="space-y-4">
-            <p>
-              Dette sletter kontoen din permanent. Du mister tilgang til appen,
-              profilen din slettes, og medlemskapene dine fjernes.
-            </p>
+            <p>{t("settings.deleteAccount.confirmDescription")}</p>
             <div className="space-y-2">
               <Label htmlFor="confirm-delete-email">
-                Skriv inn e-postadressen din for å bekrefte
+                {t("settings.deleteAccount.confirmEmailLabel")}
               </Label>
               <Input
                 id="confirm-delete-email"
@@ -170,7 +166,7 @@ export function AccountDeleteSection({
                 disabled={busy}
               />
               <p className="text-app-sm text-muted-foreground">
-                Bekreft med:{" "}
+                {t("settings.deleteAccount.confirmWith")}{" "}
                 <span className="font-medium text-foreground">{email}</span>
               </p>
             </div>
@@ -179,7 +175,7 @@ export function AccountDeleteSection({
             ) : null}
           </div>
         }
-        confirmLabel="Ja, slett kontoen min"
+        confirmLabel={t("settings.deleteAccount.confirmButton")}
         busy={busy}
         onConfirm={handleDelete}
       />

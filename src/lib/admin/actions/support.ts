@@ -10,17 +10,19 @@ import {
 } from "@/lib/admin/support-labels";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { adminRoutes } from "@/config/admin-routes";
+import { getServerTranslation } from "@/i18n/server";
 import { notifySupportTicketReply } from "@/lib/notifications/actions/org-events";
 
 export async function createSupportTicket(input: {
   organizationId: string;
   subject: string;
 }) {
+  const { t } = await getServerTranslation();
   const adminUser = await requirePlatformAdmin();
   const subject = input.subject.trim();
 
   if (subject.length < 3) {
-    return { ok: false as const, error: "Emne må være minst 3 tegn." };
+    return { ok: false as const, error: t("serverErrors.admin.subjectMinLength") };
   }
 
   const admin = createSupabaseAdminClient();
@@ -56,12 +58,13 @@ export async function addSupportNote(input: {
   body: string;
   isInternal?: boolean;
 }) {
+  const { t } = await getServerTranslation();
   const adminUser = await requirePlatformAdmin();
   const body = input.body.trim();
   const isInternal = input.isInternal ?? false;
 
   if (body.length < 3) {
-    return { ok: false as const, error: "Notat må være minst 3 tegn." };
+    return { ok: false as const, error: t("serverErrors.admin.noteMinLength") };
   }
 
   const admin = createSupabaseAdminClient();

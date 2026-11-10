@@ -3,12 +3,11 @@
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { InvoiceSegmentFilter } from "@/components/invoices/invoice-segment-filter";
 import { InvoicesWorkspace } from "@/components/invoices/invoices-workspace";
-import {
-  localCalendarTodayYmd,
-  type InvoiceRowFilter,
-} from "@/lib/invoice-row-utils";
+import { useTranslation } from "@/i18n/client";
+import { localCalendarTodayYmd, type InvoiceRowFilter } from "@/lib/invoice-row-utils";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
+import { usePageSearch } from "@/providers/page-search-provider";
 import { useMemo, useState } from "react";
 
 import type { UnpaidInvoiceRow } from "./types";
@@ -22,6 +21,8 @@ export function InvoicesShell({
   loadError: string | null;
   canMarkInvoicesPaid?: boolean;
 }) {
+  const { t } = useTranslation();
+  const { query } = usePageSearch();
   const [filter, setFilter] = useState<InvoiceRowFilter>("all");
   const todayYmd = useMemo(() => localCalendarTodayYmd(), []);
 
@@ -47,7 +48,7 @@ export function InvoicesShell({
           <AppPageHeader
             className="mb-0"
             surface="default"
-            title="Fakturaer"
+            title={t("appPages.invoices.title")}
             actions={
               rows.length > 0 ? (
                 <InvoiceSegmentFilter
@@ -55,17 +56,18 @@ export function InvoicesShell({
                   todayYmd={todayYmd}
                   filter={filter}
                   onFilterChange={setFilter}
-                  className="w-full md:w-auto"
+                  className="w-full shrink-0 sm:w-auto"
                 />
-              ) : undefined
+              ) : null
             }
-            actionsClassName="md:max-w-[min(56rem,100%)] md:justify-end"
+            actionsClassName="w-full md:min-w-0 md:flex-1 md:justify-end"
           />
         </div>
 
         <InvoicesWorkspace
           rows={rows}
           filter={filter}
+          searchQuery={query}
           todayYmd={todayYmd}
           canMarkInvoicesPaid={canMarkInvoicesPaid}
         />

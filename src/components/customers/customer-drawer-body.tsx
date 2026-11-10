@@ -15,6 +15,7 @@ import {
 } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
+import { useTranslation } from "@/i18n/client";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,29 +47,6 @@ function customerInitials(name: string) {
   );
 }
 
-function formatNok(n: number) {
-  return new Intl.NumberFormat("nb-NO", {
-    style: "currency",
-    currency: "NOK",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function formatMemberSince(createdAt: string) {
-  return new Intl.DateTimeFormat("nb-NO", {
-    month: "long",
-    year: "numeric",
-  }).format(new Date(createdAt));
-}
-
-function formatBookingDate(dateStr: string) {
-  return new Intl.DateTimeFormat("nb-NO", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(dateStr));
-}
-
 function bookingIconForType(eventType: string) {
   const t = eventType.toLowerCase();
   if (t.includes("bryllup"))
@@ -95,6 +73,7 @@ export function CustomerDrawerBody({
   onDeleteCustomer,
   deleteBusy = false,
 }: CustomerDrawerBodyProps) {
+  const { t, formatCurrency, formatDate } = useTranslation();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
   const { invalidateCustomers } = useTenantDataInvalidation();
@@ -127,16 +106,18 @@ export function CustomerDrawerBody({
         .eq("id", customerId)
         .eq("organization_id", currentOrganizationId);
       if (error) {
-        toast.error("Kunne ikke lagre notat", { description: error.message });
+        toast.error(t("customers.drawer.noteSaveFailed"), {
+          description: error.message,
+        });
         return;
       }
       const display = value ?? "";
       notesBaselineRef.current = { customerId, text: display };
       setNotesDraft(display);
-      toast.success("Notat lagret");
+      toast.success(t("customers.drawer.noteSaved"));
       invalidateCustomers();
     },
-    [supabase, invalidateCustomers, currentOrganizationId],
+    [supabase, invalidateCustomers, currentOrganizationId, t],
   );
 
   useEffect(() => {
@@ -166,11 +147,11 @@ export function CustomerDrawerBody({
     setSavingProfile(false);
 
     if (error) {
-      toast.error("Kunne ikke oppdatere kunde", { description: error.message });
+      toast.error(t("customers.drawer.updateFailed"), { description: error.message });
       return;
     }
 
-    toast.success("Profil oppdatert");
+    toast.success(t("customers.drawer.profileUpdated"));
     setEditingProfile(false);
     invalidateCustomers();
   }
@@ -187,7 +168,12 @@ export function CustomerDrawerBody({
               {customer.name}
             </SheetTitle>
             <p className="text-sm text-muted-foreground">
-              Medlem siden {formatMemberSince(customer.created_at)}
+              {t("customers.drawer.memberSince", {
+                date: formatDate(customer.created_at, {
+                  month: "long",
+                  year: "numeric",
+                }),
+              })}
             </p>
           </div>
         </div>
@@ -197,7 +183,7 @@ export function CustomerDrawerBody({
           size="icon-sm"
           className="absolute top-6 right-6 rounded-full"
           onClick={onClose}
-          aria-label="Lukk"
+          aria-label={t("common.actions.close")}
         >
           <X className="size-5" aria-hidden />
         </Button>
@@ -209,7 +195,7 @@ export function CustomerDrawerBody({
             <div className="flex items-center gap-2">
               <Contact className="size-4 text-primary" aria-hidden />
               <h3 className="font-heading text-xs font-bold tracking-widest text-muted-foreground uppercase">
-                Kontakt
+                {t("customers.drawer.contact")}
               </h3>
             </div>
             {!editingProfile ? (
@@ -219,7 +205,7 @@ export function CustomerDrawerBody({
                 className="h-8 shrink-0 px-2 text-xs font-semibold text-primary hover:bg-primary/5"
                 onClick={() => setEditingProfile(true)}
               >
-                Rediger
+                {t("common.actions.edit")}
               </Button>
             ) : null}
           </div>
@@ -230,7 +216,7 @@ export function CustomerDrawerBody({
             >
               <div className="space-y-2">
                 <Label className="text-[11px] font-semibold tracking-wide uppercase">
-                  Navn
+                  {t("common.fields.name")}
                 </Label>
                 <Input
                   className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
@@ -245,7 +231,7 @@ export function CustomerDrawerBody({
               </div>
               <div className="space-y-2">
                 <Label className="text-[11px] font-semibold tracking-wide uppercase">
-                  Telefon
+                  {t("common.fields.phone")}
                 </Label>
                 <Input
                   className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
@@ -254,7 +240,7 @@ export function CustomerDrawerBody({
               </div>
               <div className="space-y-2">
                 <Label className="text-[11px] font-semibold tracking-wide uppercase">
-                  E-post
+                  {t("common.fields.email")}
                 </Label>
                 <Input
                   className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
@@ -277,7 +263,7 @@ export function CustomerDrawerBody({
                     });
                   }}
                 >
-                  Avbryt
+                  {t("common.actions.cancel")}
                 </Button>
                 <Button
                   type="submit"
@@ -286,7 +272,7 @@ export function CustomerDrawerBody({
                   className="flex-1"
                   disabled={savingProfile}
                 >
-                  {savingProfile ? "Lagrer…" : "Lagre"}
+                  {savingProfile ? t("common.saving") : t("common.actions.save")}
                 </Button>
               </div>
             </form>
@@ -294,7 +280,7 @@ export function CustomerDrawerBody({
             <div className="flex flex-col gap-4">
               <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-4">
                 <p className="mb-1 text-[10px] font-bold text-muted-foreground uppercase">
-                  Telefon
+                  {t("common.fields.phone")}
                 </p>
                 <p className="font-medium text-primary">
                   {customer.phone ?? "—"}
@@ -302,7 +288,7 @@ export function CustomerDrawerBody({
               </div>
               <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-4">
                 <p className="mb-1 text-[10px] font-bold text-muted-foreground uppercase">
-                  E-post
+                  {t("common.fields.email")}
                 </p>
                 <p className="break-all font-medium text-primary">
                   {customer.email ?? "—"}
@@ -316,21 +302,21 @@ export function CustomerDrawerBody({
           <div className="mb-4 flex items-center gap-2">
             <Wallet className="size-4 text-primary" aria-hidden />
             <h3 className="font-heading text-xs font-bold tracking-widest text-muted-foreground uppercase">
-              Betaling
+              {t("customers.drawer.payment")}
             </h3>
           </div>
           <div className="flex flex-col gap-4 sm:flex-row">
             <div className="flex-1 rounded-md border-2 border-success/15 bg-rn-surface-gradient-from p-5">
               <p className="mb-1 text-[10px] font-bold text-success/70 uppercase">
-                Totalt brukt
+                {t("customers.drawer.totalSpent")}
               </p>
               <p className="text-xl font-bold text-success">
-                {formatNok(s.spent)}
+                {formatCurrency(s.spent)}
               </p>
             </div>
             <div className="flex-1 rounded-md border-2 border-rn-border-strong bg-card p-5 shadow-sm">
               <p className="mb-1 text-[10px] font-bold text-muted-foreground uppercase">
-                Utestående
+                {t("customers.drawer.outstanding")}
               </p>
               <p
                 className={cn(
@@ -338,7 +324,7 @@ export function CustomerDrawerBody({
                   s.outstanding > 0 ? "text-destructive" : "text-foreground",
                 )}
               >
-                {formatNok(s.outstanding)}
+                {formatCurrency(s.outstanding)}
               </p>
             </div>
           </div>
@@ -349,19 +335,19 @@ export function CustomerDrawerBody({
             <div className="flex items-center gap-2">
               <History className="size-4 text-primary" aria-hidden />
               <h3 className="font-heading text-xs font-bold tracking-widest text-muted-foreground uppercase">
-                Bookinghistorikk
+                {t("customers.drawer.bookingHistory")}
               </h3>
             </div>
             <Link
               href="/app/bookings"
               className="text-xs font-bold text-primary hover:underline"
             >
-              Alle bookinger
+              {t("customers.drawer.allBookings")}
             </Link>
           </div>
           {bookings.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Ingen bookinger registrert ennå.
+              {t("customers.drawer.noBookings")}
             </p>
           ) : (
             <div className="space-y-3">
@@ -376,11 +362,12 @@ export function CustomerDrawerBody({
                     </span>
                     <div className="min-w-0">
                       <p className="font-semibold text-primary">
-                        {b.event_type} · {formatBookingDate(b.event_date)}
+                        {b.event_type} · {formatDate(b.event_date)}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {b.propertyName ?? "Lokale"} <span aria-hidden>·</span>{" "}
-                        {b.guest_count} gjester
+                        {b.propertyName ?? t("customers.drawer.venueFallback")}{" "}
+                        <span aria-hidden>·</span>{" "}
+                        {t("customers.drawer.guests", { count: b.guest_count })}
                       </p>
                     </div>
                   </div>
@@ -398,7 +385,7 @@ export function CustomerDrawerBody({
           <div className="mb-4 flex items-center gap-2">
             <StickyNote className="size-4 text-primary" aria-hidden />
             <h3 className="font-heading text-xs font-bold tracking-widest text-muted-foreground uppercase">
-              Interne notater
+              {t("customers.drawer.internalNotes")}
             </h3>
           </div>
           <div className="relative">
@@ -406,10 +393,10 @@ export function CustomerDrawerBody({
               value={notesDraft}
               onChange={(e) => setNotesDraft(e.target.value)}
               className="min-h-32 resize-none rounded-md border-2 border-rn-border-strong p-4 text-sm focus-visible:border-success focus-visible:ring-success/25"
-              placeholder="Legg til notat om kunden…"
+              placeholder={t("customers.drawer.notesPlaceholder")}
             />
             <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] font-bold text-muted-foreground uppercase">
-              Autolagring
+              {t("customers.drawer.autoSave")}
             </span>
           </div>
         </section>
@@ -423,7 +410,7 @@ export function CustomerDrawerBody({
             "w-full",
           )}
         >
-          Ny reservasjon
+          {t("customers.drawer.newReservation")}
         </Link>
         <Button
           type="button"
@@ -431,14 +418,14 @@ export function CustomerDrawerBody({
           disabled={deleteBusy || s.count > 0 || editingProfile}
           title={
             s.count > 0
-              ? "Kan ikke slette: kunden har bookinger"
-              : "Slett kunde permanent"
+              ? t("customers.drawer.deleteBlockedTitle")
+              : t("customers.drawer.deletePermanentlyTitle")
           }
           className="h-12 w-full rounded-md border-2 border-destructive/40 text-base font-semibold text-destructive hover:bg-destructive/10"
           onClick={onDeleteCustomer}
         >
           <Trash2 className="mr-2 size-4 shrink-0" aria-hidden />
-          Slett kunde
+          {t("customers.drawer.deleteCustomer")}
         </Button>
       </SheetFooter>
     </>

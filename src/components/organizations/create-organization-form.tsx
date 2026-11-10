@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
+import { useTranslation } from "@/i18n/client";
 import {
   isBillingEnabled,
   SAAS_MONTHLY_PRICE_NOK,
@@ -21,6 +22,7 @@ import {
 import { useSupabase } from "@/providers/supabase-provider";
 
 export function CreateOrganizationForm() {
+  const { t } = useTranslation();
   const supabase = useSupabase();
   const { user, loading: authLoading } = useAuthUser();
   const { refreshOrganizations } = useCurrentOrganization();
@@ -31,13 +33,13 @@ export function CreateOrganizationForm() {
     event.preventDefault();
     if (authLoading) return;
     if (!user) {
-      toast.error("Du må være innlogget for å opprette en organisasjon.");
+      toast.error(t("organizations.mustBeLoggedIn"));
       return;
     }
 
     const trimmed = name.trim();
     if (!trimmed) {
-      toast.error("Skriv inn et navn for organisasjonen.");
+      toast.error(t("organizations.nameRequired"));
       return;
     }
 
@@ -49,7 +51,7 @@ export function CreateOrganizationForm() {
         trimmed,
       );
       await refreshOrganizations();
-      toast.success("Organisasjon opprettet.");
+      toast.success(t("organizations.created"));
 
       if (created) {
         void triggerWelcomeNotification({ organizationName: org.name });
@@ -58,7 +60,7 @@ export function CreateOrganizationForm() {
       window.location.assign("/app/settings/organization");
     } catch (error) {
       toast.error(
-        toOrganizationError(error, "Kunne ikke opprette organisasjon.").message,
+        toOrganizationError(error, t("organizations.createFailed")).message,
       );
     } finally {
       setSubmitting(false);
@@ -68,24 +70,29 @@ export function CreateOrganizationForm() {
   return (
     <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="organization-name">Organisasjonsnavn</Label>
+        <Label htmlFor="organization-name">{t("organizations.nameLabel")}</Label>
         <Input
           id="organization-name"
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder="F.eks. Mitt selskap AS"
+          placeholder={t("organizations.namePlaceholder")}
           autoComplete="organization"
           disabled={submitting}
         />
       </div>
       <Button type="submit" size="cta" disabled={submitting || authLoading}>
-        {submitting ? "Oppretter…" : authLoading ? "Laster…" : "Opprett organisasjon"}
+        {submitting
+          ? t("organizations.creating")
+          : authLoading
+            ? t("common.actions.loading")
+            : t("organizations.create")}
       </Button>
       {isBillingEnabled() ? (
         <p className="text-app-sm text-muted-foreground">
-          Du får {SAAS_TRIAL_DAYS} dagers gratis prøveperiode uten betalingskort.
-          Etter prøveperioden må du legge til betaling ({SAAS_MONTHLY_PRICE_NOK}{" "}
-          kr/mnd) under Innstillinger → Fakturering for å fortsette.
+          {t("organizations.trialHint", {
+            days: SAAS_TRIAL_DAYS,
+            price: SAAS_MONTHLY_PRICE_NOK,
+          })}
         </p>
       ) : null}
     </form>

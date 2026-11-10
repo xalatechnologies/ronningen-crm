@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/i18n/client";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/form-select";
 import { Input } from "@/components/ui/input";
@@ -9,9 +10,6 @@ import {
   replyToOrgSupportTicket,
 } from "@/lib/support/actions";
 import {
-  SUPPORT_CATEGORY_LABELS,
-  SUPPORT_STATUS_DESCRIPTIONS,
-  SUPPORT_STATUS_LABELS,
   SUPPORT_TICKET_CATEGORIES,
   type SupportTicketCategory,
 } from "@/lib/support/labels";
@@ -19,6 +17,7 @@ import type { OrgSupportOverview, OrgSupportTicket } from "@/lib/support/types";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { enGB } from "date-fns/locale/en-GB";
 import { nb } from "date-fns/locale/nb";
 import {
   ChevronDown,
@@ -29,11 +28,6 @@ import {
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-
-const CATEGORY_OPTIONS = SUPPORT_TICKET_CATEGORIES.map((value) => ({
-  value,
-  label: SUPPORT_CATEGORY_LABELS[value],
-}));
 
 const labelClass =
   "text-app-xs font-semibold uppercase tracking-wider text-muted-foreground";
@@ -57,6 +51,8 @@ function TicketThread({
   ticket: OrgSupportTicket;
   onUpdated: () => void;
 }) {
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "nb" ? nb : enGB;
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const canReply = ticket.status === "open" || ticket.status === "waiting";
@@ -73,19 +69,21 @@ function TicketThread({
     setBusy(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke sende melding", { description: result.error });
+      toast.error(t("support.panel.sendFailed"), { description: result.error });
       return;
     }
 
     setBody("");
-    toast.success("Melding sendt");
+    toast.success(t("support.panel.messageSent"));
     onUpdated();
   }
 
   return (
     <div className="mt-4 space-y-4 border-t border-rn-border-strong/50 pt-4">
       {ticket.messages.length === 0 ? (
-        <p className="text-app-sm text-muted-foreground">Ingen meldinger ennå.</p>
+        <p className="text-app-sm text-muted-foreground">
+          {t("support.panel.noMessages")}
+        </p>
       ) : (
         <ul className="space-y-3">
           {ticket.messages.map((message) => (
@@ -101,11 +99,11 @@ function TicketThread({
               <p className="whitespace-pre-wrap text-app-sm">{message.body}</p>
               <p className="mt-2 text-app-xs text-muted-foreground">
                 {message.isFromPlatform
-                  ? "Plattformsupport"
-                  : (message.authorName ?? "Deg")}{" "}
+                  ? t("support.panel.platformSupport")
+                  : (message.authorName ?? t("support.panel.you"))}{" "}
                 ·{" "}
                 {format(new Date(message.createdAt), "d. MMM yyyy HH:mm", {
-                  locale: nb,
+                  locale: dateLocale,
                 })}
               </p>
             </li>
@@ -117,7 +115,7 @@ function TicketThread({
         <form onSubmit={(event) => void handleReply(event)} className="space-y-3">
           <div className="space-y-2">
             <Label htmlFor={`reply-${ticket.id}`} className={labelClass}>
-              Ditt svar
+              {t("support.panel.yourReply")}
             </Label>
             <textarea
               id={`reply-${ticket.id}`}
@@ -125,7 +123,7 @@ function TicketThread({
               onChange={(event) => setBody(event.target.value)}
               rows={3}
               className={textareaClass}
-              placeholder="Skriv meldingen din…"
+              placeholder={t("support.panel.replyPlaceholder")}
             />
           </div>
           <Button
@@ -135,12 +133,12 @@ function TicketThread({
             disabled={busy || body.trim().length < 3}
             className="w-full sm:w-auto"
           >
-            {busy ? "Sender…" : "Send melding"}
+            {busy ? t("support.panel.sending") : t("support.panel.sendMessage")}
           </Button>
         </form>
       ) : (
         <p className="text-app-sm text-muted-foreground">
-          Saken er lukket. Opprett en ny sak om du trenger mer hjelp.
+          {t("support.panel.closedHint")}
         </p>
       )}
     </div>
@@ -148,6 +146,8 @@ function TicketThread({
 }
 
 export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === "nb" ? nb : enGB;
   const router = useRouter();
   const [expandedId, setExpandedId] = useState<string | null>(
     data.tickets[0]?.id ?? null,
@@ -157,8 +157,17 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
   const [body, setBody] = useState("");
   const [createBusy, setCreateBusy] = useState(false);
 
+  const categoryOptions = useMemo(
+    () =>
+      SUPPORT_TICKET_CATEGORIES.map((value) => ({
+        value,
+        label: t(`support.category.${value}`),
+      })),
+    [t],
+  );
+
   const waitingCount = useMemo(
-    () => data.tickets.filter((t) => t.status === "waiting").length,
+    () => data.tickets.filter((ticket) => ticket.status === "waiting").length,
     [data.tickets],
   );
 
@@ -175,7 +184,7 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
     setCreateBusy(false);
 
     if (!result.ok) {
-      toast.error("Kunne ikke opprette sak", { description: result.error });
+      toast.error(t("support.panel.createFailed"), { description: result.error });
       return;
     }
 
@@ -183,9 +192,22 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
     setBody("");
     setCategory("other");
     setExpandedId(result.ticketId);
-    toast.success("Sak opprettet");
+    toast.success(t("support.panel.ticketCreated"));
     refresh();
   }
+
+  const ticketSummary =
+    data.tickets.length === 0
+      ? t("support.panel.noTickets")
+      : data.openCount === 1
+        ? t("support.panel.ticketSummary", {
+            open: data.openCount,
+            waiting: waitingCount,
+          })
+        : t("support.panel.ticketSummaryPlural", {
+            open: data.openCount,
+            waiting: waitingCount,
+          });
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,340px)] lg:items-start">
@@ -197,12 +219,10 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
             </div>
             <div>
               <h2 className="font-heading text-lg font-semibold text-foreground md:text-xl">
-                Dine saker
+                {t("support.panel.yourTickets")}
               </h2>
               <p className="mt-1 text-app-sm text-muted-foreground">
-                {data.tickets.length === 0
-                  ? "Ingen saker ennå."
-                  : `${data.openCount} åpen${data.openCount === 1 ? "" : "e"} · ${waitingCount} venter på deg`}
+                {ticketSummary}
               </p>
             </div>
           </div>
@@ -210,10 +230,11 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
 
         {data.tickets.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
-            <p className="font-medium text-foreground">Ingen support-saker</p>
+            <p className="font-medium text-foreground">
+              {t("support.panel.noSupportTickets")}
+            </p>
             <p className="mt-2 max-w-sm text-app-sm text-muted-foreground">
-              Opprett en sak til høyre når du trenger hjelp med feil, tilgang,
-              fakturering eller andre spørsmål.
+              {t("support.panel.emptyHint")}
             </p>
           </div>
         ) : (
@@ -238,7 +259,11 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
                       }
                       className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md border-2 border-rn-border-strong text-muted-foreground transition-colors hover:bg-muted/40"
                       aria-expanded={expanded}
-                      aria-label={expanded ? "Skjul samtale" : "Vis samtale"}
+                      aria-label={
+                        expanded
+                          ? t("support.panel.hideThread")
+                          : t("support.panel.showThread")
+                      }
                     >
                       {expanded ? (
                         <ChevronDown className="size-4" />
@@ -252,7 +277,7 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
                           {ticket.subject}
                         </p>
                         <span className="rounded-md border-2 border-rn-border-strong px-2 py-0.5 text-app-xs font-semibold text-muted-foreground">
-                          {SUPPORT_CATEGORY_LABELS[ticket.category]}
+                          {t(`support.category.${ticket.category}`)}
                         </span>
                         <span
                           className={cn(
@@ -260,13 +285,14 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
                             statusTone(ticket.status),
                           )}
                         >
-                          {SUPPORT_STATUS_LABELS[ticket.status]}
+                          {t(`support.status.${ticket.status}`)}
                         </span>
                       </div>
                       <p className="mt-1 text-app-xs text-muted-foreground">
-                        {SUPPORT_STATUS_DESCRIPTIONS[ticket.status]} · Oppdatert{" "}
+                        {t(`support.statusDescription.${ticket.status}`)} ·{" "}
+                        {t("support.panel.updated")}{" "}
                         {format(new Date(ticket.updatedAt), "d. MMM yyyy HH:mm", {
-                          locale: nb,
+                          locale: dateLocale,
                         })}
                       </p>
                       {expanded ? (
@@ -293,10 +319,10 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
           </div>
           <div>
             <h2 className="font-heading text-lg font-semibold text-foreground md:text-xl">
-              Ny sak
+              {t("support.panel.newTicket")}
             </h2>
             <p className="mt-1 text-app-sm text-muted-foreground">
-              Vi svarer så raskt vi kan på hverdager.
+              {t("support.panel.newTicketDescription")}
             </p>
           </div>
         </div>
@@ -307,7 +333,7 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
         >
           <div className="space-y-2">
             <Label htmlFor="support-category" className={labelClass}>
-              Kategori
+              {t("common.category")}
             </Label>
             <FormSelect
               id="support-category"
@@ -315,24 +341,24 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
               onValueChange={(value) =>
                 setCategory(value as SupportTicketCategory)
               }
-              options={CATEGORY_OPTIONS}
+              options={categoryOptions}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="support-subject" className={labelClass}>
-              Emne
+              {t("support.panel.subject")}
             </Label>
             <Input
               id="support-subject"
               value={subject}
               onChange={(event) => setSubject(event.target.value)}
-              placeholder="Kort beskrivelse"
+              placeholder={t("support.panel.subjectPlaceholder")}
               className={fieldClass}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="support-body" className={labelClass}>
-              Melding
+              {t("support.panel.message")}
             </Label>
             <textarea
               id="support-body"
@@ -340,7 +366,7 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
               onChange={(event) => setBody(event.target.value)}
               rows={5}
               className={textareaClass}
-              placeholder="Beskriv hva du trenger hjelp med…"
+              placeholder={t("support.panel.messagePlaceholder")}
             />
           </div>
           <Button
@@ -354,7 +380,7 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
               body.trim().length < 3
             }
           >
-            {createBusy ? "Sender…" : "Send sak"}
+            {createBusy ? t("support.panel.sending") : t("support.panel.sendTicket")}
           </Button>
         </form>
       </aside>

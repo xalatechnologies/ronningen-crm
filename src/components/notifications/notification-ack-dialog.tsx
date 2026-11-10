@@ -9,12 +9,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "@/i18n/client";
 import { needsPopup } from "@/lib/notifications/user-notification-filters";
 import { useNotifications } from "@/providers/notification-provider";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
 export function NotificationAckDialog() {
+  const { t } = useTranslation();
   const { scopedNotifications, acknowledge } = useNotifications();
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
@@ -49,7 +51,7 @@ export function NotificationAckDialog() {
     >
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{current?.title ?? "Varsel"}</DialogTitle>
+          <DialogTitle>{current?.title ?? t("notifications.inbox.ackTitle")}</DialogTitle>
           <DialogDescription className="whitespace-pre-wrap pt-2 text-foreground">
             {current?.body}
           </DialogDescription>
@@ -57,10 +59,12 @@ export function NotificationAckDialog() {
         <DialogFooter className="gap-2 sm:gap-2">
           {current?.action_url ? (
             <Button variant="outline" render={<Link href={current.action_url} />}>
-              {current.action_label ?? "Åpne"}
+              {current.action_label ?? t("notifications.inbox.open")}
             </Button>
           ) : null}
-          <Button onClick={() => void handleAcknowledge()}>Jeg forstår</Button>
+          <Button onClick={() => void handleAcknowledge()}>
+            {t("notifications.inbox.ackUnderstand")}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

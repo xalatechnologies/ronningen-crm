@@ -9,6 +9,7 @@ import { requirePlatformAdmin } from "@/lib/admin/require-platform-admin";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { adminRoutes } from "@/config/admin-routes";
 import { notifyBillingAccessSuspended } from "@/lib/notifications/actions/org-events";
+import { getServerTranslation } from "@/i18n/server";
 
 function revalidateOrganizationPaths(organizationId: string) {
   revalidatePath("/admin");
@@ -132,6 +133,7 @@ export async function deleteOrganization(input: {
   organizationId: string;
   confirmSlug: string;
 }) {
+  const { t } = await getServerTranslation();
   const adminUser = await requirePlatformAdmin();
   const admin = createSupabaseAdminClient();
 
@@ -194,7 +196,7 @@ export async function deleteOrganization(input: {
       ok: false as const,
       error:
         error.message.includes("foreign key")
-          ? "Kunne ikke slette organisasjonen på grunn av gjenværende data. Kontakt utvikler."
+          ? t("serverErrors.admin.orgDeleteRemainingData")
           : error.message,
     };
   }

@@ -1,6 +1,5 @@
 "use client";
 
-import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { MobileNavLinks } from "@/components/layout/mobile-nav";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +18,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { AppHeaderSearch } from "@/components/layout/app-header-search";
 import { OrganizationSwitcher } from "@/components/organizations/organization-switcher";
 import { APP_NAME } from "@/config/app";
 import { useAuthUser } from "@/hooks/use-auth-user";
@@ -28,6 +28,7 @@ import { useSupabase } from "@/providers/supabase-provider";
 import { MenuIcon, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { signOutToLogin } from "@/lib/auth/sign-out";
+import { useTranslation } from "@/i18n/client";
 import { useMemo, useState, type ReactNode } from "react";
 
 function initialsFromUser(email: string | undefined, metaName: unknown): string {
@@ -83,6 +84,7 @@ function HeaderAvatarOrInitials({
 }
 
 export function AppHeader({ children }: { children?: ReactNode }) {
+  const { t } = useTranslation();
   const { user, loading } = useAuthUser();
   const { isPlatformAdmin } = usePlatformAdmin();
   const supabase = useSupabase();
@@ -114,7 +116,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
                 variant="ghost"
                 size="icon"
                 className="size-11 shrink-0 md:hidden"
-                aria-label="Åpne meny"
+                aria-label={t("common.actions.openMenu")}
               >
                 <MenuIcon className="size-6" />
               </Button>
@@ -134,13 +136,11 @@ export function AppHeader({ children }: { children?: ReactNode }) {
             </div>
           </SheetContent>
         </Sheet>
+        <AppHeaderSearch />
       </div>
 
       <div className="flex min-w-0 items-center gap-2 md:gap-3">
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {children}
-          <ThemeToggle variant="header" />
-        </div>
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">{children}</div>
         <OrganizationSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -150,7 +150,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
               "disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-muted/30",
             )}
             disabled={loading}
-            aria-label="Konto og utlogging"
+            aria-label={t("common.account.menuAria")}
           >
             {avatarUrl ? (
               <HeaderAvatarOrInitials
@@ -179,21 +179,21 @@ export function AppHeader({ children }: { children?: ReactNode }) {
           >
             <DropdownMenuGroup>
               <DropdownMenuLabel className="px-3 py-2 font-heading text-app-sm font-semibold text-foreground truncate md:px-3.5 md:py-2.5 md:text-app-md">
-                {user?.email ?? "Innlogget"}
+                {user?.email ?? t("common.account.loggedIn")}
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-2 bg-border" />
               <DropdownMenuItem
                 className="px-3 py-2.5 font-heading text-app-md md:px-3.5 md:py-3"
                 render={<Link href="/app/settings" />}
               >
-                Innstillinger
+                {t("common.account.settings")}
               </DropdownMenuItem>
               {isPlatformAdmin ? (
                 <DropdownMenuItem
                   className="px-3 py-2.5 font-heading text-app-md md:px-3.5 md:py-3"
                   render={<Link href="/admin" />}
                 >
-                  Plattformadmin
+                  {t("common.account.platformAdmin")}
                 </DropdownMenuItem>
               ) : null}
               <DropdownMenuSeparator className="my-2 bg-border" />
@@ -201,7 +201,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
                 className="px-3 py-2.5 font-heading text-app-md font-bold md:px-3.5 md:py-3"
                 onSelect={() => void signOut()}
               >
-                Logg ut
+                {t("common.account.logout")}
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
