@@ -22,6 +22,7 @@ import { FormSelect } from "@/components/ui/form-select";
 import { BOOKING_PAYMENT_STATUS_VALUES, bookingPaymentStatusLabel } from "@/constants/booking-payment-status";
 import { useTranslation } from "@/i18n/client";
 import { statusLabel } from "@/lib/navigation/nav-labels";
+import { bookingConflictMessageKey } from "@/lib/bookings/booking-conflict-error";
 import { sortBookingsByUpcomingFirst } from "@/lib/bookings/list-sort";
 import { cn } from "@/lib/utils";
 import { APP_LIST_ROW_DATE, APP_TABLE_HEAD, APP_TABLE_HEAD_BAR } from "@/lib/table-typography";
@@ -473,7 +474,9 @@ export function BookingsList({
 
       if (error) {
         toast.error(t("bookings.statusUpdateFailed"), {
-          description: error.message,
+          description: bookingConflictMessageKey(error)
+            ? t(bookingConflictMessageKey(error)!)
+            : error.message,
         });
         return;
       }

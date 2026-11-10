@@ -45,6 +45,7 @@ import { parseNokFormValue } from "@/lib/bookings/parse-nok-form-value";
 import { generateClientRequestId } from "@/lib/customers/customer-identity";
 import { redirectAfterCreate } from "@/lib/navigation/redirect-after-create";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
+import { bookingConflictMessageKey } from "@/lib/bookings/booking-conflict-error";
 import { createBookingAtomic } from "@/lib/reservations/atomic-create";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
@@ -598,8 +599,12 @@ export function NewBookingForm({
       clientRequestIdRef.current = generateClientRequestId();
       redirectAfterCreate(router, "/app/bookings");
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : t("bookings.form.unknownError");
+      const conflictKey = bookingConflictMessageKey(err);
+      const message = conflictKey
+        ? t(conflictKey)
+        : err instanceof Error
+          ? err.message
+          : t("bookings.form.unknownError");
       toast.error(t("bookings.form.createFailed"), { description: message });
     } finally {
       submitInFlightRef.current = false;

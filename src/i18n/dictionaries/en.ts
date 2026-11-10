@@ -746,6 +746,13 @@ export const en = {
       pending: "Booking set to pending",
     },
     statusUpdateFailed: "Could not update status",
+    conflict: {
+      bookingOverlap:
+        "This venue is already booked on the selected dates. Choose other dates or another venue.",
+      accommodationOverlap:
+        "This accommodation unit is already reserved for this period.",
+      invalidPeriod: "End date cannot be before the start date.",
+    },
     amount: "Amount:",
     noBookingsYet: "No bookings yet.",
     noSearchResults: "No matches with search or filter.",

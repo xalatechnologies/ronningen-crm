@@ -53,6 +53,7 @@ import {
   type BookingAddonOption,
   type BookingPackageOption,
 } from "@/lib/bookings/commercial-lines";
+import { bookingConflictMessageKey } from "@/lib/bookings/booking-conflict-error";
 import { parseNokFormValue } from "@/lib/bookings/parse-nok-form-value";
 import {
   bookingCustomerFieldsChanged,
@@ -493,7 +494,9 @@ export function BookingDetailSheet({
 
       if (bookErr) {
         toast.error(t("bookings.detail.updateFailed"), {
-          description: bookErr.message,
+          description: bookingConflictMessageKey(bookErr)
+            ? t(bookingConflictMessageKey(bookErr)!)
+            : bookErr.message,
         });
         return;
       }

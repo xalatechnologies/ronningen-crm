@@ -40,6 +40,7 @@ import {
   type Resolver,
   useForm,
 } from "react-hook-form";
+import { bookingConflictMessageKey } from "@/lib/bookings/booking-conflict-error";
 import { toast } from "sonner";
 
 const fieldClass =
@@ -157,8 +158,12 @@ export function NewAccommodationReservationForm({
       clientRequestIdRef.current = generateClientRequestId();
       redirectAfterCreate(router, "/app/overnatting");
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : t("common.toasts.genericError");
+      const conflictKey = bookingConflictMessageKey(err);
+      const message = conflictKey
+        ? t(conflictKey)
+        : err instanceof Error
+          ? err.message
+          : t("common.toasts.genericError");
       toast.error(t("overnatting.createFailed"), { description: message });
     } finally {
       submitInFlightRef.current = false;

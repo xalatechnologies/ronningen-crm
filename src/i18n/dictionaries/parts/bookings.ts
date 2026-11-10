@@ -41,6 +41,13 @@ export const bookingsNb = {
     pending: "Booking satt til avventer",
   },
   statusUpdateFailed: "Kunne ikke oppdatere status",
+  conflict: {
+    bookingOverlap:
+      "Lokalet er allerede booket på de valgte datoene. Velg andre datoer eller et annet lokale.",
+    accommodationOverlap:
+      "Overnattingsenheten er allerede reservert i denne perioden.",
+    invalidPeriod: "Sluttdato kan ikke være før startdato.",
+  },
   amount: "Beløp:",
   noBookingsYet: "Ingen bookinger ennå.",
   noSearchResults: "Ingen treff med søk eller filter.",
