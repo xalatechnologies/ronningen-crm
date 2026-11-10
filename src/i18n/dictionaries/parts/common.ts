@@ -188,6 +188,10 @@ export const settingsNavNb = {
     description:
       "Kalender-feed og eksterne integrasjoner for booking-synk.",
   },
+  activity: {
+    title: "Aktivitetslogg",
+    description: "Sporbarhet: hvem som har opprettet, endret eller slettet data.",
+  },
   contracts: {
     title: "Leieavtaler",
     description: "Maler og utsendelse av digitale leieavtaler.",

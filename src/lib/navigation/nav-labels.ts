@@ -63,6 +63,10 @@ const settingsSectionKeys: Record<string, { title: TranslationKey; description: 
     title: "settingsNav.integrations.title",
     description: "settingsNav.integrations.description",
   },
+  activity: {
+    title: "settingsNav.activity.title",
+    description: "settingsNav.activity.description",
+  },
   contracts: {
     title: "settingsNav.contracts.title",
     description: "settingsNav.contracts.description",

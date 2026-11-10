@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarClock,
   CreditCard,
+  History,
   FileText,
   LayoutGrid,
   LifeBuoy,
@@ -64,6 +65,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     title: "Team",
     description: "Se hvem som har tilgang og administrer roller i organisasjonen.",
     icon: Users,
+    visible: canManageOrgSettings,
+  },
+  {
+    id: "activity",
+    href: "/app/settings/activity",
+    title: "Aktivitetslogg",
+    description: "Sporbarhet: hvem som har opprettet, endret eller slettet data.",
+    icon: History,
     visible: canManageOrgSettings,
   },
   {

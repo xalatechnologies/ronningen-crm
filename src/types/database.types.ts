@@ -134,6 +134,56 @@ export type Database = {
           },
         ];
       };
+      audit_log: {
+        Row: {
+          id: number;
+          organization_id: string;
+          table_name: string;
+          row_id: string;
+          op: string;
+          actor_user_id: string | null;
+          actor_role: string;
+          changed_fields: string[] | null;
+          old_data: Json | null;
+          new_data: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          organization_id: string;
+          table_name: string;
+          row_id: string;
+          op: string;
+          actor_user_id?: string | null;
+          actor_role?: string | null;
+          changed_fields?: string[] | null;
+          old_data?: Json | null;
+          new_data?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          organization_id?: string;
+          table_name?: string;
+          row_id?: string;
+          op?: string;
+          actor_user_id?: string | null;
+          actor_role?: string | null;
+          changed_fields?: string[] | null;
+          old_data?: Json | null;
+          new_data?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       assets: {
         Row: {
           condition: string | null;
