@@ -593,7 +593,11 @@ export function BookingDetailSheet({
       });
 
       if (!result.ok) {
-        toast.error(t("bookings.detail.deleteFailed"), { description: result.error });
+        toast.error(t("bookings.detail.deleteFailed"), {
+          description: result.error.includes("booking_has_signed_contract")
+            ? t("bookings.detail.deleteBlockedSignedContract")
+            : result.error,
+        });
         return;
       }
 

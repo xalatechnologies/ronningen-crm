@@ -150,6 +150,8 @@ export const bookingsNb = {
     moveToPending: "Til avventer",
     moveToPendingConfirm: "Flytte denne bookingen tilbake til «Avventer»?",
     deleteBooking: "Slett booking",
+    deleteBlockedSignedContract:
+      "Denne bookingen har en signert kontrakt og kan ikke slettes. Signerte kontrakter må oppbevares. Sett bookingen til «Kansellert» i stedet.",
     deleteTitle: "Slette booking?",
     deleteDescription:
       "«{customer}», {date}. Dette kan ikke angres. Kunden beholdes i Kunder.",

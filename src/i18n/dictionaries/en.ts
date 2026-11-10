@@ -855,6 +855,8 @@ export const en = {
       moveToPending: "Move to pending",
       moveToPendingConfirm: "Move this booking back to «Pending»?",
       deleteBooking: "Delete booking",
+      deleteBlockedSignedContract:
+        'This booking has a signed contract and cannot be deleted. Signed contracts must be retained. Set the booking to "Cancelled" instead.',
       deleteTitle: "Delete booking?",
       deleteDescription:
         "«{customer}», {date}. This cannot be undone. The customer remains in Customers.",
