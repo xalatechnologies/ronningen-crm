@@ -44,9 +44,9 @@ Property finance and event venue management (foundation). Feature screens are in
 
    **Platform admin:** After migrations, run `PLATFORM_ADMIN_PASSWORD='…' npm run admin:seed` (requires `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`). Sign in at `/auth/login`, then open `/admin` or use **Plattformadmin** in the account menu.
 
-   **Local test sign-in:** In development, `/auth/login` is pre-filled with `admin@ronningen.no` / `Admin1234@` (see `src/config/dev-login.ts`). On a **new** Supabase project, apply migrations (includes `seed_dev_auth_admin`) so that user exists; or add the user under **Authentication → Users**, or use **Register**. Optional env overrides: `NEXT_PUBLIC_DEV_LOGIN_EMAIL`, `NEXT_PUBLIC_DEV_LOGIN_PASSWORD`.
+   **Local test sign-in:** In development, `/auth/login` is pre-filled from `src/config/dev-login.ts`. For a **local** Supabase, `supabase db reset` runs `supabase/seed.sql`, which creates that dev user (never on a hosted project). On a hosted project, add the user under **Authentication → Users**, or use **Register**. Optional env overrides: `NEXT_PUBLIC_DEV_LOGIN_EMAIL`, `NEXT_PUBLIC_DEV_LOGIN_PASSWORD`.
 
-   If sign-in returns **Database error querying schema**, Auth (GoTrue) expects empty strings—not SQL `NULL`—on several `auth.users` token columns for SQL-created users; see migration `auth_users_gotrue_token_empty_strings` and [supabase/auth#1940](https://github.com/supabase/auth/issues/1940).
+   If sign-in returns **Database error querying schema**, Auth (GoTrue) expects empty strings—not SQL `NULL`—on several `auth.users` token columns for SQL-created users; see the token fix in `supabase/seed.sql` and [supabase/auth#1940](https://github.com/supabase/auth/issues/1940).
 
 3. **Supabase database**
 
