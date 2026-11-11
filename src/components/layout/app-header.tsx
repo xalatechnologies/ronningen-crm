@@ -19,6 +19,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { AppHeaderSearch } from "@/components/layout/app-header-search";
+import { LanguageSwitcher } from "@/components/language/language-switcher";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { OrganizationSwitcher } from "@/components/organizations/organization-switcher";
 import { APP_NAME } from "@/config/app";
 import { useAuthUser } from "@/hooks/use-auth-user";
@@ -140,6 +142,12 @@ export function AppHeader({ children }: { children?: ReactNode }) {
       </div>
 
       <div className="flex min-w-0 items-center gap-2 md:gap-3">
+        <div className="hidden shrink-0 items-center gap-2 md:flex">
+          <div className="[&_[role=radio]]:rounded-lg [&_[role=radiogroup]>div]:h-11 [&_[role=radiogroup]>div]:rounded-xl [&_[role=radiogroup]>div]:border [&_[role=radiogroup]>div]:border-foreground/20 [&_[role=radiogroup]>div]:bg-muted/60">
+            <LanguageSwitcher variant="compact" />
+          </div>
+          <ThemeToggle variant="header" />
+        </div>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">{children}</div>
         <OrganizationSwitcher />
         <DropdownMenu>
@@ -206,6 +214,11 @@ export function AppHeader({ children }: { children?: ReactNode }) {
                   {t("common.account.platformAdmin")}
                 </DropdownMenuItem>
               ) : null}
+              <div className="md:hidden [&_.grid]:rounded-xl [&_.grid]:border-0 [&_.grid]:bg-muted [&_[role=radio]]:rounded-lg">
+                <DropdownMenuSeparator className="my-1.5 bg-border" />
+                <ThemeToggle variant="menu" />
+                <LanguageSwitcher variant="menu" />
+              </div>
               <DropdownMenuSeparator className="my-1.5 bg-border" />
               <DropdownMenuItem
                 variant="destructive"
