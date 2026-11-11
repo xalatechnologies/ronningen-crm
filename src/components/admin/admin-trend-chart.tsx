@@ -120,7 +120,7 @@ export function AdminTrendChart({
         ) : null}
       </div>
 
-      <div className="mt-4 border-t border-rn-border-strong/35 pt-4">
+      <div className="mt-4 border-t border-foreground/10 pt-4">
         <div
           className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between"
           aria-hidden
@@ -155,7 +155,7 @@ export function AdminTrendChart({
                 >
                   {formatAxis(bar.value)}
                 </span>
-                <div className="relative flex min-h-[5rem] flex-1 flex-col justify-end border-b-2 border-rn-border-strong/55 sm:min-h-[6rem] md:min-h-[7rem]">
+                <div className="relative flex min-h-[5rem] flex-1 flex-col justify-end border-b-2 border-foreground/20 sm:min-h-[6rem] md:min-h-[7rem]">
                   {bar.hasValue ? (
                     <div
                       className={cn(
@@ -179,7 +179,7 @@ export function AdminTrendChart({
         </div>
 
         <div
-          className="mt-2.5 flex w-full justify-between gap-0.5 border-t border-dashed border-rn-border-strong/40 pt-2.5"
+          className="mt-2.5 flex w-full justify-between gap-0.5 border-t border-dashed border-foreground/15 pt-2.5"
           aria-hidden
         >
           {chartBars.map((bar) => (

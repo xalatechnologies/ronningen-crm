@@ -46,18 +46,18 @@ import type { ReactNode } from "react";
 export const dynamic = "force-dynamic";
 
 const sectionPad =
-  "px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6";
+  "px-5 py-5 sm:px-6 sm:py-6";
 
 const kpiTileClass =
-  "admin-overview-kpi-tile flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 dark:bg-white/[0.06] sm:p-6";
+  "admin-overview-kpi-tile flex min-h-[length:var(--app-tap-target-min)] flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 dark:bg-white/[0.06] sm:p-6";
 
 const tableHeadClass = cn(
   "admin-overview-table-head",
   APP_TABLE_HEAD,
-  "px-4 text-app-sm font-bold tracking-[0.07em] text-foreground sm:px-6 sm:text-app-base md:px-8",
+  "px-4 text-app-xs font-semibold tracking-wide text-muted-foreground sm:px-5",
 );
 const tableCellClass =
-  "px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6";
+  "px-4 py-3 sm:px-5";
 
 function OverviewSectionIntro({
   title,
@@ -164,14 +164,14 @@ export default async function AdminOverviewPage() {
       : t("admin.overview_active_subscriptions", { count: activeCount });
 
   return (
-    <div className="admin-page-workspace admin-overview-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
+    <div className="admin-page-workspace admin-overview-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-6 pb-8">
       <div
         className={cn(
           "dashboard-oversikt-card min-w-0 overflow-hidden",
           RN_CARD_SHELL,
         )}
       >
-        <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
+        <div className="dashboard-oversikt-hero px-5 py-5 sm:px-6 lg:px-6">
           <AppPageHeader
             className="mb-0"
             surface="default"
@@ -187,9 +187,11 @@ export default async function AdminOverviewPage() {
             }
           />
         </div>
+      </div>
 
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section
-          className={cn("border-t border-foreground/10", sectionPad)}
+          className={sectionPad}
           aria-label={t("admin.abonnement_og_inntekt")}
         >
           <OverviewSectionIntro
@@ -237,9 +239,11 @@ export default async function AdminOverviewPage() {
             />
           </div>
         </section>
+      </div>
 
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section
-          className={cn("border-t border-foreground/10", sectionPad)}
+          className={sectionPad}
           aria-label={t("admin.plattformaktivitet")}
         >
           <OverviewSectionIntro
@@ -288,17 +292,19 @@ export default async function AdminOverviewPage() {
             />
           </div>
         </section>
+      </div>
 
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section
-          className={cn("border-t border-foreground/10", sectionPad)}
+          className={sectionPad}
           aria-label={t("admin.trender")}
         >
           <OverviewSectionIntro
             title={t("admin.trender")}
             description={t("admin.estimert_mrr_gjennom_aret_og_nye_leietakere_per_dag_siste_uk")}
           />
-          <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-foreground/10">
-            <div className="lg:pr-8">
+          <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <div className="rounded-2xl bg-muted/30 p-5 ring-1 ring-foreground/10">
               <AdminTrendChart
                 className="admin-overview-trend-chart"
                 embedded
@@ -312,7 +318,7 @@ export default async function AdminOverviewPage() {
                 valueFormat="nok"
               />
             </div>
-            <div className="lg:pl-8">
+            <div className="rounded-2xl bg-muted/30 p-5 ring-1 ring-foreground/10">
               <AdminTrendChart
                 className="admin-overview-trend-chart"
                 embedded
@@ -326,15 +332,16 @@ export default async function AdminOverviewPage() {
             </div>
           </div>
         </section>
+      </div>
 
-        <section
-          className="grid border-t border-foreground/10 lg:grid-cols-2"
-          aria-label={t("admin.abonnement_og_oppfolging")}
-        >
-          <div className="border-b border-foreground/10 px-4 py-5 sm:px-5 md:px-6 lg:border-r lg:border-b-0 lg:px-8 lg:py-6">
+      <section
+        className="grid gap-6 lg:grid-cols-2"
+        aria-label={t("admin.abonnement_og_oppfolging")}
+      >
+          <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL, sectionPad)}>
             <AdminSubscriptionStatusPanel embedded statusCounts={stats.statusCounts} />
           </div>
-          <div className="px-4 py-5 sm:px-5 md:px-6 lg:px-8 lg:py-6">
+          <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL, sectionPad)}>
             <AdminQueuePanel
               embedded
               title={t("admin.proveperiode_utloper_snart")}
@@ -343,8 +350,7 @@ export default async function AdminOverviewPage() {
               viewAllHref={adminSubscriptionsHref("trialing")}
             />
           </div>
-        </section>
-      </div>
+      </section>
 
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section className={sectionPad} aria-label={t("admin.koer_som_krever_handling")}>
@@ -352,7 +358,8 @@ export default async function AdminOverviewPage() {
             title={t("admin.oppfolging")}
             description={t("admin.organisasjoner_som_trenger_manuell_oppfolging")}
           />
-          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
+          <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="rounded-2xl bg-muted/30 p-5 ring-1 ring-foreground/10">
             <AdminQueuePanel
               embedded
               title={t("admin.forfalt_betaling")}
@@ -360,6 +367,8 @@ export default async function AdminOverviewPage() {
               emptyLabel={t("admin.ingen_organisasjoner_med_forfalt_status")}
               viewAllHref={adminSubscriptionsHref("past_due")}
             />
+            </div>
+            <div className="rounded-2xl bg-muted/30 p-5 ring-1 ring-foreground/10">
             <AdminQueuePanel
               embedded
               title={t("admin.suspenderte_organisasjoner")}
@@ -367,6 +376,7 @@ export default async function AdminOverviewPage() {
               emptyLabel={t("admin.ingen_suspenderte_organisasjoner")}
               viewAllHref={adminOrganizationsHref({ status: "suspended" })}
             />
+            </div>
           </div>
         </section>
       </div>
@@ -377,7 +387,7 @@ export default async function AdminOverviewPage() {
             title={t("admin.nylig_aktivitet")}
             description={t("admin.siste_registreringer_og_admin_handlinger")}
           />
-          <div className="mt-6 grid grid-cols-1 gap-8 xl:grid-cols-2 xl:gap-10">
+          <div className="mt-5 grid grid-cols-1 gap-6 xl:grid-cols-2">
             <AdminDataPanel
               embedded
               className="admin-overview-data-panel min-w-0"
@@ -386,9 +396,9 @@ export default async function AdminOverviewPage() {
                 <AdminLinkButton href={adminOrganizationsHref()}>{t("admin.alle_organisasjoner")}</AdminLinkButton>
               }
             >
-              <div className="-mx-1 overflow-x-auto sm:mx-0">
+              <div className="overflow-x-auto rounded-xl ring-1 ring-foreground/10">
                 <Table>
-                  <TableHeader className="bg-rn-surface-table-head [&_tr]:border-b [&_tr]:border-foreground/15">
+                  <TableHeader className="bg-muted/50 [&_tr]:border-b [&_tr]:border-foreground/15">
                     <TableRow>
                       <TableHead className={tableHeadClass}>{t("admin.overview_name")}</TableHead>
                       <TableHead className={tableHeadClass}>{t("admin.status")}</TableHead>
@@ -455,9 +465,9 @@ export default async function AdminOverviewPage() {
                 </AdminLinkButton>
               }
             >
-              <div className="-mx-1 overflow-x-auto sm:mx-0">
+              <div className="overflow-x-auto rounded-xl ring-1 ring-foreground/10">
                 <Table>
-                  <TableHeader className="bg-rn-surface-table-head [&_tr]:border-b [&_tr]:border-foreground/15">
+                  <TableHeader className="bg-muted/50 [&_tr]:border-b [&_tr]:border-foreground/15">
                     <TableRow>
                       <TableHead className={tableHeadClass}>{t("admin.overview_timestamp")}</TableHead>
                       <TableHead className={cn(tableHeadClass, "hidden md:table-cell")}>
