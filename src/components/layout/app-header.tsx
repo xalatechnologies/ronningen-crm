@@ -25,7 +25,7 @@ import { useAuthUser } from "@/hooks/use-auth-user";
 import { usePlatformAdmin } from "@/hooks/use-platform-admin";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
-import { MenuIcon, ChevronDown } from "lucide-react";
+import { ChevronDown, LogOut, MenuIcon, Settings, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { signOutToLogin } from "@/lib/auth/sign-out";
 import { useTranslation } from "@/i18n/client";
@@ -175,32 +175,44 @@ export function AppHeader({ children }: { children?: ReactNode }) {
           <DropdownMenuContent
             align="end"
             sideOffset={8}
-            className="min-w-64 max-w-[min(100vw-1.5rem,20rem)] rounded-2xl border border-foreground/10 bg-popover p-2.5 text-app-base shadow-lg"
+            className="min-w-72 max-w-[min(100vw-1.5rem,22rem)] rounded-2xl border border-foreground/10 bg-popover p-2 text-app-base shadow-lg"
           >
             <DropdownMenuGroup>
-              <DropdownMenuLabel className="px-3 py-2 font-heading text-app-sm font-semibold text-foreground truncate md:px-3.5 md:py-2.5 md:text-app-md">
-                {user?.email ?? t("common.account.loggedIn")}
+              <DropdownMenuLabel className="flex items-center gap-3 px-3 py-3">
+                <span
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted font-heading text-app-sm font-bold text-success dark:!text-white"
+                  aria-hidden
+                >
+                  {initials}
+                </span>
+                <span className="min-w-0 truncate font-heading text-app-sm font-semibold text-foreground md:text-app-md">
+                  {user?.email ?? t("common.account.loggedIn")}
+                </span>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator className="my-2 bg-border" />
+              <DropdownMenuSeparator className="my-1.5 bg-border" />
               <DropdownMenuItem
-                className="px-3 py-2.5 font-heading text-app-md md:px-3.5 md:py-3"
+                className="gap-3 rounded-lg px-3 py-2.5 font-heading text-app-md"
                 render={<Link href="/app/settings" />}
               >
+                <Settings className="size-5 text-muted-foreground" aria-hidden />
                 {t("common.account.settings")}
               </DropdownMenuItem>
               {isPlatformAdmin ? (
                 <DropdownMenuItem
-                  className="px-3 py-2.5 font-heading text-app-md md:px-3.5 md:py-3"
+                  className="gap-3 rounded-lg px-3 py-2.5 font-heading text-app-md"
                   render={<Link href="/admin" />}
                 >
+                  <ShieldCheck className="size-5 text-muted-foreground" aria-hidden />
                   {t("common.account.platformAdmin")}
                 </DropdownMenuItem>
               ) : null}
-              <DropdownMenuSeparator className="my-2 bg-border" />
+              <DropdownMenuSeparator className="my-1.5 bg-border" />
               <DropdownMenuItem
-                className="px-3 py-2.5 font-heading text-app-md font-bold md:px-3.5 md:py-3"
+                variant="destructive"
+                className="gap-3 rounded-lg px-3 py-2.5 font-heading text-app-md font-semibold"
                 onSelect={() => void signOut()}
               >
+                <LogOut className="size-5" aria-hidden />
                 {t("common.account.logout")}
               </DropdownMenuItem>
             </DropdownMenuGroup>

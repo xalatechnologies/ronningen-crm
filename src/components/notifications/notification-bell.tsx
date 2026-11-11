@@ -58,10 +58,10 @@ export function NotificationBell() {
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-        className="w-[min(100vw-1.5rem,22rem)] rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-2 shadow-rn-card"
+        className="w-[min(100vw-1.5rem,22rem)] rounded-2xl border border-foreground/10 bg-popover p-2 shadow-lg"
       >
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="px-2 py-1.5 font-heading text-app-sm font-semibold">
+          <DropdownMenuLabel className="px-3 py-2 font-heading text-app-md font-bold text-foreground">
             {t("notifications.inbox.title")}
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="my-1 bg-border" />
@@ -73,7 +73,10 @@ export function NotificationBell() {
             preview.map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
-                className="flex cursor-pointer flex-col items-start gap-1 px-3 py-2.5"
+                className={cn(
+                  "flex cursor-pointer flex-col items-start gap-1 rounded-xl px-3 py-2.5",
+                  !notification.read_at && "bg-success/8",
+                )}
                 onSelect={() => {
                   void markRead(notification.id);
                   if (notification.action_url) {
@@ -111,7 +114,7 @@ export function NotificationBell() {
           )}
           <DropdownMenuSeparator className="my-1 bg-border" />
           <DropdownMenuItem
-            className="justify-center px-3 py-2 font-heading text-app-sm font-semibold text-success"
+            className="justify-center rounded-xl bg-muted px-3 py-2.5 font-heading text-app-sm font-semibold text-success"
             render={<Link href="/app/notifications" />}
           >
             {t("notifications.bell.viewAll")}
