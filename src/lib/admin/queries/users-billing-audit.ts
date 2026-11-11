@@ -252,6 +252,8 @@ export type AdminAuditFilters = {
   action?: string;
   category?: AdminAuditCategory;
   q?: string;
+  /** Actions whose translated label matches `q` (resolved by the caller with its translator). */
+  labelMatchedActions?: string[];
   actorUserId?: string;
   limit?: number;
   offset?: number;
@@ -350,6 +352,11 @@ export async function fetchAdminAuditLogPaginated(
     const pattern = `%${escapeIlikePattern(search)}%`;
     const actorIds = await resolveSearchActorIds(admin, search);
     const parts = [`action.ilike.${pattern}`, `target_id.ilike.${pattern}`];
+    if (filters.labelMatchedActions && filters.labelMatchedActions.length > 0) {
+      parts.push(
+        `action.in.(${filters.labelMatchedActions.map((a) => `"${a}"`).join(",")})`,
+      );
+    }
     if (actorIds.length > 0) {
       parts.push(`actor_user_id.in.(${actorIds.join(",")})`);
     }

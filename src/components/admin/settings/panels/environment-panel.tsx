@@ -69,7 +69,7 @@ function GroupSection({
 
   return (
     <section>
-      <div className="flex items-center justify-between gap-3 border-b border-rn-border-strong/60 bg-muted/25 px-4 py-2.5">
+      <div className="flex items-center justify-between gap-3 border-b border-foreground/10 bg-muted/25 px-4 py-2.5">
         <h3 className="font-heading text-app-sm font-semibold">{label}</h3>
         <div className="flex items-center gap-2 text-app-xs text-muted-foreground">
           <span>

@@ -35,6 +35,15 @@ const ADMIN_AUDIT_ACTION_KEYS: Record<string, TranslationKey> = {
   "notification.campaign_sent": "audit.actions.notificationCampaignSent",
 };
 
+/** Audit actions whose visible label contains the search text (so search matches what the admin reads). */
+export function matchAuditActionsByLabel(query: string, t: Translator): string[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return [];
+  return Object.keys(ADMIN_AUDIT_ACTION_KEYS).filter((action) =>
+    t(ADMIN_AUDIT_ACTION_KEYS[action]).toLowerCase().includes(needle),
+  );
+}
+
 export function formatAuditActionLabel(action: string, t: Translator): string {
   const key = ADMIN_AUDIT_ACTION_KEYS[action];
   return key ? t(key) : action;

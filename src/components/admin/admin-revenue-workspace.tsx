@@ -48,7 +48,7 @@ function RevenueKpiTile({
   caption,
   icon: Icon,
   href,
-  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconContainerClassName = "rounded-xl bg-accent p-2 dark:bg-white/10",
   iconClassName = "size-6 text-primary dark:text-white",
   valueClassName = "text-success",
 }: {
@@ -65,7 +65,7 @@ function RevenueKpiTile({
   const content = (
     <>
       <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="dashboard-kpi-label min-w-0 break-words">{label}</span>
+        <span className="dashboard-kpi-label min-w-0 break-words !normal-case !tracking-normal">{label}</span>
         <div className={cn(iconContainerClassName, "shrink-0")}>
           <Icon className={iconClassName} aria-hidden />
         </div>
@@ -140,9 +140,9 @@ export function AdminRevenueWorkspace({
       : t("admin.ingen_sammenligning_forrige_maned");
 
   return (
-    <div className="admin-page-workspace admin-revenue-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
+    <div className="admin-page-workspace admin-revenue-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-6 pb-8">
       <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
+        <div className="dashboard-oversikt-hero px-5 py-5 sm:px-6 lg:px-6">
           <AppPageHeader
             className="mb-0"
             surface="default"
@@ -151,8 +151,10 @@ export function AdminRevenueWorkspace({
             description={t("admin.finansiell_oversikt_pa_tvers_av_alle_leietakere")}
           />
         </div>
+      </div>
 
-        <section className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8">
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
+        <section className="px-5 py-5 sm:px-6 sm:py-6">
           <SectionIntro
             title={t("admin.saas_abonnement")}
             description={t("admin.plattformabonnement_og_estimert_mrr_basert_pa_aktive_leietak")}
@@ -176,7 +178,7 @@ export function AdminRevenueWorkspace({
               value={`${metrics.churnRate30d}%`}
               caption={t("admin.avsluttede_abonnement_siste_30_dager")}
               icon={TrendingDown}
-              iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
+              iconContainerClassName="rounded-xl bg-rn-danger-soft p-2"
               iconClassName="size-6 text-rn-danger-ink"
               valueClassName={
                 metrics.churnRate30d > 0 ? "text-destructive" : "text-success"
@@ -192,9 +194,11 @@ export function AdminRevenueWorkspace({
             />
           </div>
         </section>
+      </div>
 
-        <section className="grid border-t border-rn-border-strong/50 lg:grid-cols-2">
-          <div className="border-rn-border-strong/50 px-4 py-5 sm:px-5 md:px-6 lg:border-r lg:px-8 lg:py-6">
+      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
+        <section className="grid lg:grid-cols-2">
+          <div className="border-foreground/10 px-4 py-5 sm:px-5 md:px-6 lg:border-r lg:px-8 lg:py-6">
             <AdminTrendChart
               className="admin-overview-trend-chart"
               embedded
@@ -203,7 +207,7 @@ export function AdminRevenueWorkspace({
               valueFormat="nok"
             />
           </div>
-          <div className="px-4 py-5 sm:px-5 md:px-6 lg:px-8 lg:py-6">
+          <div className="px-5 py-5 sm:px-6">
             <AdminSubscriptionStatusPanel
               embedded
               statusCounts={data.statusCounts}
@@ -211,13 +215,13 @@ export function AdminRevenueWorkspace({
           </div>
         </section>
 
-        <section className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 md:px-6 lg:px-8 lg:py-6">
+        <section className="border-t border-foreground/10 px-5 py-5 sm:px-6">
           <AdminPlanDistributionPanel embedded planCounts={data.planCounts} />
         </section>
       </div>
 
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <section className="px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8">
+        <section className="px-5 py-5 sm:px-6 sm:py-6">
           <SectionIntro
             title={t("admin.booking_inntekt_leietaker")}
             description={t("admin.omsetning_registrert_i_bookinger_pa_tvers_av_leietakere_ikke")}
@@ -240,7 +244,7 @@ export function AdminRevenueWorkspace({
               value={formatNok(data.outstandingNok)}
               caption={t("admin.gjenstaende_belop_i_aktive_bookinger")}
               icon={TrendingDown}
-              iconContainerClassName="rounded-md bg-amber-500/10 p-2"
+              iconContainerClassName="rounded-xl bg-amber-500/10 p-2"
               iconClassName="size-6 text-amber-800 dark:text-amber-300"
               valueClassName={
                 data.outstandingNok > 0
@@ -257,7 +261,7 @@ export function AdminRevenueWorkspace({
           </div>
         </section>
 
-        <section className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 md:px-6 lg:px-8 lg:py-6">
+        <section className="border-t border-foreground/10 px-5 py-5 sm:px-6">
           <AdminTrendChart
             className="admin-overview-trend-chart"
             embedded
@@ -284,17 +288,17 @@ export function AdminRevenueWorkspace({
       </div>
 
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8 md:py-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-foreground/15 px-5 py-4 sm:px-6 md:py-5">
           <h2 className="app-section-title">{t("adminLabels.sections.activeSubscriptionsMrr")}</h2>
           <AdminLinkButton href={adminSubscriptionsHref("active")}>
             {t("adminLabels.actions.activeAll")}
           </AdminLinkButton>
         </div>
 
-        <div className="app-table -mx-px max-w-full overflow-x-auto overscroll-x-contain">
+        <div className="app-table max-w-full overflow-x-auto overscroll-x-contain">
           <table className="w-full min-w-[45rem] text-left text-app-base">
             <thead>
-              <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+              <tr className="border-b border-foreground/15 bg-muted/50">
                 <th className={tableHeadClass}>{t("adminLabels.fields.organization")}</th>
                 <th className={tableHeadClass}>{t("admin.plan")}</th>
                 <th className={tableHeadClass}>{t("admin.status")}</th>
@@ -306,7 +310,7 @@ export function AdminRevenueWorkspace({
               {data.activePayers.map((row) => (
                 <tr
                   key={row.id}
-                  className="transition-colors hover:bg-rn-surface-row-hover"
+                  className="transition-colors hover:bg-muted/40"
                 >
                   <td className="p-0 align-middle">
                     <AdminTableDetailLink
@@ -359,7 +363,7 @@ export function AdminRevenueWorkspace({
           </table>
         </div>
 
-        <p className="border-t border-rn-border-strong/50 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
+        <p className="border-t border-foreground/10 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
           {t("admin.saas_mrr_footnote")}
         </p>
       </div>

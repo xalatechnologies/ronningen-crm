@@ -60,7 +60,7 @@ export function CommercialPanel({
         </div>
       </dl>
 
-      <p className="mt-6 border-t border-rn-border-strong/50 pt-4 text-app-sm text-muted-foreground">
+      <p className="mt-6 border-t border-foreground/10 pt-4 text-app-sm text-muted-foreground">
         {t("admin.commercial_config_footer")}
       </p>
     </AdminDataPanel>

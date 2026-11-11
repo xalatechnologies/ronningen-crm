@@ -7,7 +7,7 @@ import {
   type AdminAuditFilters,
 } from "@/lib/admin/queries/users-billing-audit";
 import { getServerTranslation } from "@/i18n/server";
-import { formatAuditActionLabel } from "@/lib/admin/audit-labels";
+import { formatAuditActionLabel, matchAuditActionsByLabel } from "@/lib/admin/audit-labels";
 
 export async function exportAuditLogCsv(
   filters: AdminAuditFilters = {},
@@ -17,6 +17,7 @@ export async function exportAuditLogCsv(
 
   const { entries } = await fetchAdminAuditLogPaginated({
     ...filters,
+    labelMatchedActions: filters.q ? matchAuditActionsByLabel(filters.q, t) : undefined,
     limit: 5000,
     offset: 0,
   });

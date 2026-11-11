@@ -34,7 +34,7 @@ export function EnvironmentVariableRow({ item }: { item: EnvChecklistItem }) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 border-b border-rn-border-strong/40 px-4 py-3 last:border-b-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
+        "flex flex-col gap-2 border-b border-foreground/10 px-4 py-3 last:border-b-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
         needsAttention && "border-l-2 border-l-amber-500 bg-amber-500/[0.04]",
       )}
     >
@@ -44,7 +44,7 @@ export function EnvironmentVariableRow({ item }: { item: EnvChecklistItem }) {
             {item.name}
           </code>
           {item.required ? (
-            <span className="rounded-md border border-rn-border-strong/60 bg-muted/40 px-1.5 py-0.5 text-app-xs font-medium text-muted-foreground">
+            <span className="rounded-full border border-foreground/15 bg-muted/40 px-1.5 py-0.5 text-app-xs font-medium text-muted-foreground">
               Påkrevd
             </span>
           ) : (

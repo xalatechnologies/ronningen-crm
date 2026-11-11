@@ -12,7 +12,7 @@ function EnvVarPills({ vars }: { vars: string[] }) {
       {vars.map((name) => (
         <span
           key={name}
-          className="rounded-md border border-rn-border-strong/60 bg-muted/30 px-2 py-0.5 font-mono text-app-xs text-muted-foreground"
+          className="rounded-full border border-foreground/15 bg-muted/30 px-2 py-0.5 font-mono text-app-xs text-muted-foreground"
         >
           {name}
         </span>

@@ -1,5 +1,7 @@
 import { AdminAuditWorkspace } from "@/components/admin/admin-audit-workspace";
 import type { AdminAuditCategory } from "@/lib/admin/audit-categories";
+import { getServerTranslation } from "@/i18n/server";
+import { matchAuditActionsByLabel } from "@/lib/admin/audit-labels";
 import { fetchAdminAuditPageData } from "@/lib/admin/queries/users-billing-audit";
 type PageProps = {
   searchParams: Promise<{
@@ -39,10 +41,12 @@ export default async function AdminAuditPage({ searchParams }: PageProps) {
   const from = params.from;
   const to = params.to;
 
+  const { t } = await getServerTranslation();
   const data = await fetchAdminAuditPageData({
     category: category === "all" ? undefined : category,
     action: selectedAction || undefined,
     q: search || undefined,
+    labelMatchedActions: search ? matchAuditActionsByLabel(search, t) : undefined,
     from: from ? `${from}T00:00:00.000Z` : undefined,
     to: to ? `${to}T23:59:59.999Z` : undefined,
     limit: PAGE_SIZE,
