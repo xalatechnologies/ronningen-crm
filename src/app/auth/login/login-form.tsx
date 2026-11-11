@@ -1,6 +1,6 @@
 "use client";
 
-import { AppBrandLogo } from "@/components/brand/app-brand-logo";
+import { BrandLockup } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -113,12 +113,10 @@ export function LoginForm() {
       >
         <Link
           href="/"
-          className="flex w-fit items-center gap-3 font-heading text-lg font-bold transition-opacity hover:opacity-80"
+          aria-label={APP_NAME}
+          className="w-fit transition-opacity hover:opacity-80"
         >
-          <span className="relative size-10 overflow-hidden rounded-lg bg-black">
-            <AppBrandLogo sizes="40px" />
-          </span>
-          {APP_NAME}
+          <BrandLockup tone="dark" />
         </Link>
 
         <div className="flex flex-col gap-10">
@@ -175,12 +173,8 @@ export function LoginForm() {
       <div className="flex flex-col px-5 py-6 sm:px-10 md:py-10">
         <div className="mx-auto flex w-full max-w-[420px] flex-1 flex-col justify-center gap-8 py-10">
           <div className="flex flex-col gap-3">
-            <Link
-              href="/"
-              aria-label={APP_NAME}
-              className="relative size-12 overflow-hidden rounded-xl bg-black lg:hidden"
-            >
-              <AppBrandLogo sizes="48px" priority />
+            <Link href="/" aria-label={APP_NAME} className="w-fit lg:hidden">
+              <BrandLockup />
             </Link>
             <h1 className="text-[clamp(30px,4vw,40px)] leading-[1.1] font-bold tracking-[-0.03em] text-[#0c1f16]">
               {t("auth.login")}

@@ -8,7 +8,7 @@ import {
 import { APP_NAME } from "@/config/app";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
-import { AppBrandLogo } from "@/components/brand/app-brand-logo";
+import { BrandLockup } from "@/components/brand/brand-logo";
 import Link from "next/link";
 
 const NAV_KEYS = [
@@ -35,17 +35,8 @@ export function LandingFooter() {
       <div className={cn(LANDING_CONTAINER, "flex flex-col gap-10 md:gap-12")}>
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr] lg:gap-16">
           <div className="space-y-4">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-3 font-heading text-lg font-bold tracking-tight text-rn-text-heading"
-            >
-              <span
-                className="relative flex size-10 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-black shadow-sm"
-                aria-hidden
-              >
-                <AppBrandLogo sizes="40px" />
-              </span>
-              {APP_NAME}
+            <Link href="/" aria-label={APP_NAME} className="inline-flex">
+              <BrandLockup />
             </Link>
             <p className="max-w-md text-sm leading-relaxed text-rn-text-slate md:text-base">
               {t("landing.footer.description")}

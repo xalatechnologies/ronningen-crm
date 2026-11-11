@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import type { User } from "@supabase/supabase-js";
 import { MenuIcon } from "lucide-react";
-import { AppBrandLogo } from "@/components/brand/app-brand-logo";
+import { BrandLockup } from "@/components/brand/brand-logo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -109,14 +109,8 @@ export function LandingHeader() {
           "flex h-16 items-center justify-between gap-4 md:h-[4.5rem]",
         )}
       >
-        <Link
-          href="/"
-          className="flex min-w-0 items-center gap-3 font-heading text-lg font-bold tracking-tight text-rn-text-heading"
-        >
-          <span className="relative flex size-10 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] bg-black md:size-11">
-            <AppBrandLogo sizes="(min-width: 768px) 56px, 48px" priority />
-          </span>
-          <span className="truncate">{APP_NAME}</span>
+        <Link href="/" aria-label={APP_NAME} className="min-w-0">
+          <BrandLockup />
         </Link>
 
         <nav
