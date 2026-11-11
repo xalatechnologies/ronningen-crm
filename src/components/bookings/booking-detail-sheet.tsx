@@ -81,10 +81,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 const fieldClass =
-  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-app-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-app-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-12 w-full rounded-xl border border-foreground/25 bg-background px-4 text-app-base text-foreground shadow-none outline-none transition-colors hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 disabled:opacity-60 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
 
 const labelClass =
-  "text-[12px] font-semibold uppercase tracking-wider text-rn-text-slate";
+  "text-[13px] font-semibold text-foreground md:text-sm";
 
 function RequiredMark() {
   return (
@@ -658,7 +658,7 @@ export function BookingDetailSheet({
           "shadow-rn-card",
         )}
       >
-        <SheetHeader className="flex shrink-0 flex-row items-center justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head px-6 py-5 sm:px-8 sm:py-6">
+        <SheetHeader className="flex shrink-0 flex-row items-center justify-between gap-4 border-b border-foreground/10 bg-card px-6 py-5 sm:px-8 sm:py-6">
           <SheetTitle className="app-section-title min-w-0 flex-1 text-left tracking-tight">
             {t("bookings.detail.title")}
           </SheetTitle>
@@ -1196,7 +1196,7 @@ export function BookingDetailSheet({
             </section>
           </div>
 
-          <SheetFooter className="mt-0 max-h-none flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer/50 p-6 sm:max-h-none sm:flex-row sm:flex-wrap sm:justify-stretch">
+          <SheetFooter className="mt-0 max-h-none flex-col gap-3 border-t border-foreground/10 bg-card p-6 sm:max-h-none sm:flex-row sm:flex-wrap sm:justify-stretch">
             <Button
               type="submit"
               variant="success"
@@ -1244,7 +1244,7 @@ export function BookingDetailSheet({
                 variant="outline"
                 size="cta"
                 disabled={busy}
-                className="w-full border-2 border-rn-border-strong font-heading font-bold sm:flex-1"
+                className="w-full rounded-xl border border-foreground/30 bg-card font-heading font-bold shadow-none hover:bg-muted sm:flex-1"
                 onClick={() =>
                   onSetStatus(bookingRow.id, "pending", {
                     confirmMessage: t("bookings.detail.moveToPendingConfirm"),
@@ -1303,7 +1303,7 @@ export function BookingDetailSheet({
               type="button"
               variant="outline"
               size="cta"
-              className="w-full border-2 border-rn-border-strong sm:w-auto"
+              className="w-full rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted sm:w-auto"
               disabled={deleteBusy}
               onClick={() => setDeleteDialogOpen(false)}
             >
