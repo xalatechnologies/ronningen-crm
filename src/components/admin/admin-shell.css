@@ -140,11 +140,12 @@ button.admin-ops-inline-link:hover {
 }
 
 .platform-admin .admin-action-btn--secondary {
-  border-width: 2px !important;
-  border-color: var(--rn-border-strong) !important;
+  border-width: 1px !important;
+  border-color: color-mix(in srgb, var(--foreground) 30%, transparent) !important;
+  border-radius: 0.75rem;
   background-color: var(--card);
   font-weight: 600;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+  box-shadow: none;
 }
 
 .platform-admin .admin-action-btn--secondary:hover {

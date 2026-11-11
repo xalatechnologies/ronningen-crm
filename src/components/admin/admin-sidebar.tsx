@@ -21,7 +21,7 @@ export function AdminSidebar({
   return (
     <aside
       className={cn(
-        "admin-sidebar flex w-(--sidebar-width) flex-col border-r-2 border-rn-border-strong bg-sidebar text-sidebar-foreground antialiased",
+        "admin-sidebar flex w-(--sidebar-width) flex-col border-r border-foreground/10 bg-sidebar text-sidebar-foreground antialiased",
         className,
       )}
     >
@@ -29,7 +29,7 @@ export function AdminSidebar({
         <div className="flex items-center gap-3 md:gap-3.5">
           <Link
             href="/admin"
-            className="relative flex size-12 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-black shadow-sm md:size-14"
+            className="relative flex size-12 shrink-0 overflow-hidden rounded-xl bg-black md:size-14"
             aria-label={t("adminNav.overviewAria", { appName: APP_NAME })}
           >
             <AppBrandLogo
@@ -55,7 +55,7 @@ export function AdminSidebar({
         <AdminNavLinks supportOpenCount={supportOpenCount} />
       </nav>
 
-      <footer className="shrink-0 border-t border-rn-border-strong/50 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)] md:py-5">
+      <footer className="shrink-0 border-t border-foreground/8 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)] md:py-5">
         <AdminContextSwitch active="platform" className="mb-3" />
         <p
           className="text-app-xs leading-snug text-muted-foreground"

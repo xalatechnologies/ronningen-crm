@@ -12,7 +12,7 @@ export const ADMIN_SEGMENT_BAR_CLASS = cn(
 );
 
 export const ADMIN_SEGMENT_SEARCH_INPUT_CLASS =
-  "h-11 border-2 border-rn-border-strong bg-background pl-10 shadow-sm focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  "h-11 rounded-xl border border-foreground/25 bg-background pl-10 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 type AdminSegmentFilterBarProps = ComponentProps<"div">;
 

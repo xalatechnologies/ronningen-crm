@@ -30,12 +30,12 @@ export function AdminStatusBadge({
         ? "border-destructive/40 bg-destructive/10 text-destructive"
         : status === "trialing"
           ? "border-rn-accent-border/50 bg-rn-surface-gradient-from text-success dark:!text-white"
-          : "border-rn-border-strong bg-muted/30 text-muted-foreground";
+          : "border-foreground/15 bg-muted/50 text-muted-foreground";
 
   return (
     <span
       className={cn(
-        "inline-flex rounded-md border-2 px-2.5 py-0.5 text-app-xs font-semibold md:text-app-sm",
+        "inline-flex rounded-full border px-2.5 py-0.5 text-app-xs font-semibold md:text-app-sm",
         tone,
         className,
       )}
@@ -62,13 +62,13 @@ export function AdminSupportStatusBadge({
     status === "open"
       ? "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300"
       : status === "waiting"
-        ? "border-rn-border-strong bg-muted/40 text-muted-foreground"
-        : "border-rn-border-strong bg-muted/20 text-muted-foreground";
+        ? "border-foreground/15 bg-muted/50 text-muted-foreground"
+        : "border-foreground/15 bg-muted/40 text-muted-foreground";
 
   return (
     <span
       className={cn(
-        "inline-flex rounded-md border-2 px-2.5 py-0.5 text-app-xs font-semibold md:text-app-sm",
+        "inline-flex rounded-full border px-2.5 py-0.5 text-app-xs font-semibold md:text-app-sm",
         tone,
         className,
       )}
@@ -89,7 +89,7 @@ export function AdminPlanBadge({
   return (
     <span
       className={cn(
-        "admin-plan-badge inline-flex min-w-[6.75rem] items-center justify-center rounded-md border-2 border-rn-border-strong bg-card px-2.5 py-0.5 text-center text-app-xs font-semibold text-foreground md:text-app-sm",
+        "admin-plan-badge inline-flex min-w-[6.75rem] items-center justify-center rounded-full border border-foreground/20 bg-card px-2.5 py-0.5 text-center text-app-xs font-semibold text-foreground md:text-app-sm",
         className,
       )}
     >

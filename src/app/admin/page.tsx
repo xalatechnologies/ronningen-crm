@@ -49,7 +49,7 @@ const sectionPad =
   "px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6";
 
 const kpiTileClass =
-  "admin-overview-kpi-tile flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong bg-muted/25 p-5 shadow-sm dark:bg-white/[0.06] sm:p-6";
+  "admin-overview-kpi-tile flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 dark:bg-white/[0.06] sm:p-6";
 
 const tableHeadClass = cn(
   "admin-overview-table-head",
@@ -81,7 +81,7 @@ function OverviewKpiTile({
   href,
   goToLabel,
   icon: Icon,
-  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconContainerClassName = "rounded-xl bg-accent p-2 dark:bg-white/10",
   iconClassName = "size-6 text-primary dark:text-white",
   valueClassName = "text-success",
 }: {
@@ -100,11 +100,11 @@ function OverviewKpiTile({
       href={href}
       className={cn(
         kpiTileClass,
-        "group transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
+        "group transition-colors hover:bg-muted/60 hover:ring-success/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
       )}
     >
       <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="dashboard-kpi-label min-w-0 break-words">{label}</span>
+        <span className="dashboard-kpi-label min-w-0 break-words !normal-case !tracking-normal">{label}</span>
         <div className={cn(iconContainerClassName, "shrink-0")}>
           <Icon className={iconClassName} aria-hidden />
         </div>
@@ -189,7 +189,7 @@ export default async function AdminOverviewPage() {
         </div>
 
         <section
-          className={cn("border-t border-rn-border-strong/50", sectionPad)}
+          className={cn("border-t border-foreground/10", sectionPad)}
           aria-label={t("admin.abonnement_og_inntekt")}
         >
           <OverviewSectionIntro
@@ -239,7 +239,7 @@ export default async function AdminOverviewPage() {
         </section>
 
         <section
-          className={cn("border-t border-rn-border-strong/50", sectionPad)}
+          className={cn("border-t border-foreground/10", sectionPad)}
           aria-label={t("admin.plattformaktivitet")}
         >
           <OverviewSectionIntro
@@ -290,14 +290,14 @@ export default async function AdminOverviewPage() {
         </section>
 
         <section
-          className={cn("border-t border-rn-border-strong/50", sectionPad)}
+          className={cn("border-t border-foreground/10", sectionPad)}
           aria-label={t("admin.trender")}
         >
           <OverviewSectionIntro
             title={t("admin.trender")}
             description={t("admin.estimert_mrr_gjennom_aret_og_nye_leietakere_per_dag_siste_uk")}
           />
-          <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-rn-border-strong/50">
+          <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-foreground/10">
             <div className="lg:pr-8">
               <AdminTrendChart
                 className="admin-overview-trend-chart"
@@ -328,10 +328,10 @@ export default async function AdminOverviewPage() {
         </section>
 
         <section
-          className="grid border-t border-rn-border-strong/50 lg:grid-cols-2"
+          className="grid border-t border-foreground/10 lg:grid-cols-2"
           aria-label={t("admin.abonnement_og_oppfolging")}
         >
-          <div className="border-b border-rn-border-strong/50 px-4 py-5 sm:px-5 md:px-6 lg:border-r lg:border-b-0 lg:px-8 lg:py-6">
+          <div className="border-b border-foreground/10 px-4 py-5 sm:px-5 md:px-6 lg:border-r lg:border-b-0 lg:px-8 lg:py-6">
             <AdminSubscriptionStatusPanel embedded statusCounts={stats.statusCounts} />
           </div>
           <div className="px-4 py-5 sm:px-5 md:px-6 lg:px-8 lg:py-6">
@@ -388,7 +388,7 @@ export default async function AdminOverviewPage() {
             >
               <div className="-mx-1 overflow-x-auto sm:mx-0">
                 <Table>
-                  <TableHeader className="bg-rn-surface-table-head [&_tr]:border-b-2 [&_tr]:border-rn-border-strong/70">
+                  <TableHeader className="bg-rn-surface-table-head [&_tr]:border-b [&_tr]:border-foreground/15">
                     <TableRow>
                       <TableHead className={tableHeadClass}>{t("admin.overview_name")}</TableHead>
                       <TableHead className={tableHeadClass}>{t("admin.status")}</TableHead>
@@ -457,7 +457,7 @@ export default async function AdminOverviewPage() {
             >
               <div className="-mx-1 overflow-x-auto sm:mx-0">
                 <Table>
-                  <TableHeader className="bg-rn-surface-table-head [&_tr]:border-b-2 [&_tr]:border-rn-border-strong/70">
+                  <TableHeader className="bg-rn-surface-table-head [&_tr]:border-b [&_tr]:border-foreground/15">
                     <TableRow>
                       <TableHead className={tableHeadClass}>{t("admin.overview_timestamp")}</TableHead>
                       <TableHead className={cn(tableHeadClass, "hidden md:table-cell")}>

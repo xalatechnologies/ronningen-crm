@@ -18,7 +18,8 @@ import { useTranslation } from "@/i18n/client";
 import { signOutToLogin } from "@/lib/auth/sign-out";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
-import { ChevronDown } from "lucide-react";
+import { adminRoutes } from "@/config/admin-routes";
+import { ChevronDown, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -54,7 +55,7 @@ function HeaderAvatarOrInitials({
   const [broken, setBroken] = useState(false);
   const fallback = (
     <span
-      className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-xs font-bold text-success dark:!text-white md:size-10 md:text-app-sm"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full border border-foreground/20 bg-muted font-heading text-app-xs font-bold text-success dark:!text-white"
       aria-hidden
     >
       {loading ? "…" : initials}
@@ -65,9 +66,9 @@ function HeaderAvatarOrInitials({
     <img
       src={avatarUrl}
       alt=""
-      width={40}
-      height={40}
-      className="size-9 shrink-0 rounded-full border-2 border-rn-border-strong object-cover md:size-10"
+      width={32}
+      height={32}
+      className="size-8 shrink-0 rounded-full border border-foreground/20 object-cover"
       referrerPolicy="no-referrer"
       onError={() => setBroken(true)}
     />
@@ -99,7 +100,7 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
   return (
     <header
       className={cn(
-        "admin-header sticky top-0 z-30 flex min-h-[length:var(--app-header-height)] items-center justify-between gap-3 border-b-2 border-rn-border-strong bg-card px-[length:var(--app-page-padding-mobile)] py-[length:calc(var(--app-card-padding)*0.65)] shadow-rn-card md:px-[length:var(--app-page-padding-tablet)] md:py-[length:calc(var(--app-card-padding)*0.75)] lg:px-[length:var(--app-page-padding-desktop)]",
+        "admin-header sticky top-0 z-30 flex min-h-[length:var(--app-header-height)] items-center justify-between gap-3 border-b border-foreground/10 bg-card px-[length:var(--app-page-padding-mobile)] py-[length:calc(var(--app-card-padding)*0.65)] md:px-[length:var(--app-page-padding-tablet)] md:py-[length:calc(var(--app-card-padding)*0.75)] lg:px-[length:var(--app-page-padding-desktop)]",
       )}
     >
       <AdminSearchShortcut />
@@ -108,11 +109,27 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
         <AdminMobileNav supportOpenCount={supportOpenCount} />
       </div>
 
+      <Link
+        href={adminRoutes.search}
+        className="hidden h-10 min-w-0 max-w-xl flex-1 items-center gap-3 rounded-xl border border-foreground/25 bg-muted/40 px-4 text-app-sm text-muted-foreground outline-none transition-colors hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 md:flex"
+        aria-label={t("admin.global_search_title")}
+      >
+        <Search className="size-4 shrink-0" aria-hidden />
+        <span className="flex-1 truncate">{t("admin.global_search_title")} …</span>
+        <kbd className="rounded-md bg-card px-1.5 py-0.5 font-sans text-app-xs font-semibold text-muted-foreground ring-1 ring-foreground/15">
+          ⌘K
+        </kbd>
+      </Link>
+
       <div className="ml-auto flex shrink-0 items-center gap-2 md:gap-3">
+      <div className="hidden shrink-0 items-center gap-1.5 md:flex">
+        <LanguageSwitcher variant="header" />
+        <ThemeToggle variant="header" />
+      </div>
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            "flex shrink-0 items-center gap-1.5 rounded-xl border border-foreground/20 bg-muted/60 py-1 pr-1.5 pl-1.5 outline-none transition-colors",
+            "flex h-10 shrink-0 items-center gap-1.5 rounded-xl border border-foreground/20 bg-muted/60 py-0 pr-2 pl-1 outline-none transition-colors",
             "hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             "disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-muted/30",
           )}
@@ -128,7 +145,7 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
             />
           ) : (
             <span
-              className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-xs font-bold text-success dark:!text-white md:size-10 md:text-app-sm"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full border border-foreground/20 bg-muted font-heading text-app-xs font-bold text-success dark:!text-white"
               aria-hidden
             >
               {loading ? "…" : initials}
@@ -142,7 +159,7 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
         <DropdownMenuContent
           align="end"
           sideOffset={8}
-          className="w-72 max-w-[min(100vw-1.5rem,18rem)] rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-2.5 text-app-base shadow-rn-card"
+          className="w-72 max-w-[min(100vw-1.5rem,18rem)] rounded-2xl border border-foreground/10 bg-popover p-2 text-app-base shadow-lg"
         >
           <DropdownMenuGroup className="min-w-0">
             <DropdownMenuLabel className="px-3 py-2 font-heading text-app-sm font-semibold md:px-3.5 md:py-2.5 md:text-app-md">
@@ -161,9 +178,11 @@ export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: numbe
               {t("common.account.goToApp")}
             </DropdownMenuItem>
             <DropdownMenuSeparator className="my-2 bg-border" />
-            <ThemeToggle variant="menu" />
-            <LanguageSwitcher variant="menu" />
-            <DropdownMenuSeparator className="my-2 bg-border" />
+            <div className="md:hidden [&_.grid]:rounded-xl [&_.grid]:border-0 [&_.grid]:bg-muted [&_[role=radio]]:rounded-lg">
+              <ThemeToggle variant="menu" />
+              <LanguageSwitcher variant="menu" />
+              <DropdownMenuSeparator className="my-2 bg-border" />
+            </div>
             <DropdownMenuItem
               className="px-3 py-2.5 font-heading text-app-md font-bold md:px-3.5 md:py-3"
               onSelect={() => void signOut()}

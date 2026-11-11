@@ -35,12 +35,12 @@ const interactiveBase =
 
 const variantShell: Record<AdminKpiVariant, string> = {
   organizations: cn(
-    "relative overflow-hidden rounded-lg bg-muted/20 py-5 pl-5 pr-5 sm:py-6",
+    "relative overflow-hidden rounded-2xl bg-muted/20 py-5 pl-5 pr-5 sm:py-6",
     "border border-transparent border-l-[3px] border-l-success/70",
     "hover:bg-muted/35 hover:border-l-success",
   ),
   subscriptions: cn(
-    "relative overflow-hidden rounded-lg bg-background py-5 shadow-sm ring-1 ring-rn-border-strong/45 sm:py-6",
+    "relative overflow-hidden rounded-2xl bg-background py-5 shadow-sm ring-1 ring-foreground/12 sm:py-6",
     "before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-gradient-to-r before:from-success/80 before:via-emerald-500/50 before:to-transparent",
     "hover:ring-success/30 hover:shadow-md",
   ),
@@ -49,32 +49,32 @@ const variantShell: Record<AdminKpiVariant, string> = {
     "hover:from-muted/50 hover:to-muted/25",
   ),
   revenue: cn(
-    "relative overflow-hidden rounded-lg border border-emerald-500/15 bg-emerald-500/[0.04] py-5 sm:py-6",
+    "relative overflow-hidden rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.04] py-5 sm:py-6",
     "hover:border-emerald-500/25 hover:bg-emerald-500/[0.07]",
   ),
   support: cn(
-    "flex min-h-full gap-4 rounded-lg border border-rn-border-strong/40 bg-background py-4 pl-0 pr-5 sm:py-5",
+    "flex min-h-full gap-4 rounded-2xl border border-foreground/12 bg-background py-4 pl-0 pr-5 sm:py-5",
     "hover:border-amber-500/25 hover:bg-amber-500/[0.03]",
   ),
   audit: cn(
-    "relative overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-muted/10 py-4 sm:py-5",
+    "relative overflow-hidden rounded-2xl border border-foreground/15 bg-muted/10 py-4 sm:py-5",
     "hover:border-rn-accent-border/50 hover:bg-muted/20",
   ),
   "feature-flags": cn(
-    "flex min-h-full overflow-hidden rounded-lg border border-rn-border-strong/40 bg-background shadow-sm",
+    "flex min-h-full overflow-hidden rounded-2xl border border-foreground/12 bg-background shadow-sm",
     "hover:border-success/30 hover:shadow-md",
   ),
   notifications: cn(
-    "relative overflow-hidden rounded-2xl bg-background py-5 ring-1 ring-rn-border-strong/50 sm:py-6",
+    "relative overflow-hidden rounded-2xl bg-background py-5 ring-1 ring-foreground/12 sm:py-6",
     "hover:ring-success/35",
   ),
   health: cn(
-    "relative overflow-hidden rounded-lg border border-rn-border-strong/35 bg-muted/10 py-5 sm:py-6",
+    "relative overflow-hidden rounded-2xl border border-foreground/12 bg-muted/10 py-5 sm:py-6",
     "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]",
     "hover:border-rn-border-strong/60 hover:bg-muted/20",
   ),
   settings: cn(
-    "rounded-md border-b border-rn-border-strong/50 bg-transparent py-4 sm:py-5",
+    "rounded-md border-b border-foreground/12 bg-transparent py-4 sm:py-5",
     "hover:border-success/40 hover:bg-muted/10",
   ),
 };
@@ -222,7 +222,7 @@ function KpiContent({
   if (variant === "health") {
     return (
       <>
-        <div className="mb-3 flex items-center gap-2 border-b border-rn-border-strong/30 pb-3">
+        <div className="mb-3 flex items-center gap-2 border-b border-foreground/12 pb-3">
           <span
             className={cn(
               "size-2 shrink-0 rounded-full",
