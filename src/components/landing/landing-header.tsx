@@ -10,7 +10,10 @@ import {
 } from "@/components/ui/sheet";
 import { APP_NAME } from "@/config/app";
 import { LANDING_ROUTES } from "@/components/landing/landing-content";
-import { LANDING_CONTAINER } from "@/components/landing/landing-layout";
+import {
+  LANDING_CONTAINER,
+  LANDING_SECTION_X,
+} from "@/components/landing/landing-layout";
 import { LanguageSwitcher } from "@/components/language/language-switcher";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { useTranslation } from "@/i18n/client";
@@ -26,12 +29,12 @@ import type { AuthProfile } from "@/providers/auth-provider";
 
 const loginButtonClass = cn(
   buttonVariants({ variant: "outline" }),
-  "hidden h-11 rounded-[length:var(--app-radius)] border-0 bg-[#eef2f0] px-5 font-heading text-[15px] font-semibold shadow-none hover:bg-[#e3eae6] sm:inline-flex",
+  "hidden h-11 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong px-5 font-heading text-sm font-semibold sm:inline-flex",
 );
 
 const registerButtonClass = cn(
   buttonVariants({ variant: "success", size: "default" }),
-  "h-11 border-0 px-5 font-heading text-[15px] font-semibold shadow-none",
+  "h-11 px-5 font-heading text-sm font-bold",
 );
 
 function getDisplayName(
@@ -72,11 +75,11 @@ export function LandingHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-background">
+    <header className="sticky top-0 z-50 border-b-2 border-rn-border-strong/60 bg-card/95 backdrop-blur-sm">
       <div
         className={cn(
           LANDING_CONTAINER,
-          "px-[clamp(16px,2.2vw,32px)]",
+          LANDING_SECTION_X,
           "flex h-16 items-center justify-between gap-4 md:h-[4.5rem]",
         )}
       >
@@ -84,7 +87,7 @@ export function LandingHeader() {
           href="/"
           className="flex min-w-0 items-center gap-3 font-heading text-lg font-bold tracking-tight text-rn-text-heading"
         >
-          <span className="relative flex size-10 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] bg-black md:size-11">
+          <span className="relative flex size-12 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-black shadow-sm md:size-14">
             <AppBrandLogo sizes="(min-width: 768px) 56px, 48px" priority />
           </span>
           <span className="truncate">{APP_NAME}</span>
@@ -98,7 +101,7 @@ export function LandingHeader() {
             <a
               key={item.key}
               href={t(`landing.navHrefs.${item.hrefKey}`)}
-              className="font-heading text-[15px] font-semibold text-rn-text-slate transition-colors hover:text-rn-text-heading"
+              className="font-heading text-base font-semibold text-rn-text-slate transition-colors hover:text-rn-text-heading md:text-lg"
             >
               {t(`landing.nav.${item.key}`)}
             </a>
@@ -106,9 +109,7 @@ export function LandingHeader() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden sm:block">
-            <LanguageSwitcher variant="compact" />
-          </div>
+          <LanguageSwitcher variant="compact" />
           {!loading && isAuthenticated ? (
             <>
               <p className="hidden max-w-[12rem] truncate text-right text-sm text-rn-text-slate md:block lg:max-w-[16rem]">
