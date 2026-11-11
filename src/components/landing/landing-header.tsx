@@ -24,17 +24,17 @@ import { MenuIcon } from "lucide-react";
 import { AppBrandLogo } from "@/components/brand/app-brand-logo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { AuthProfile } from "@/providers/auth-provider";
 
 const loginButtonClass = cn(
   buttonVariants({ variant: "outline" }),
-  "hidden h-11 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong px-5 font-heading text-sm font-semibold sm:inline-flex",
+  "hidden h-10 rounded-full border-0 bg-transparent px-4 font-heading text-[15px] font-semibold text-[#1a1c1a] shadow-none hover:bg-[#eef2f0] sm:inline-flex",
 );
 
 const registerButtonClass = cn(
   buttonVariants({ variant: "success", size: "default" }),
-  "h-11 px-5 font-heading text-sm font-bold",
+  "h-10 rounded-full border-0 px-5 font-heading text-[15px] font-semibold shadow-none",
 );
 
 function getDisplayName(
@@ -62,6 +62,32 @@ export function LandingHeader() {
   const { user, profile, loading, isAuthenticated } = useAuthUser();
   const supabase = useSupabase();
   const router = useRouter();
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Scroll-spy: the active link is the last nav section whose top has passed the header.
+  useEffect(() => {
+    const ids = NAV_KEYS.map((item) =>
+      t(`landing.navHrefs.${item.hrefKey}`).replace(/^#/, ""),
+    );
+
+    function update() {
+      const line = window.innerHeight * 0.3;
+      let current: string | null = null;
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= line) current = id;
+      }
+      setActiveId(current);
+    }
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [t]);
 
   const displayName = useMemo(
     () => getDisplayName(user, profile, t("landing.auth.userFallback")),
@@ -75,7 +101,7 @@ export function LandingHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b-2 border-rn-border-strong/60 bg-card/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 bg-card shadow-[0_1px_0_rgba(0,45,28,0.07)]">
       <div
         className={cn(
           LANDING_CONTAINER,
@@ -87,29 +113,41 @@ export function LandingHeader() {
           href="/"
           className="flex min-w-0 items-center gap-3 font-heading text-lg font-bold tracking-tight text-rn-text-heading"
         >
-          <span className="relative flex size-12 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-black shadow-sm md:size-14">
+          <span className="relative flex size-10 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] bg-black md:size-11">
             <AppBrandLogo sizes="(min-width: 768px) 56px, 48px" priority />
           </span>
           <span className="truncate">{APP_NAME}</span>
         </Link>
 
         <nav
-          className="hidden items-center gap-8 md:flex"
+          className="hidden items-center gap-1 md:flex"
           aria-label={t("landing.header.mainNavAria")}
         >
-          {NAV_KEYS.map((item) => (
-            <a
-              key={item.key}
-              href={t(`landing.navHrefs.${item.hrefKey}`)}
-              className="font-heading text-base font-semibold text-rn-text-slate transition-colors hover:text-rn-text-heading md:text-lg"
-            >
-              {t(`landing.nav.${item.key}`)}
-            </a>
-          ))}
+          {NAV_KEYS.map((item) => {
+            const href = t(`landing.navHrefs.${item.hrefKey}`);
+            const active = href.replace(/^#/, "") === activeId;
+            return (
+              <a
+                key={item.key}
+                href={href}
+                aria-current={active ? "location" : undefined}
+                className={cn(
+                  "rounded-full px-4 py-2 font-heading text-[15px] font-semibold transition-colors",
+                  active
+                    ? "bg-[#e8f5ee] text-[#1a4331]"
+                    : "text-rn-text-slate hover:text-rn-text-heading",
+                )}
+              >
+                {t(`landing.nav.${item.key}`)}
+              </a>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <LanguageSwitcher variant="compact" />
+          <div className="hidden sm:block [&_[role=radiogroup]>div]:rounded-full [&_[role=radiogroup]>div]:border-0 [&_[role=radiogroup]>div]:bg-[#eef2f0] [&_[role=radio]]:rounded-full">
+            <LanguageSwitcher variant="compact" />
+          </div>
           {!loading && isAuthenticated ? (
             <>
               <p className="hidden max-w-[12rem] truncate text-right text-sm text-rn-text-slate md:block lg:max-w-[16rem]">
@@ -165,7 +203,19 @@ export function LandingHeader() {
                     key={item.key}
                     href={t(`landing.navHrefs.${item.hrefKey}`)}
                     onClick={() => setMobileOpen(false)}
-                    className="rounded-[length:var(--app-radius)] px-3 py-3 text-base font-medium text-rn-text-body hover:bg-rn-surface-row-hover"
+                    aria-current={
+                      t(`landing.navHrefs.${item.hrefKey}`).replace(/^#/, "") ===
+                      activeId
+                        ? "location"
+                        : undefined
+                    }
+                    className={cn(
+                      "rounded-[length:var(--app-radius)] px-3 py-3 text-base font-medium hover:bg-rn-surface-row-hover",
+                      t(`landing.navHrefs.${item.hrefKey}`).replace(/^#/, "") ===
+                        activeId
+                        ? "bg-[#e8f5ee] font-semibold text-[#1a4331]"
+                        : "text-rn-text-body",
+                    )}
                   >
                     {t(`landing.nav.${item.key}`)}
                   </a>
