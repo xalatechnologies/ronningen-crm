@@ -62,7 +62,7 @@ type AdminOrganizationsWorkspaceProps = {
 const kpiTileClass =
   "flex flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 sm:p-6";
 
-const tableHeadClass = cn(APP_TABLE_HEAD_CELL, "text-left text-app-xs font-semibold tracking-wide text-muted-foreground");
+const tableHeadClass = cn(APP_TABLE_HEAD_CELL, "px-4 py-3 text-left text-app-xs font-semibold tracking-wide text-muted-foreground md:px-5");
 const tableCellClass = "px-4 py-4 align-middle md:px-5";
 
 function OrganizationsKpiTile({
@@ -432,6 +432,7 @@ export function AdminOrganizationsWorkspace({
                       href={adminRoutes.organizationDetail(org.id)}
                       title={org.name}
                       subtitle={org.slug}
+                      className="px-4 md:px-5"
                     />
                   </td>
                   <td className={tableCellClass}>
