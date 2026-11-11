@@ -416,9 +416,22 @@ export function AdminOrganizationsWorkspace({
               {filtered.map((org) => (
                 <tr
                   key={org.id}
-                  className="transition-colors hover:bg-muted/40"
+                  className="cursor-pointer transition-colors hover:bg-muted/40"
+                  onClick={(event) => {
+                    if (
+                      (event.target as HTMLElement).closest(
+                        "a, button, input, label",
+                      )
+                    ) {
+                      return;
+                    }
+                    router.push(adminRoutes.organizationDetail(org.id));
+                  }}
                 >
-                  <td className={tableCellClass}>
+                  <td
+                    className={tableCellClass}
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <input
                       type="checkbox"
                       checked={selected.has(org.id)}
