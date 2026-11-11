@@ -33,19 +33,19 @@ const FILTER_TITLE_KEYS: Record<InvoiceRowFilter, TranslationKey> = {
 function segmentActiveClass(id: InvoiceRowFilter): string {
   switch (id) {
     case "all":
-      return "border-success bg-success/15 text-rn-text-heading shadow-sm";
+      return "border-success bg-success text-white [&_svg]:!text-white";
     case "overdue":
-      return "border-red-300 bg-red-50 text-red-950 shadow-sm";
+      return "border-red-300 bg-red-50 text-red-950";
     case "partial":
-      return "border-amber-300 bg-amber-50 text-amber-950 shadow-sm";
+      return "border-amber-300 bg-amber-50 text-amber-950";
     case "unpaid":
-      return "border-rn-border-strong bg-muted/40 text-foreground shadow-sm";
+      return "border-foreground/30 bg-muted text-foreground";
     case "upcoming":
-      return "border-border bg-muted text-foreground shadow-sm";
+      return "border-foreground/30 bg-muted text-foreground";
     case "inkasso":
-      return "border-violet-300 bg-violet-50 text-violet-950 shadow-sm";
+      return "border-violet-300 bg-violet-50 text-violet-950";
     default:
-      return "border-success bg-success/15 text-rn-text-heading shadow-sm";
+      return "border-success bg-success text-white [&_svg]:!text-white";
   }
 }
 
@@ -93,11 +93,11 @@ export function InvoiceSegmentFilter({
             aria-pressed={active ? "true" : "false"}
             onClick={() => onFilterChange(spec.id)}
             className={cn(
-              "inline-flex h-12 min-h-12 min-w-0 items-center gap-2 rounded-md border-2 px-3 py-3 text-left transition-colors sm:px-4 md:h-14 md:min-h-14 md:px-5 md:py-3.5",
+              "inline-flex h-12 min-h-12 min-w-0 items-center gap-2 rounded-xl border px-3 py-3 text-left transition-colors sm:px-4 md:h-14 md:min-h-14 md:px-5 md:py-3.5",
               RN_TEXT_SEGMENT,
               active
                 ? segmentActiveClass(spec.id)
-                : "border-rn-border-strong bg-card text-muted-foreground hover:border-rn-border-strong/80 hover:bg-muted/35",
+                : "border-foreground/25 bg-card text-foreground hover:border-foreground/40 hover:bg-muted",
             )}
           >
             {isAll ? (
@@ -116,10 +116,10 @@ export function InvoiceSegmentFilter({
             ) : null}
             <span
               className={cn(
-                "inline-flex min-w-5 items-center justify-center rounded-md border px-2 py-0.5 text-app-sm font-bold tabular-nums md:text-app-base",
+                "inline-flex min-w-5 items-center justify-center rounded-full px-2 py-0.5 text-app-sm font-bold tabular-nums md:text-app-base",
                 active
-                  ? "border-white/30 bg-white/20 text-inherit"
-                  : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
+                  ? "bg-black/10 text-inherit"
+                  : "bg-muted text-foreground",
               )}
             >
               {count}

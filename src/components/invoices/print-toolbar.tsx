@@ -35,6 +35,7 @@ export function InvoicePrintToolbar({ documentTitle }: { documentTitle: string }
             type="button"
             variant="success"
             size="cta"
+            className="rounded-xl shadow-none"
             onClick={openPrint}
           >
             <Download className="size-4 shrink-0" aria-hidden />
@@ -43,7 +44,7 @@ export function InvoicePrintToolbar({ documentTitle }: { documentTitle: string }
           <Button
             type="button"
             variant="outline"
-            className="h-11 gap-2 rounded-md border-2 border-rn-border-strong px-5 font-heading text-base font-semibold"
+            className="h-11 gap-2 rounded-xl border border-foreground/30 bg-card px-5 font-heading text-base font-semibold shadow-none hover:bg-muted"
             onClick={openPrint}
           >
             <Printer className="size-4 shrink-0" aria-hidden />
