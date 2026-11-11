@@ -1,22 +1,16 @@
 "use client";
 
-import { LandingSectionShell } from "@/components/landing/landing-section-shell";
+import { LANDING_ROUTES } from "@/components/landing/landing-content";
 import {
-  LANDING_ROUTES,
-} from "@/components/landing/landing-content";
-import { buttonVariants } from "@/components/ui/button";
+  LANDING_CONTAINER,
+  LANDING_SECTION_X,
+} from "@/components/landing/landing-layout";
 import { useTranslation } from "@/i18n/client";
 import { getDictionary } from "@/i18n/dictionaries";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
-import { CheckCircle2 } from "lucide-react";
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
-
-const ctaClass = cn(
-  buttonVariants({ variant: "success", size: "cta" }),
-  "w-full font-heading font-bold",
-);
 
 export function BenefitsPricingSection() {
   const { t, locale } = useTranslation();
@@ -27,84 +21,88 @@ export function BenefitsPricingSection() {
   );
 
   return (
-    <LandingSectionShell
+    <section
       id="priser"
-      titleId="landing-benefits-pricing-title"
-      title={t("landing.sections.benefits")}
-      tinted
+      aria-labelledby="landing-benefits-pricing-title"
+      className={cn(LANDING_SECTION_X, "py-16 md:py-24 lg:py-32")}
     >
-      <div className="grid gap-8 lg:grid-cols-2 lg:items-stretch lg:gap-10">
-        <div
-          className={cn(
-            RN_CARD_SHELL,
-            "flex h-full flex-col bg-card p-6 shadow-rn-card md:p-8",
-          )}
-        >
-          <h3 className="font-heading text-lg font-bold tracking-tight text-rn-text-heading md:text-xl">
-            {benefits.whatYouGet}
-          </h3>
-          <ul className="mt-5 grid gap-4 md:grid-cols-2">
-            {benefits.items.map((benefit) => (
-              <li
-                key={benefit}
-                className="flex items-start gap-3 text-sm text-rn-text-body md:text-base"
-              >
-                <CheckCircle2
-                  className="mt-0.5 size-5 shrink-0 text-success"
-                  aria-hidden
-                />
-                <span>{benefit}</span>
-              </li>
-            ))}
-          </ul>
+      <div
+        className={cn(
+          LANDING_CONTAINER,
+          "grid gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-20",
+        )}
+      >
+        <div className="flex flex-col gap-10">
+          <h2
+            id="landing-benefits-pricing-title"
+            className="max-w-[20ch] text-[clamp(30px,5vw,52px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#0c1f16]"
+          >
+            {t("landing.sections.benefits")}
+          </h2>
+
+          <div className="flex flex-col gap-5">
+            <p className="font-heading text-lg font-semibold text-[#0c1f16]">
+              {benefits.whatYouGet}
+            </p>
+            <ul className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+              {benefits.items.map((benefit) => (
+                <li
+                  key={benefit}
+                  className="flex items-start gap-3 text-base leading-snug text-[#1a1c1a]"
+                >
+                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e8f5ee] text-[#1a4331]">
+                    <Check className="size-3.5" strokeWidth={3} aria-hidden />
+                  </span>
+                  <span>{benefit}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        <article
-          className={cn(
-            RN_CARD_SHELL,
-            "flex flex-col overflow-hidden bg-card shadow-rn-card",
-          )}
-        >
-          <header className="border-b-2 border-rn-border-strong/50 px-6 py-6 text-center">
-            <span className="mb-3 inline-flex rounded-full border border-rn-accent-border bg-success px-3 py-1 text-xs font-semibold tracking-wide text-white uppercase">
-              {benefits.recommended}
-            </span>
-            <h3 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading md:text-2xl">
+        <article className="flex flex-col gap-8 rounded-3xl bg-[#1a4331] p-7 text-white md:p-10">
+          <div className="flex flex-col gap-2">
+            <h3 className="font-heading text-2xl font-semibold !text-white">
               {benefits.planName}
             </h3>
-            <p className="mt-2 text-sm leading-relaxed text-rn-text-slate md:text-base">
+            <p className="text-base leading-relaxed text-[#d6e6dc]">
               {benefits.planDescription}
             </p>
+          </div>
 
-            <p className="mt-3 text-sm leading-relaxed text-rn-text-slate/90 md:text-base">
-              {t("landing.pricing.sectionDescription")}
-            </p>
-          </header>
-
-          <div className="flex flex-col items-center gap-2 px-6 py-6">
-            <p className="font-heading text-4xl font-bold tracking-tight text-rn-text-heading">
-              500
-              <span className="ml-1 text-base font-semibold text-rn-text-slate">
+          <div className="flex flex-col gap-3">
+            <p className="flex items-baseline gap-2 font-heading font-bold tracking-tight">
+              <span className="text-[clamp(64px,8vw,96px)] leading-none">
+                500
+              </span>
+              <span className="text-lg font-semibold text-[#b9d3c4]">
                 {t("landing.pricing.perMonth")}
               </span>
             </p>
-            <p className="rounded-full bg-rn-surface-wash px-3 py-1 text-sm font-medium text-rn-text-body">
+            <p className="w-fit rounded-full bg-white/12 px-3.5 py-1.5 text-sm font-medium text-white">
               {t("landing.pricing.trial")}
             </p>
           </div>
 
-          <footer className="flex flex-col gap-3 border-t-2 border-rn-border-strong/50 bg-rn-surface-wash/50 px-6 py-6">
-            <Link href={LANDING_ROUTES.register} className={ctaClass}>
+          <p className="text-base leading-relaxed text-[#d6e6dc]">
+            {t("landing.pricing.sectionDescription")}
+          </p>
+
+          <div className="flex flex-col gap-3">
+            <Link
+              href={LANDING_ROUTES.register}
+              className="inline-flex h-14 w-full items-center justify-center rounded-xl bg-white px-6 font-heading text-base font-bold text-[#1a4331] transition-colors hover:bg-[#e8f5ee]"
+            >
               {t("landing.hero.primaryCta")}
             </Link>
             {showDevDisclaimer ? (
-              <p className="text-center text-xs leading-relaxed text-muted-foreground">
+              <p className="text-center text-xs leading-relaxed text-[#b9d3c4]">
                 {t("landing.pricing.disclaimerDev")}
               </p>
             ) : null}
-          </footer>
+          </div>
         </article>
       </div>
-    </LandingSectionShell>
+    </section>
   );
 }

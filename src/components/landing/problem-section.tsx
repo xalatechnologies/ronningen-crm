@@ -1,11 +1,13 @@
 "use client";
 
-import { LandingSectionShell } from "@/components/landing/landing-section-shell";
 import {
   PROBLEM_ICONS,
   SCATTERED_SOURCE_KEYS,
-  SCATTERED_SOURCE_ROTATE,
 } from "@/components/landing/landing-content";
+import {
+  LANDING_CONTAINER,
+  LANDING_SECTION_X,
+} from "@/components/landing/landing-layout";
 import { useTranslation } from "@/i18n/client";
 import { getDictionary } from "@/i18n/dictionaries";
 import { cn } from "@/lib/utils";
@@ -19,96 +21,79 @@ export function ProblemSection() {
   );
 
   return (
-    <LandingSectionShell
-      titleId="landing-problem-title"
-      title={t("landing.sections.problem")}
-      description={t("landing.problem.description")}
+    <section
+      aria-labelledby="landing-problem-title"
+      className={cn(LANDING_SECTION_X, "py-16 md:py-24 lg:py-32")}
     >
-      <div className="flex flex-col gap-8 md:gap-10">
-        <div
-          className="relative overflow-hidden rounded-[length:var(--app-radius)] border-2 border-dashed border-rn-border-strong bg-rn-surface-wash px-6 py-8 md:px-10 md:py-10"
-          aria-hidden
-        >
-          <p className="text-center font-heading text-xs font-bold tracking-[0.2em] text-rn-text-slate uppercase md:text-sm">
-            {t("landing.problem.withoutSystem")}
+      <div
+        className={cn(
+          LANDING_CONTAINER,
+          "grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:gap-20",
+        )}
+      >
+        <div className="flex flex-col gap-6 lg:sticky lg:top-28 lg:self-start">
+          <h2
+            id="landing-problem-title"
+            className="max-w-[18ch] text-[clamp(30px,5vw,52px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#0c1f16]"
+          >
+            {t("landing.sections.problem")}
+          </h2>
+          <p className="landing-subhead max-w-[44ch]">
+            {t("landing.problem.description")}
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 md:gap-4">
-            {SCATTERED_SOURCE_KEYS.map((key, index) => (
-              <span
-                key={key}
-                className={cn(
-                  "inline-flex rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card px-4 py-2.5 font-heading text-sm font-semibold text-rn-text-body shadow-rn-card md:text-base",
-                  SCATTERED_SOURCE_ROTATE[index],
-                )}
-              >
-                {t(`landing.problem.scatteredSources.${key}`)}
-              </span>
-            ))}
+
+          <div className="mt-2 flex flex-col gap-3" aria-hidden>
+            <p className="text-sm font-medium text-rn-text-slate">
+              {t("landing.problem.withoutSystem")}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {SCATTERED_SOURCE_KEYS.map((key) => (
+                <span
+                  key={key}
+                  className="rounded-full bg-[#eef2f0] px-4 py-2 text-sm font-medium text-[#334155]"
+                >
+                  {t(`landing.problem.scatteredSources.${key}`)}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
-        <ul className="grid gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6">
+        <ul className="flex flex-col gap-4">
           {problems.map(({ title, text }, index) => {
             const Icon = PROBLEM_ICONS[index]!;
-            const isBanner = index === 2;
+            const isLast = index === problems.length - 1;
 
             return (
-              <li key={title} className={cn(isBanner && "lg:col-span-2")}>
+              <li key={title}>
                 <article
                   className={cn(
-                    "relative h-full overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-border-strong shadow-rn-card",
-                    isBanner
-                      ? "flex flex-col gap-5 bg-success p-6 text-white sm:flex-row sm:items-center sm:gap-8 md:p-8 lg:p-10"
-                      : "bg-card p-6 md:p-8",
-                    index === 1 && "border-dashed bg-rn-surface-wash",
+                    "flex flex-col gap-4 rounded-2xl p-6 sm:flex-row sm:gap-6 md:p-8",
+                    isLast
+                      ? "bg-[#1a4331] text-white"
+                      : "bg-[#eef2f0] text-[#1a1c1a]",
                   )}
                 >
-                  {!isBanner ? (
-                    <span
-                      className="pointer-events-none absolute top-3 right-4 font-heading text-7xl font-bold leading-none text-rn-text-heading/[0.04] md:text-8xl"
-                      aria-hidden
-                    >
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                  ) : null}
-
-                  <div
+                  <Icon
                     className={cn(
-                      "flex shrink-0 items-center gap-4",
-                      isBanner && "sm:w-64",
+                      "size-7 shrink-0",
+                      isLast ? "text-[#85b098]" : "text-[#1a4331]",
                     )}
-                  >
-                    <div
-                      className={cn(
-                        "flex size-14 items-center justify-center rounded-[length:var(--app-radius)] border-2 md:size-16",
-                        isBanner
-                          ? "border-white/30 bg-white/10 text-primary-light"
-                          : "border-rn-border-strong/70 bg-rn-surface-wash text-success",
-                      )}
-                      aria-hidden
-                    >
-                      <Icon className="size-7" />
-                    </div>
-                    {isBanner ? (
-                      <span className="font-heading text-sm font-bold tracking-[0.18em] text-primary-light uppercase">
-                        {t("landing.problem.bottleneck", { n: index + 1 })}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className={cn("relative flex flex-col gap-2", isBanner && "flex-1")}>
+                    aria-hidden
+                  />
+                  <div className="flex flex-col gap-2">
                     <h3
                       className={cn(
-                        "font-heading text-xl font-semibold md:text-2xl",
-                        isBanner ? "text-white" : "text-rn-text-heading",
+                        "font-heading text-xl font-semibold tracking-tight md:text-2xl",
+                        isLast ? "text-white" : "text-[#0c1f16]",
                       )}
                     >
                       {title}
                     </h3>
                     <p
                       className={cn(
-                        "text-sm leading-relaxed md:text-base",
-                        isBanner ? "text-primary-light" : "text-rn-text-slate",
+                        "max-w-[52ch] text-base leading-relaxed",
+                        isLast ? "text-[#d6e6dc]" : "text-[#475569]",
                       )}
                     >
                       {text}
@@ -120,6 +105,6 @@ export function ProblemSection() {
           })}
         </ul>
       </div>
-    </LandingSectionShell>
+    </section>
   );
 }

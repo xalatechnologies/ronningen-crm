@@ -1,215 +1,245 @@
 "use client";
 
-import { LandingSectionShell } from "@/components/landing/landing-section-shell";
 import { PRODUCT_PREVIEW_ICONS } from "@/components/landing/landing-content";
+import {
+  LANDING_CONTAINER,
+  LANDING_SECTION_X,
+} from "@/components/landing/landing-layout";
 import { useTranslation } from "@/i18n/client";
 import { getDictionary } from "@/i18n/dictionaries";
 import { statusLabel } from "@/lib/navigation/nav-labels";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
-const REPORT_CHART_HEIGHTS = [42, 58, 48, 72, 55, 80, 64] as const;
-
-function BookingsMiniPreview() {
-  const { t } = useTranslation();
-  const rows = [
-    { event: "Bryllup", status: t("statuses.confirmed"), tone: "bg-success/15 text-success" },
-    { event: "Konfirmasjon", status: t("statuses.partial"), tone: "bg-amber-500/15 text-amber-900" },
-    { event: t("landing.miniPreview.meeting"), status: t("landing.miniPreview.inquiry"), tone: "bg-rn-surface-segment text-rn-text-slate" },
-  ] as const;
-
-  return (
-    <div
-      className="overflow-hidden rounded-[length:var(--app-radius)] border border-rn-border-strong/70 bg-rn-surface-wash"
-      aria-hidden
-    >
-      {rows.map((row) => (
-        <div
-          key={row.event}
-          className="flex items-center justify-between gap-3 border-b border-rn-border-strong/40 px-3 py-2.5 last:border-b-0"
-        >
-          <span className="text-sm font-medium text-rn-text-heading">{row.event}</span>
-          <span
-            className={cn(
-              "rounded-full px-2 py-0.5 text-xs font-semibold",
-              row.tone,
-            )}
-          >
-            {row.status}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function FinanceMiniPreview() {
-  const kpis = [
-    { label: "Inntekt", value: "kr 128k" },
-    { label: "Ubetalte", value: "kr 24k" },
-    { label: "Margin", value: "62 %" },
-  ] as const;
-
-  return (
-    <div className="space-y-3" aria-hidden>
-      <div className="grid grid-cols-3 gap-2">
-        {kpis.map((kpi) => (
-          <div
-            key={kpi.label}
-            className="rounded-[length:var(--app-radius)] border border-rn-border-strong/70 bg-rn-surface-wash px-2 py-2 text-center"
-          >
-            <p className="text-[10px] font-medium text-rn-text-slate">{kpi.label}</p>
-            <p className="mt-0.5 font-heading text-sm font-bold text-rn-text-heading">
-              {kpi.value}
-            </p>
-          </div>
-        ))}
-      </div>
-      <div className="rounded-[length:var(--app-radius)] border border-rn-border-strong/70 bg-rn-surface-wash p-3">
-        <div className="mb-2 flex items-center justify-between text-[10px] font-semibold text-rn-text-slate">
-          <span>Betalt denne måneden</span>
-          <span className="text-success">78 %</span>
-        </div>
-        <div className="h-2 overflow-hidden rounded-full bg-rn-surface-segment">
-          <div className="h-full w-[78%] rounded-full bg-success" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ReportsMiniPreview() {
-  return (
-    <div
-      className="rounded-[length:var(--app-radius)] border border-rn-border-strong/70 bg-rn-surface-wash p-3"
-      aria-hidden
-    >
-      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-rn-text-slate">
-        Omsetning YTD
-      </p>
-      <div className="flex h-20 items-end justify-between gap-1">
-        {REPORT_CHART_HEIGHTS.map((height, index) => (
-          <div
-            key={index}
-            className={cn(
-              "flex-1 rounded-t-sm",
-              index === REPORT_CHART_HEIGHTS.length - 1
-                ? "bg-success"
-                : "bg-success/25",
-            )}
-            style={{ height: `${height}%` }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-const MINI_PREVIEWS = [
-  BookingsMiniPreview,
-  FinanceMiniPreview,
-  ReportsMiniPreview,
+const CHART_HEIGHTS = [40, 65, 52, 78, 58, 88, 72, 48, 82, 60, 70, 55] as const;
+const CHART_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Des",
 ] as const;
 
-type ProductPreviewItem = {
-  title: string;
-  bullets: readonly string[];
+const STATUS_TONE: Record<string, string> = {
+  confirmed: "bg-[#e8f5ee] text-[#1a4331]",
+  partial: "bg-[#fdf3dc] text-[#7a5410]",
+  inquiry: "bg-[#eef2f0] text-[#475569]",
 };
 
-function ProductPreviewCard({
-  item,
-  index,
-  icon: Icon,
-}: {
-  item: ProductPreviewItem;
-  index: number;
-  icon: LucideIcon;
-}) {
-  const isFeatured = index === 1;
-  const MiniPreview = MINI_PREVIEWS[index];
-
-  return (
-    <article
-      className={cn(
-        "flex flex-col overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card shadow-rn-card",
-        isFeatured &&
-          "lg:-translate-y-2 lg:shadow-rn-hero-success lg:ring-2 lg:ring-success/25",
-      )}
-    >
-      <div
-        className={cn(
-          "flex items-center gap-3 px-5 py-4 md:px-6 md:py-5",
-          isFeatured
-            ? "border-b border-rn-accent-border bg-success text-white"
-            : "border-b border-rn-border-strong/50 bg-rn-surface-wash",
-        )}
-      >
-        <div
-          className={cn(
-            "flex size-11 items-center justify-center rounded-[length:var(--app-radius)] border-2",
-            isFeatured
-              ? "border-white/30 bg-white/10 text-primary-light"
-              : "border-rn-border-strong/70 bg-card text-success",
-          )}
-          aria-hidden
-        >
-          <Icon className="size-5" />
-        </div>
-        <h3
-          className={cn(
-            "font-heading text-xl font-semibold",
-            isFeatured ? "text-white" : "text-rn-text-heading",
-          )}
-        >
-          {item.title}
-        </h3>
-      </div>
-
-      <div className="flex flex-1 flex-col gap-5 p-5 md:p-6">
-        <MiniPreview />
-
-        <ul className="mt-auto space-y-2.5">
-          {item.bullets.map((bullet) => (
-            <li
-              key={bullet}
-              className="flex items-start gap-2.5 text-sm text-rn-text-slate md:text-base"
-            >
-              <Check className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
-              <span>{bullet}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </article>
-  );
-}
+// June 2026 starts on a Monday; dates carrying a booking are marked.
+const DAYS = Array.from({ length: 30 }, (_, i) => i + 1);
+const BOOKED: Record<number, "confirmed" | "partial" | "inquiry"> = {
+  14: "confirmed",
+  22: "partial",
+};
 
 export function ProductPreviewSection() {
   const { t, locale } = useTranslation();
-  const items = useMemo(
-    () => getDictionary(locale).landing.productPreview.items,
-    [locale],
-  );
+  const [active, setActive] = useState(0);
+  const dict = useMemo(() => getDictionary(locale).landing, [locale]);
+  const items = dict.productPreview.items;
+  const demo = dict.heroDemo;
+  const current = items[active]!;
 
   return (
-    <LandingSectionShell
-      titleId="landing-preview-title"
-      title={t("landing.sections.productPreview")}
-      description={t("landing.productPreview.description")}
-      tinted
+    <section
+      aria-labelledby="landing-preview-title"
+      className={cn(LANDING_SECTION_X, "py-16 md:py-24 lg:py-32")}
     >
-      <div className="grid gap-5 lg:grid-cols-3 lg:items-center lg:gap-6">
-        {items.map((item, index) => (
-          <ProductPreviewCard
-            key={item.title}
-            item={item}
-            index={index}
-            icon={PRODUCT_PREVIEW_ICONS[index]!}
-          />
-        ))}
+      <div
+        className={cn(
+          LANDING_CONTAINER,
+          "grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] lg:items-center lg:gap-20",
+        )}
+      >
+        <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-5">
+            <h2
+              id="landing-preview-title"
+              className="max-w-[20ch] text-[clamp(30px,5vw,52px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#0c1f16]"
+            >
+              {t("landing.sections.productPreview")}
+            </h2>
+            <p className="landing-subhead max-w-[44ch]">
+              {t("landing.productPreview.description")}
+            </p>
+          </div>
+
+          <div
+            role="group"
+            className="inline-flex w-fit max-w-full gap-1 rounded-full bg-[#eef2f0] p-1"
+          >
+            {items.map((item, index) => {
+              const Icon = PRODUCT_PREVIEW_ICONS[index]!;
+              const on = index === active;
+              return (
+                <button
+                  key={item.title}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setActive(index)}
+                  className={cn(
+                    "flex min-h-11 items-center gap-2 rounded-full px-4 text-[15px] font-semibold transition-colors",
+                    on
+                      ? "bg-[#1a4331] text-white"
+                      : "text-[#334155] hover:bg-white/70",
+                  )}
+                >
+                  <Icon className="size-4" aria-hidden />
+                  {item.title}
+                </button>
+              );
+            })}
+          </div>
+
+          <ul className="flex flex-col gap-3">
+            {current.bullets.map((bullet) => (
+              <li
+                key={bullet}
+                className="flex items-start gap-3 text-base text-[#1a1c1a] md:text-lg"
+              >
+                <Check
+                  className="mt-1 size-5 shrink-0 text-[#1a4331]"
+                  aria-hidden
+                />
+                <span>{bullet}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div
+          className="overflow-hidden rounded-3xl bg-[#e8f5ee] p-4 sm:p-8 lg:p-10"
+          aria-hidden
+        >
+          <div className="min-h-[340px] rounded-2xl bg-white p-5 shadow-[0_24px_64px_-28px_rgba(0,45,28,0.35)] md:p-7">
+            {active === 0 ? (
+              <div className="grid gap-6 sm:grid-cols-[1fr_1fr]">
+                <div className="grid grid-cols-7 gap-1.5 text-center text-[13px]">
+                  {DAYS.map((day) => {
+                    const state = BOOKED[day];
+                    return (
+                      <span
+                        key={day}
+                        className={cn(
+                          "flex aspect-square items-center justify-center rounded-lg",
+                          state === "confirmed" && "bg-[#1a4331] font-bold text-white",
+                          state === "partial" && "bg-[#fdf3dc] font-bold text-[#7a5410]",
+                          !state && "text-[#475569]",
+                          day === 1 && "col-start-1",
+                        )}
+                      >
+                        {day}
+                      </span>
+                    );
+                  })}
+                </div>
+                <ul className="flex flex-col justify-center divide-y divide-[#eef1ee]">
+                  {demo.bookings.map((row) => (
+                    <li key={row.event} className="flex flex-col gap-1 py-3">
+                      <span className="flex items-center justify-between gap-2 text-[15px] font-semibold">
+                        {row.event}
+                        <span className="text-[13px] font-normal text-[#64748b]">
+                          {row.date}
+                        </span>
+                      </span>
+                      <span
+                        className={cn(
+                          "w-fit rounded-full px-2.5 py-0.5 text-xs font-medium",
+                          STATUS_TONE[row.statusKey] ?? STATUS_TONE.inquiry,
+                        )}
+                      >
+                        {statusLabel(row.statusKey, t)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {active === 1 ? (
+              <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: t("landing.miniPreview.income"), value: "kr 128k" },
+                    { label: t("landing.miniPreview.unpaid"), value: "kr 24k" },
+                    { label: "Margin", value: "62 %" },
+                  ].map((kpi, i) => (
+                    <div
+                      key={kpi.label}
+                      className={cn(
+                        "rounded-xl px-3.5 py-3",
+                        i === 0 ? "bg-[#1a4331] text-white" : "bg-[#f4f6f3]",
+                      )}
+                    >
+                      <p
+                        className={cn(
+                          "text-xs font-medium",
+                          i === 0 ? "text-[#b9d3c4]" : "text-[#475569]",
+                        )}
+                      >
+                        {kpi.label}
+                      </p>
+                      <p className="mt-1 font-heading text-xl font-bold tracking-tight whitespace-nowrap md:text-2xl">
+                        {kpi.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between text-sm font-semibold">
+                    <span>Betalt denne måneden</span>
+                    <span className="text-[#1a4331]">78 %</span>
+                  </div>
+                  <div className="h-3 overflow-hidden rounded-full bg-[#e8f5ee]">
+                    <div className="h-full w-[78%] rounded-full bg-[#1a4331]" />
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {active === 2 ? (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-baseline justify-between">
+                  <p className="font-heading text-base font-semibold">
+                    {demo.monthlyRevenue}
+                  </p>
+                  <p className="font-heading text-base font-bold text-[#1a4331]">
+                    {demo.demoRevenue}
+                  </p>
+                </div>
+                <div className="flex h-52 items-end gap-1.5">
+                  {CHART_HEIGHTS.map((h, i) => (
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex-1 rounded-md",
+                        i === 5 ? "bg-[#1a4331]" : "bg-[#d3e6da]",
+                      )}
+                      style={{ height: `${h}%` }}
+                    />
+                  ))}
+                </div>
+                <div className="flex gap-1.5 text-[10px] font-medium text-[#64748b]">
+                  {CHART_MONTHS.map((m) => (
+                    <span key={m} className="min-w-0 flex-1 text-center">
+                      {m}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
       </div>
-    </LandingSectionShell>
+    </section>
   );
 }
