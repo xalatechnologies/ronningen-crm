@@ -1,18 +1,17 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { RN_ADMIN_SEGMENT_ACTIVE, RN_SEGMENT_CONTROL, RN_TEXT_SEGMENT } from "@/lib/rn-ui";
+import { RN_TEXT_SEGMENT } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
 export const ADMIN_SEGMENT_BAR_CLASS = cn(
-  RN_SEGMENT_CONTROL,
-  "admin-segment-bar flex w-full flex-col gap-1.5 p-1.5 sm:flex-row sm:items-center",
+  "admin-segment-bar flex w-full flex-col gap-3 rounded-2xl bg-muted/40 p-2 ring-1 ring-foreground/10 sm:flex-row sm:items-center",
 );
 
 export const ADMIN_SEGMENT_SEARCH_INPUT_CLASS =
-  "h-11 rounded-xl border border-foreground/25 bg-background pl-10 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  "h-11 rounded-xl border border-foreground/25 bg-background pl-10 hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20";
 
 type AdminSegmentFilterBarProps = ComponentProps<"div">;
 
@@ -62,7 +61,7 @@ export function AdminSegmentFilterSearch({
 export function AdminSegmentFilterDivider() {
   return (
     <div
-      className="hidden h-8 w-px shrink-0 bg-rn-border-strong/60 sm:block"
+      className="hidden h-8 w-px shrink-0 bg-foreground/15 sm:block"
       aria-hidden
     />
   );
@@ -109,10 +108,10 @@ export function adminSegmentFilterButtonClass(
 ): string {
   return cn(
     RN_TEXT_SEGMENT,
-    "min-h-11 flex-1 rounded-[length:calc(var(--app-radius)-2px)] px-3 py-2.5 transition-colors sm:flex-none",
+    "min-h-10 flex-1 rounded-full px-4 py-2 transition-colors sm:flex-none",
     ADMIN_SEGMENT_BUTTON_MIN_WIDTH[minWidth],
     active
-      ? RN_ADMIN_SEGMENT_ACTIVE
-      : "border border-foreground/20 bg-card font-medium text-foreground hover:bg-muted hover:text-foreground",
+      ? "border border-success bg-success !text-white shadow-sm"
+      : "border border-foreground/20 bg-card font-medium text-foreground hover:border-foreground/40 hover:bg-muted hover:text-foreground",
   );
 }
