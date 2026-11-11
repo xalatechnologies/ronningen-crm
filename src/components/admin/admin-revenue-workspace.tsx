@@ -36,7 +36,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
 const kpiTileClass =
-  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
+  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 sm:p-6";
 
 const tableHeadClass = APP_TABLE_HEAD_CELL_ADMIN;
 const tableCellClass =
@@ -196,9 +196,9 @@ export function AdminRevenueWorkspace({
         </section>
       </div>
 
-      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <section className="grid lg:grid-cols-2">
-          <div className="border-foreground/10 px-4 py-5 sm:px-5 md:px-6 lg:border-r lg:px-8 lg:py-6">
+      <section className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className={cn("min-w-0 overflow-hidden px-5 py-5 sm:px-6 sm:py-6", RN_CARD_SHELL)}>
+          <div className="rounded-2xl bg-muted/30 p-5 ring-1 ring-foreground/10">
             <AdminTrendChart
               className="admin-overview-trend-chart"
               embedded
@@ -207,18 +207,19 @@ export function AdminRevenueWorkspace({
               valueFormat="nok"
             />
           </div>
-          <div className="px-5 py-5 sm:px-6">
+        </div>
+        <div className="grid min-w-0 gap-6">
+          <div className={cn("min-w-0 overflow-hidden px-5 py-5 sm:px-6", RN_CARD_SHELL)}>
             <AdminSubscriptionStatusPanel
               embedded
               statusCounts={data.statusCounts}
             />
           </div>
-        </section>
-
-        <section className="border-t border-foreground/10 px-5 py-5 sm:px-6">
-          <AdminPlanDistributionPanel embedded planCounts={data.planCounts} />
-        </section>
-      </div>
+          <div className={cn("min-w-0 overflow-hidden px-5 py-5 sm:px-6", RN_CARD_SHELL)}>
+            <AdminPlanDistributionPanel embedded planCounts={data.planCounts} />
+          </div>
+        </div>
+      </section>
 
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section className="px-5 py-5 sm:px-6 sm:py-6">
@@ -306,7 +307,7 @@ export function AdminRevenueWorkspace({
                 <th className={cn(tableHeadClass, "text-right")}>{t("admin.medlemmer")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-rn-border-strong/50">
+            <tbody className="divide-y divide-foreground/10">
               {data.activePayers.map((row) => (
                 <tr
                   key={row.id}

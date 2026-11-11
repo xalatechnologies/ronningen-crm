@@ -67,7 +67,7 @@ function AccountStatusBadge({
         {isDisabled ? t("admin.deaktivert") : t("admin.aktiv_konto")}
       </span>
       {isSelf ? (
-        <span className="inline-flex rounded-md border-2 border-rn-border-strong bg-muted/30 px-2.5 py-0.5 text-app-xs font-semibold text-muted-foreground md:text-app-sm">
+        <span className="inline-flex rounded-md border border-foreground/25 bg-muted/30 px-2.5 py-0.5 text-app-xs font-semibold text-muted-foreground md:text-app-sm">
           Dette er deg
         </span>
       ) : null}

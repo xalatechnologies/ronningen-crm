@@ -80,7 +80,7 @@ export function NotificationTemplateDetailPanel({
           id={`subject-${template.key}`}
           value={subject}
           onChange={(event) => setSubject(event.target.value)}
-          className="border-2 border-rn-border-strong"
+          className="border border-foreground/25"
         />
       </div>
 
@@ -91,7 +91,7 @@ export function NotificationTemplateDetailPanel({
           value={bodyHtml}
           onChange={(event) => setBodyHtml(event.target.value)}
           rows={8}
-          className="w-full rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-3 py-2 font-mono text-app-sm outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+          className="w-full rounded-xl border border-foreground/25 bg-background px-3 py-2 font-mono text-app-sm outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
         />
       </div>
 
@@ -100,7 +100,7 @@ export function NotificationTemplateDetailPanel({
           {t("admin.notification_preview")}
         </p>
         <div
-          className="rounded-md border border-rn-border-strong/60 bg-card p-4 text-app-sm prose prose-sm max-w-none dark:prose-invert"
+          className="rounded-xl border border-foreground/15 bg-card p-4 text-app-sm prose prose-sm max-w-none dark:prose-invert"
           dangerouslySetInnerHTML={{ __html: bodyHtml }}
         />
       </div>

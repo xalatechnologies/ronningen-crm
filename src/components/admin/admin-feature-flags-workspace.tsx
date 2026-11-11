@@ -44,7 +44,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 const kpiTileClass =
-  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
+  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 sm:p-6";
 
 const tableHeadClass = APP_TABLE_HEAD_CELL_ADMIN;
 const tableCellClass =
@@ -312,7 +312,7 @@ export function AdminFeatureFlagsWorkspace({
                 <th className={tableHeadClass}>{t("adminLabels.fields.lastChanged")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-rn-border-strong/50">
+            <tbody className="divide-y divide-foreground/10">
               {filtered.map((flag) => {
                 const expanded = expandedKey === flag.key;
                 const showEnvHint =

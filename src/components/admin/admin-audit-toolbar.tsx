@@ -6,7 +6,7 @@ import type { AdminAuditCategory } from "@/components/admin/admin-audit-filters"
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { FormSelect } from "@/components/ui/form-select";
 import { ADMIN_SEGMENT_BAR_CLASS } from "@/components/admin/admin-segment-filter-bar";
-import { RN_ADMIN_SEGMENT_ACTIVE, RN_TEXT_SEGMENT } from "@/lib/rn-ui";
+import { RN_TEXT_SEGMENT } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { Download, RotateCcw } from "lucide-react";
 
@@ -139,9 +139,9 @@ export function AdminAuditToolbar({
                 }
                 className={cn(
                   RN_TEXT_SEGMENT,
-                  "min-h-11 rounded-[length:calc(var(--app-radius)-2px)] border-2 px-3 py-2 text-app-sm transition-colors",
+                  "min-h-10 rounded-full border px-4 py-2 text-app-sm transition-colors",
                   active
-                    ? RN_ADMIN_SEGMENT_ACTIVE
+                    ? "border-success bg-success !text-white shadow-sm"
                     : "border-foreground/20 bg-card font-medium text-foreground hover:bg-muted hover:text-foreground",
                 )}
                 aria-pressed={active ? "true" : "false"}
@@ -186,7 +186,7 @@ export function AdminAuditToolbar({
         ) : null}
 
         <div
-          className="hidden h-8 w-px shrink-0 bg-rn-border-strong/60 sm:block"
+          className="hidden h-8 w-px shrink-0 bg-foreground/15 sm:block"
           aria-hidden
         />
 
