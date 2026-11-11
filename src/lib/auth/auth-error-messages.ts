@@ -40,6 +40,14 @@ export function mapAuthErrorToUserMessage(
     return t("auth.errors.userAlreadyRegistered");
   }
 
+  if (includes(combined, "banned") || includes(combined, "user_banned")) {
+    return t("auth.errors.userBanned");
+  }
+
+  if (includes(combined, "over_request_rate_limit") || includes(combined, "too many requests")) {
+    return t("auth.errors.tooManyAttempts");
+  }
+
   if (
     includes(combined, "invalid login credentials") ||
     includes(combined, "invalid_credentials")

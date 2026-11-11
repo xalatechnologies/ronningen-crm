@@ -9,6 +9,11 @@ import {
 } from "@/lib/admin/support-nav-badge";
 import { safeInternalRedirect } from "@/lib/security/safe-redirect";
 import {
+  REMEMBER_COOKIE,
+  isRemembered,
+  withSessionLifetime,
+} from "@/lib/auth/session-lifetime";
+import {
   getSupabasePublicEnvForClient,
   isSupabasePublicConfigured,
 } from "@/lib/supabase/public-env";
@@ -47,6 +52,8 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  const remember = isRemembered(request.cookies.get(REMEMBER_COOKIE)?.value);
+
   const supabase = createServerClient<Database>(url, anon, {
     cookies: {
       getAll() {
@@ -58,7 +65,7 @@ export async function updateSession(request: NextRequest) {
         });
         response = NextResponse.next({ request: { headers: request.headers } });
         cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
+          response.cookies.set(name, value, withSessionLifetime(options, remember));
         });
       },
     },

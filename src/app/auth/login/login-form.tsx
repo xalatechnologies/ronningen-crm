@@ -8,11 +8,7 @@ import { APP_NAME } from "@/config/app";
 import { getDevLoginDefaultValues } from "@/config/dev-login";
 import { useTranslation } from "@/i18n/client";
 import { getDictionary } from "@/i18n/dictionaries";
-import { mapAuthErrorToUserMessage } from "@/lib/auth/auth-error-messages";
-import {
-  createBrowserSupabaseClient,
-  isSupabasePublicConfigured,
-} from "@/lib/supabase/client";
+import { isSupabasePublicConfigured } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import {
   createLoginSchema,
@@ -20,6 +16,7 @@ import {
   validationMessagesForLocale,
 } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -27,6 +24,7 @@ import { Controller, useForm } from "react-hook-form";
 
 import { safeInternalRedirect } from "@/lib/security/safe-redirect";
 import { shouldResolveAuthDestination } from "@/lib/organizations/tenant-setup";
+import { CodeLogin } from "./code-login";
 
 export function LoginForm() {
   const { t, locale } = useTranslation();
@@ -38,7 +36,10 @@ export function LoginForm() {
   const urlError = searchParams.get("error");
   const [formError, setFormError] = useState<string | null>(null);
   const displayedError = formError ?? urlError;
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
+  const [redirecting, setRedirecting] = useState(false);
+  const [mode, setMode] = useState<"password" | "code">("password");
 
   const loginDefaults = useMemo(() => getDevLoginDefaultValues(), []);
   const showDevLogin = Boolean(loginDefaults.email);
@@ -52,40 +53,46 @@ export function LoginForm() {
     defaultValues: loginDefaults,
   });
 
+  /** Full navigation avoids a blank RSC transition while /app layouts load; the overlay stays up until then. */
+  function goTo(resolved: string | undefined) {
+    setRedirecting(true);
+    const destination =
+      shouldResolveAuthDestination(redirect) && resolved
+        ? safeInternalRedirect(resolved, redirect)
+        : redirect;
+    window.location.assign(destination);
+  }
+
   async function onSubmit(values: LoginInput) {
     setFormError(null);
     if (!isSupabasePublicConfigured()) {
       setFormError(t("auth.pages.supabaseConfigMissing"));
       return;
     }
-    const { error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    });
-    if (error) {
-      const message =
-        error.message === "Failed to fetch" || error.name === "AuthRetryableFetchError"
-          ? t("auth.pages.supabaseConnectionError")
-          : mapAuthErrorToUserMessage(error, locale);
-      setFormError(message);
+
+    let response: Response;
+    try {
+      response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: values.email, password: values.password, remember }),
+      });
+    } catch {
+      setFormError(t("auth.errors.network"));
       return;
     }
 
-    let destination = redirect;
-    if (shouldResolveAuthDestination(redirect)) {
-      const response = await fetch("/api/auth/destination");
-      if (response.ok) {
-        const payload = (await response.json().catch(() => null)) as {
-          redirectTo?: string;
-        } | null;
-        if (payload?.redirectTo) {
-          destination = safeInternalRedirect(payload.redirectTo, redirect);
-        }
-      }
+    const payload = (await response.json().catch(() => null)) as {
+      error?: string;
+      redirectTo?: string;
+    } | null;
+
+    if (!response.ok) {
+      setFormError(payload?.error ?? t("auth.errors.generic"));
+      return;
     }
 
-    // Full navigation avoids a blank RSC transition while /app layouts load.
-    window.location.assign(destination);
+    goTo(payload?.redirectTo);
   }
 
   const demo = useMemo(() => getDictionary(locale).landing.heroDemo, [locale]);
@@ -95,7 +102,7 @@ export function LoginForm() {
 
   return (
     <main className="relative grid min-h-[min(100dvh,100svh)] flex-1 lg:grid-cols-[1.05fr_1fr]">
-      {form.formState.isSubmitting ? (
+      {form.formState.isSubmitting || redirecting ? (
         <div
           className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm"
           role="status"
@@ -220,89 +227,133 @@ export function LoginForm() {
             </div>
           ) : null}
 
-          <form
-            className="flex flex-col gap-5"
-            onSubmit={form.handleSubmit(onSubmit)}
-            noValidate
-          >
-            <div className="space-y-2">
-              <Label
-                htmlFor="email"
-                className="text-app-sm font-semibold text-[#1a1c1a]"
-              >
-                {t("auth.email")}
-              </Label>
-              <Controller
-                name="email"
-                control={form.control}
-                render={({ field }) => (
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder={loginDefaults.email || "deg@eksempel.no"}
-                    className={inputClass}
-                    {...field}
-                    value={field.value ?? ""}
-                  />
-                )}
-              />
-              {form.formState.errors.email ? (
-                <p className="text-app-sm text-destructive">
-                  {form.formState.errors.email.message}
-                </p>
-              ) : null}
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-4">
+          {mode === "password" ? (
+            <form
+              className="flex flex-col gap-5"
+              onSubmit={form.handleSubmit(onSubmit)}
+              noValidate
+            >
+              <div className="space-y-2">
                 <Label
-                  htmlFor="password"
+                  htmlFor="email"
                   className="text-app-sm font-semibold text-[#1a1c1a]"
                 >
-                  {t("auth.password")}
+                  {t("auth.email")}
                 </Label>
-                <Link
-                  href="/auth/forgot-password"
-                  className="text-app-sm font-semibold text-[#1a4331] transition-colors hover:text-[#0c1f16] hover:underline"
-                >
-                  {t("auth.forgotPassword")}
-                </Link>
+                <Controller
+                  name="email"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder={loginDefaults.email || "deg@eksempel.no"}
+                      className={inputClass}
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  )}
+                />
+                {form.formState.errors.email ? (
+                  <p className="text-app-sm text-destructive">
+                    {form.formState.errors.email.message}
+                  </p>
+                ) : null}
               </div>
-              <Controller
-                name="password"
-                control={form.control}
-                render={({ field }) => (
-                  <Input
-                    id="password"
-                    type="password"
-                    autoComplete="current-password"
-                    className={inputClass}
-                    {...field}
-                    value={field.value ?? ""}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-4">
+                  <Label
+                    htmlFor="password"
+                    className="text-app-sm font-semibold text-[#1a1c1a]"
+                  >
+                    {t("auth.password")}
+                  </Label>
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-app-sm font-semibold text-[#1a4331] transition-colors hover:text-[#0c1f16] hover:underline"
+                  >
+                    {t("auth.forgotPassword")}
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Controller
+                    name="password"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="current-password"
+                        className={cn(inputClass, "pr-12")}
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    )}
                   />
-                )}
-              />
-              {form.formState.errors.password ? (
-                <p className="text-app-sm text-destructive">
-                  {form.formState.errors.password.message}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                    aria-pressed={showPassword}
+                    title={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                    className="absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-[#475569] transition-colors hover:bg-black/5 hover:text-[#0c1f16] focus-visible:ring-2 focus-visible:ring-[#1a4331]/60 focus-visible:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="size-5" aria-hidden /> : <Eye className="size-5" aria-hidden />}
+                  </button>
+                </div>
+                {form.formState.errors.password ? (
+                  <p className="text-app-sm text-destructive">
+                    {form.formState.errors.password.message}
+                  </p>
+                ) : null}
+              </div>
+              <label className="flex cursor-pointer items-center gap-2.5 text-app-sm text-[#1a1c1a]">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="size-4 rounded accent-[#1a4331]"
+                />
+                {t("auth.rememberMe")}
+              </label>
+              {displayedError ? (
+                <p
+                  role="alert"
+                  className="rounded-xl bg-destructive/10 px-4 py-3 text-app-sm text-destructive md:text-app-base"
+                >
+                  {displayedError}
                 </p>
               ) : null}
-            </div>
-            {displayedError ? (
-              <p className="rounded-xl bg-destructive/10 px-4 py-3 text-app-sm text-destructive md:text-app-base">
-                {displayedError}
-              </p>
-            ) : null}
-            <Button
-              type="submit"
-              variant="success"
-              size="cta"
-              disabled={form.formState.isSubmitting}
-              className="h-12 w-full rounded-xl shadow-none"
-            >
-              {form.formState.isSubmitting ? t("auth.pages.loggingIn") : t("auth.login")}
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                variant="success"
+                size="cta"
+                disabled={form.formState.isSubmitting || redirecting}
+                className="h-12 w-full rounded-xl shadow-none"
+              >
+                {form.formState.isSubmitting || redirecting ? t("auth.pages.loggingIn") : t("auth.login")}
+              </Button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormError(null);
+                  setMode("code");
+                }}
+                className="self-center text-app-sm font-semibold text-[#1a4331] transition-colors hover:text-[#0c1f16] hover:underline"
+              >
+                {t("auth.loginWithCode")}
+              </button>
+            </form>
+          ) : (
+            <CodeLogin
+              remember={remember}
+              onRememberChange={setRemember}
+              onSuccess={goTo}
+              onBack={() => setMode("password")}
+              initialEmail={form.getValues("email")}
+            />
+          )}
 
           <Link
             href="/auth/register"
