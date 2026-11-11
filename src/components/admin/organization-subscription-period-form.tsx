@@ -78,7 +78,7 @@ export function OrganizationSubscriptionPeriodForm({
             type="date"
             value={startDate}
             onChange={(event) => setStartDate(event.target.value)}
-            className="flex h-12 w-full rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-4 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+            className="flex h-12 w-full rounded-xl border border-foreground/25 bg-background px-4 text-app-base outline-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
           />
         </div>
         <div className="space-y-2">
@@ -88,7 +88,7 @@ export function OrganizationSubscriptionPeriodForm({
             type="date"
             value={endDate}
             onChange={(event) => setEndDate(event.target.value)}
-            className="flex h-12 w-full rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-4 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+            className="flex h-12 w-full rounded-xl border border-foreground/25 bg-background px-4 text-app-base outline-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
           />
         </div>
       </div>

@@ -66,7 +66,7 @@ export function OrganizationAdminNotesPanel({
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           rows={5}
-          className="w-full rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-4 py-3 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+          className="w-full rounded-xl border border-foreground/25 bg-background px-4 py-3 text-app-base outline-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
           placeholder={t("admin.interne_observasjoner_support_saker_avtaler")}
         />
       </div>

@@ -1,6 +1,19 @@
 import { computeHealthScore } from "@/lib/admin/health-score";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import type { HealthScoreResult } from "@/lib/admin/types";
+import { isCancelledBookingStatus } from "@/lib/dashboard-metrics";
+
+/** Newest of several optional ISO timestamps (null when none is set). */
+export function latestIso(...values: (string | null | undefined)[]): string | null {
+  let best: string | null = null;
+  for (const value of values) {
+    if (!value) continue;
+    if (best == null || new Date(value).getTime() > new Date(best).getTime()) {
+      best = value;
+    }
+  }
+  return best;
+}
 
 export type AdminOrganizationRow = {
   id: string;
@@ -44,6 +57,8 @@ export async function fetchAdminOrganizations(): Promise<AdminOrganizationRow[]>
     { data: subscriptions },
     { data: properties },
     { data: bookings },
+    { data: auditRows },
+    { data: loginRows },
   ] = await Promise.all([
     admin.from("organization_members").select("organization_id"),
     admin
@@ -55,7 +70,19 @@ export async function fetchAdminOrganizations(): Promise<AdminOrganizationRow[]>
     admin.from("properties").select("organization_id"),
     admin
       .from("bookings")
-      .select("organization_id, total_price, remaining_amount, created_at"),
+      .select("organization_id, total_price, remaining_amount, created_at, status"),
+    admin
+      .from("audit_log")
+      .select("organization_id, created_at")
+      .not("organization_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(5000),
+    admin
+      .from("platform_login_events")
+      .select("organization_id, created_at")
+      .not("organization_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(5000),
   ]);
 
   const countByOrg = new Map<string, number>();
@@ -89,7 +116,20 @@ export async function fetchAdminOrganizations(): Promise<AdminOrganizationRow[]>
   const revenueByOrg = new Map<string, number>();
   const unpaidByOrg = new Map<string, number>();
   const bookings30ByOrg = new Map<string, number>();
+  const latestSeenByOrg = new Map<string, string>();
+  const noteSeen = (organizationId: string | null, iso: string | null) => {
+    if (!organizationId || !iso) return;
+    latestSeenByOrg.set(
+      organizationId,
+      latestIso(latestSeenByOrg.get(organizationId), iso) ?? iso,
+    );
+  };
+  for (const row of auditRows ?? []) noteSeen(row.organization_id, row.created_at);
+  for (const row of loginRows ?? []) noteSeen(row.organization_id, row.created_at);
   for (const b of bookings ?? []) {
+    noteSeen(b.organization_id, b.created_at);
+    // Cancelled bookings do not count as revenue (same rule as the tenant dashboard).
+    if (isCancelledBookingStatus(b.status)) continue;
     revenueByOrg.set(
       b.organization_id,
       (revenueByOrg.get(b.organization_id) ?? 0) + Number(b.total_price ?? 0),
@@ -108,6 +148,10 @@ export async function fetchAdminOrganizations(): Promise<AdminOrganizationRow[]>
   }
 
   return (orgs ?? []).map((o) => {
+    const lastActivityAt = latestIso(
+      o.last_activity_at,
+      latestSeenByOrg.get(o.id),
+    );
     const health = computeHealthScore({
       subscriptionStatus: o.subscription_status,
       isSuspended: o.is_suspended,
@@ -115,7 +159,7 @@ export async function fetchAdminOrganizations(): Promise<AdminOrganizationRow[]>
       bookingsLast30d: bookings30ByOrg.get(o.id) ?? 0,
       totalRevenue: revenueByOrg.get(o.id) ?? 0,
       unpaidRemaining: unpaidByOrg.get(o.id) ?? 0,
-      lastActivityAt: o.last_activity_at,
+      lastActivityAt,
     });
 
     return {
@@ -130,7 +174,7 @@ export async function fetchAdminOrganizations(): Promise<AdminOrganizationRow[]>
       venueCount: venueCountByOrg.get(o.id) ?? 0,
       trialEnds: periodEndByOrg.get(o.id) ?? null,
       providerSubscriptionId: stripeSubByOrg.get(o.id) ?? null,
-      lastActivityAt: o.last_activity_at,
+      lastActivityAt,
       totalRevenue: revenueByOrg.get(o.id) ?? 0,
       unpaidRemaining: unpaidByOrg.get(o.id) ?? 0,
       bookingsLast30d: bookings30ByOrg.get(o.id) ?? 0,
@@ -159,6 +203,17 @@ export type AdminOrganizationDetail = {
   orgNumber: string | null;
   contactEmail: string | null;
   billingEmail: string | null;
+  tagline: string | null;
+  contactPhone: string | null;
+  addressLines: string[];
+  bankAccount: string | null;
+  owner: { fullName: string | null; email: string | null } | null;
+  venueCount: number;
+  assetCount: number;
+  accommodationUnitCount: number;
+  accommodationReservationCount: number;
+  contractCount: number;
+  transactionCount: number;
   subscriptionPeriodEnd: string | null;
   subscriptionPeriodStart: string | null;
   providerCustomerId: string | null;
@@ -195,7 +250,7 @@ export async function fetchAdminOrganizationDetail(
   const { data: org, error } = await admin
     .from("organizations")
     .select(
-      "id, name, slug, subscription_status, subscription_plan, is_suspended, suspended_at, suspended_reason, admin_notes, created_at, updated_at, legal_name, org_number, contact_email, billing_email, last_activity_at, trial_ends_at, billing_exempt",
+      "id, name, slug, subscription_status, subscription_plan, is_suspended, suspended_at, suspended_reason, admin_notes, created_at, updated_at, legal_name, org_number, contact_email, billing_email, last_activity_at, trial_ends_at, billing_exempt, tagline, contact_phone, address_line1, address_line2, postal_code, city, bank_account",
     )
     .eq("id", organizationId)
     .maybeSingle();
@@ -210,6 +265,14 @@ export async function fetchAdminOrganizationDetail(
     { count: customerCount },
     { data: subscription },
     { data: bookings },
+    { count: venueCount },
+    { count: assetCount },
+    { count: accommodationUnitCount },
+    { count: accommodationReservationCount },
+    { count: contractCount },
+    { count: transactionCount },
+    { data: lastAudit },
+    { data: lastLogin },
   ] = await Promise.all([
     admin
       .from("organization_members")
@@ -239,14 +302,36 @@ export async function fetchAdminOrganizationDetail(
       .maybeSingle(),
     admin
       .from("bookings")
-      .select("total_price, remaining_amount, created_at")
+      .select("total_price, remaining_amount, created_at, status")
       .eq("organization_id", organizationId),
+    admin.from("properties").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    admin.from("assets").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    admin.from("accommodation_units").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    admin.from("accommodation_reservations").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    admin.from("rental_contracts").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    admin.from("transactions").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    admin
+      .from("audit_log")
+      .select("created_at")
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false })
+      .limit(1),
+    admin
+      .from("platform_login_events")
+      .select("created_at")
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false })
+      .limit(1),
   ]);
 
   let totalRevenue = 0;
   let unpaidRemaining = 0;
   let bookingsLast30d = 0;
+  let newestBookingAt: string | null = null;
   for (const b of bookings ?? []) {
+    newestBookingAt = latestIso(newestBookingAt, b.created_at);
+    // Cancelled bookings do not count as revenue (same rule as the tenant dashboard).
+    if (isCancelledBookingStatus(b.status)) continue;
     totalRevenue += Number(b.total_price ?? 0);
     unpaidRemaining += Number(b.remaining_amount ?? 0);
     if (b.created_at >= since) bookingsLast30d += 1;
@@ -265,6 +350,17 @@ export async function fetchAdminOrganizationDetail(
     (profiles ?? []).map((p) => [p.id, p] as const),
   );
 
+  const lastActivityAt = latestIso(
+    org.last_activity_at,
+    newestBookingAt,
+    lastAudit?.[0]?.created_at,
+    lastLogin?.[0]?.created_at,
+  );
+
+  const ownerMember =
+    (members ?? []).find((m) => m.role === "owner") ?? members?.[0] ?? null;
+  const ownerProfile = ownerMember ? profileById.get(ownerMember.user_id) : null;
+
   const health = computeHealthScore({
     subscriptionStatus: org.subscription_status,
     isSuspended: org.is_suspended,
@@ -272,7 +368,7 @@ export async function fetchAdminOrganizationDetail(
     bookingsLast30d,
     totalRevenue,
     unpaidRemaining,
-    lastActivityAt: org.last_activity_at,
+    lastActivityAt,
   });
 
   return {
@@ -292,6 +388,23 @@ export async function fetchAdminOrganizationDetail(
     orgNumber: org.org_number,
     contactEmail: org.contact_email,
     billingEmail: org.billing_email,
+    tagline: org.tagline,
+    contactPhone: org.contact_phone,
+    addressLines: [
+      org.address_line1,
+      org.address_line2,
+      [org.postal_code, org.city].filter(Boolean).join(" "),
+    ].filter((line): line is string => Boolean(line && line.trim())),
+    bankAccount: org.bank_account,
+    owner: ownerProfile
+      ? { fullName: ownerProfile.full_name, email: ownerProfile.email }
+      : null,
+    venueCount: venueCount ?? 0,
+    assetCount: assetCount ?? 0,
+    accommodationUnitCount: accommodationUnitCount ?? 0,
+    accommodationReservationCount: accommodationReservationCount ?? 0,
+    contractCount: contractCount ?? 0,
+    transactionCount: transactionCount ?? 0,
     subscriptionPeriodEnd: subscription?.current_period_end ?? null,
     subscriptionPeriodStart: subscription?.current_period_start ?? null,
     providerCustomerId: subscription?.provider_customer_id ?? null,
@@ -315,7 +428,7 @@ export async function fetchAdminOrganizationDetail(
     customerCount: customerCount ?? 0,
     totalRevenue,
     unpaidRemaining,
-    lastActivityAt: org.last_activity_at,
+    lastActivityAt,
     bookingsLast30d,
     health,
   };

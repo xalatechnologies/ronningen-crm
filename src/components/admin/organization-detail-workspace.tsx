@@ -32,9 +32,9 @@ export function OrganizationDetailWorkspace({
   const { tab, setTab } = useOrganizationDetailTab(initialTab);
 
   return (
-    <div className="admin-org-detail admin-page-workspace admin-organization-detail-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
+    <div className="admin-org-detail admin-page-workspace admin-organization-detail-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-6 pb-8">
       <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
+        <div className="dashboard-oversikt-hero px-5 py-5 sm:px-6 lg:px-6">
           <OrganizationDetailHeader
             org={org}
             tab={tab}
@@ -42,10 +42,13 @@ export function OrganizationDetailWorkspace({
             billingEnabled={billingEnabled}
           />
         </div>
+      </div>
 
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <OrganizationDetailKpiStrip org={org} tab={tab} onTabChange={setTab} />
+      </div>
 
-        <div className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 md:px-6 lg:px-8">
+      <div className="min-w-0">
           <AdminDetailTabPanel tabId="profile" activeTab={tab}>
             <OrganizationProfileTab org={org} />
           </AdminDetailTabPanel>
@@ -69,7 +72,6 @@ export function OrganizationDetailWorkspace({
           <AdminDetailTabPanel tabId="support" activeTab={tab}>
             <OrganizationSupportTab org={org} supportTickets={supportTickets} />
           </AdminDetailTabPanel>
-        </div>
       </div>
     </div>
   );
