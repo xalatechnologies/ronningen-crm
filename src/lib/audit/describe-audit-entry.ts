@@ -9,6 +9,13 @@ export const AUDIT_TABLES = [
   "transactions",
   "booking_payment_installments",
   "organization_members",
+  "booking_inquiries",
+  "accommodation_reservations",
+  "accommodation_units",
+  "packages",
+  "services",
+  "assets",
+  "properties",
 ] as const;
 
 export type AuditTableName = (typeof AUDIT_TABLES)[number];
@@ -24,6 +31,14 @@ export const AUDIT_TABLE_LABEL_KEYS: Record<AuditTableName, TranslationKey> = {
   booking_payment_installments:
     "appPages.settings.activity.tables.booking_payment_installments",
   organization_members: "appPages.settings.activity.tables.organization_members",
+  booking_inquiries: "appPages.settings.activity.tables.booking_inquiries",
+  accommodation_reservations:
+    "appPages.settings.activity.tables.accommodation_reservations",
+  accommodation_units: "appPages.settings.activity.tables.accommodation_units",
+  packages: "appPages.settings.activity.tables.packages",
+  services: "appPages.settings.activity.tables.services",
+  assets: "appPages.settings.activity.tables.assets",
+  properties: "appPages.settings.activity.tables.properties",
 };
 
 export type AuditEntryInput = {
@@ -65,6 +80,9 @@ const MONEY_FIELDS: readonly string[] = [
   "paid_amount",
   "remaining_amount",
   "amount",
+  "estimated_total",
+  "price",
+  "value",
 ];
 const IGNORED_FIELDS: readonly string[] = ["updated_at"];
 const MAX_TEXT_LENGTH = 80;
@@ -75,6 +93,19 @@ const SUMMARY_FIELDS: Record<AuditTableName, readonly string[]> = {
   transactions: ["type", "amount", "category"],
   booking_payment_installments: ["amount", "due_date", "status"],
   organization_members: ["role"],
+  booking_inquiries: [
+    "event_type",
+    "preferred_event_date",
+    "guest_count",
+    "estimated_total",
+    "status",
+  ],
+  accommodation_reservations: ["check_in_date", "check_out_date", "status"],
+  accommodation_units: ["name"],
+  packages: ["name", "price"],
+  services: ["name", "price"],
+  assets: ["name", "value"],
+  properties: ["name"],
 };
 
 const BOOLEAN_LABELS: Record<Locale, { yes: string; no: string }> = {
