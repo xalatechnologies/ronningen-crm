@@ -1,15 +1,15 @@
-import { AudienceSection } from "@/components/landing/audience-section";
-import { BenefitsPricingSection } from "@/components/landing/benefits-pricing-section";
-import { FaqSection } from "@/components/landing/faq-section";
-import { FeaturesSection } from "@/components/landing/features-section";
-import { FinalCtaSection } from "@/components/landing/final-cta-section";
-import { HeroSection } from "@/components/landing/hero-section";
-import { HowItWorksSection } from "@/components/landing/how-it-works-section";
-import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeader } from "@/components/landing/landing-header";
-import { ProblemSection } from "@/components/landing/problem-section";
-import { ProductPreviewSection } from "@/components/landing/product-preview-section";
+import { Faq } from "@/components/landing/v2/faq";
+import { Features } from "@/components/landing/v2/features";
+import { FinalCta } from "@/components/landing/v2/final-cta";
+import { LandingV2Footer } from "@/components/landing/v2/footer";
+import { Hero } from "@/components/landing/v2/hero";
+import { HowItWorks } from "@/components/landing/v2/how-it-works";
+import { Pricing } from "@/components/landing/v2/pricing";
+import { Showcase } from "@/components/landing/v2/showcase";
 import type { Metadata } from "next";
+
+import "@/components/landing/v2/landing-v2.css";
 
 export const metadata: Metadata = {
   title: "Event Manager | Venue Booking and Finance Dashboard",
@@ -22,17 +22,15 @@ export default function HomePage() {
     <div className="flex min-h-svh flex-col bg-background text-foreground">
       <LandingHeader />
       <main>
-        <HeroSection />
-        <ProblemSection />
-        <FeaturesSection />
-        <HowItWorksSection />
-        <ProductPreviewSection />
-        <AudienceSection />
-        <BenefitsPricingSection />
-        <FaqSection />
-        <FinalCtaSection />
+        <Hero />
+        <Features />
+        <HowItWorks />
+        <Showcase />
+        <Pricing />
+        <Faq />
+        <FinalCta />
       </main>
-      <LandingFooter />
+      <LandingV2Footer />
     </div>
   );
 }
