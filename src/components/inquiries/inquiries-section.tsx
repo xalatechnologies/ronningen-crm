@@ -28,7 +28,6 @@ import { usePageSearch } from "@/providers/page-search-provider";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/i18n/client";
 import { formatAppDateTime } from "@/lib/format-datetime";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import {
   APP_DATA_BODY,
   APP_DATA_DATE,
@@ -48,7 +47,12 @@ import { useEffect, useMemo, useState } from "react";
 import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
 const filterEyebrowClass =
-  "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
+  "mb-1.5 block text-[13px] font-semibold text-foreground";
+
+const cardClass = "overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8";
+
+const dateFieldClass =
+  "h-11 min-h-11 w-full min-w-0 rounded-xl border border-foreground/25 text-app-sm shadow-none sm:h-12 sm:min-h-12 sm:text-app-base";
 
 const inquiriesTableHeadClass = cn(
   "bookings-list-table-head",
@@ -124,10 +128,20 @@ function isOverdueFollowUp(row: InquiryListRow, now = new Date()): boolean {
 }
 
 function statusBadgeClass(status: BookingInquiryStatus): string {
-  if (status === "converted")
-    return "border-success/50 bg-success/15 text-success";
-  if (status === "lost") return "border-muted-foreground/40 bg-muted/50";
-  return "border-rn-border-strong bg-card";
+  switch (status) {
+    case "converted":
+      return "bg-success/15 text-success";
+    case "lost":
+      return "bg-muted text-muted-foreground";
+    case "contacted":
+      return "bg-sky-50 text-sky-900 dark:bg-sky-950/40 dark:text-sky-200";
+    case "quote_sent":
+      return "bg-violet-50 text-violet-900 dark:bg-violet-950/40 dark:text-violet-200";
+    case "awaiting_customer":
+      return "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200";
+    default:
+      return "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200";
+  }
 }
 
 export type InquiriesSectionProps = {
@@ -273,8 +287,8 @@ export function InquiriesSection({
 
   return (
     <div className="inquiries-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
-      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
+      <div className="flex min-w-0 flex-col gap-6">
+        <div>
           <div className="inquiries-list-hero">
             <AppPageHeader
               className="mb-0"
@@ -287,7 +301,7 @@ export function InquiriesSection({
                       type="button"
                       variant="outline"
                       size="cta"
-                      className="w-full gap-2 border-2 border-rn-border-strong px-4 font-semibold sm:w-auto md:px-8"
+                      className="w-full gap-2 rounded-xl border border-foreground/30 bg-card px-4 font-semibold text-foreground shadow-none hover:border-foreground/50 hover:bg-muted sm:w-auto md:px-8"
                       aria-expanded={showCalendarView}
                       onClick={() => setShowCalendarView((v) => !v)}
                     >
@@ -302,7 +316,7 @@ export function InquiriesSection({
                       href="/app/inquiries/new"
                       className={cn(
                         buttonVariants({ variant: "success", size: "cta" }),
-                        "inline-flex w-full items-center justify-center gap-2 px-4 sm:w-auto md:px-8",
+                        "inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 shadow-none sm:w-auto md:px-8",
                       )}
                     >
                       <Plus className="size-5" aria-hidden />
@@ -316,11 +330,8 @@ export function InquiriesSection({
         </div>
 
         {loadError ? (
-          <div
-            className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
-            role="alert"
-          >
-            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive">
+          <div role="alert">
+            <div className="rounded-xl bg-destructive/10 px-4 py-3 text-destructive">
               {t("inquiries.loadError", { error: loadError })}
             </div>
           </div>
@@ -328,7 +339,7 @@ export function InquiriesSection({
 
         {!loadError ? (
           <section
-            className="inquiries-list-filters border-t border-rn-border-strong/35 px-4 py-5 sm:px-6 md:px-8 md:py-6"
+            className={cn("inquiries-list-filters px-4 py-5 sm:px-6 md:px-8 md:py-6", cardClass)}
             aria-label={t("inquiries.searchFilterAria")}
           >
             <div className="flex min-w-0 flex-col gap-4">
@@ -343,7 +354,7 @@ export function InquiriesSection({
                     onChange={setDateFrom}
                     maxYmd={dateTo || undefined}
                     variant="toolbar"
-                    className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+                    className={dateFieldClass}
                   />
                 </div>
                 <div className="min-w-0">
@@ -356,7 +367,7 @@ export function InquiriesSection({
                     onChange={setDateTo}
                     minYmd={dateFrom || undefined}
                     variant="toolbar"
-                    className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+                    className={dateFieldClass}
                   />
                 </div>
                 <div className="min-w-0 sm:col-span-2 lg:col-span-1">
@@ -367,7 +378,7 @@ export function InquiriesSection({
                   <DropdownMenuTrigger
                     className={cn(
                       buttonVariants({ variant: "outline" }),
-                      "h-11 min-h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold shadow-sm sm:h-12 sm:min-h-12 sm:text-app-base lg:min-w-[11.5rem]",
+                      "h-11 min-h-11 w-full gap-2 rounded-xl border border-foreground/25 px-4 font-heading text-app-sm font-semibold shadow-none sm:h-12 sm:min-h-12 sm:text-app-base lg:min-w-[11.5rem]",
                       menuFilterCount > 0 &&
                         "border-success/50 bg-success/5 text-foreground",
                     )}
@@ -376,7 +387,7 @@ export function InquiriesSection({
                     <ListFilter className="size-4 shrink-0" aria-hidden />
                     <span>{filterButtonLabel}</span>
                     {menuFilterCount > 0 ? (
-                      <span className="inquiries-list-filter-count inline-flex min-w-[1.25rem] items-center justify-center rounded-md bg-success px-1.5 py-0.5 font-bold text-white tabular-nums">
+                      <span className="inquiries-list-filter-count inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-success px-1.5 py-0.5 font-bold text-white tabular-nums">
                         {menuFilterCount}
                       </span>
                     ) : null}
@@ -385,10 +396,10 @@ export function InquiriesSection({
                   <DropdownMenuContent
                     align="end"
                     sideOffset={8}
-                    className="min-w-56 rounded-md border-2 border-rn-border-strong p-2 shadow-rn-card"
+                    className="min-w-56 rounded-xl border border-foreground/10 p-2 shadow-lg"
                   >
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                         {t("common.fields.status")}
                       </DropdownMenuLabel>
                       <DropdownMenuRadioGroup
@@ -466,8 +477,8 @@ export function InquiriesSection({
         ) : null}
 
         {!loadError && filtered.length === 0 ? (
-          <div className="flex flex-col items-center gap-4 px-6 py-16 text-center">
-            <div className="flex size-16 items-center justify-center rounded-md border-2 border-rn-border-strong bg-muted/40">
+          <div className={cn("flex flex-col items-center gap-4 px-6 py-16 text-center", cardClass)}>
+            <div className="flex size-16 items-center justify-center rounded-2xl bg-muted">
               <Inbox className="size-8 text-muted-foreground" aria-hidden />
             </div>
             <p className="max-w-sm text-muted-foreground">
@@ -479,15 +490,17 @@ export function InquiriesSection({
         ) : null}
 
         {!loadError && filtered.length > 0 && showCalendarView ? (
-          <InquiriesFollowUpMonthCalendar
-            rows={filtered}
-            totalInquiriesCount={activeInquiries.length}
-            onSelectInquiry={openRow}
-          />
+          <div className={cardClass}>
+            <InquiriesFollowUpMonthCalendar
+              rows={filtered}
+              totalInquiriesCount={activeInquiries.length}
+              onSelectInquiry={openRow}
+            />
+          </div>
         ) : null}
 
         {!loadError && filtered.length > 0 && !showCalendarView ? (
-          <div>
+          <div className={cardClass}>
             <div
               className={cn(
                 "hidden grid-cols-12 md:grid",
@@ -513,7 +526,7 @@ export function InquiriesSection({
                 {t("inquiries.tableUpdated")}
               </div>
             </div>
-            <div className="divide-y divide-rn-border-strong/50">
+            <div className="divide-y divide-foreground/6">
               {pageRows.map((row) => (
                 <button
                   key={row.id}
@@ -577,7 +590,7 @@ export function InquiriesSection({
                   <div className="flex flex-wrap items-center gap-2 md:col-span-2">
                     <span
                       className={cn(
-                        "inquiries-list-status-pill inline-flex rounded-md border-2 px-2.5 py-0.5 font-semibold",
+                        "inquiries-list-status-pill inline-flex rounded-full px-3 py-1 font-semibold",
                         statusBadgeClass(row.status),
                       )}
                     >
@@ -589,7 +602,12 @@ export function InquiriesSection({
                       <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground md:hidden">
                         {t("inquiries.tableNextFollowUp")}
                       </p>
-                      <p className={inquiriesTableCellDateClass}>
+                      <p
+                        className={cn(
+                          inquiriesTableCellDateClass,
+                          isOverdueFollowUp(row) && "font-semibold text-destructive",
+                        )}
+                      >
                         {row.nextFollowUpAtIso
                           ? formatAppDateTime(row.nextFollowUpAtIso, locale)
                           : "—"}
@@ -614,7 +632,7 @@ export function InquiriesSection({
               ))}
             </div>
             {filtered.length > TENANT_LIST_PAGE_SIZE ? (
-              <div className="flex flex-col items-stretch justify-between gap-4 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
+              <div className="flex flex-col items-stretch justify-between gap-4 border-t border-foreground/8 bg-muted/40 px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
                 <span className="inquiries-list-footer-caption font-medium text-rn-footer-text">
                   {t("inquiries.footer.showingRange", {
                     from: (currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1,
@@ -631,7 +649,7 @@ export function InquiriesSection({
                     type="button"
                     variant="outline"
                     size="icon-sm"
-                    className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
+                    className="size-10 rounded-xl border border-foreground/30 bg-card shadow-none hover:border-foreground/50 hover:bg-muted disabled:border-foreground/15"
                     disabled={currentPage <= 1}
                     aria-label={t("common.pagination.prevPage")}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -648,7 +666,7 @@ export function InquiriesSection({
                     type="button"
                     variant="outline"
                     size="icon-sm"
-                    className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
+                    className="size-10 rounded-xl border border-foreground/30 bg-card shadow-none hover:border-foreground/50 hover:bg-muted disabled:border-foreground/15"
                     disabled={currentPage >= totalPages}
                     aria-label={t("common.pagination.nextPage")}
                     onClick={() =>

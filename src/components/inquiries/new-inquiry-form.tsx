@@ -16,7 +16,6 @@ import {
   type BookingInquiryFormInput,
 } from "@/lib/validations";
 import { parseNokFormValue } from "@/lib/bookings/parse-nok-form-value";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { notifyInquiryCreated } from "@/lib/notifications/actions/org-events";
 import { generateClientRequestId } from "@/lib/customers/customer-identity";
@@ -254,9 +253,7 @@ export function NewInquiryForm({
     return (
       <div className="mx-auto w-full max-w-lg space-y-4 pb-12">
         <div
-          className={cn(
-            "rounded-lg border-2 border-rn-border-strong bg-card p-6 shadow-rn-card",
-          )}
+          className={cn("rounded-2xl bg-card p-6 ring-1 ring-foreground/8")}
         >
           <p className="text-rn-text-body">
             {t("inquiries.form.noAccess")}
@@ -274,23 +271,23 @@ export function NewInquiryForm({
 
   return (
     <div className="mx-auto w-full pb-12 md:pb-8">
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <header className="flex items-center gap-3 border-b-2 border-rn-border-strong bg-card px-3 py-3 sm:gap-4 sm:px-4 md:px-5">
+      <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
+        <header className="flex items-center gap-3 border-b border-foreground/8 bg-card px-4 py-4 sm:gap-4 sm:px-6 md:px-8">
           <Link
             href="/app/inquiries"
             aria-label={t("inquiries.backToInquiries")}
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
-              "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
+              "shrink-0 rounded-full text-rn-text-heading hover:bg-muted",
             )}
           >
             <ArrowLeft className="size-5 text-success" aria-hidden />
           </Link>
           <div className="min-w-0 flex-1">
-            <h1 className="font-heading text-xl font-bold tracking-tight text-rn-text-heading sm:text-2xl md:text-3xl">
+            <h1 className="font-heading text-2xl font-bold tracking-[-0.02em] text-rn-text-heading md:text-3xl">
               {t("inquiries.new")}
             </h1>
-            <p className="mt-0.5 text-xs leading-snug text-muted-foreground sm:text-sm md:text-base md:leading-relaxed">
+            <p className="mt-1 text-sm leading-snug text-muted-foreground md:text-base">
               {t("inquiries.form.subtitle")}
             </p>
           </div>
@@ -299,7 +296,7 @@ export function NewInquiryForm({
             aria-label={t("inquiries.closeGoToInquiries")}
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
-              "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
+              "shrink-0 rounded-full text-rn-text-heading hover:bg-muted",
             )}
           >
             <X className="size-5 text-rn-text-slate" aria-hidden />
@@ -311,7 +308,7 @@ export function NewInquiryForm({
           className="flex flex-col"
           onSubmit={handleSubmit(onSubmit)}
         >
-          <div className="flex flex-col bg-card px-6 py-6 sm:px-8 sm:py-7">
+          <div className="flex flex-col bg-card px-4 py-5 sm:px-8 sm:py-7">
             <InquiryFormBody
               register={register}
               setValue={setValue}
@@ -325,17 +322,23 @@ export function NewInquiryForm({
               layout="sectioned"
             />
           </div>
-          <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-muted/35 px-6 py-4 sm:flex-row sm:justify-end sm:px-8">
+          <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-foreground/10 bg-card/95 px-4 py-4 backdrop-blur sm:flex-row sm:justify-end sm:px-8">
             <Link
               href="/app/inquiries"
               className={cn(
                 buttonVariants({ variant: "outline", size: "cta" }),
-                "inline-flex items-center justify-center border-2 border-rn-border-strong font-heading font-bold",
+                "inline-flex items-center justify-center rounded-xl border border-foreground/30 bg-card font-heading font-bold text-foreground shadow-none hover:border-foreground/50 hover:bg-muted",
               )}
             >
               {t("common.actions.cancel")}
             </Link>
-            <Button type="submit" variant="success" size="cta" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              variant="success"
+              size="cta"
+              className="rounded-xl shadow-none"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? t("inquiries.registering") : t("inquiries.register")}
             </Button>
           </div>

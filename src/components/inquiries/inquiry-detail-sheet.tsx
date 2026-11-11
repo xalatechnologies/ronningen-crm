@@ -513,7 +513,7 @@ export function InquiryDetailSheet({
         className="flex h-full max-h-dvh w-[min(100%,92vw)] max-w-2xl flex-col gap-0 overflow-hidden p-0 lg:max-w-3xl"
         showCloseButton
       >
-        <SheetHeader className="shrink-0 border-b-2 border-rn-border-strong bg-rn-surface-table-head py-5 pl-6 pr-14 sm:py-6 sm:pl-8 sm:pr-16">
+        <SheetHeader className="shrink-0 border-b border-foreground/10 bg-card py-5 pl-6 pr-14 sm:py-6 sm:pl-8 sm:pr-16">
           <div className="flex items-start justify-between gap-3">
             <SheetTitle className="min-w-0 flex-1 font-heading text-left text-xl font-bold tracking-tight text-rn-text-heading">
               {inquiry.customerName}
@@ -521,12 +521,12 @@ export function InquiryDetailSheet({
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
               <span
                 className={cn(
-                  "rounded-md border-2 px-3 py-1 text-sm font-semibold",
+                  "rounded-full px-3 py-1 text-sm font-semibold",
                   isConverted
-                    ? "border-success/50 bg-success/15 text-success"
+                    ? "bg-success/15 text-success"
                     : inquiry.status === "lost"
-                      ? "border-muted-foreground/40 bg-muted/40"
-                      : "border-rn-border-strong bg-card",
+                      ? "bg-muted text-muted-foreground"
+                      : "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200",
                 )}
               >
                 {inquiryStatusLabel(inquiry.status, t)}
@@ -580,7 +580,7 @@ export function InquiryDetailSheet({
           <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="flex flex-col gap-6 px-6 py-6 sm:px-8 sm:py-7">
               {isConverted ? (
-                <div className="rounded-md border-2 border-success/35 bg-success/10 px-4 py-3 text-sm text-foreground">
+                <div className="rounded-xl bg-success/10 px-4 py-3 text-sm text-foreground">
                   {t("inquiries.convertedBannerBefore")}{" "}
                   <Link
                     href="/app/bookings"
@@ -647,11 +647,12 @@ export function InquiryDetailSheet({
                     catalogLoading={!catalogReady}
                     disabled={!canManage}
                     lockCustomer
+                    layout="sectioned"
                   />
                 </form>
               )}
 
-              <div className="border-t-2 border-rn-border-strong pt-6">
+              <div className="border-t border-foreground/10 pt-6">
                 <h3 className="font-heading text-lg font-semibold text-rn-text-heading">
                   {t("inquiries.activity")}
                 </h3>
@@ -663,13 +664,13 @@ export function InquiryDetailSheet({
                       void handleSubmitNote(onAddNote)();
                     }}
                   >
-                    <Label htmlFor="inq-act-note" className="text-xs uppercase">
+                    <Label htmlFor="inq-act-note" className="text-sm font-semibold">
                       {t("inquiries.newNote")}
                     </Label>
                     <Textarea
                       id="inq-act-note"
                       rows={3}
-                      className="rounded-md border-2 border-rn-border-strong bg-background p-3 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                      className="rounded-xl border border-foreground/25 bg-background p-3 shadow-none focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
                       {...registerNote("body")}
                     />
                     {noteErrors.body ? (
@@ -700,7 +701,7 @@ export function InquiryDetailSheet({
                       return (
                         <li
                           key={a.id}
-                          className="rounded-md border border-rn-border-strong/60 bg-muted/25 px-3 py-2 text-sm"
+                          className="rounded-xl bg-muted/50 px-4 py-3 text-sm"
                         >
                           {isEditing ? (
                             <div className="space-y-2">
@@ -708,7 +709,7 @@ export function InquiryDetailSheet({
                                 rows={3}
                                 value={editingNoteBody}
                                 onChange={(e) => setEditingNoteBody(e.target.value)}
-                                className="rounded-md border-2 border-rn-border-strong bg-background p-3 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                                className="rounded-xl border border-foreground/25 bg-background p-3 shadow-none focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
                                 aria-label={t("inquiries.editNoteAria")}
                               />
                               <div className="flex flex-wrap gap-2">
@@ -786,14 +787,14 @@ export function InquiryDetailSheet({
             <div
               className={cn(
                 RN_MODAL_FOOTER,
-                "flex shrink-0 flex-col gap-3 border-t-2 border-rn-border-strong bg-muted/35 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-8 sm:py-4",
+                "flex shrink-0 flex-col gap-3 border-t border-foreground/10 bg-card px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-8 sm:py-4",
               )}
             >
               <Button
                 type="button"
                 variant="destructive"
                 size="cta"
-                className="w-full sm:w-auto"
+                className="w-full rounded-xl shadow-none sm:w-auto"
                 onClick={() => setDeleteDialogOpen(true)}
               >
                 {t("inquiries.deleteInquiry")}
@@ -803,7 +804,7 @@ export function InquiryDetailSheet({
                   href={`/app/bookings/new?inquiryId=${inquiry.id}`}
                   className={cn(
                     buttonVariants({ variant: "success", size: "cta" }),
-                    "inline-flex w-full justify-center sm:w-auto",
+                    "inline-flex w-full justify-center rounded-xl shadow-none sm:w-auto",
                   )}
                 >
                   {t("inquiries.convertToBooking")}
@@ -812,7 +813,7 @@ export function InquiryDetailSheet({
                   type="button"
                   variant="default"
                   size="cta"
-                  className="w-full sm:w-auto"
+                  className="w-full rounded-xl shadow-none sm:w-auto"
                   disabled={form.formState.isSubmitting}
                   onClick={() => void form.handleSubmit(onSave)()}
                 >
