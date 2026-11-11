@@ -142,7 +142,7 @@ export function AdminAuditToolbar({
                   "min-h-11 rounded-[length:calc(var(--app-radius)-2px)] border-2 px-3 py-2 text-app-sm transition-colors",
                   active
                     ? RN_ADMIN_SEGMENT_ACTIVE
-                    : "border-transparent font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+                    : "border-foreground/20 bg-card font-medium text-foreground hover:bg-muted hover:text-foreground",
                 )}
                 aria-pressed={active ? "true" : "false"}
               >

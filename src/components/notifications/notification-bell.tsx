@@ -37,8 +37,8 @@ export function NotificationBell() {
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          "relative flex size-11 shrink-0 items-center justify-center rounded-[length:var(--app-radius)] border-2 border-transparent outline-none transition-colors",
-          "hover:bg-muted/45 focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "relative flex size-11 shrink-0 items-center justify-center rounded-xl border border-foreground/20 bg-muted/60 outline-none transition-colors",
+          "hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           "data-popup-open:bg-muted/30",
         )}
         aria-label={

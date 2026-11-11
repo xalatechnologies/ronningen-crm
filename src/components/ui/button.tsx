@@ -11,14 +11,14 @@ const buttonVariants = cva(
         default:
           "bg-primary !font-semibold !text-primary-foreground [a]:hover:bg-primary/80 [a]:!text-primary-foreground",
         outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "border-foreground/30 bg-card text-foreground hover:border-foreground/50 hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "border-foreground/15 bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "bg-muted/70 text-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:bg-muted/50 dark:hover:bg-muted/80",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+          "border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+        link: "font-semibold text-primary underline underline-offset-4 hover:no-underline",
         /** Primærhandling (grønn) — brukes med `size="cta"` for felles størrelse i appen. */
         success:
           "border-2 border-rn-accent-border bg-success !font-semibold !text-white shadow-md hover:bg-rn-accent-fill-hover hover:!text-white visited:!text-white [a]:!text-white [a]:visited:!text-white [a]:hover:bg-rn-accent-fill-hover [a]:hover:!text-white focus-visible:border-success focus-visible:ring-success/35 [&_svg]:!text-white",

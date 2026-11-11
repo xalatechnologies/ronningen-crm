@@ -225,7 +225,7 @@ export function NotificationInbox() {
                       "min-h-10 flex-1 rounded-[length:calc(var(--app-radius)-2px)] px-3 py-2 transition-colors",
                       active
                         ? "border-2 border-rn-accent-border bg-rn-surface-gradient-from font-bold text-success shadow-sm"
-                        : "border-2 border-transparent font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+                        : "border border-foreground/20 bg-card font-medium text-foreground hover:bg-muted hover:text-foreground",
                     )}
                     aria-pressed={active}
                   >
@@ -341,9 +341,9 @@ export function NotificationInbox() {
                     {notification.action_url ? (
                       <Button
                         type="button"
-                        variant="link"
+                        variant="outline"
                         size="sm"
-                        className="mt-2 h-auto px-0 text-success"
+                        className="mt-2 h-9 rounded-xl px-3.5 text-success"
                         onClick={() => {
                           void markRead(notification.id);
                           router.push(notification.action_url!);
@@ -358,9 +358,8 @@ export function NotificationInbox() {
                   <DropdownMenu>
                     <DropdownMenuTrigger
                       className={cn(
-                        "flex size-9 shrink-0 items-center justify-center rounded-[length:var(--app-radius)] border-2 border-transparent text-muted-foreground outline-none transition-colors",
-                        "hover:bg-muted/50 hover:text-foreground focus-visible:ring-2 focus-visible:ring-success/35",
-                        "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 data-popup-open:opacity-100",
+                        "flex size-9 shrink-0 items-center justify-center rounded-xl border border-foreground/20 bg-muted/60 text-foreground outline-none transition-colors",
+                        "hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-success/35",
                       )}
                       aria-label={t("notifications.inbox.actionsAria")}
                     >

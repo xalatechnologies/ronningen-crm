@@ -399,10 +399,10 @@ export function PricingSection({
 
   const catalogActionButtonClass = (isPopular: boolean) =>
     cn(
-      "rounded-md p-2.5 transition-colors",
+      "rounded-lg p-2.5 transition-colors",
       isPopular
-        ? "text-white/70 hover:bg-white/10 hover:text-white"
-        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+        ? "bg-white/10 text-white hover:bg-white/20 hover:text-white"
+        : "bg-muted text-foreground hover:bg-muted/70 hover:text-foreground",
     );
 
   const sortedPackages = useMemo(

@@ -113,6 +113,6 @@ export function adminSegmentFilterButtonClass(
     ADMIN_SEGMENT_BUTTON_MIN_WIDTH[minWidth],
     active
       ? RN_ADMIN_SEGMENT_ACTIVE
-      : "border-2 border-transparent font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+      : "border border-foreground/20 bg-card font-medium text-foreground hover:bg-muted hover:text-foreground",
   );
 }

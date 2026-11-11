@@ -145,8 +145,8 @@ export function AppHeader({ children }: { children?: ReactNode }) {
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              "flex shrink-0 items-center gap-2 rounded-[length:var(--app-radius)] border-2 border-transparent py-1.5 pr-1 pl-1 outline-none transition-colors",
-              "hover:bg-muted/45 focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              "flex shrink-0 items-center gap-2 rounded-xl border border-foreground/20 bg-muted/60 py-1.5 pr-1.5 pl-1.5 outline-none transition-colors",
+              "hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               "disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-muted/30",
             )}
             disabled={loading}
