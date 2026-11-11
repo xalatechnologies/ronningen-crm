@@ -126,10 +126,10 @@ export function AppHeader({ children }: { children?: ReactNode }) {
           />
           <SheetContent
             side="left"
-            className="w-[min(100%,280px)] border-sidebar-border bg-sidebar p-0 text-sidebar-foreground"
+            className="w-[min(100%,280px)] border-sidebar-border bg-sidebar p-0 text-sidebar-foreground [&_[data-slot=sheet-close]]:bg-white/10 [&_[data-slot=sheet-close]]:text-white [&_[data-slot=sheet-close]]:hover:bg-white/20"
           >
             <SheetHeader className="border-b border-sidebar-border px-4 py-3 text-left">
-              <SheetTitle className="font-heading !text-app-md font-bold tracking-tight text-sidebar-foreground">
+              <SheetTitle className="font-heading !text-app-md font-bold tracking-tight !text-white">
                 {APP_NAME}
               </SheetTitle>
             </SheetHeader>

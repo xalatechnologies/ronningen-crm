@@ -15,7 +15,7 @@ export function BrandMark({ className }: { className?: string }) {
       aria-label={APP_NAME}
       className={cn("size-full", className)}
     >
-      <rect width="48" height="48" rx="12" fill="#1a4331" />
+      <rect width="48" height="48" rx="12" style={{ fill: "var(--brand-tile, #1a4331)" }} />
       <rect x="13" y="12" width="6" height="24" rx="3" fill="#ffffff" />
       <rect x="13" y="12" width="22" height="6" rx="3" fill="#ffffff" />
       <rect x="19" y="21" width="10" height="6" rx="3" fill="#85b098" />

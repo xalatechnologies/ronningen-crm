@@ -4,7 +4,7 @@ import { ADMIN_NAV_ICONS } from "@/config/admin-nav-icons";
 import { adminNavigationGroups, adminRoutes } from "@/config/admin-routes";
 import { useTranslation } from "@/i18n/client";
 import { adminNavGroupLabel, adminNavLabel } from "@/lib/navigation/nav-labels";
-import { RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
+import { RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -18,7 +18,7 @@ function isActive(pathname: string, href: string) {
 const navLinkClassName = cn(
   "admin-sidebar-link flex min-h-[max(2.5rem,var(--app-tap-target-min))] items-center gap-2.5 rounded-xl py-[length:calc(var(--app-card-padding)*0.45)] pl-2.5 pr-[length:calc(var(--app-card-padding)*0.45)] transition-all outline-none select-none md:gap-3 md:py-[length:calc(var(--app-card-padding)*0.5)] md:pl-3 md:pr-[length:calc(var(--app-card-padding)*0.55)]",
   RN_TEXT_NAV_LINK,
-  "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+  "focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
 );
 
 /** Avoid aria-current mismatches during hydration (pathname extensions / tooling). */
@@ -77,8 +77,8 @@ export function AdminNavLinks({
                 className={cn(
                   navLinkClassName,
                   active
-                    ? "bg-success/12 font-semibold text-success dark:!text-white"
-                    : "font-medium text-rn-text-body hover:bg-muted hover:text-rn-text-heading",
+                    ? "bg-white/15 font-semibold text-white"
+                    : "font-medium text-white/80 hover:bg-white/10 hover:text-white",
                 )}
                 aria-current={active ? "page" : undefined}
                 aria-label={
@@ -90,7 +90,7 @@ export function AdminNavLinks({
                 <Icon
                   className={cn(
                     "size-5 shrink-0 md:size-[1.375rem]",
-                    active ? RN_NAV_LINK_ACTIVE_ICON : "opacity-85",
+                    active ? "text-white opacity-100" : "opacity-85",
                   )}
                   aria-hidden
                 />

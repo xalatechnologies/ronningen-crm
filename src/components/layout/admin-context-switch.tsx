@@ -38,7 +38,7 @@ export function AdminContextSwitch({
     <div
       role="group"
       aria-label={t("adminNav.switchAria")}
-      className={cn("flex w-full gap-1 rounded-xl bg-muted p-1", className)}
+      className={cn("flex w-full gap-1 rounded-xl bg-black/25 p-1", className)}
     >
       {OPTIONS.map((option) => {
         const isActive = active === option.id;
@@ -51,10 +51,10 @@ export function AdminContextSwitch({
             className={cn(
               RN_TEXT_SEGMENT,
               "flex min-h-10 flex-1 items-center justify-center rounded-lg px-2 py-1.5 text-center text-app-xs transition-colors outline-none select-none md:min-h-11 md:text-app-sm",
-              "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              "focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
               isActive
-                ? "bg-card font-bold text-success shadow-sm dark:!text-white"
-                : "font-medium text-rn-text-body hover:bg-card/70 hover:text-rn-text-heading",
+                ? "bg-white font-bold !text-[#1a4331] shadow-sm"
+                : "font-medium text-white/80 hover:bg-white/10 hover:text-white",
             )}
           >
             {labels[option.id]}

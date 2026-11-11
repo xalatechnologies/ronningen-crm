@@ -6,7 +6,7 @@ import { SIDEBAR_SEGMENT_ICONS } from "@/config/nav-icons";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { prefetchTenantRoute } from "@/lib/queries/prefetch-route";
 import { getQueryClient } from "@/lib/queries/get-query-client";
-import { RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
+import { RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { appNavLabel } from "@/lib/navigation/nav-labels";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
@@ -64,7 +64,7 @@ export function AppSidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        "flex w-(--sidebar-width) flex-col border-r border-foreground/10 bg-sidebar text-sidebar-foreground antialiased",
+        "flex w-(--sidebar-width) flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground antialiased",
         className,
       )}
     >
@@ -73,7 +73,7 @@ export function AppSidebar({ className }: { className?: string }) {
           <Link
             href="/app/dashboard"
             className={cn(
-              "relative flex size-14 shrink-0 overflow-hidden rounded-xl bg-black md:size-16",
+              "relative flex size-14 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/20 [--brand-tile:#0c1f16] dark:[--brand-tile:#1a4331] md:size-16",
             )}
             aria-label={t("navigation.goToDashboardAria", { appName: APP_NAME })}
             onMouseEnter={() => prefetchRoute("/app/dashboard")}
@@ -91,10 +91,10 @@ export function AppSidebar({ className }: { className?: string }) {
             )}
           </Link>
           <div className="min-w-0">
-            <p className="font-heading text-app-base font-bold tracking-tight text-rn-text-heading">
+            <p className="font-heading text-app-base font-bold tracking-tight text-white">
               {displayName}
             </p>
-            <p className="text-app-xs font-medium text-rn-text-slate">
+            <p className="text-app-xs font-medium text-white/65">
               {currentOrganization ? APP_NAME : t("common.account.administration")}
             </p>
           </div>
@@ -139,18 +139,18 @@ export function AppSidebar({ className }: { className?: string }) {
               className={cn(
                 "flex min-h-[max(2.75rem,var(--app-tap-target-min))] items-center gap-[length:var(--spacing-app-gap)] rounded-xl py-[length:calc(var(--app-card-padding)*0.55)] pl-3 pr-[length:calc(var(--app-card-padding)*0.55)] transition-all outline-none select-none md:gap-[length:var(--spacing-app-gap)] md:py-[length:calc(var(--app-card-padding)*0.65)] md:pl-[length:calc(var(--app-card-padding)*0.45)] md:pr-[length:calc(var(--app-card-padding)*0.65)]",
                 RN_TEXT_NAV_LINK,
-                "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                "focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
                 active
-                  ? "bg-success/12 font-semibold text-success dark:!text-white"
-                  : "font-medium text-rn-text-body hover:bg-muted hover:text-rn-text-heading",
-                pending && !active && "bg-muted/80 opacity-80",
+                  ? "bg-white/15 font-semibold text-white"
+                  : "font-medium text-white/80 hover:bg-white/10 hover:text-white",
+                pending && !active && "bg-white/10 opacity-80",
               )}
               aria-current={active ? "page" : undefined}
             >
               <Icon
                 className={cn(
                   "size-7 shrink-0 md:size-8",
-                  active ? RN_NAV_LINK_ACTIVE_ICON : "opacity-85",
+                  active ? "text-white opacity-100" : "opacity-85",
                   pending && !active && "animate-pulse",
                 )}
                 aria-hidden
@@ -161,7 +161,7 @@ export function AppSidebar({ className }: { className?: string }) {
         })}
       </nav>
       <footer
-        className="shrink-0 border-t border-foreground/8 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)] md:py-5"
+        className="shrink-0 border-t border-sidebar-border px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)] md:py-5"
       >
         <AdminContextSwitch active="app" />
       </footer>
