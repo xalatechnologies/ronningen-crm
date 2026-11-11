@@ -33,9 +33,9 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 const labelClass =
-  "text-app-xs font-semibold uppercase tracking-wider text-muted-foreground";
+  "text-app-xs font-semibold text-muted-foreground";
 const fieldClass =
-  "h-12 rounded-md border-2 border-rn-border-strong bg-background px-4 text-base focus-visible:border-success focus-visible:ring-success/25";
+  "h-11 rounded-xl border border-foreground/25 bg-background px-4 text-base hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 aria-invalid:border-destructive";
 
 function FormSection({
   icon: Icon,
@@ -49,9 +49,9 @@ function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-5 border-b border-rn-border-strong/50 pb-6 last:border-b-0 last:pb-0">
+    <section className="flex flex-col gap-5 border-b border-foreground/10 pb-6 last:border-b-0 last:pb-0">
       <div className="flex items-start gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30 text-muted-foreground">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/60 ring-1 ring-foreground/10 text-muted-foreground">
           <Icon className="size-4" aria-hidden />
         </div>
         <div>
@@ -285,7 +285,7 @@ export function OrganizationProfileForm({
               id="org-pay"
               rows={4}
               placeholder={t("settings.orgProfile.paymentInstructionsPlaceholder")}
-              className="rounded-md border-2 border-rn-border-strong bg-background p-3 text-base focus-visible:border-success focus-visible:ring-success/25"
+              className="rounded-xl border border-foreground/25 bg-background p-3 text-base focus-visible:border-success focus-visible:ring-success/25"
               {...register("paymentInstructions")}
             />
             {errors.paymentInstructions ? (
@@ -296,7 +296,7 @@ export function OrganizationProfileForm({
           </div>
         </FormSection>
 
-        <div className="flex justify-end border-t border-rn-border-strong/50 pt-5">
+        <div className="flex justify-end border-t border-foreground/10 pt-5">
           <Button
             type="submit"
             variant="success"
@@ -319,8 +319,8 @@ export function OrganizationProfileForm({
           "flex flex-col gap-5 p-5 md:p-6 lg:sticky lg:top-6",
         )}
       >
-        <div className="flex items-start gap-3 border-b border-rn-border-strong/50 pb-5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30 text-muted-foreground">
+        <div className="flex items-start gap-3 border-b border-foreground/10 pb-5">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/60 ring-1 ring-foreground/10 text-muted-foreground">
             <FileText className="size-4" aria-hidden />
           </div>
           <div>
@@ -333,7 +333,7 @@ export function OrganizationProfileForm({
           </div>
         </div>
 
-        <div data-theme="light" className="rounded-md border-2 border-zinc-900 bg-white p-5 text-sm text-zinc-800 shadow-sm">
+        <div data-theme="light" className="rounded-xl border border-zinc-300 bg-white p-5 text-sm text-zinc-800 shadow-sm">
           <p className="font-heading text-xl font-bold text-zinc-950">
             {preview.name || t("settings.orgProfile.displayNameFallback")}
           </p>

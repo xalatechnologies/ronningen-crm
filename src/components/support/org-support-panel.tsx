@@ -30,17 +30,17 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const labelClass =
-  "text-app-xs font-semibold uppercase tracking-wider text-muted-foreground";
+  "text-app-xs font-semibold text-muted-foreground";
 const fieldClass =
-  "h-12 rounded-md border-2 border-rn-border-strong bg-background px-4 text-base focus-visible:border-success focus-visible:ring-success/25";
+  "h-11 rounded-xl border border-foreground/25 bg-background px-4 text-base hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 aria-invalid:border-destructive";
 const textareaClass =
-  "w-full rounded-md border-2 border-rn-border-strong bg-background px-4 py-3 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "w-full rounded-xl border border-foreground/25 bg-background px-4 py-3 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
 function statusTone(status: OrgSupportTicket["status"]): string {
   if (status === "open")
     return "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300";
   if (status === "waiting")
-    return "border-rn-border-strong bg-muted/40 text-muted-foreground";
+    return "border-foreground/15 bg-muted/50 text-muted-foreground";
   return "border-success/35 bg-success/8 text-success dark:!text-white";
 }
 
@@ -79,7 +79,7 @@ function TicketThread({
   }
 
   return (
-    <div className="mt-4 space-y-4 border-t border-rn-border-strong/50 pt-4">
+    <div className="mt-4 space-y-4 border-t border-foreground/10 pt-4">
       {ticket.messages.length === 0 ? (
         <p className="text-app-sm text-muted-foreground">
           {t("support.panel.noMessages")}
@@ -90,10 +90,10 @@ function TicketThread({
             <li
               key={message.id}
               className={cn(
-                "rounded-md border-2 px-4 py-3",
+                "rounded-xl border px-4 py-3",
                 message.isFromPlatform
                   ? "border-success/30 bg-success/5"
-                  : "border-rn-border-strong bg-muted/20",
+                  : "border-foreground/15 bg-muted/40",
               )}
             >
               <p className="whitespace-pre-wrap text-app-sm">{message.body}</p>
@@ -212,9 +212,9 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,340px)] lg:items-start">
       <section className={cn(RN_CARD_SHELL, "flex flex-col p-5 md:p-6")}>
-        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-rn-border-strong/50 pb-5">
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-foreground/10 pb-5">
           <div className="flex items-start gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30 text-muted-foreground">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 ring-1 ring-foreground/10 text-muted-foreground">
               <Inbox className="size-5" aria-hidden />
             </div>
             <div>
@@ -245,10 +245,10 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
                 <li
                   key={ticket.id}
                   className={cn(
-                    "rounded-md border-2 transition-colors",
+                    "rounded-xl border transition-colors",
                     expanded
-                      ? "border-rn-accent-border/60 bg-rn-surface-gradient-from/30"
-                      : "border-rn-border-strong/70 bg-background hover:border-rn-border-strong",
+                      ? "border-success/40 bg-success/8"
+                      : "border-foreground/20 bg-background hover:border-foreground/40",
                   )}
                 >
                   <div className="flex gap-3 p-4">
@@ -257,7 +257,7 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
                       onClick={() =>
                         setExpandedId(expanded ? null : ticket.id)
                       }
-                      className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md border-2 border-rn-border-strong text-muted-foreground transition-colors hover:bg-muted/40"
+                      className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-xl border border-foreground/25 text-muted-foreground transition-colors hover:bg-muted/40"
                       aria-expanded={expanded}
                       aria-label={
                         expanded
@@ -276,12 +276,12 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
                         <p className="font-semibold text-foreground">
                           {ticket.subject}
                         </p>
-                        <span className="rounded-md border-2 border-rn-border-strong px-2 py-0.5 text-app-xs font-semibold text-muted-foreground">
+                        <span className="rounded-xl border border-foreground/25 px-2 py-0.5 text-app-xs font-semibold text-muted-foreground">
                           {t(`support.category.${ticket.category}`)}
                         </span>
                         <span
                           className={cn(
-                            "rounded-md border-2 px-2 py-0.5 text-app-xs font-semibold",
+                            "rounded-full border px-2.5 py-0.5 text-app-xs font-semibold",
                             statusTone(ticket.status),
                           )}
                         >
@@ -313,8 +313,8 @@ export function OrgSupportPanel({ data }: { data: OrgSupportOverview }) {
           "flex flex-col gap-6 p-5 md:p-6 lg:sticky lg:top-6",
         )}
       >
-        <div className="flex items-start gap-3 border-b border-rn-border-strong/50 pb-5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30 text-muted-foreground">
+        <div className="flex items-start gap-3 border-b border-foreground/10 pb-5">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 ring-1 ring-foreground/10 text-muted-foreground">
             <MessageSquarePlus className="size-5" aria-hidden />
           </div>
           <div>

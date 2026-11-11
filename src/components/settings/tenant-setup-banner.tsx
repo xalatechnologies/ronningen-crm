@@ -51,13 +51,13 @@ export function TenantSetupBanner({
   return (
     <div
       className={cn(
-        "border-2 border-success/40 bg-success/5 px-5 py-4 md:px-6",
+        "border border-success/30 bg-success/8 px-5 py-4 md:px-6",
         RN_CARD_SHELL,
         className,
       )}
       role="status"
     >
-      <p className="text-app-xs font-semibold uppercase tracking-wider text-success">
+      <p className="text-app-xs font-semibold text-success">
         {stepLabel}
       </p>
       <h2 className="mt-1 font-heading text-lg font-bold text-foreground">

@@ -72,15 +72,15 @@ function SubscriptionStatusBadge({
       : status === "past_due"
         ? "border-destructive/40 bg-destructive/10 text-destructive"
         : status === "trialing"
-          ? "border-rn-accent-border/50 bg-rn-surface-gradient-from text-success dark:!text-white"
+          ? "border-success/30 bg-success/10 text-success dark:!text-white"
           : status === "incomplete"
             ? "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200"
-            : "border-rn-border-strong bg-muted/30 text-muted-foreground";
+            : "border-foreground/15 bg-muted/50 text-muted-foreground";
 
   return (
     <span
       className={cn(
-        "inline-flex rounded-md border-2 px-2.5 py-0.5 text-app-xs font-semibold md:text-app-sm",
+        "inline-flex rounded-full border px-2.5 py-0.5 text-app-xs font-semibold md:text-app-sm",
         tone,
         className,
       )}
@@ -201,7 +201,7 @@ const attentionToneClass: Record<AttentionMessage["tone"], string> = {
     "border-destructive/45 bg-destructive/8 text-destructive [&_strong]:text-destructive",
   warning:
     "border-amber-500/40 bg-amber-500/[0.06] text-foreground [&_strong]:text-foreground",
-  info: "border-rn-border-strong/70 bg-muted/25 text-muted-foreground [&_strong]:text-foreground",
+  info: "border-foreground/15 bg-muted/50 text-muted-foreground [&_strong]:text-foreground",
 };
 
 export function BillingSettingsPanel({
@@ -489,16 +489,16 @@ export function BillingSettingsPanel({
         }
         actions={
           billingExempt ? (
-            <span className="rounded-md border border-success/40 bg-success/10 px-2.5 py-1 text-app-xs font-semibold text-success">
+            <span className="rounded-full border border-success/40 bg-success/10 px-2.5 py-1 text-app-xs font-semibold text-success">
               {t("billing.exemptBadge")}
             </span>
           ) : billingOn && isSandbox ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-500/35 bg-amber-500/[0.08] px-2.5 py-1 text-app-xs font-semibold text-amber-900 dark:text-amber-100">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/35 bg-amber-500/[0.08] px-2.5 py-1 text-app-xs font-semibold text-amber-900 dark:text-amber-100">
               <FlaskConical className="size-3.5" aria-hidden />
               {billingModeLabel}
             </span>
           ) : billingOn ? (
-            <span className="rounded-md border border-rn-border-strong/60 bg-muted/30 px-2.5 py-1 text-app-xs font-semibold text-muted-foreground">
+            <span className="rounded-full border border-foreground/15 bg-muted/50 px-2.5 py-1 text-app-xs font-semibold text-muted-foreground">
               {billingModeLabel}
             </span>
           ) : null
@@ -508,7 +508,7 @@ export function BillingSettingsPanel({
       {billingExempt ? (
         <div
           role="status"
-          className="rounded-[length:var(--app-radius)] border-2 border-success/35 bg-success/10 px-4 py-3.5 md:px-5 md:py-4"
+          className="rounded-2xl border border-success/35 bg-success/10 px-4 py-3.5 md:px-5 md:py-4"
         >
           <p className="text-app-sm font-semibold text-success">
             {t("billing.exemptTitle")}
@@ -523,7 +523,7 @@ export function BillingSettingsPanel({
         <div
           role="alert"
           className={cn(
-            "rounded-[length:var(--app-radius)] border-2 px-4 py-3.5 md:px-5 md:py-4",
+            "rounded-2xl border px-4 py-3.5 md:px-5 md:py-4",
             attentionToneClass[attention.tone],
           )}
         >
@@ -534,7 +534,7 @@ export function BillingSettingsPanel({
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,320px)] lg:items-start">
         <section className={cn(RN_CARD_SHELL, "flex flex-col gap-6 p-5 md:p-6")}>
-          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-rn-border-strong/50 pb-5">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-foreground/10 pb-5">
             <div>
               <h2 className="font-heading text-lg font-semibold text-foreground md:text-xl">
                 {t("billing.subscription")}
@@ -552,7 +552,7 @@ export function BillingSettingsPanel({
 
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
-              <dt className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <dt className="text-app-xs font-semibold text-muted-foreground">
                 {t("billing.currentStatus")}
               </dt>
               <dd className="mt-1.5">
@@ -560,7 +560,7 @@ export function BillingSettingsPanel({
               </dd>
             </div>
             <div>
-              <dt className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <dt className="text-app-xs font-semibold text-muted-foreground">
                 {t("billing.billingPeriod")}
               </dt>
               <dd className="mt-1.5 text-app-sm font-medium text-foreground">
@@ -571,7 +571,7 @@ export function BillingSettingsPanel({
             </div>
           </dl>
 
-          <div className="flex flex-col gap-3 border-t border-rn-border-strong/50 pt-5">
+          <div className="flex flex-col gap-3 border-t border-foreground/10 pt-5">
             {!billingExempt && billingOn && showCheckoutCta && isOwner ? (
               <Button
                 type="button"
@@ -606,7 +606,7 @@ export function BillingSettingsPanel({
                 className={cn(
                   "w-full",
                   showCheckout &&
-                    "border-2 border-success/55 bg-success/10 font-semibold text-success shadow-sm hover:bg-success/20 dark:!text-white [&_svg]:text-success dark:[&_svg]:!text-white",
+                    "border border-success/55 bg-success/10 font-semibold text-success shadow-sm hover:bg-success/20 dark:!text-white [&_svg]:text-success dark:[&_svg]:!text-white",
                 )}
                 disabled={actionLoading}
                 onClick={() => void handlePortal()}
@@ -617,7 +617,7 @@ export function BillingSettingsPanel({
             ) : null}
 
             {!billingExempt && billingOn && (showCheckout || showPortal) && !isOwner ? (
-              <p className="rounded-md border border-rn-border-strong/60 bg-muted/25 px-4 py-3 text-app-sm text-muted-foreground">
+              <p className="rounded-xl bg-muted/50 ring-1 ring-foreground/10 px-4 py-3 text-app-sm text-muted-foreground">
                 {t("billing.ownerOnly")}
               </p>
             ) : null}
@@ -642,7 +642,7 @@ export function BillingSettingsPanel({
           </div>
 
           {showDevIds && subscription?.provider_customer_id ? (
-            <div className="rounded-md border border-dashed border-rn-border-strong/60 bg-muted/15 px-3 py-2 font-mono text-app-xs text-muted-foreground">
+            <div className="rounded-xl border border-dashed border-foreground/25 bg-muted/15 px-3 py-2 font-mono text-app-xs text-muted-foreground">
               <p>kunde: {subscription.provider_customer_id}</p>
               {subscription.provider_subscription_id ? (
                 <p>abonnement: {subscription.provider_subscription_id}</p>
@@ -653,7 +653,7 @@ export function BillingSettingsPanel({
 
         <aside className={cn(RN_CARD_SHELL, "flex flex-col gap-5 p-5 md:p-6")}>
           <div>
-            <p className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-app-xs font-semibold text-muted-foreground">
               {t("billing.includedInPlan")}
             </p>
             <h2 className="mt-1 font-heading text-xl font-semibold text-foreground">
@@ -670,7 +670,7 @@ export function BillingSettingsPanel({
             </p>
           </div>
 
-          <ul className="flex flex-col gap-2 border-t border-rn-border-strong/50 pt-5">
+          <ul className="flex flex-col gap-2 border-t border-foreground/10 pt-5">
             {plan.features.map((feature) => (
               <li
                 key={feature}

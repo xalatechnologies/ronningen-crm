@@ -16,9 +16,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 const labelClass =
-  "text-app-xs font-semibold uppercase tracking-wider text-muted-foreground";
+  "text-app-xs font-semibold text-muted-foreground";
 const fieldClass =
-  "h-12 rounded-md border-2 border-rn-border-strong bg-background px-4 text-base focus-visible:border-success focus-visible:ring-success/25 md:h-12";
+  "h-11 rounded-xl border border-foreground/25 bg-background px-4 text-base hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 aria-invalid:border-destructive";
 
 export function AccountSettingsForm({
   initialFullName,
@@ -89,8 +89,8 @@ export function AccountSettingsForm({
         onSubmit={(e) => void onSave(e)}
         className={cn(RN_CARD_SHELL, "flex flex-col gap-6 p-5 md:p-6")}
       >
-        <div className="flex items-start gap-3 border-b border-rn-border-strong/50 pb-5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30 text-muted-foreground">
+        <div className="flex items-start gap-3 border-b border-foreground/10 pb-5">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 ring-1 ring-foreground/10 text-muted-foreground">
             <UserRound className="size-5" aria-hidden />
           </div>
           <div>
@@ -140,7 +140,7 @@ export function AccountSettingsForm({
           </div>
         </div>
 
-        <div className="border-t border-rn-border-strong/50 pt-5">
+        <div className="border-t border-foreground/10 pt-5">
           <Button
             type="submit"
             variant="success"
@@ -154,8 +154,8 @@ export function AccountSettingsForm({
       </form>
 
       <section className={cn(RN_CARD_SHELL, "flex flex-col gap-6 p-5 md:p-6")}>
-        <div className="flex items-start gap-3 border-b border-rn-border-strong/50 pb-5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30 text-muted-foreground">
+        <div className="flex items-start gap-3 border-b border-foreground/10 pb-5">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 ring-1 ring-foreground/10 text-muted-foreground">
             <KeyRound className="size-5" aria-hidden />
           </div>
           <div>
@@ -174,12 +174,12 @@ export function AccountSettingsForm({
           {t("settings.accountForm.passwordLinkHint")}
         </p>
 
-        <div className="mt-auto border-t border-rn-border-strong/50 pt-5">
+        <div className="mt-auto border-t border-foreground/10 pt-5">
           <Button
             type="button"
             variant="outline"
             size="cta"
-            className="w-full border-2 border-rn-border-strong sm:w-auto"
+            className="w-full border-foreground/30 sm:w-auto"
             disabled={resetBusy || !displayEmail}
             onClick={() => void onPasswordReset()}
           >

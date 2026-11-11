@@ -72,7 +72,7 @@ export function AccountDeleteSection({
         )}
       >
         <div className="flex items-start gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-destructive/30 bg-destructive/10 text-destructive">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-destructive/30 bg-destructive/10 text-destructive">
             <AlertTriangle className="size-5" aria-hidden />
           </div>
           <div className="min-w-0 flex-1">
@@ -86,7 +86,7 @@ export function AccountDeleteSection({
         </div>
 
         {!eligible && blockers.length > 0 ? (
-          <div className="mt-5 space-y-3 rounded-md border border-rn-border-strong/60 bg-muted/20 p-4">
+          <div className="mt-5 space-y-3 rounded-xl bg-muted/50 ring-1 ring-foreground/10 p-4">
             <p className="text-app-sm font-semibold text-foreground">
               {t("settings.deleteAccount.cannotDelete")}
             </p>
@@ -121,7 +121,7 @@ export function AccountDeleteSection({
           </p>
         )}
 
-        <div className="mt-5 border-t border-rn-border-strong/50 pt-5">
+        <div className="mt-5 border-t border-foreground/10 pt-5">
           <Button
             type="button"
             variant="destructive"

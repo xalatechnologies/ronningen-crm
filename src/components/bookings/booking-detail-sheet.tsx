@@ -1196,13 +1196,13 @@ export function BookingDetailSheet({
             </section>
           </div>
 
-          <SheetFooter className="mt-0 max-h-none flex-col gap-3 border-t border-foreground/10 bg-card p-6 sm:max-h-none sm:flex-row sm:flex-wrap sm:justify-stretch">
+          <SheetFooter className="mt-0 max-h-none flex-col gap-3 border-t border-foreground/10 bg-card px-6 py-4 sm:max-h-none sm:flex-row sm:flex-wrap sm:justify-end">
             <Button
               type="submit"
               variant="success"
               size="cta"
               disabled={busy}
-              className="w-full sm:order-first sm:flex-1"
+              className="w-full sm:order-last sm:w-auto"
             >
               <Save className="mr-2 size-4 shrink-0" aria-hidden />
               {t("bookings.detail.saveChanges")}
@@ -1213,7 +1213,7 @@ export function BookingDetailSheet({
                 variant="success"
                 size="cta"
                 disabled={busy}
-                className="w-full sm:flex-1"
+                className="w-full sm:w-auto"
                 onClick={() => onSetStatus(bookingRow.id, "confirmed")}
               >
                 <CheckCircle2 className="mr-2 size-4 shrink-0" aria-hidden />
@@ -1227,7 +1227,7 @@ export function BookingDetailSheet({
                 variant="outline"
                 size="cta"
                 disabled={busy}
-                className="w-full border-2 border-destructive/40 font-heading font-bold text-destructive hover:bg-destructive/10 sm:flex-1"
+                className="w-full border border-destructive/40 font-heading font-bold text-destructive hover:bg-destructive/10 sm:w-auto"
                 onClick={() =>
                   onSetStatus(bookingRow.id, "cancelled", {
                     confirmMessage: t("bookings.cancelConfirm"),
@@ -1244,7 +1244,7 @@ export function BookingDetailSheet({
                 variant="outline"
                 size="cta"
                 disabled={busy}
-                className="w-full rounded-xl border border-foreground/30 bg-card font-heading font-bold shadow-none hover:bg-muted sm:flex-1"
+                className="w-full rounded-xl border border-foreground/30 bg-card font-heading font-bold shadow-none hover:bg-muted sm:w-auto"
                 onClick={() =>
                   onSetStatus(bookingRow.id, "pending", {
                     confirmMessage: t("bookings.detail.moveToPendingConfirm"),
@@ -1260,7 +1260,7 @@ export function BookingDetailSheet({
                 variant="outline"
                 size="cta"
                 disabled={busy}
-                className="w-full border-2 border-destructive/40 font-heading font-bold text-destructive hover:bg-destructive/10 sm:w-full"
+                className="w-full border border-destructive/40 font-heading font-bold text-destructive hover:bg-destructive/10 sm:w-auto"
                 onClick={() => setDeleteDialogOpen(true)}
               >
                 <Trash2 className="mr-2 size-4 shrink-0" aria-hidden />

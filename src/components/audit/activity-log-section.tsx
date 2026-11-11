@@ -46,9 +46,9 @@ function hrefFor(page: number, tableFilter: AuditTableName | null): string {
 }
 
 const LINK_BASE =
-  "inline-flex min-h-[var(--app-tap-target-min)] items-center rounded-md border-2 px-3 text-sm font-semibold outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50";
+  "inline-flex min-h-[var(--app-tap-target-min)] items-center rounded-xl border px-3 text-sm font-semibold outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50";
 const LINK_IDLE =
-  "border-rn-border-strong/60 text-muted-foreground hover:bg-rn-surface-row-hover hover:text-foreground";
+  "border-foreground/20 text-muted-foreground hover:bg-rn-surface-row-hover hover:text-foreground";
 
 export async function ActivityLogSection({
   rows,

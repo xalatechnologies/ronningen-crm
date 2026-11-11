@@ -54,7 +54,7 @@ export function ContractSettingsForm(props: {
   }
 
   return (
-    <div className="space-y-4 rounded-lg border-2 border-rn-border-strong bg-card p-5">
+    <div className="space-y-4 rounded-2xl bg-card ring-1 ring-foreground/8 p-5">
       <label className="flex items-center gap-3 text-sm font-medium">
         <input
           type="checkbox"

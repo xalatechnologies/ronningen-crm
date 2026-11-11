@@ -21,7 +21,7 @@ const buttonVariantsBase = cva(
         link: "font-semibold text-primary underline underline-offset-4 hover:no-underline",
         /** Primærhandling (grønn) — brukes med `size="cta"` for felles størrelse i appen. */
         success:
-          "border-2 border-rn-accent-border bg-success !font-semibold !text-white shadow-md hover:bg-rn-accent-fill-hover hover:!text-white visited:!text-white [a]:!text-white [a]:visited:!text-white [a]:hover:bg-rn-accent-fill-hover [a]:hover:!text-white focus-visible:border-success focus-visible:ring-success/35 [&_svg]:!text-white",
+          "border border-rn-accent-border bg-success !font-semibold !text-white shadow-sm hover:bg-rn-accent-fill-hover hover:!text-white visited:!text-white [a]:!text-white [a]:visited:!text-white [a]:hover:bg-rn-accent-fill-hover [a]:hover:!text-white focus-visible:border-success focus-visible:ring-success/35 [&_svg]:!text-white",
       },
       size: {
         default:
@@ -29,8 +29,8 @@ const buttonVariantsBase = cva(
         xs: "h-6 min-h-0 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-app-xs in-data-[slot=button-group]:rounded-md has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 min-h-0 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-app-sm in-data-[slot=button-group]:rounded-md has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "min-h-[max(var(--app-button-min-height),var(--app-tap-target-min))] gap-1.5 px-3 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        /** Hoved-CTA: litt høyere enn tidligere h-12 (48px) — 56px med større padding og ikon. */
-        cta: "min-h-[calc(var(--app-control-height)+1.25rem)] gap-2.5 rounded-[length:var(--app-radius)] px-8 text-app-md font-bold has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 md:gap-3 md:px-9 md:text-app-lg [&_svg:not([class*='size-'])]:size-5 md:[&_svg:not([class*='size-'])]:size-[1.375rem]",
+        /** Hoved-CTA: 44px, kompakt og lesbar. */
+        cta: "min-h-11 gap-2 rounded-xl px-5 text-app-sm font-semibold has-data-[icon=inline-end]:pr-3.5 has-data-[icon=inline-start]:pl-3.5 [&_svg:not([class*='size-'])]:size-4",
         icon: "size-8",
         "icon-xs":
           "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-md [&_svg:not([class*='size-'])]:size-3",

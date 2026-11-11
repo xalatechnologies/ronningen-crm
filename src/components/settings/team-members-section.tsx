@@ -254,7 +254,7 @@ export function TeamMembersSection({
               <Input
                 id="team-email"
                 type="email"
-                className="h-12 min-h-12 w-full min-w-0 rounded-md border-2 border-rn-border-strong md:flex-1"
+                className="h-12 min-h-12 w-full min-w-0 rounded-xl border border-foreground/25 md:flex-1"
                 {...addForm.register("email")}
               />
             </div>
@@ -334,9 +334,8 @@ export function TeamMembersSection({
                 <TableCell className="text-right">
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="destructive"
                     size="sm"
-                    className="text-destructive hover:bg-destructive/10"
                     disabled={m.userId === user?.id}
                     onClick={() => setRemoveTarget(m)}
                   >

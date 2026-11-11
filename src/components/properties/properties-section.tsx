@@ -39,10 +39,10 @@ import { useForm, type Resolver, type UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 
 const labelClass =
-  "text-app-xs font-semibold uppercase tracking-wider text-muted-foreground";
+  "text-app-xs font-semibold text-muted-foreground";
 
 const fieldClass =
-  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-11 w-full rounded-xl border border-foreground/25 bg-background px-3.5 text-sm shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
 
 const emptyDefaults: PropertyFormInput = {
   name: "",
@@ -172,7 +172,7 @@ function PropertyCard({
     <article className={cn(RN_CARD_SHELL, "flex flex-col p-5 md:p-6")}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30 text-muted-foreground">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 ring-1 ring-foreground/10 text-muted-foreground">
             <Building2 className="size-5" aria-hidden />
           </div>
           <div className="min-w-0">
@@ -180,7 +180,7 @@ function PropertyCard({
               {property.name}
             </h3>
             {typeLabel !== "—" ? (
-              <span className="mt-2 inline-flex rounded-md border-2 border-rn-border-strong bg-muted/25 px-2 py-0.5 text-app-xs font-semibold text-muted-foreground">
+              <span className="mt-2 inline-flex rounded-xl border border-foreground/25 bg-muted/25 px-2 py-0.5 text-app-xs font-semibold text-muted-foreground">
                 {typeLabel}
               </span>
             ) : null}
@@ -212,7 +212,7 @@ function PropertyCard({
         ) : null}
       </div>
 
-      <dl className="mt-5 flex flex-col gap-3 border-t border-rn-border-strong/50 pt-5">
+      <dl className="mt-5 flex flex-col gap-3 border-t border-foreground/10 pt-5">
         <div>
           <dt className={labelClass}>{t("common.fields.address")}</dt>
           <dd className="mt-1 flex items-start gap-2 text-app-sm text-foreground">
@@ -422,7 +422,7 @@ export function PropertiesSection({
 
       {loadError ? (
         <div className={cn(RN_CARD_SHELL, "px-5 py-4 md:px-6")} role="alert">
-          <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {t("properties.loadError", { error: loadError })}
           </div>
         </div>
@@ -435,7 +435,7 @@ export function PropertiesSection({
             "flex flex-col items-center gap-4 px-6 py-16 text-center md:px-8",
           )}
         >
-          <div className="flex size-14 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30">
+          <div className="flex size-14 items-center justify-center rounded-xl bg-muted/60 ring-1 ring-foreground/10">
             <Building2 className="size-7 text-muted-foreground" aria-hidden />
           </div>
           <div>
@@ -492,7 +492,7 @@ export function PropertiesSection({
       ) : null}
 
       <Dialog open={dialog.open} onOpenChange={(open) => !open && closeDialog()}>
-        <DialogContent className="max-w-md border-2 border-rn-border-strong">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="font-heading text-xl font-bold">
               {isEdit ? t("properties.editVenue") : t("properties.newVenue")}
