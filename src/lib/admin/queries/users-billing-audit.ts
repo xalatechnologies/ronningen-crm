@@ -88,6 +88,7 @@ export type AdminBillingRow = {
   subscriptionStatus: string;
   subscriptionPlan: string;
   isSuspended: boolean;
+  billingExempt?: boolean;
   periodEnd: string | null;
   providerCustomerId: string | null;
   providerSubscriptionId: string | null;
@@ -101,7 +102,7 @@ export async function fetchAdminBillingOverview(): Promise<AdminBillingRow[]> {
   const { data: orgs, error } = await admin
     .from("organizations")
     .select(
-      "id, name, slug, billing_email, subscription_status, subscription_plan, is_suspended, created_at",
+      "id, name, slug, billing_email, subscription_status, subscription_plan, is_suspended, billing_exempt, created_at",
     )
     .order("subscription_status", { ascending: true });
 
@@ -153,6 +154,7 @@ export async function fetchAdminBillingOverview(): Promise<AdminBillingRow[]> {
       subscriptionStatus: o.subscription_status,
       subscriptionPlan: o.subscription_plan,
       isSuspended: o.is_suspended,
+      billingExempt: o.billing_exempt ?? false,
       periodEnd: sub?.periodEnd ?? null,
       providerCustomerId: sub?.providerCustomerId ?? null,
       providerSubscriptionId: sub?.providerSubscriptionId ?? null,
