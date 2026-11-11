@@ -63,7 +63,7 @@ function HeaderAvatarOrInitials({
   const [broken, setBroken] = useState(false);
   const fallback = (
     <span
-      className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-sm font-bold text-success dark:!text-white"
+      className="flex size-11 shrink-0 items-center justify-center rounded-full border border-foreground/20 bg-muted font-heading text-app-sm font-bold text-success dark:!text-white"
       aria-hidden
     >
       {loading ? "…" : initials}
@@ -76,7 +76,7 @@ function HeaderAvatarOrInitials({
       alt=""
       width={44}
       height={44}
-      className="size-11 shrink-0 rounded-full border-2 border-rn-border-strong object-cover"
+      className="size-11 shrink-0 rounded-full border border-foreground/20 object-cover"
       referrerPolicy="no-referrer"
       onError={() => setBroken(true)}
     />
@@ -104,7 +104,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex min-h-[length:var(--app-header-height)] items-center justify-between gap-[length:var(--spacing-app-gap)] border-b-2 border-rn-border-strong bg-card px-[length:var(--app-page-padding-mobile)] py-[length:calc(var(--app-card-padding)*0.65)] shadow-rn-card md:px-[length:var(--app-page-padding-tablet)] md:py-[length:calc(var(--app-card-padding)*0.75)] lg:px-[length:var(--app-page-padding-desktop)]",
+        "sticky top-0 z-30 flex min-h-[length:var(--app-header-height)] items-center justify-between gap-[length:var(--spacing-app-gap)] border-b border-foreground/10 bg-card px-[length:var(--app-page-padding-mobile)] py-[length:calc(var(--app-card-padding)*0.65)] md:px-[length:var(--app-page-padding-tablet)] md:py-[length:calc(var(--app-card-padding)*0.75)] lg:px-[length:var(--app-page-padding-desktop)]",
       )}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -161,7 +161,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
               />
             ) : (
               <span
-                className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-sm font-bold text-success dark:!text-white"
+                className="flex size-11 shrink-0 items-center justify-center rounded-full border border-foreground/20 bg-muted font-heading text-app-sm font-bold text-success dark:!text-white"
                 aria-hidden
               >
                 {loading ? "…" : initials}
@@ -175,7 +175,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
           <DropdownMenuContent
             align="end"
             sideOffset={8}
-            className="min-w-64 max-w-[min(100vw-1.5rem,20rem)] rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-2.5 text-app-base shadow-rn-card"
+            className="min-w-64 max-w-[min(100vw-1.5rem,20rem)] rounded-2xl border border-foreground/10 bg-popover p-2.5 text-app-base shadow-lg"
           >
             <DropdownMenuGroup>
               <DropdownMenuLabel className="px-3 py-2 font-heading text-app-sm font-semibold text-foreground truncate md:px-3.5 md:py-2.5 md:text-app-md">

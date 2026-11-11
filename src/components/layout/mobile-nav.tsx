@@ -3,7 +3,7 @@
 import { AdminContextSwitch } from "@/components/layout/admin-context-switch";
 import { mainNavigation } from "@/config/navigation";
 import { SIDEBAR_SEGMENT_ICONS } from "@/config/nav-icons";
-import { RN_NAV_LINK_ACTIVE, RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
+import { RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { appNavLabel } from "@/lib/navigation/nav-labels";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
@@ -31,12 +31,12 @@ export function MobileNavLinks({ onNavigate }: { onNavigate?: () => void }) {
               href={item.href}
               onClick={onNavigate}
               className={cn(
-                "flex min-h-[max(2.75rem,var(--app-tap-target-min))] items-center gap-[length:var(--spacing-app-gap)] rounded-[length:var(--app-radius)] border-l-[3px] py-[length:calc(var(--app-card-padding)*0.55)] pl-3 pr-[length:calc(var(--app-card-padding)*0.55)] transition-colors outline-none md:gap-[length:var(--spacing-app-gap)] md:py-[length:calc(var(--app-card-padding)*0.65)] md:pl-[length:calc(var(--app-card-padding)*0.45)] md:pr-[length:calc(var(--app-card-padding)*0.65)]",
+                "flex min-h-[max(2.75rem,var(--app-tap-target-min))] items-center gap-[length:var(--spacing-app-gap)] rounded-xl py-[length:calc(var(--app-card-padding)*0.55)] pl-3 pr-[length:calc(var(--app-card-padding)*0.55)] transition-colors outline-none md:gap-[length:var(--spacing-app-gap)] md:py-[length:calc(var(--app-card-padding)*0.65)] md:pl-[length:calc(var(--app-card-padding)*0.45)] md:pr-[length:calc(var(--app-card-padding)*0.65)]",
                 RN_TEXT_NAV_LINK,
                 "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 active
-                  ? RN_NAV_LINK_ACTIVE
-                  : "border-transparent font-medium text-rn-text-body hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover hover:text-rn-text-heading",
+                  ? "bg-success/12 font-semibold text-success dark:!text-white"
+                  : "font-medium text-rn-text-body hover:bg-muted hover:text-rn-text-heading",
               )}
             >
               <Icon
@@ -51,7 +51,7 @@ export function MobileNavLinks({ onNavigate }: { onNavigate?: () => void }) {
           );
         })}
       </nav>
-      <div className="border-t border-rn-border-strong/50 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)]">
+      <div className="border-t border-foreground/8 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)]">
         <AdminContextSwitch active="app" onNavigate={onNavigate} />
       </div>
     </div>

@@ -6,7 +6,7 @@ import { SIDEBAR_SEGMENT_ICONS } from "@/config/nav-icons";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { prefetchTenantRoute } from "@/lib/queries/prefetch-route";
 import { getQueryClient } from "@/lib/queries/get-query-client";
-import { RN_NAV_LINK_ACTIVE, RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
+import { RN_NAV_LINK_ACTIVE_ICON, RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { appNavLabel } from "@/lib/navigation/nav-labels";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
@@ -64,7 +64,7 @@ export function AppSidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        "flex w-(--sidebar-width) flex-col border-r-2 border-rn-border-strong bg-sidebar text-sidebar-foreground antialiased",
+        "flex w-(--sidebar-width) flex-col border-r border-foreground/10 bg-sidebar text-sidebar-foreground antialiased",
         className,
       )}
     >
@@ -73,7 +73,7 @@ export function AppSidebar({ className }: { className?: string }) {
           <Link
             href="/app/dashboard"
             className={cn(
-              "relative flex size-14 shrink-0 overflow-hidden rounded-[length:var(--app-radius)] border-2 border-rn-accent-border bg-black shadow-sm md:size-16",
+              "relative flex size-14 shrink-0 overflow-hidden rounded-xl bg-black md:size-16",
             )}
             aria-label={t("navigation.goToDashboardAria", { appName: APP_NAME })}
             onMouseEnter={() => prefetchRoute("/app/dashboard")}
@@ -137,13 +137,13 @@ export function AppSidebar({ className }: { className?: string }) {
                 handleNavClick(item.href);
               }}
               className={cn(
-                "flex min-h-[max(2.75rem,var(--app-tap-target-min))] items-center gap-[length:var(--spacing-app-gap)] rounded-[length:var(--app-radius)] border-l-[3px] py-[length:calc(var(--app-card-padding)*0.55)] pl-3 pr-[length:calc(var(--app-card-padding)*0.55)] transition-all outline-none select-none md:gap-[length:var(--spacing-app-gap)] md:py-[length:calc(var(--app-card-padding)*0.65)] md:pl-[length:calc(var(--app-card-padding)*0.45)] md:pr-[length:calc(var(--app-card-padding)*0.65)]",
+                "flex min-h-[max(2.75rem,var(--app-tap-target-min))] items-center gap-[length:var(--spacing-app-gap)] rounded-xl py-[length:calc(var(--app-card-padding)*0.55)] pl-3 pr-[length:calc(var(--app-card-padding)*0.55)] transition-all outline-none select-none md:gap-[length:var(--spacing-app-gap)] md:py-[length:calc(var(--app-card-padding)*0.65)] md:pl-[length:calc(var(--app-card-padding)*0.45)] md:pr-[length:calc(var(--app-card-padding)*0.65)]",
                 RN_TEXT_NAV_LINK,
                 "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 active
-                  ? RN_NAV_LINK_ACTIVE
-                  : "border-transparent font-medium text-rn-text-body hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover hover:text-rn-text-heading",
-                pending && !active && "bg-rn-surface-row-hover/80 opacity-80",
+                  ? "bg-success/12 font-semibold text-success dark:!text-white"
+                  : "font-medium text-rn-text-body hover:bg-muted hover:text-rn-text-heading",
+                pending && !active && "bg-muted/80 opacity-80",
               )}
               aria-current={active ? "page" : undefined}
             >
@@ -161,7 +161,7 @@ export function AppSidebar({ className }: { className?: string }) {
         })}
       </nav>
       <footer
-        className="shrink-0 border-t border-rn-border-strong/50 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)] md:py-5"
+        className="shrink-0 border-t border-foreground/8 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)] md:py-5"
       >
         <AdminContextSwitch active="app" />
       </footer>
