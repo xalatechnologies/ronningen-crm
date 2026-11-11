@@ -45,7 +45,7 @@ import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 const partnersTableHeadClass = cn("customers-table-head", APP_TABLE_HEAD_CELL);
 
 const fieldClass =
-  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-12 w-full rounded-xl border border-foreground/25 bg-background px-4 text-base shadow-none outline-none transition-colors hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
 
 function partnerCategoryLabel(category: string, t: Translator): string {
   const preset = PARTNER_CATEGORY_PRESETS.find((p) => p.value === category);
@@ -360,7 +360,7 @@ export function PartnersPanel({
   return (
     <>
       {showHeader ? (
-        <div className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
+        <div className="px-6 py-5 md:px-8 md:py-6">
           <div className="customers-page-hero">
             <AppPageHeader
               className="mb-0"
@@ -391,7 +391,7 @@ export function PartnersPanel({
             <div className="app-table overflow-x-auto">
               <table className="w-full min-w-[640px] text-left text-app-base">
                 <thead>
-                  <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+                  <tr className="border-0 bg-muted/60">
                     <th className={partnersTableHeadClass}>{t("common.fields.name")}</th>
                     <th className={partnersTableHeadClass}>{t("customers.table.category")}</th>
                     <th className={partnersTableHeadClass}>{t("common.fields.phone")}</th>
@@ -408,8 +408,8 @@ export function PartnersPanel({
                       <tr
                         key={p.id}
                         className={cn(
-                          "cursor-pointer transition-colors hover:bg-rn-surface-row-hover",
-                          active && "bg-rn-surface-row-hover",
+                          "cursor-pointer transition-colors hover:bg-muted/50",
+                          active && "bg-muted/60",
                         )}
                         onClick={() => openEdit(p)}
                       >
@@ -424,10 +424,10 @@ export function PartnersPanel({
                         <td className="px-6 py-5 md:px-8 md:py-6">
                           <span
                             className={cn(
-                              "customers-partners-category-pill inline-flex rounded-full border px-2.5 py-1 font-semibold md:px-3",
+                              "customers-partners-category-pill inline-flex rounded-full px-2.5 py-1 font-semibold md:px-3",
                               active
-                                ? "border-success/35 bg-rn-surface-gradient-from text-success"
-                                : "border-rn-border-strong bg-rn-surface-segment text-rn-text-body",
+                                ? "bg-success/15 text-success"
+                                : "bg-muted text-rn-text-body",
                             )}
                           >
                             {partnerCategoryLabel(p.category, t)}
@@ -455,7 +455,7 @@ export function PartnersPanel({
             </div>
 
             {filtered.length > 0 ? (
-              <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
+              <div className="flex flex-col gap-3 border-t border-foreground/8 bg-muted/40 px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
                 <span>
                   {filtered.length <= TENANT_LIST_PAGE_SIZE
                     ? t("customers.footer.showingCount", {
@@ -480,7 +480,7 @@ export function PartnersPanel({
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
+                    className="h-11 gap-1 rounded-xl border border-foreground/30 bg-card px-4 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
                     disabled={currentPage <= 1}
                     onClick={() =>
                       setPartnersPage((p) => Math.max(1, p - 1))
@@ -498,7 +498,7 @@ export function PartnersPanel({
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
+                    className="h-11 gap-1 rounded-xl border border-foreground/30 bg-card px-4 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
                     disabled={currentPage >= totalPages}
                     onClick={() =>
                       setPartnersPage((p) => Math.min(totalPages, p + 1))
@@ -524,13 +524,12 @@ export function PartnersPanel({
           side="right"
           showCloseButton={false}
           className={cn(
-            "w-full max-w-[min(100vw,36rem)] gap-0 border-l-2 border-rn-border-strong bg-card p-0 sm:max-w-[36rem]",
-            "shadow-rn-card",
+            "w-full max-w-[min(100vw,36rem)] gap-0 border-l border-foreground/10 bg-card p-0 sm:max-w-[36rem]",
           )}
         >
           {selected ? (
             <div className="flex h-full flex-col">
-              <SheetHeader className="flex flex-row items-center justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head p-6">
+              <SheetHeader className="flex flex-row items-center justify-between gap-4 border-b border-foreground/10 bg-card p-6">
                 <SheetTitle className="app-card-title text-left">
                   {t("customers.partnerForm.editTitle")}
                 </SheetTitle>
@@ -538,7 +537,7 @@ export function PartnersPanel({
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  className="rounded-md border-2 border-transparent hover:border-rn-border-strong/60"
+                  className="rounded-full hover:bg-muted"
                   aria-label={t("common.actions.close")}
                   onClick={() => setSelectedId(null)}
                 >
@@ -552,15 +551,15 @@ export function PartnersPanel({
                 <div className="flex-1 overflow-y-auto p-6">
                   <PartnerFields form={editForm} idPrefix="edit" />
                 </div>
-                <div className="flex flex-col gap-2 border-t-2 border-rn-border-strong bg-rn-surface-footer/50 p-6">
-                  <Button type="submit" variant="success" size="cta" className="w-full">
+                <div className="flex flex-col gap-2 border-t border-foreground/10 bg-card p-6">
+                  <Button type="submit" variant="success" size="cta" className="w-full rounded-xl shadow-none">
                     {t("customers.partnerForm.save")}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     disabled={deleteBusyId != null}
-                    className="h-12 rounded-md border-2 border-destructive/40 text-base text-destructive hover:bg-destructive/10"
+                    className="h-12 rounded-xl border border-destructive/40 text-base text-destructive shadow-none hover:bg-destructive/10"
                     onClick={() => onDeletePartner()}
                   >
                     {t("customers.partnerForm.delete")}
@@ -580,7 +579,7 @@ export function PartnersPanel({
       >
         <DialogContent
           showCloseButton
-          className="max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-6 shadow-xl sm:max-w-md"
+          className="max-w-[calc(100%-2rem)] gap-4 rounded-2xl border border-foreground/10 bg-card p-6 shadow-xl sm:max-w-md"
         >
           {partnerDeleteTarget ? (
             <>
@@ -599,7 +598,7 @@ export function PartnersPanel({
                   type="button"
                   variant="outline"
                   size="cta"
-                  className="w-full border-2 border-rn-border-strong sm:w-auto"
+                  className="w-full rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted sm:w-auto"
                   onClick={() => setPartnerDeleteTarget(null)}
                 >
                   {t("common.actions.cancel")}
@@ -608,7 +607,7 @@ export function PartnersPanel({
                   type="button"
                   size="cta"
                   disabled={deleteBusyId != null}
-                  className="w-full border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700 sm:w-auto"
+                  className="w-full rounded-xl border-0 bg-red-600 !text-white shadow-none hover:bg-red-700 sm:w-auto"
                   onClick={() => void confirmPartnerDelete()}
                 >
                   {t("customers.partnerDelete.confirm")}
@@ -620,7 +619,7 @@ export function PartnersPanel({
       </Dialog>
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="max-w-md rounded-md" showCloseButton>
+        <DialogContent className="max-w-md rounded-2xl border border-foreground/10" showCloseButton>
           <DialogHeader>
             <DialogTitle className="app-card-title">{t("customers.partnerForm.newTitle")}</DialogTitle>
           </DialogHeader>
@@ -630,10 +629,10 @@ export function PartnersPanel({
           >
             <PartnerFields form={addForm} idPrefix="add" />
             <DialogFooter className="gap-2 sm:justify-end">
-              <Button type="button" variant="outline" onClick={() => setAddOpen(false)}>
+              <Button type="button" variant="outline" className="rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted" onClick={() => setAddOpen(false)}>
                 {t("common.actions.cancel")}
               </Button>
-              <Button type="submit" variant="success" size="cta">
+              <Button type="submit" variant="success" size="cta" className="rounded-xl shadow-none">
                 {t("customers.partnerForm.register")}
               </Button>
             </DialogFooter>

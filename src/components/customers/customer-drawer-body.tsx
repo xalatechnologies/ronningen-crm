@@ -158,9 +158,9 @@ export function CustomerDrawerBody({
 
   return (
     <>
-      <SheetHeader className="flex-row justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head px-8 pt-8 pb-4">
+      <SheetHeader className="flex-row justify-between gap-4 border-b border-foreground/10 bg-card px-8 pt-8 pb-4">
         <div className="flex flex-1 items-center gap-4 pr-10">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-success text-xl font-bold text-white shadow-md">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-success text-xl font-bold text-white">
             {customerInitials(customer.name)}
           </div>
           <div className="min-w-0">
@@ -194,15 +194,15 @@ export function CustomerDrawerBody({
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Contact className="size-4 text-primary" aria-hidden />
-              <h3 className="font-heading text-xs font-bold tracking-widest text-muted-foreground uppercase">
+              <h3 className="font-heading text-sm font-semibold text-muted-foreground">
                 {t("customers.drawer.contact")}
               </h3>
             </div>
             {!editingProfile ? (
               <Button
                 type="button"
-                variant="ghost"
-                className="h-8 shrink-0 px-2 text-xs font-semibold text-primary hover:bg-primary/5"
+                variant="outline"
+                className="h-10 shrink-0 rounded-xl border border-foreground/30 bg-card px-4 text-sm font-semibold text-foreground shadow-none hover:bg-muted"
                 onClick={() => setEditingProfile(true)}
               >
                 {t("common.actions.edit")}
@@ -215,11 +215,11 @@ export function CustomerDrawerBody({
               className="space-y-4"
             >
               <div className="space-y-2">
-                <Label className="text-[11px] font-semibold tracking-wide uppercase">
+                <Label className="text-[13px] font-semibold">
                   {t("common.fields.name")}
                 </Label>
                 <Input
-                  className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
+                  className="h-12 rounded-xl border border-foreground/25 bg-background px-4 shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
                   {...editForm.register("name")}
                   aria-invalid={!!editForm.formState.errors.name}
                 />
@@ -230,20 +230,20 @@ export function CustomerDrawerBody({
                 ) : null}
               </div>
               <div className="space-y-2">
-                <Label className="text-[11px] font-semibold tracking-wide uppercase">
+                <Label className="text-[13px] font-semibold">
                   {t("common.fields.phone")}
                 </Label>
                 <Input
-                  className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
+                  className="h-12 rounded-xl border border-foreground/25 bg-background px-4 shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
                   {...editForm.register("phone")}
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[11px] font-semibold tracking-wide uppercase">
+                <Label className="text-[13px] font-semibold">
                   {t("common.fields.email")}
                 </Label>
                 <Input
-                  className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
+                  className="h-12 rounded-xl border border-foreground/25 bg-background px-4 shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
                   type="email"
                   {...editForm.register("email")}
                 />
@@ -253,7 +253,7 @@ export function CustomerDrawerBody({
                   type="button"
                   variant="outline"
                   size="cta"
-                  className="flex-1 border-2 border-rn-border-strong font-heading font-bold"
+                  className="flex-1 rounded-xl border border-foreground/30 bg-card font-heading font-bold shadow-none hover:bg-muted"
                   onClick={() => {
                     setEditingProfile(false);
                     editForm.reset({
@@ -278,16 +278,16 @@ export function CustomerDrawerBody({
             </form>
           ) : (
             <div className="flex flex-col gap-4">
-              <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-4">
-                <p className="mb-1 text-[10px] font-bold text-muted-foreground uppercase">
+              <div className="rounded-xl bg-muted/50 p-4">
+                <p className="mb-1 text-xs font-semibold text-muted-foreground">
                   {t("common.fields.phone")}
                 </p>
                 <p className="font-medium text-primary">
                   {customer.phone ?? "—"}
                 </p>
               </div>
-              <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-4">
-                <p className="mb-1 text-[10px] font-bold text-muted-foreground uppercase">
+              <div className="rounded-xl bg-muted/50 p-4">
+                <p className="mb-1 text-xs font-semibold text-muted-foreground">
                   {t("common.fields.email")}
                 </p>
                 <p className="break-all font-medium text-primary">
@@ -301,21 +301,21 @@ export function CustomerDrawerBody({
         <section>
           <div className="mb-4 flex items-center gap-2">
             <Wallet className="size-4 text-primary" aria-hidden />
-            <h3 className="font-heading text-xs font-bold tracking-widest text-muted-foreground uppercase">
+            <h3 className="font-heading text-sm font-semibold text-muted-foreground">
               {t("customers.drawer.payment")}
             </h3>
           </div>
           <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="flex-1 rounded-md border-2 border-success/15 bg-rn-surface-gradient-from p-5">
-              <p className="mb-1 text-[10px] font-bold text-success/70 uppercase">
+            <div className="flex-1 rounded-xl bg-success/10 p-5">
+              <p className="mb-1 text-xs font-semibold text-success/80">
                 {t("customers.drawer.totalSpent")}
               </p>
               <p className="text-xl font-bold text-success">
                 {formatCurrency(s.spent)}
               </p>
             </div>
-            <div className="flex-1 rounded-md border-2 border-rn-border-strong bg-card p-5 shadow-sm">
-              <p className="mb-1 text-[10px] font-bold text-muted-foreground uppercase">
+            <div className="flex-1 rounded-xl bg-muted/50 p-5">
+              <p className="mb-1 text-xs font-semibold text-muted-foreground">
                 {t("customers.drawer.outstanding")}
               </p>
               <p
@@ -334,7 +334,7 @@ export function CustomerDrawerBody({
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <History className="size-4 text-primary" aria-hidden />
-              <h3 className="font-heading text-xs font-bold tracking-widest text-muted-foreground uppercase">
+              <h3 className="font-heading text-sm font-semibold text-muted-foreground">
                 {t("customers.drawer.bookingHistory")}
               </h3>
             </div>
@@ -354,10 +354,10 @@ export function CustomerDrawerBody({
               {bookings.slice(0, 8).map((b) => (
                 <div
                   key={b.id}
-                  className="flex cursor-default items-center justify-between rounded-md border-2 border-rn-border-strong bg-card p-4 transition-shadow hover:shadow-sm"
+                  className="flex cursor-default items-center justify-between rounded-xl bg-muted/50 p-4 transition-colors hover:bg-muted"
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-rn-surface-gradient-from">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card">
                       {bookingIconForType(b.event_type)}
                     </span>
                     <div className="min-w-0">
@@ -384,7 +384,7 @@ export function CustomerDrawerBody({
         <section>
           <div className="mb-4 flex items-center gap-2">
             <StickyNote className="size-4 text-primary" aria-hidden />
-            <h3 className="font-heading text-xs font-bold tracking-widest text-muted-foreground uppercase">
+            <h3 className="font-heading text-sm font-semibold text-muted-foreground">
               {t("customers.drawer.internalNotes")}
             </h3>
           </div>
@@ -392,22 +392,22 @@ export function CustomerDrawerBody({
             <Textarea
               value={notesDraft}
               onChange={(e) => setNotesDraft(e.target.value)}
-              className="min-h-32 resize-none rounded-md border-2 border-rn-border-strong p-4 text-sm focus-visible:border-success focus-visible:ring-success/25"
+              className="min-h-32 resize-none rounded-xl border border-foreground/25 bg-background p-4 text-sm shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
               placeholder={t("customers.drawer.notesPlaceholder")}
             />
-            <span className="pointer-events-none absolute right-3 bottom-3 text-[10px] font-bold text-muted-foreground uppercase">
+            <span className="pointer-events-none absolute right-3 bottom-3 text-xs font-semibold text-muted-foreground">
               {t("customers.drawer.autoSave")}
             </span>
           </div>
         </section>
       </div>
 
-      <SheetFooter className="flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer/50 p-6">
+      <SheetFooter className="flex-col gap-3 border-t border-foreground/10 bg-card p-6">
         <Link
           href={`/app/bookings/new?customerId=${customer.id}`}
           className={cn(
             buttonVariants({ variant: "success", size: "cta" }),
-            "w-full",
+            "w-full rounded-xl shadow-none",
           )}
         >
           {t("customers.drawer.newReservation")}
@@ -421,7 +421,7 @@ export function CustomerDrawerBody({
               ? t("customers.drawer.deleteBlockedTitle")
               : t("customers.drawer.deletePermanentlyTitle")
           }
-          className="h-12 w-full rounded-md border-2 border-destructive/40 text-base font-semibold text-destructive hover:bg-destructive/10"
+          className="h-12 w-full rounded-xl border border-destructive/40 text-base font-semibold text-destructive shadow-none hover:bg-destructive/10"
           onClick={onDeleteCustomer}
         >
           <Trash2 className="mr-2 size-4 shrink-0" aria-hidden />
