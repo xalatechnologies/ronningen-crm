@@ -65,7 +65,7 @@ function HeaderAvatarOrInitials({
   const [broken, setBroken] = useState(false);
   const fallback = (
     <span
-      className="flex size-11 shrink-0 items-center justify-center rounded-full border border-foreground/20 bg-muted font-heading text-app-sm font-bold text-success dark:!text-white"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full border border-foreground/20 bg-muted font-heading text-app-xs font-bold text-success dark:!text-white"
       aria-hidden
     >
       {loading ? "…" : initials}
@@ -76,9 +76,9 @@ function HeaderAvatarOrInitials({
     <img
       src={avatarUrl}
       alt=""
-      width={44}
-      height={44}
-      className="size-11 shrink-0 rounded-full border border-foreground/20 object-cover"
+      width={32}
+      height={32}
+      className="size-8 shrink-0 rounded-full border border-foreground/20 object-cover"
       referrerPolicy="no-referrer"
       onError={() => setBroken(true)}
     />
@@ -142,10 +142,8 @@ export function AppHeader({ children }: { children?: ReactNode }) {
       </div>
 
       <div className="flex min-w-0 items-center gap-2 md:gap-3">
-        <div className="hidden shrink-0 items-center gap-2 md:flex">
-          <div className="[&_[role=radio]]:rounded-lg [&_[role=radiogroup]>div]:h-11 [&_[role=radiogroup]>div]:rounded-xl [&_[role=radiogroup]>div]:border [&_[role=radiogroup]>div]:border-foreground/20 [&_[role=radiogroup]>div]:bg-muted/60">
-            <LanguageSwitcher variant="compact" />
-          </div>
+        <div className="hidden shrink-0 items-center gap-1.5 md:flex">
+          <LanguageSwitcher variant="header" />
           <ThemeToggle variant="header" />
         </div>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">{children}</div>
@@ -153,7 +151,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              "flex shrink-0 items-center gap-2 rounded-xl border border-foreground/20 bg-muted/60 py-1.5 pr-1.5 pl-1.5 outline-none transition-colors",
+              "flex h-10 shrink-0 items-center gap-1.5 rounded-xl border border-foreground/20 bg-muted/60 py-0 pr-2 pl-1 outline-none transition-colors",
               "hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               "disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-muted/30",
             )}
@@ -169,7 +167,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
               />
             ) : (
               <span
-                className="flex size-11 shrink-0 items-center justify-center rounded-full border border-foreground/20 bg-muted font-heading text-app-sm font-bold text-success dark:!text-white"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-foreground/20 bg-muted font-heading text-app-xs font-bold text-success dark:!text-white"
                 aria-hidden
               >
                 {loading ? "…" : initials}

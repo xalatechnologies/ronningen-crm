@@ -13,7 +13,7 @@ import {
 import { useTheme } from "@/hooks/use-theme";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Monitor, Moon, Sun } from "lucide-react";
+import { Monitor, Moon, Sun } from "lucide-react";
 
 const themeOptions: {
   value: ThemePreference;
@@ -52,7 +52,7 @@ export function ThemeToggle({
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            "inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl border border-foreground/20 bg-muted/60 px-3 outline-none transition-colors",
+            "inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-foreground/20 bg-muted/60 outline-none transition-colors",
             "hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             "data-popup-open:bg-muted/30",
             className,
@@ -60,11 +60,7 @@ export function ThemeToggle({
           aria-label={`${t("common.theme.label")}: ${current.label}`}
           title={current.label}
         >
-          <CurrentIcon className="size-5 shrink-0 text-foreground" aria-hidden />
-          <ChevronDown
-            className="size-4 shrink-0 text-muted-foreground opacity-70"
-            aria-hidden
-          />
+          <CurrentIcon className="size-4 shrink-0 text-foreground" aria-hidden />
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"

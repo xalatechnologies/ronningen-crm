@@ -36,7 +36,7 @@ export function AppHeaderSearch() {
         placeholder={t(placeholderKeyForPath(pathname))}
         aria-label={t("common.actions.headerSearchAria")}
         autoComplete="off"
-        className="h-10 w-full rounded-xl border border-foreground/25 bg-muted/40 pl-10 text-app-sm text-foreground shadow-none hover:border-foreground/40 sm:h-11 sm:pl-12 sm:text-app-base focus-visible:border-success focus-visible:bg-background focus-visible:ring-3 focus-visible:ring-success/20"
+        className="h-10 w-full rounded-xl border border-foreground/25 bg-muted/40 pl-10 text-app-sm text-foreground shadow-none hover:border-foreground/40 sm:pl-12 sm:text-app-base focus-visible:border-success focus-visible:bg-background focus-visible:ring-3 focus-visible:ring-success/20"
       />
     </div>
   );

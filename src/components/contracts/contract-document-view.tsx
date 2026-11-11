@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 
 function ContractFactList({ rows }: { rows: ContractFactRow[] }) {
   return (
-    <dl className="grid grid-cols-[5.75rem_minmax(0,1fr)] gap-x-3 gap-y-1.5">
+    <dl className="grid grid-cols-[5.75rem_minmax(0,1fr)] gap-x-3 gap-y-2 rounded-xl bg-muted/50 p-4 ring-1 ring-foreground/10">
       {rows.map((row) => (
         <div key={row.label} className="contents">
           <dt className="text-muted-foreground">{row.label}</dt>
@@ -53,7 +53,7 @@ function ContractEditList({ rows }: { rows: EditRow[] }) {
           <dd className="min-w-0">
             <Input
               type={row.type}
-              className="h-8"
+              className="h-8 rounded-lg border-foreground/25"
               value={row.value}
               onChange={(e) => row.onChange(e.target.value)}
             />
@@ -106,7 +106,7 @@ function ContractLineEditor(props: {
       ))}
       <button
         type="button"
-        className="rounded-md border border-rn-border-strong px-3 py-1 text-xs font-medium"
+        className="rounded-lg border border-foreground/30 bg-card px-3 py-1.5 text-xs font-semibold hover:bg-muted"
         onClick={() =>
           props.onChange([
             ...props.lines,
@@ -184,13 +184,17 @@ export function ContractDocumentView(props: {
 
   return (
     <article
-      className={cn(RN_CARD_SHELL, "space-y-8 p-5 text-sm leading-relaxed md:p-8", props.className)}
+      className={cn(
+        RN_CARD_SHELL,
+        "space-y-8 !rounded-2xl !border-0 p-5 text-sm leading-relaxed !shadow-none ring-1 ring-foreground/8 md:p-10",
+        props.className,
+      )}
     >
-      <header className="space-y-1 border-b-2 border-rn-border-strong pb-4 text-center">
-        <h2 className="font-heading text-2xl font-bold tracking-wide">LEIEAVTALE</h2>
+      <header className="space-y-1 border-b border-foreground/15 pb-6 text-center">
+        <h2 className="font-heading text-3xl font-bold tracking-wide">LEIEAVTALE</h2>
         <p className="font-heading text-lg font-semibold">{contractHeadingIssuerName(doc)}</p>
         {headline ? (
-          <p className="text-base font-semibold tracking-wide">{headline}</p>
+          <p className="inline-flex rounded-full bg-success/10 px-4 py-1 text-sm font-semibold tracking-wide text-success dark:!text-white">{headline}</p>
         ) : null}
       </header>
 
@@ -242,7 +246,7 @@ export function ContractDocumentView(props: {
         {!editing && addons.length ? (
           <div className="space-y-2">
             <p className="text-sm font-bold uppercase tracking-wide">Tillegg</p>
-            <ul className="divide-y divide-rn-border-strong/60 border-y border-rn-border-strong/60">
+            <ul className="divide-y divide-foreground/10 border-y border-foreground/10">
               {addons.map((item) => {
                 const note = summarizeContractExtra(item.description);
                 const amount = formatContractLineAmount(item.unitAmountNok);
