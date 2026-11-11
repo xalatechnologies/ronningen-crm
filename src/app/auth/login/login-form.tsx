@@ -20,7 +20,6 @@ import {
   validationMessagesForLocale,
 } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -111,21 +110,23 @@ export function LoginForm() {
 
       <aside
         className="relative hidden flex-col justify-between gap-12 overflow-hidden bg-[#0c1f16] p-12 text-white lg:flex xl:p-16"
-        aria-hidden
       >
-        <div className="flex items-center gap-3 font-heading text-lg font-bold">
+        <Link
+          href="/"
+          className="flex w-fit items-center gap-3 font-heading text-lg font-bold transition-opacity hover:opacity-80"
+        >
           <span className="relative size-10 overflow-hidden rounded-lg bg-black">
             <AppBrandLogo sizes="40px" />
           </span>
           {APP_NAME}
-        </div>
+        </Link>
 
         <div className="flex flex-col gap-10">
           <p className="max-w-[18ch] text-[clamp(34px,3.4vw,56px)] leading-[1.05] font-bold tracking-[-0.03em]">
             {t("landing.hero.headline")}
           </p>
 
-          <div className="max-w-[460px] rounded-2xl bg-white p-5 text-[#1a1c1a] shadow-[0_24px_64px_-24px_rgba(0,0,0,0.6)]">
+          <div aria-hidden className="max-w-[460px] rounded-2xl bg-white p-5 text-[#1a1c1a] shadow-[0_24px_64px_-24px_rgba(0,0,0,0.6)]">
             <div className="grid grid-cols-3 gap-2.5">
               {demo.stats.map((stat, i) => (
                 <div
@@ -172,19 +173,15 @@ export function LoginForm() {
       </aside>
 
       <div className="flex flex-col px-5 py-6 sm:px-10 md:py-10">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 self-start font-heading text-app-sm font-semibold text-rn-text-slate transition-colors hover:text-success md:text-app-base"
-        >
-          <ArrowLeft className="size-4 shrink-0" aria-hidden />
-          {t("auth.pages.backToHome")}
-        </Link>
-
         <div className="mx-auto flex w-full max-w-[420px] flex-1 flex-col justify-center gap-8 py-10">
           <div className="flex flex-col gap-3">
-            <span className="relative size-12 overflow-hidden rounded-xl bg-black lg:hidden">
+            <Link
+              href="/"
+              aria-label={APP_NAME}
+              className="relative size-12 overflow-hidden rounded-xl bg-black lg:hidden"
+            >
               <AppBrandLogo sizes="48px" priority />
-            </span>
+            </Link>
             <h1 className="text-[clamp(30px,4vw,40px)] leading-[1.1] font-bold tracking-[-0.03em] text-[#0c1f16]">
               {t("auth.login")}
             </h1>
