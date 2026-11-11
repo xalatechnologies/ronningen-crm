@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  assignableRoles,
+  canChangeMemberRole,
+  canRemoveMember,
   canManageAssets,
   canManageBookings,
   canManageFinance,
@@ -69,6 +72,37 @@ describe("organization-permissions", () => {
     it("currently allows all routes when role is set (documented gap)", () => {
       expect(canAccessRoute("viewer", "/app/finance")).toBe(true);
       expect(canAccessRoute(null, "/app/dashboard")).toBe(false);
+    });
+  });
+
+  describe("team hierarchy", () => {
+    it("owners hand out every role except owner; admins only the roles below them", () => {
+      expect(assignableRoles("owner")).toEqual(["admin", "manager", "accountant", "viewer"]);
+      expect(assignableRoles("admin")).toEqual(["manager", "accountant", "viewer"]);
+      expect(assignableRoles("manager")).toEqual([]);
+      expect(assignableRoles(null)).toEqual([]);
+    });
+
+    it("an admin cannot change or remove owners or other admins", () => {
+      for (const target of ["owner", "admin"] as const) {
+        expect(canChangeMemberRole("admin", target)).toBe(false);
+        expect(canRemoveMember("admin", target)).toBe(false);
+      }
+      expect(canChangeMemberRole("admin", "viewer")).toBe(true);
+      expect(canRemoveMember("admin", "manager")).toBe(true);
+    });
+
+    it("an owner can manage admins and remove co-owners, but never changes an owner's role here", () => {
+      expect(canChangeMemberRole("owner", "admin")).toBe(true);
+      expect(canRemoveMember("owner", "owner")).toBe(true);
+      expect(canChangeMemberRole("owner", "owner")).toBe(false);
+    });
+
+    it("managers, accountants and viewers manage nobody", () => {
+      for (const actor of ["manager", "accountant", "viewer"] as const) {
+        expect(canRemoveMember(actor, "viewer")).toBe(false);
+        expect(canChangeMemberRole(actor, "viewer")).toBe(false);
+      }
     });
   });
 });

@@ -24,6 +24,8 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { OrganizationSwitcher } from "@/components/organizations/organization-switcher";
 import { APP_NAME } from "@/config/app";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useOrganizationPermissions } from "@/hooks/use-organization-permissions";
+import { roleLabel } from "@/lib/navigation/nav-labels";
 import { usePlatformAdmin } from "@/hooks/use-platform-admin";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -89,6 +91,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
   const { t } = useTranslation();
   const { user, loading } = useAuthUser();
   const { isPlatformAdmin } = usePlatformAdmin();
+  const { role: myRole } = useOrganizationPermissions();
   const supabase = useSupabase();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -191,8 +194,15 @@ export function AppHeader({ children }: { children?: ReactNode }) {
                 >
                   {initials}
                 </span>
-                <span className="min-w-0 truncate font-heading text-app-sm font-semibold text-foreground md:text-app-md">
-                  {user?.email ?? t("common.account.loggedIn")}
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate font-heading text-app-sm font-semibold text-foreground md:text-app-md">
+                    {user?.email ?? t("common.account.loggedIn")}
+                  </span>
+                  {myRole ? (
+                    <span className="mt-0.5 w-fit rounded-full bg-success/12 px-2 py-0.5 text-app-xs font-semibold text-success dark:!text-white">
+                      {roleLabel(myRole, t)}
+                    </span>
+                  ) : null}
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-1.5 bg-border" />
