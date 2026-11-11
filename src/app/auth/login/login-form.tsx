@@ -1,14 +1,13 @@
 "use client";
 
-import { AuthBrandMark } from "@/components/auth/auth-brand-mark";
+import { AppBrandLogo } from "@/components/brand/app-brand-logo";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { APP_NAME } from "@/config/app";
 import { getDevLoginDefaultValues } from "@/config/dev-login";
 import { useTranslation } from "@/i18n/client";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { getDictionary } from "@/i18n/dictionaries";
 import { mapAuthErrorToUserMessage } from "@/lib/auth/auth-error-messages";
 import {
   createBrowserSupabaseClient,
@@ -90,8 +89,13 @@ export function LoginForm() {
     window.location.assign(destination);
   }
 
+  const demo = useMemo(() => getDictionary(locale).landing.heroDemo, [locale]);
+
+  const inputClass =
+    "h-12 rounded-xl border-0 bg-[#f1f4f2] px-4 text-app-base shadow-none focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-[#1a4331]/60";
+
   return (
-    <main className="relative flex min-h-[min(100dvh,100svh)] flex-1 flex-col items-center justify-center px-4 py-16 md:px-8 md:py-24">
+    <main className="relative grid min-h-[min(100dvh,100svh)] flex-1 lg:grid-cols-[1.05fr_1fr]">
       {form.formState.isSubmitting ? (
         <div
           className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm"
@@ -100,11 +104,74 @@ export function LoginForm() {
         >
           <div className="size-10 animate-spin rounded-full border-4 border-muted border-t-success" />
           <p className="text-app-base font-medium text-muted-foreground">
-          {t("auth.pages.loggingIn")}
+            {t("auth.pages.loggingIn")}
           </p>
         </div>
       ) : null}
-      <div className="flex w-full max-w-xl flex-col items-stretch gap-8">
+
+      <aside
+        className="relative hidden flex-col justify-between gap-12 overflow-hidden bg-[#0c1f16] p-12 text-white lg:flex xl:p-16"
+        aria-hidden
+      >
+        <div className="flex items-center gap-3 font-heading text-lg font-bold">
+          <span className="relative size-10 overflow-hidden rounded-lg bg-black">
+            <AppBrandLogo sizes="40px" />
+          </span>
+          {APP_NAME}
+        </div>
+
+        <div className="flex flex-col gap-10">
+          <p className="max-w-[18ch] text-[clamp(34px,3.4vw,56px)] leading-[1.05] font-bold tracking-[-0.03em]">
+            {t("landing.hero.headline")}
+          </p>
+
+          <div className="max-w-[460px] rounded-2xl bg-white p-5 text-[#1a1c1a] shadow-[0_24px_64px_-24px_rgba(0,0,0,0.6)]">
+            <div className="grid grid-cols-3 gap-2.5">
+              {demo.stats.map((stat, i) => (
+                <div
+                  key={stat.labelKey}
+                  className={cn(
+                    "rounded-xl px-3 py-2.5",
+                    i === 0 ? "bg-[#1a4331] text-white" : "bg-[#f4f6f3]",
+                  )}
+                >
+                  <p
+                    className={cn(
+                      "text-[10px] font-medium",
+                      i === 0 ? "text-[#b9d3c4]" : "text-[#475569]",
+                    )}
+                  >
+                    {t(
+                      `landing.heroStats.${stat.labelKey}` as "landing.heroStats.revenue",
+                    )}
+                  </p>
+                  <p className="mt-0.5 font-heading text-[15px] font-bold whitespace-nowrap">
+                    {stat.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex h-20 items-end gap-1.5">
+              {[40, 65, 52, 78, 58, 88, 72, 48, 82, 60, 70, 55].map((h, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "flex-1 rounded-[4px]",
+                    i === 5 ? "bg-[#1a4331]" : "bg-[#d3e6da]",
+                  )}
+                  style={{ height: `${h}%` }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <p className="max-w-[40ch] text-sm leading-relaxed text-[#b9d3c4]">
+          {t("auth.pages.loginTagline", { appName: APP_NAME })}
+        </p>
+      </aside>
+
+      <div className="flex flex-col px-5 py-6 sm:px-10 md:py-10">
         <Link
           href="/"
           className="inline-flex items-center gap-2 self-start font-heading text-app-sm font-semibold text-rn-text-slate transition-colors hover:text-success md:text-app-base"
@@ -113,164 +180,146 @@ export function LoginForm() {
           {t("auth.pages.backToHome")}
         </Link>
 
-        <Card
-          className={cn(
-            "w-full gap-0 py-0 text-app-base ring-0",
-            RN_CARD_SHELL,
-            "shadow-rn-card",
-          )}
-        >
-          <CardHeader className="space-y-5 border-b-2 border-rn-border-strong/50 px-6 py-7 md:px-10 md:py-9">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              <AuthBrandMark />
-              <div className="min-w-0 flex-1 space-y-2">
-                <CardTitle className="app-title md:text-app-3xl">
-                  {t("auth.login")}
-                </CardTitle>
-                <p className="text-app-sm leading-relaxed text-muted-foreground md:text-app-base">
-                  {t("auth.pages.loginTagline", { appName: APP_NAME })}
-                </p>
-              </div>
-            </div>
+        <div className="mx-auto flex w-full max-w-[420px] flex-1 flex-col justify-center gap-8 py-10">
+          <div className="flex flex-col gap-3">
+            <span className="relative size-12 overflow-hidden rounded-xl bg-black lg:hidden">
+              <AppBrandLogo sizes="48px" priority />
+            </span>
+            <h1 className="text-[clamp(30px,4vw,40px)] leading-[1.1] font-bold tracking-[-0.03em] text-[#0c1f16]">
+              {t("auth.login")}
+            </h1>
+            <p className="text-app-base leading-relaxed text-muted-foreground lg:hidden">
+              {t("auth.pages.loginTagline", { appName: APP_NAME })}
+            </p>
+          </div>
 
-            {showDevLogin ? (
-              <div className="rounded-md border-2 border-rn-border-strong/60 bg-muted/35 px-4 py-3 text-app-sm md:px-5 md:py-4 md:text-app-base">
-                <p className="font-semibold text-rn-text-heading">
-                  {t("auth.platformAdminDev")}
-                </p>
-                <p className="mt-2 text-muted-foreground">
-                  Feltene under er fylt ut med{" "}
-                  <span className="font-mono text-app-sm text-foreground md:text-app-base">
-                    {loginDefaults.email}
-                  </span>
-                  .
-                </p>
-              </div>
-            ) : null}
+          {!isSupabasePublicConfigured() ? (
+            <p className="rounded-xl bg-amber-500/10 px-4 py-3 text-app-sm text-amber-950 md:text-app-base dark:text-amber-100">
+              <strong className="font-semibold">{t("auth.pages.supabaseNotConfigured")}</strong>{" "}
+              {t("auth.pages.supabaseConfigBanner", {
+                envFile: ".env.local",
+                urlKey: "NEXT_PUBLIC_SUPABASE_URL",
+                anonKey: "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+                publishableKey: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+                restartDev: t("auth.pages.restartDevServer"),
+              })}
+            </p>
+          ) : null}
 
-            {!isSupabasePublicConfigured() ? (
-              <p className="rounded-md border-2 border-amber-500/40 bg-amber-500/10 px-4 py-3 text-app-sm text-amber-950 md:text-app-base dark:text-amber-100">
-                <strong className="font-semibold">{t("auth.pages.supabaseNotConfigured")}</strong>{" "}
-                {t("auth.pages.supabaseConfigBanner", {
-                  envFile: ".env.local",
-                  urlKey: "NEXT_PUBLIC_SUPABASE_URL",
-                  anonKey: "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-                  publishableKey: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-                  restartDev: t("auth.pages.restartDevServer"),
-                })}
-              </p>
-            ) : null}
-          </CardHeader>
-
-          <CardContent className="space-y-6 px-6 pb-8 pt-7 md:px-10 md:pb-10 md:pt-8">
-            <form
-              className="flex flex-col gap-6"
-              onSubmit={form.handleSubmit(onSubmit)}
-              noValidate
+          {showDevLogin ? (
+            <div
+              className="rounded-xl bg-[#e8f5ee] px-4 py-3 text-app-sm md:text-app-base"
+              aria-live="polite"
             >
-              {showDevLogin ? (
-                <div
-                  className="rounded-md border-2 border-success/30 bg-success/8 px-4 py-3 text-app-sm md:text-app-base"
-                  aria-live="polite"
-                >
-                  <p className="font-semibold text-foreground">
-                    {t("auth.platformAdmin")}
-                  </p>
-                  <p className="mt-1.5 font-mono text-app-sm text-foreground md:text-app-base">
-                    {loginDefaults.email}
-                    <span className="mx-1.5 text-muted-foreground">/</span>
-                    {loginDefaults.password}
-                  </p>
-                </div>
-              ) : null}
+              <p className="font-semibold text-[#1a4331]">
+                {t("auth.platformAdminDev")}
+              </p>
+              <p className="mt-1 text-[#334155]">
+                Feltene under er fylt ut med{" "}
+                <span className="font-mono text-app-sm text-foreground md:text-app-base">
+                  {loginDefaults.email}
+                </span>
+                .
+              </p>
+              <p className="mt-1.5 font-mono text-app-sm text-foreground">
+                {t("auth.platformAdmin")}: {loginDefaults.email}
+                <span className="mx-1.5 text-muted-foreground">/</span>
+                {loginDefaults.password}
+              </p>
+            </div>
+          ) : null}
 
-              <div className="space-y-2">
-                <Label
-                  htmlFor="email"
-                  className="text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]"
-                >
-                  {t("auth.email")}
-                </Label>
-                <Controller
-                  name="email"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input
-                      id="email"
-                      type="email"
-                      autoComplete="email"
-                      placeholder={loginDefaults.email || "deg@eksempel.no"}
-                      className="h-12 rounded-md border-2 border-rn-border-strong text-app-base focus-visible:border-success focus-visible:ring-success/25"
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  )}
-                />
-                {form.formState.errors.email ? (
-                  <p className="text-app-sm text-destructive">
-                    {form.formState.errors.email.message}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
+          <form
+            className="flex flex-col gap-5"
+            onSubmit={form.handleSubmit(onSubmit)}
+            noValidate
+          >
+            <div className="space-y-2">
+              <Label
+                htmlFor="email"
+                className="text-app-sm font-semibold text-[#1a1c1a]"
+              >
+                {t("auth.email")}
+              </Label>
+              <Controller
+                name="email"
+                control={form.control}
+                render={({ field }) => (
+                  <Input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder={loginDefaults.email || "deg@eksempel.no"}
+                    className={inputClass}
+                    {...field}
+                    value={field.value ?? ""}
+                  />
+                )}
+              />
+              {form.formState.errors.email ? (
+                <p className="text-app-sm text-destructive">
+                  {form.formState.errors.email.message}
+                </p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-4">
                 <Label
                   htmlFor="password"
-                  className="text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-[11px]"
+                  className="text-app-sm font-semibold text-[#1a1c1a]"
                 >
                   {t("auth.password")}
                 </Label>
-                <Controller
-                  name="password"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Input
-                      id="password"
-                      type="password"
-                      autoComplete="current-password"
-                      className="h-12 rounded-md border-2 border-rn-border-strong text-app-base focus-visible:border-success focus-visible:ring-success/25"
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  )}
-                />
-                {form.formState.errors.password ? (
-                  <p className="text-app-sm text-destructive">
-                    {form.formState.errors.password.message}
-                  </p>
-                ) : null}
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-app-sm font-semibold text-[#1a4331] transition-colors hover:text-[#0c1f16] hover:underline"
+                >
+                  {t("auth.forgotPassword")}
+                </Link>
               </div>
-              {displayedError ? (
-                <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-app-sm text-destructive md:text-app-base">
-                  {displayedError}
+              <Controller
+                name="password"
+                control={form.control}
+                render={({ field }) => (
+                  <Input
+                    id="password"
+                    type="password"
+                    autoComplete="current-password"
+                    className={inputClass}
+                    {...field}
+                    value={field.value ?? ""}
+                  />
+                )}
+              />
+              {form.formState.errors.password ? (
+                <p className="text-app-sm text-destructive">
+                  {form.formState.errors.password.message}
                 </p>
               ) : null}
-              <Button
-                type="submit"
-                variant="success"
-                size="cta"
-                disabled={form.formState.isSubmitting}
-                className="w-full"
-              >
-                {form.formState.isSubmitting ? t("auth.pages.loggingIn") : t("auth.login")}
-              </Button>
-            </form>
-
-            <div className="flex flex-col gap-4 border-t-2 border-rn-border-strong/50 pt-6 text-app-base sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-6">
-              <Link
-                href="/auth/forgot-password"
-                className="font-semibold text-success underline decoration-success/40 underline-offset-4 transition-colors hover:text-success/90"
-              >
-                {t("auth.forgotPassword")}
-              </Link>
-              <Link
-                href="/auth/register"
-                className="font-semibold text-foreground underline decoration-rn-border-strong underline-offset-4 transition-colors hover:text-success"
-              >
-                {t("auth.createAccount")}
-              </Link>
             </div>
-          </CardContent>
-        </Card>
+            {displayedError ? (
+              <p className="rounded-xl bg-destructive/10 px-4 py-3 text-app-sm text-destructive md:text-app-base">
+                {displayedError}
+              </p>
+            ) : null}
+            <Button
+              type="submit"
+              variant="success"
+              size="cta"
+              disabled={form.formState.isSubmitting}
+              className="h-12 w-full rounded-xl shadow-none"
+            >
+              {form.formState.isSubmitting ? t("auth.pages.loggingIn") : t("auth.login")}
+            </Button>
+          </form>
+
+          <Link
+            href="/auth/register"
+            className="self-center font-heading text-app-base font-semibold text-[#0c1f16] underline decoration-[#85b098] underline-offset-4 transition-colors hover:text-[#1a4331]"
+          >
+            {t("auth.createAccount")}
+          </Link>
+        </div>
       </div>
     </main>
   );
