@@ -126,7 +126,7 @@ export function LandingHeader() {
                 href={href}
                 aria-current={active ? "location" : undefined}
                 className={cn(
-                  "rounded-full px-4 py-2 font-heading text-[15px] font-semibold transition-colors",
+                  "rounded-full px-3 py-2 font-heading text-[15px] font-semibold whitespace-nowrap transition-colors lg:px-4",
                   active
                     ? "bg-[#e8f5ee] text-[#1a4331]"
                     : "text-rn-text-slate hover:text-rn-text-heading",
@@ -139,12 +139,12 @@ export function LandingHeader() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden sm:block [&_[role=radiogroup]>div]:rounded-full [&_[role=radiogroup]>div]:border-0 [&_[role=radiogroup]>div]:bg-[#eef2f0] [&_[role=radio]]:rounded-full">
+          <div className="hidden shrink-0 sm:block [&_[role=radiogroup]>div]:rounded-full [&_[role=radiogroup]>div]:border-0 [&_[role=radiogroup]>div]:bg-[#eef2f0] [&_[role=radio]]:rounded-full">
             <LanguageSwitcher variant="compact" />
           </div>
           {!loading && isAuthenticated ? (
-            <>
-              <p className="hidden max-w-[12rem] truncate text-right text-sm text-rn-text-slate md:block lg:max-w-[16rem]">
+            <div className="flex min-w-0 items-center gap-3 rounded-full lg:bg-[#eef2f0] lg:p-1 lg:pl-4">
+              <p className="hidden min-w-0 max-w-[14rem] truncate text-sm text-rn-text-slate lg:block xl:max-w-[20rem]">
                 {t("landing.auth.loggedInAs")}{" "}
                 <span className="font-semibold text-rn-text-heading">
                   {displayName}
@@ -153,7 +153,7 @@ export function LandingHeader() {
               <Link href={LANDING_ROUTES.app} className={registerButtonClass}>
                 {t("landing.auth.goToApp")}
               </Link>
-            </>
+            </div>
           ) : !loading ? (
             <>
               <Link href={LANDING_ROUTES.login} className={loginButtonClass}>
