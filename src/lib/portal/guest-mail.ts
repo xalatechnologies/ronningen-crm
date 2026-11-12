@@ -3,6 +3,7 @@ import "server-only";
 import { contractPublicOrigin } from "@/lib/contracts/mail";
 import { brandedFromAddress, sendEmail, type SendEmailResult } from "@/lib/notifications/email-client";
 import type { Translator } from "@/i18n/types";
+import { sanitizeHostName } from "./host-name";
 import { PALETTES, type PaletteKey } from "./invite-rules";
 
 function escapeHtml(value: string): string {
@@ -27,7 +28,8 @@ export async function sendGuestInviteEmail(input: {
   token: string;
   guestId: string;
   kind: "invite" | "reminder";
-  sendCount: number;
+  /** Unique per send attempt (the claimed e-mail row), so a retry or a re-invite never reuses an idempotency key. */
+  attemptId: string;
   guestName: string;
   hostName: string;
   hostEmail: string | null;
@@ -40,7 +42,7 @@ export async function sendGuestInviteEmail(input: {
 }): Promise<SendEmailResult> {
   const { t } = input;
   const p = PALETTES[input.paletteKey];
-  const host = safeName(input.hostName) || input.venueName;
+  const host = sanitizeHostName(input.hostName, input.venueName);
   const url = guestInviteUrl(input.token);
   const intro = input.kind === "invite" ? t("portal.guestMail.inviteIntro", { host }) : t("portal.guestMail.reminderIntro", { host });
   const cta = t("portal.guestMail.cta");
@@ -78,6 +80,6 @@ export async function sendGuestInviteEmail(input: {
     subject,
     html,
     text: `${intro}\n\n${cta}: ${url}\n\n${footer}`,
-    idempotencyKey: `guest-${input.kind}:${input.guestId}:${input.sendCount}`,
+    idempotencyKey: `guest-${input.kind}:${input.attemptId}`,
   });
 }

@@ -42,8 +42,12 @@ export const FONTS: Record<FontKey, { heading: string; body: string; headingStyl
 };
 
 /** URLs and bare domains in free text: blocked in v1 (phishing/spam abuse). The database blocks http(s):// and www. too. */
+const BLOCKED_TLDS =
+  "com|no|net|org|io|app|me|ly|info|biz|xyz|co|link|click|shop|site|online|store|top|club|live|tech|dev|page|bio|fun|work|cloud|pro|website|space|icu|vip|buzz|cc|tk|ml|ga|cf|gq|ru|cn|de|uk|eu|nu|se|dk|fi|tv|us|ca|au|in|name|mobi|support|help|bank|pay|secure|login|zip|mov|gle";
+
+/** URLs and bare domains in free text: blocked in v1 (phishing/spam abuse). The database blocks http(s):// and www. too. */
 export function containsLink(text: string): boolean {
-  return /(https?:\/\/|www\.)/i.test(text) || /\b[\w-]+\.(com|no|net|org|io|app|me|ly|info|biz|xyz|co|link|click)\b/i.test(text);
+  return /(https?:\/\/|www\.)/i.test(text) || new RegExp(`\\b[\\w-]+\\.(${BLOCKED_TLDS})\\b`, "i").test(text);
 }
 
 const text = (max: number) =>

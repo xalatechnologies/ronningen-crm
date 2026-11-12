@@ -11,6 +11,7 @@ import { canManageBookings } from "@/lib/organizations/organization-permissions"
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { portalAccountsTable } from "./db";
 import { getPortalInvitePreview, issuePortalInvite } from "./invite";
+import { requireStaffForBooking } from "./staff";
 
 export type SendInviteResult =
   | { ok: true; emailed: boolean }
@@ -178,5 +179,21 @@ export async function setPortalSettings(input: {
     .eq("id", parsed.data.organizationId);
   if (error) return { ok: false, error: error.message };
   revalidatePath("/app/settings/kontrakter");
+  return { ok: true };
+}
+
+/** Staff (owner/admin/manager): cut off the customer's access to this booking's portal immediately. */
+export async function revokePortalAccess(bookingId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!z.string().uuid().safeParse(bookingId).success) return { ok: false, error: "invalid_input" };
+  const staff = await requireStaffForBooking(bookingId);
+  if (!staff.ok) return { ok: false, error: staff.error };
+
+  const { error } = await portalAccountsTable(createSupabaseAdminClient())
+    .update({ revoked_at: new Date().toISOString() } as never)
+    .eq("booking_id", bookingId)
+    .eq("organization_id", staff.organizationId)
+    .is("revoked_at", null);
+  if (error) return { ok: false, error: "failed" };
+  revalidatePath(`/app/bookings/${bookingId}`);
   return { ok: true };
 }

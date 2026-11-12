@@ -3,9 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { resetGuestInvitation } from "./guest-tokens";
 import { getPortalContext } from "./context";
 import { guestInputSchema, MAX_GUESTS, parseGuestPaste, type GuestInput, type PasteError } from "./guest-rules";
 
@@ -34,8 +32,6 @@ export async function saveGuest(input: GuestInput): Promise<GuestResult> {
 
   const supabase = await createServerSupabaseClient();
   if (id) {
-    const { data: before } = await guests(supabase).select("email, status").eq("id", id).eq("booking_id", ctx.booking.id).maybeSingle();
-    const prev = before as unknown as { email: string | null; status: string } | null;
     const { data, error } = await guests(supabase)
       .update({ name, email, phone, group_label: groupLabel, max_party: maxParty, updated_at: new Date().toISOString() } as never)
       .eq("id", id)
@@ -43,10 +39,8 @@ export async function saveGuest(input: GuestInput): Promise<GuestResult> {
       .select("id");
     if (error) return mapError(error);
     if (((data as unknown[] | null)?.length ?? 0) === 0) return { ok: false, error: "not_found" };
-    // A changed address must not keep the old address's links or answer.
-    if (prev && prev.status !== "not_sent" && (prev.email ?? null) !== (email ?? null)) {
-      await resetGuestInvitation(createSupabaseAdminClient(), id);
-    }
+    // An e-mail change revokes the old links and clears the answer: a database trigger does it, so it
+    // also holds for direct API edits.
   } else {
     const { error } = await guests(supabase).insert({
       organization_id: ctx.organization.id,

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { DIET_TAGS, MAX_PARTY, type DietTag, type GuestRow, type GuestStatus } from "./guest-rules";
 
 export const MAX_DAILY_EMAILS = 300;
+export const MAX_DAILY_EMAILS_ORG = 1000;
+export const MAX_DAILY_EMAILS_PLATFORM = 3000;
 export const REMINDER_COOLDOWN_DAYS = 3;
 export const RSVP_MIN_INTERVAL_MS = 2_000;
 export const MAX_RSVP_UPDATES = 50;

@@ -10,11 +10,13 @@ import { notifyOrgMembers } from "@/lib/notifications/notify";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getPortalContext } from "./context";
 import { emailCustomerThrottled } from "./notify-customer";
+import { todayInOslo } from "./rsvp-rules";
 import { requireStaffForBooking } from "./staff";
 import {
   canCounter,
   canTransition,
   counterInputSchema,
+  quoteExpired,
   quoteInputSchema,
   quoteTotalNok,
   wishItemInputSchema,
@@ -22,7 +24,7 @@ import {
   type WishStatus,
 } from "./wishlist-rules";
 
-export type WishResult = { ok: true } | { ok: false; error: "invalid" | "forbidden" | "not_found" | "wrong_state" | "limit" | "failed" };
+export type WishResult = { ok: true } | { ok: false; error: "invalid" | "forbidden" | "not_found" | "wrong_state" | "limit" | "expired" | "failed" };
 
 type Admin = ReturnType<typeof createSupabaseAdminClient>;
 const items = (c: Admin | Awaited<ReturnType<typeof createServerSupabaseClient>>) => c.from("portal_wish_items" as never);
@@ -37,11 +39,12 @@ type ItemRow = {
   quantity: number | string;
   status: WishStatus;
   revision: number;
+  quote_seq: number;
 };
 
 async function loadItem(admin: Admin, itemId: string, bookingId: string): Promise<ItemRow | null> {
   const { data } = await items(admin)
-    .select("id, organization_id, booking_id, title, quantity, status, revision")
+    .select("id, organization_id, booking_id, title, quantity, status, revision, quote_seq")
     .eq("id", itemId)
     .eq("booking_id", bookingId)
     .maybeSingle();
@@ -60,16 +63,22 @@ async function moveItem(
     .eq("id", item.id)
     .eq("status", item.status)
     .eq("revision", item.revision)
+    .eq("quote_seq", item.quote_seq)
     .select("id");
   return ((data as unknown[] | null)?.length ?? 0) > 0;
 }
 
-async function closeQuoteAndCounter(admin: Admin, itemId: string, counterStatus: "superseded" | "rejected" = "superseded") {
-  await quotes(admin).update({ status: "superseded" } as never).eq("wish_item_id", itemId).eq("status", "active");
+/**
+ * Closes the item's active quote and open counter, but only those of revision <= maxRevision: a quote the
+ * venue wrote for a NEWER revision at the same moment is never touched (it belongs to the edited wish).
+ */
+async function closeQuoteAndCounter(admin: Admin, itemId: string, maxRevision: number, counterStatus: "superseded" | "rejected" = "superseded") {
+  await quotes(admin).update({ status: "superseded" } as never).eq("wish_item_id", itemId).eq("status", "active").lte("revision", maxRevision);
   await counters(admin)
     .update({ status: counterStatus, answered_at: new Date().toISOString() } as never)
     .eq("wish_item_id", itemId)
-    .eq("status", "open");
+    .eq("status", "open")
+    .lte("revision", maxRevision);
 }
 
 // ---------------------------------------------------------------- customer
@@ -172,7 +181,8 @@ export async function sendWishes(): Promise<WishResult & { count?: number }> {
   return { ok: true, count };
 }
 
-export async function respondToQuote(input: { itemId: string; answer: "approve" | "decline" }): Promise<WishResult> {
+/** The customer answers the quote THEY SAW (quoteId): if the venue changed it meanwhile, nothing is approved. */
+export async function respondToQuote(input: { itemId: string; quoteId: string; answer: "approve" | "decline" }): Promise<WishResult> {
   const ctx = await getPortalContext();
   if (!ctx) return { ok: false, error: "forbidden" };
   const admin = createSupabaseAdminClient();
@@ -181,8 +191,10 @@ export async function respondToQuote(input: { itemId: string; answer: "approve" 
   const to: WishStatus = input.answer === "approve" ? "approved" : "declined";
   if (!canTransition("customer", item.status, to)) return { ok: false, error: "wrong_state" };
 
-  const { data: active } = await quotes(admin).select("id").eq("wish_item_id", item.id).eq("status", "active").maybeSingle();
-  if (!active) return { ok: false, error: "wrong_state" };
+  const { data: active } = await quotes(admin).select("id, valid_until").eq("wish_item_id", item.id).eq("status", "active").maybeSingle();
+  const quote = active as { id: string; valid_until: string | null } | null;
+  if (!quote || quote.id !== input.quoteId) return { ok: false, error: "wrong_state" };
+  if (input.answer === "approve" && quoteExpired(quote.valid_until)) return { ok: false, error: "expired" };
   if (!(await moveItem(admin, item, to))) return { ok: false, error: "wrong_state" };
 
   await notifyStaff(ctx, input.answer === "approve" ? "wishApproved" : "wishDeclined", { item: item.title });
@@ -190,7 +202,7 @@ export async function respondToQuote(input: { itemId: string; answer: "approve" 
   return { ok: true };
 }
 
-export async function counterQuote(input: { itemId: string; unitPriceNok: number; note?: string | null }): Promise<WishResult> {
+export async function counterQuote(input: { itemId: string; quoteId: string; unitPriceNok: number; note?: string | null }): Promise<WishResult> {
   const ctx = await getPortalContext();
   if (!ctx) return { ok: false, error: "forbidden" };
   const parsed = counterInputSchema.safeParse(input);
@@ -201,10 +213,12 @@ export async function counterQuote(input: { itemId: string; unitPriceNok: number
   if (!canTransition("customer", item.status, "countered")) return { ok: false, error: "wrong_state" };
 
   const [{ data: active }, { count }] = await Promise.all([
-    quotes(admin).select("id").eq("wish_item_id", item.id).eq("status", "active").maybeSingle(),
+    quotes(admin).select("id, valid_until").eq("wish_item_id", item.id).eq("status", "active").maybeSingle(),
     counters(admin).select("id", { count: "exact", head: true }).eq("wish_item_id", item.id).eq("revision", item.revision),
   ]);
-  if (!active) return { ok: false, error: "wrong_state" };
+  const activeQuote = active as { id: string; valid_until: string | null } | null;
+  if (!activeQuote || activeQuote.id !== parsed.data.quoteId) return { ok: false, error: "wrong_state" };
+  if (quoteExpired(activeQuote.valid_until)) return { ok: false, error: "expired" };
   if (!canCounter({ counterRounds: count ?? 0, hasOpenCounter: false })) return { ok: false, error: "limit" };
 
   if (!(await moveItem(admin, item, "countered"))) return { ok: false, error: "wrong_state" };
@@ -212,7 +226,7 @@ export async function counterQuote(input: { itemId: string; unitPriceNok: number
     organization_id: ctx.organization.id,
     booking_id: ctx.booking.id,
     wish_item_id: item.id,
-    quote_id: (active as { id: string }).id,
+    quote_id: activeQuote.id,
     revision: item.revision,
     proposed_unit_price_nok: parsed.data.unitPriceNok,
     note: parsed.data.note,
@@ -235,7 +249,7 @@ export async function withdrawWish(itemId: string): Promise<WishResult> {
   if (!item) return { ok: false, error: "not_found" };
   if (!canTransition("customer", item.status, "withdrawn")) return { ok: false, error: "wrong_state" };
   if (!(await moveItem(admin, item, "withdrawn"))) return { ok: false, error: "wrong_state" };
-  await closeQuoteAndCounter(admin, item.id);
+  await closeQuoteAndCounter(admin, item.id, item.revision);
   await notifyStaff(ctx, "wishWithdrawn", { item: item.title });
   refreshCustomer();
   return { ok: true };
@@ -257,7 +271,7 @@ export async function reviseWish(input: WishItemInput & { id: string }): Promise
   if (!(await moveItem(admin, item, "requested", { ...fields, revision: item.revision + 1 }))) {
     return { ok: false, error: "wrong_state" };
   }
-  await closeQuoteAndCounter(admin, item.id);
+  await closeQuoteAndCounter(admin, item.id, item.revision);
   await notifyStaff(ctx, "wishRevised", { item: fields.title });
   refreshCustomer();
   return { ok: true };
@@ -272,7 +286,7 @@ export async function reopenWish(itemId: string): Promise<WishResult> {
   if (!item) return { ok: false, error: "not_found" };
   if (!canTransition("customer", item.status, "draft")) return { ok: false, error: "wrong_state" };
   if (!(await moveItem(admin, item, "draft", { revision: item.revision + 1 }))) return { ok: false, error: "wrong_state" };
-  await closeQuoteAndCounter(admin, item.id);
+  await closeQuoteAndCounter(admin, item.id, item.revision);
   refreshCustomer();
   return { ok: true };
 }
@@ -312,9 +326,11 @@ export async function quoteWish(input: {
   if (!c.ok) return c;
   const { admin, item, staff } = c;
   if (!canTransition("staff", item.status, "quoted")) return { ok: false, error: "wrong_state" };
+  if (parsed.data.validUntil && parsed.data.validUntil < todayInOslo()) return { ok: false, error: "invalid" };
 
   const { data: old } = await quotes(admin).select("id").eq("wish_item_id", item.id).eq("status", "active").maybeSingle();
-  if (!(await moveItem(admin, item, "quoted"))) return { ok: false, error: "wrong_state" };
+  // quote_seq + 1: any customer answer to the previous quote now fails its version check.
+  if (!(await moveItem(admin, item, "quoted", { quote_seq: item.quote_seq + 1 }))) return { ok: false, error: "wrong_state" };
 
   await quotes(admin).update({ status: "superseded" } as never).eq("wish_item_id", item.id).eq("status", "active");
   const { error } = await quotes(admin).insert({
@@ -350,7 +366,7 @@ export async function markWishUnavailable(input: { bookingId: string; itemId: st
   const { admin, item, staff } = c;
   if (!canTransition("staff", item.status, "unavailable")) return { ok: false, error: "wrong_state" };
   if (!(await moveItem(admin, item, "unavailable"))) return { ok: false, error: "wrong_state" };
-  await closeQuoteAndCounter(admin, item.id);
+  await closeQuoteAndCounter(admin, item.id, item.revision);
   await afterStaffChange(staff.organizationId, item.booking_id);
   return { ok: true };
 }
@@ -370,7 +386,7 @@ export async function acceptCounter(input: { bookingId: string; itemId: string }
   const q = quote as { id: string; vat_included: boolean } | null;
   if (!cn || !q) return { ok: false, error: "wrong_state" };
 
-  if (!(await moveItem(admin, item, "approved"))) return { ok: false, error: "wrong_state" };
+  if (!(await moveItem(admin, item, "approved", { quote_seq: item.quote_seq + 1 }))) return { ok: false, error: "wrong_state" };
   await quotes(admin).update({ status: "superseded" } as never).eq("id", q.id);
   const unit = Number(cn.proposed_unit_price_nok);
   const { error } = await quotes(admin).insert({

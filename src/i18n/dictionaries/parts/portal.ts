@@ -70,6 +70,12 @@ export const portalNb = {
     noEmail: "Kunden mangler e-postadresse.",
     sent: "Invitasjon sendt",
     failed: "Kunne ikke sende invitasjonen",
+    revoke: "Fjern kundens tilgang",
+    revokeConfirm: "Kunden mister tilgang til portalen med en gang. Du kan sende en ny invitasjon senere.",
+    revokeYes: "Ja, fjern tilgangen",
+    revokeDone: "Tilgangen er fjernet",
+    revokeFailed: "Kunne ikke fjerne tilgangen",
+    cancel: "Avbryt",
   },
   messages: {
     title: "Meldinger",
@@ -179,6 +185,8 @@ export const portalNb = {
     approvedNote: "Tillegg utenfor avtalen. Utleier tar dem med i faktureringen.",
     failed: "Noe gikk galt. Prøv igjen.",
     wrongState: "Ønsket er endret. Siden oppdateres.",
+    expired: "Prisen er utløpt. Skriv til utleier for en ny pris.",
+    expiredBadge: "Utløpt",
     invalidPrice: "Skriv en gyldig pris, for eksempel 1250 eller 1250,50.",
   },
   mailWish: {
@@ -398,6 +406,10 @@ export const portalNb = {
     guestsCardCreate: "Lag invitasjon",
     guestsCardEdit: "Rediger invitasjon",
   },
+  closed: {
+    title: "Kundeportalen er stengt",
+    body: "{org} har stengt kundeportalen for øyeblikket. Ta kontakt med dem direkte hvis du trenger noe.",
+  },
   guestMail: {
     subjectInvite: "Invitasjon fra {host}",
     subjectReminder: "Påminnelse: svar på invitasjonen fra {host}",
@@ -602,6 +614,12 @@ export const portalEn = {
     noEmail: "The customer has no email address.",
     sent: "Invitation sent",
     failed: "Could not send the invitation",
+    revoke: "Remove customer access",
+    revokeConfirm: "The customer loses access to the portal immediately. You can send a new invitation later.",
+    revokeYes: "Yes, remove access",
+    revokeDone: "Access removed",
+    revokeFailed: "Could not remove access",
+    cancel: "Cancel",
   },
   messages: {
     title: "Messages",
@@ -711,6 +729,8 @@ export const portalEn = {
     approvedNote: "Extras outside the agreement. The venue includes them in invoicing.",
     failed: "Something went wrong. Please try again.",
     wrongState: "The wish has changed. The page is refreshing.",
+    expired: "The price has expired. Write to the venue for a new price.",
+    expiredBadge: "Expired",
     invalidPrice: "Enter a valid price, for example 1250 or 1250.50.",
   },
   mailWish: {
@@ -929,6 +949,10 @@ export const portalEn = {
     guestsCardPublished: "Published and ready to send.",
     guestsCardCreate: "Create invitation",
     guestsCardEdit: "Edit invitation",
+  },
+  closed: {
+    title: "The customer portal is closed",
+    body: "{org} has closed the customer portal for now. Contact them directly if you need anything.",
   },
   guestMail: {
     subjectInvite: "Invitation from {host}",

@@ -18,18 +18,24 @@ export type PortalContext = {
   };
 };
 
+export type PortalAccess =
+  | { state: "ok"; ctx: PortalContext }
+  /** A live customer account whose venue has switched the portal off. */
+  | { state: "closed"; organizationName: string }
+  | { state: "none" };
+
 /**
- * The signed-in customer's portal context, or null. Resolution: session user → accepted, live
- * portal_accounts row (read through RLS, so it can only ever be the user's own) → that booking.
- * The booking summary is read with the service role but only after the account matched, and only
- * with an explicit safe column list (no notes, prices or payment data).
+ * The signed-in customer's portal access. Resolution: session user → accepted, live portal_accounts row
+ * (read through RLS, so it can only ever be the user's own) → that booking. The booking summary is read with
+ * the service role but only after the account matched, and only with an explicit safe column list (no notes,
+ * prices or payment data). If the venue switched the portal off the customer gets "closed", never data.
  */
-export const getPortalContext = cache(async function getPortalContext(): Promise<PortalContext | null> {
+export const getPortalAccess = cache(async function getPortalAccess(): Promise<PortalAccess> {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user) return { state: "none" };
 
   const { data: account } = await supabase
     .from("portal_accounts" as never)
@@ -41,7 +47,7 @@ export const getPortalContext = cache(async function getPortalContext(): Promise
     .limit(1)
     .maybeSingle();
   const row = account as unknown as { id: string; organization_id: string; booking_id: string } | null;
-  if (!row) return null;
+  if (!row) return { state: "none" };
 
   const admin = createSupabaseAdminClient();
   const [{ data: booking }, { data: org }, { data: profile }] = await Promise.all([
@@ -51,12 +57,15 @@ export const getPortalContext = cache(async function getPortalContext(): Promise
       .eq("id", row.booking_id)
       .eq("organization_id", row.organization_id)
       .maybeSingle(),
-    admin.from("organizations").select("id, name, logo_url").eq("id", row.organization_id).maybeSingle(),
+    admin.from("organizations").select("id, name, logo_url, portal_enabled" as "id, name, logo_url").eq("id", row.organization_id).maybeSingle(),
     admin.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
   ]);
-  if (!booking || !org) return null;
+  if (!booking || !org) return { state: "none" };
+  if (!(org as unknown as { portal_enabled?: boolean }).portal_enabled) return { state: "closed", organizationName: org.name };
 
   return {
+    state: "ok",
+    ctx: {
     userId: user.id,
     fullName: profile?.full_name?.trim() || user.email || "",
     accountId: row.id,
@@ -67,8 +76,15 @@ export const getPortalContext = cache(async function getPortalContext(): Promise
       eventType: booking.fest_type || booking.event_type,
       guestCount: booking.guest_count,
     },
+    },
   };
 });
+
+/** The portal context, or null when there is no customer account or the venue switched the portal off. */
+export async function getPortalContext(): Promise<PortalContext | null> {
+  const access = await getPortalAccess();
+  return access.state === "ok" ? access.ctx : null;
+}
 
 export async function hasPortalAccount(
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,

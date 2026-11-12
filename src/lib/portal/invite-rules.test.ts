@@ -6,7 +6,7 @@ const base = { templateKey: "klassisk", paletteKey: "skog", fontKey: "serif", he
 
 describe("containsLink", () => {
   it("catches urls, www and bare domains", () => {
-    for (const t of ["https://x.no", "http://evil.com/login", "www.gave.no", "se gave.no", "bit.ly/abc", "klikk eksempel.com nå"]) {
+    for (const t of ["https://x.no", "http://evil.com/login", "www.gave.no", "se gave.no", "bit.ly/abc", "klikk eksempel.com nå", "bank-secure.shop", "claim at pay.support", "refund.online", "vipps.xyz"]) {
       expect(containsLink(t), t).toBe(true);
     }
   });

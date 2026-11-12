@@ -8,6 +8,7 @@ import {
   canTransition,
   counterInputSchema,
   parsePriceInput,
+  quoteExpired,
   quoteInputSchema,
   quoteTotalNok,
   roundNok,
@@ -106,7 +107,8 @@ describe("schemas", () => {
     const id = "6f1c7e0a-5b1e-4d9c-9a57-1f1d2a3b4c5d";
     expect(quoteInputSchema.safeParse({ bookingId: id, itemId: id, unitPriceNok: -1, vatIncluded: true }).success).toBe(false);
     expect(quoteInputSchema.safeParse({ bookingId: id, itemId: id, unitPriceNok: 1e9, vatIncluded: true }).success).toBe(false);
-    expect(counterInputSchema.safeParse({ itemId: id, unitPriceNok: 99.999 }).success).toBe(true);
+    expect(counterInputSchema.safeParse({ itemId: id, quoteId: id, unitPriceNok: 99.999 }).success).toBe(true);
+    expect(counterInputSchema.safeParse({ itemId: id, unitPriceNok: 5 }).success).toBe(false); // must name the quote it answers
   });
 });
 
@@ -125,5 +127,17 @@ describe("summaries", () => {
     const items = [view({ status: "quoted" }), view({ status: "requested" }), view({ status: "countered" }), view({ status: "draft" })];
     expect(awaitingCustomer(items)).toBe(1);
     expect(awaitingVenue(items)).toBe(2);
+  });
+});
+
+describe("quoteExpired", () => {
+  const noon = new Date("2027-03-01T12:00:00Z");
+  it("is open on the valid-until day and closed the day after", () => {
+    expect(quoteExpired("2027-03-01", noon)).toBe(false);
+    expect(quoteExpired("2027-03-02", noon)).toBe(false);
+    expect(quoteExpired("2027-02-28", noon)).toBe(true);
+  });
+  it("never expires without a date", () => {
+    expect(quoteExpired(null, noon)).toBe(false);
   });
 });

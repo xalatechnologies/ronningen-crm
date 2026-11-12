@@ -70,32 +70,38 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     headers["Idempotency-Key"] = input.idempotencyKey.slice(0, 256);
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      from: input.from?.trim() || from,
-      to: [input.to],
-      reply_to: input.replyTo?.trim() || undefined,
-      subject: input.subject,
-      html: input.html,
-      text: input.text,
-      attachments: input.attachments?.map((file) => ({
-        filename: file.filename,
-        content: file.content,
-        content_type: file.contentType ?? "application/pdf",
-      })),
-    }),
-  });
+  // Provider or network trouble is a result, never an exception: bulk senders must keep going.
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        from: input.from?.trim() || from,
+        to: [input.to],
+        reply_to: input.replyTo?.trim() || undefined,
+        subject: input.subject,
+        html: input.html,
+        text: input.text,
+        attachments: input.attachments?.map((file) => ({
+          filename: file.filename,
+          content: file.content,
+          content_type: file.contentType ?? "application/pdf",
+        })),
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
 
-  if (!response.ok) {
-    const body = await response.text();
-    return {
-      ok: false,
-      error: body || `Resend API feilet (${response.status})`,
-    };
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      return {
+        ok: false,
+        error: body || `Resend API feilet (${response.status})`,
+      };
+    }
+
+    const data = (await response.json().catch(() => ({}))) as { id?: string };
+    return { ok: true, id: data.id };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "E-post kunne ikke sendes" };
   }
-
-  const data = (await response.json()) as { id?: string };
-  return { ok: true, id: data.id };
 }

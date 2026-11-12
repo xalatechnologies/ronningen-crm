@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { todayInOslo } from "./rsvp-rules";
+
 export const WISH_CATEGORIES = ["food", "drink", "decoration", "furniture", "av", "cleaning", "other"] as const;
 export type WishCategory = (typeof WISH_CATEGORIES)[number];
 
@@ -107,6 +109,7 @@ export const quoteInputSchema = z.object({
 
 export const counterInputSchema = z.object({
   itemId: z.string().uuid(),
+  quoteId: z.string().uuid(),
   unitPriceNok: price,
   note: text(1000).optional().default(null),
 });
@@ -149,4 +152,9 @@ export function awaitingCustomer(items: readonly WishItemView[]): number {
 /** Items waiting for the venue (requested, or a counter to answer). */
 export function awaitingVenue(items: readonly WishItemView[]): number {
   return items.filter((item) => item.status === "requested" || item.status === "countered").length;
+}
+
+/** A quote is open on its "valid until" day and closed the day after (calendar date, Oslo time). */
+export function quoteExpired(validUntil: string | null, now: Date = new Date()): boolean {
+  return validUntil !== null && todayInOslo(now) > validUntil;
 }

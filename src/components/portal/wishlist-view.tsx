@@ -29,6 +29,7 @@ import {
   approvedTotalNok,
   canCounter,
   parsePriceInput,
+  quoteExpired,
   WISH_CATEGORIES,
   type WishCategory,
   type WishItemView,
@@ -57,6 +58,8 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
       if (success) toast.success(success);
     } else if (result.error === "limit") {
       toast.error(t("portal.wishlist.counterLimit"));
+    } else if (result.error === "expired") {
+      toast.error(t("portal.wishlist.expired"));
     } else if (result.error === "wrong_state") {
       toast.error(t("portal.wishlist.wrongState"));
     } else {
@@ -174,13 +177,14 @@ function WishCard({
   const [priceError, setPriceError] = useState(false);
   const working = busy?.startsWith(item.id) ?? false;
   const q = item.quote;
+  const expired = q ? quoteExpired(q.validUntil) : false;
 
   async function submitCounter(event: FormEvent) {
     event.preventDefault();
     const parsed = parsePriceInput(price);
     if (parsed === null) return setPriceError(true);
     setPriceError(false);
-    const ok = await run(`${item.id}:counter`, () => counterQuote({ itemId: item.id, unitPriceNok: parsed, note }));
+    const ok = await run(`${item.id}:counter`, () => counterQuote({ itemId: item.id, quoteId: q!.id, unitPriceNok: parsed, note }));
     if (ok) {
       setCountering(false);
       setPrice("");
@@ -216,9 +220,10 @@ function WishCard({
           <p className="font-heading text-xl font-bold">
             {nok(q.totalNok)} <span className="text-app-sm font-medium text-muted-foreground">{q.vatIncluded ? t("portal.wishlist.vatIncluded") : t("portal.wishlist.vatExcluded")}</span>
           </p>
+          {expired ? <p className="text-app-sm font-semibold text-destructive">{t("portal.wishlist.expiredBadge")} · {t("portal.wishlist.expired")}</p> : null}
           {q.validUntil ? (
             <p className="text-app-xs text-muted-foreground">
-              {t("portal.wishlist.validUntil", { date: new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(q.validUntil)) })}
+              {t("portal.wishlist.validUntil", { date: new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(new Date(q.validUntil)) })}
             </p>
           ) : null}
           {q.note ? <p className="text-app-sm">{t("portal.wishlist.venueNote", { note: q.note })}</p> : null}
@@ -264,14 +269,14 @@ function WishCard({
               type="button"
               variant="success"
               size="cta"
-              disabled={working}
-              onClick={() => void run(`${item.id}:approve`, () => respondToQuote({ itemId: item.id, answer: "approve" }))}
+              disabled={working || expired}
+              onClick={() => void run(`${item.id}:approve`, () => respondToQuote({ itemId: item.id, quoteId: q!.id, answer: "approve" }))}
             >
               {t("portal.wishlist.approve")}
             </Button>
             <div className="flex gap-2">
               {canCounter({ counterRounds: item.counterRounds, hasOpenCounter: false }) ? (
-                <Button type="button" variant="outline" size="cta" className="flex-1" disabled={working} onClick={() => setCountering(true)}>
+                <Button type="button" variant="outline" size="cta" className="flex-1" disabled={working || expired} onClick={() => setCountering(true)}>
                   {t("portal.wishlist.counter")}
                 </Button>
               ) : null}
@@ -281,7 +286,7 @@ function WishCard({
                 size="cta"
                 className="flex-1"
                 disabled={working}
-                onClick={() => void run(`${item.id}:decline`, () => respondToQuote({ itemId: item.id, answer: "decline" }))}
+                onClick={() => void run(`${item.id}:decline`, () => respondToQuote({ itemId: item.id, quoteId: q!.id, answer: "decline" }))}
               >
                 {t("portal.wishlist.decline")}
               </Button>

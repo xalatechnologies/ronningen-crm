@@ -24,24 +24,23 @@ export async function guestIdForToken(admin: Admin, token: string): Promise<stri
   return (data as { guest_id: string } | null)?.guest_id ?? null;
 }
 
+const invitees = (a: Admin) => a.from("portal_activity_invitees" as never);
+
 /**
- * An e-mail change means the old address must not keep access: every link is revoked and the guest goes
- * back to "not sent" with no answer (it was given by whoever held the old address).
+ * A guest who declines the main invitation is no longer attending anything: their answers are removed
+ * (for "all" activities the row only held the answer; for "selected" activities the invitation stays).
  */
-export async function resetGuestInvitation(admin: Admin, guestId: string): Promise<void> {
-  await tokens(admin).delete().eq("guest_id", guestId);
-  await admin
-    .from("portal_guests" as never)
-    .update({
-      status: "not_sent",
-      party_size: 1,
-      diet: [],
-      diet_consent_at: null,
-      responded_at: null,
-      last_sent_at: null,
-      send_count: 0,
-      rsvp_count: 0,
-      last_rsvp_at: null,
-    } as never)
-    .eq("id", guestId);
+export async function clearActivityAnswers(admin: Admin, guestId: string, bookingId: string): Promise<void> {
+  const { data: all } = await admin.from("portal_activities" as never).select("id").eq("booking_id", bookingId).eq("audience", "all");
+  const allIds = ((all as unknown as { id: string }[] | null) ?? []).map((a) => a.id);
+  if (allIds.length > 0) await invitees(admin).delete().eq("guest_id", guestId).in("activity_id", allIds);
+  await invitees(admin).update({ response: null, people: null, responded_at: null } as never).eq("guest_id", guestId);
+}
+
+/** A smaller party frees the places the guest no longer needs (capacity counts people). */
+export async function clampActivityPeople(admin: Admin, guestId: string, partySize: number): Promise<void> {
+  const { data } = await invitees(admin).select("activity_id").eq("guest_id", guestId).eq("response", "yes").gt("people", partySize);
+  for (const row of (data as unknown as { activity_id: string }[] | null) ?? []) {
+    await invitees(admin).update({ people: partySize } as never).eq("activity_id", row.activity_id).eq("guest_id", guestId);
+  }
 }

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/client";
-import { sendPortalInvite } from "@/lib/portal/actions";
+import { revokePortalAccess, sendPortalInvite } from "@/lib/portal/actions";
 import { portalInviteState, type PortalInviteState } from "@/lib/portal/rules";
 import { useSupabase } from "@/providers/supabase-provider";
 
@@ -27,6 +27,7 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
   const [waitingWishes, setWaitingWishes] = useState(0);
   const [scheduleWaiting, setScheduleWaiting] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [confirmRevoke, setConfirmRevoke] = useState(false);
 
   const load = useCallback(async () => {
     const [{ data: org }, { data: rows }, { count }, { count: wishCount }, { data: sched }] = await Promise.all([
@@ -79,6 +80,19 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
         ? t("portal.staff.expired", { email: account.email })
         : t("portal.staff.pending", { email: account.email });
 
+  async function revoke() {
+    setBusy(true);
+    try {
+      const result = await revokePortalAccess(props.bookingId);
+      if (!result.ok) return void toast.error(t("portal.staff.revokeFailed"));
+      toast.success(t("portal.staff.revokeDone"));
+      setConfirmRevoke(false);
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function send() {
     setBusy(true);
     try {
@@ -108,6 +122,25 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
           {waitingWishes > 0 ? ` · ${t("portal.staffWishes.pending", { count: waitingWishes })}` : ""}
           {scheduleWaiting ? ` · ${t("portal.staffSchedule.pendingBadge")}` : ""}
         </Link>
+      ) : null}
+      {state === "accepted" ? (
+        confirmRevoke ? (
+          <div className="flex flex-col gap-2 rounded-xl bg-amber-500/10 p-3">
+            <p className="text-app-sm">{t("portal.staff.revokeConfirm")}</p>
+            <div className="flex gap-2">
+              <Button type="button" variant="destructive" size="sm" disabled={busy} onClick={() => void revoke()}>
+                {t("portal.staff.revokeYes")}
+              </Button>
+              <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => setConfirmRevoke(false)}>
+                {t("portal.staff.cancel")}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button type="button" variant="ghost" size="sm" className="w-fit text-destructive" onClick={() => setConfirmRevoke(true)}>
+            {t("portal.staff.revoke")}
+          </Button>
+        )
       ) : null}
       {state !== "accepted" ? (
         <Button type="button" variant="outline" size="sm" className="w-fit" disabled={busy} onClick={() => void send()}>

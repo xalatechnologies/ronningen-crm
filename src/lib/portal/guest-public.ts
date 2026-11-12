@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
+import { sanitizeHostName } from "./host-name";
 import { guestIdForToken } from "./guest-tokens";
 import type { DietTag, GuestStatus } from "./guest-rules";
 import { deadlinePassed } from "./rsvp-rules";
@@ -59,13 +60,15 @@ export async function loadPublicInvite(token: string): Promise<PublicInvite | nu
       .select("template_key, palette_key, font_key, headline, message, event_date_text, event_time_text, place_text, dress_code, rsvp_deadline, status")
       .eq("booking_id", guest.booking_id)
       .maybeSingle(),
-    admin.from("organizations").select("name").eq("id", guest.organization_id).maybeSingle(),
+    admin.from("organizations").select("name, portal_enabled" as "name").eq("id", guest.organization_id).maybeSingle(),
     admin.from("bookings").select("customer_id").eq("id", guest.booking_id).maybeSingle(),
   ]);
   const design = d as unknown as
     | { template_key: InviteDesign["templateKey"]; palette_key: InviteDesign["paletteKey"]; font_key: InviteDesign["fontKey"]; headline: string; message: string; event_date_text: string; event_time_text: string; place_text: string; dress_code: string; rsvp_deadline: string | null; status: string }
     | null;
   if (!design || design.status !== "published") return null;
+  // The venue switched the portal off: guest links stop working too (abuse kill switch).
+  if (!(org as unknown as { portal_enabled?: boolean } | null)?.portal_enabled) return null;
 
   const { data: customer } = booking?.customer_id
     ? await admin.from("customers").select("name").eq("id", booking.customer_id).maybeSingle()
@@ -87,8 +90,16 @@ export async function loadPublicInvite(token: string): Promise<PublicInvite | nu
       rsvpDeadline: design.rsvp_deadline,
     },
     venueName: org?.name ?? "",
-    hostName: customer?.name ?? "",
+    hostName: sanitizeHostName(customer?.name ?? "", org?.name ?? ""),
     bookingId: guest.booking_id,
     closed: deadlinePassed(design.rsvp_deadline),
   };
+}
+
+/** Is the venue's portal switched on for this booking's organization? (guest actions stop when it is off) */
+export async function portalEnabledForBooking(admin: ReturnType<typeof createSupabaseAdminClient>, bookingId: string): Promise<boolean> {
+  const { data: b } = await admin.from("bookings").select("organization_id").eq("id", bookingId).maybeSingle();
+  if (!b?.organization_id) return false;
+  const { data: o } = await admin.from("organizations").select("portal_enabled" as "id").eq("id", b.organization_id).maybeSingle();
+  return Boolean((o as unknown as { portal_enabled?: boolean } | null)?.portal_enabled);
 }
