@@ -15,12 +15,13 @@ export type ImpersonationContext = {
 };
 
 export async function getImpersonationContext(): Promise<ImpersonationContext | null> {
-  const admin = await getPlatformAdminContext();
-  if (!admin) return null;
-
+  // Cookie first: almost every request has none, so skip the admin check then.
   const cookieStore = await cookies();
   const orgId = cookieStore.get(IMPERSONATION_COOKIE)?.value;
   if (!orgId) return null;
+
+  const admin = await getPlatformAdminContext();
+  if (!admin) return null;
   if (!isSupabaseAdminConfigured()) return null;
 
   try {

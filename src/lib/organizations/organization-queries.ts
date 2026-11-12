@@ -168,6 +168,30 @@ export async function fetchUserOrganizations(
     .filter((row): row is OrganizationMembership => row !== null);
 }
 
+/** One organization the caller may read (a member, or a platform admin viewing as it). */
+export async function fetchOrganizationSummaryById(
+  supabase: Client,
+  organizationId: string,
+): Promise<OrganizationSummary | null> {
+  const [{ data: org }, { data: sub }] = await Promise.all([
+    supabase
+      .from("organizations")
+      .select(
+        "id, name, slug, logo_url, subscription_status, subscription_plan, is_suspended, suspended_reason, billing_exempt",
+      )
+      .eq("id", organizationId)
+      .maybeSingle(),
+    supabase
+      .from("subscriptions")
+      .select("current_period_end, provider_subscription_id")
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  return org ? mapOrganization(org, sub ?? null) : null;
+}
+
 export async function fetchActiveOrganizationId(
   supabase: Client,
   userId: string,

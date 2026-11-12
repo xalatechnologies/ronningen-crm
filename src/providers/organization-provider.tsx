@@ -18,6 +18,7 @@ import {
   fetchUserOrganizations,
   resolveCurrentOrganization,
   setActiveOrganizationId,
+  fetchOrganizationSummaryById,
 } from "@/lib/organizations/organization-queries";
 import {
   ACTIVE_ORGANIZATION_STORAGE_KEY,
@@ -84,15 +85,24 @@ export function OrganizationProvider({
         impersonationOrgId ?? profileOrgId ?? storedOrgId;
       const resolved = resolveCurrentOrganization(memberships, preferredOrgId);
 
+      // Platform admin viewing as an organization they are not a member of: act as its owner.
+      const viewAs =
+        impersonationOrgId && resolved.organizationId !== impersonationOrgId
+          ? await fetchOrganizationSummaryById(supabase, impersonationOrgId)
+          : null;
+      const effective = viewAs
+        ? { organization: viewAs, organizationId: viewAs.id, role: "owner" as const }
+        : resolved;
+
       setOrganizations(memberships);
-      setCurrentOrganization(resolved.organization);
-      setCurrentOrganizationIdState(resolved.organizationId);
-      setCurrentRole(resolved.role);
+      setCurrentOrganization(effective.organization);
+      setCurrentOrganizationIdState(effective.organizationId);
+      setCurrentRole(effective.role);
 
       if (typeof window !== "undefined") {
         if (memberships.length === 0) {
           window.localStorage.removeItem(ACTIVE_ORGANIZATION_STORAGE_KEY);
-        } else if (resolved.organizationId) {
+        } else if (resolved.organizationId && !viewAs) {
           window.localStorage.setItem(
             ACTIVE_ORGANIZATION_STORAGE_KEY,
             resolved.organizationId,
