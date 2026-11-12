@@ -375,7 +375,7 @@ export const en = {
   landing: {
     nav: {
       features: "Features",
-      howItWorks: "How it works",
+      howItWorks: "Workflow",
       pricing: "Pricing",
       faq: "FAQ",
     },
@@ -428,6 +428,10 @@ export const en = {
       sectionDescription: "One plan with everything you need — no hidden tiers or add-ons.",
       disclaimerDev: "Billing is not enabled in this preview environment.",
       perMonth: "NOK/month",
+      exVat: "excl. VAT",
+      priceExVat: "Price excl. VAT",
+      vat: "VAT (25%)",
+      totalIncVat: "Total per month incl. VAT",
       trial: "30-day free trial",
     },
     auth: {
@@ -479,6 +483,7 @@ export const en = {
         { title: "Payment follow-up", text: "See paid, remaining and overdue amounts clearly." },
         { title: "Equipment and assets", text: "Track equipment linked to venues and events." },
         { title: "Reports and insights", text: "Better control of revenue, event types and outstanding amounts." },
+        { title: "Contracts and e-signing", text: "Send the rental agreement to the customer, who signs online. You get it back signed automatically." },
       ],
     },
     howItWorks: {

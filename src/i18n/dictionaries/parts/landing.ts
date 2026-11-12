@@ -1,7 +1,7 @@
 export const landingNb = {
   nav: {
     features: "Funksjoner",
-    howItWorks: "Slik fungerer det",
+    howItWorks: "Arbeidsflyt",
     pricing: "Priser",
     faq: "FAQ",
   },
@@ -54,6 +54,10 @@ export const landingNb = {
     sectionDescription: "Én plan med alt du trenger — ingen skjulte nivåer eller tillegg.",
     disclaimerDev: "Fakturering er ikke aktivert i dette forhåndsvisningsmiljøet.",
     perMonth: "kr/mnd",
+    exVat: "eks. mva",
+    priceExVat: "Pris eks. mva",
+    vat: "MVA (25 %)",
+    totalIncVat: "Totalt per måned inkl. mva",
     trial: "30 dagers gratis prøveperiode",
   },
   auth: {
@@ -122,6 +126,10 @@ export const landingNb = {
       {
         title: "Rapporter og innsikt",
         text: "Få bedre kontroll på omsetning, hendelsestyper og utestående.",
+      },
+      {
+        title: "Kontrakt og digital signering",
+        text: "Send leieavtalen til kunden, som signerer online. Du får den signert tilbake automatisk.",
       },
     ],
   },

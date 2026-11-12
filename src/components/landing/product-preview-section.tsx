@@ -10,7 +10,9 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { statusLabel } from "@/lib/navigation/nav-labels";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const TAB_MS = 5000;
 
 const CHART_HEIGHTS = [40, 65, 52, 78, 58, 88, 72, 48, 82, 60, 70, 55] as const;
 const CHART_MONTHS = [
@@ -48,6 +50,14 @@ export function ProductPreviewSection() {
   const items = dict.productPreview.items;
   const demo = dict.heroDemo;
   const current = items[active]!;
+  const [paused, setPaused] = useState(false);
+
+  // Auto-advance through the tabs; hover/focus pauses, a click restarts the timer.
+  useEffect(() => {
+    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = window.setTimeout(() => setActive((i) => (i + 1) % items.length), TAB_MS);
+    return () => window.clearTimeout(id);
+  }, [paused, active, items.length]);
 
   return (
     <section
@@ -76,6 +86,10 @@ export function ProductPreviewSection() {
           <div
             role="group"
             className="inline-flex w-fit max-w-full gap-1 rounded-full bg-[#eef2f0] p-1"
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onFocus={() => setPaused(true)}
+            onBlur={() => setPaused(false)}
           >
             {items.map((item, index) => {
               const Icon = PRODUCT_PREVIEW_ICONS[index]!;
@@ -87,7 +101,7 @@ export function ProductPreviewSection() {
                   aria-pressed={on}
                   onClick={() => setActive(index)}
                   className={cn(
-                    "flex min-h-11 items-center gap-2 rounded-full px-4 text-[15px] font-semibold transition-colors",
+                    "relative flex min-h-11 items-center gap-2 overflow-hidden rounded-full px-4 text-[15px] font-semibold transition-colors",
                     on
                       ? "bg-[#1a4331] text-white"
                       : "text-[#334155] hover:bg-white/70",
@@ -95,6 +109,13 @@ export function ProductPreviewSection() {
                 >
                   <Icon className="size-4" aria-hidden />
                   {item.title}
+                  {on && !paused ? (
+                    <span
+                      aria-hidden
+                      className="absolute inset-x-4 bottom-1 h-0.5 origin-left rounded-full bg-[#85b098] motion-reduce:hidden"
+                      style={{ animation: `hiw-progress ${TAB_MS}ms linear forwards` }}
+                    />
+                  ) : null}
                 </button>
               );
             })}

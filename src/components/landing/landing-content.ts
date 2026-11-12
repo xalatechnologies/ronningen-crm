@@ -2,6 +2,7 @@ import {
   BarChart3,
   CalendarDays,
   CreditCard,
+  FileSignature,
   FileSpreadsheet,
   Layers,
   Package,
@@ -30,6 +31,7 @@ export const FEATURE_ICONS: LucideIcon[] = [
   Wallet,
   Layers,
   PieChart,
+  FileSignature,
 ];
 
 export const PRODUCT_PREVIEW_ICONS: LucideIcon[] = [

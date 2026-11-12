@@ -4,27 +4,31 @@ import {
   LANDING_CONTAINER,
   LANDING_SECTION_X,
 } from "@/components/landing/landing-layout";
+import { HowItWorksPanel } from "@/components/landing/how-it-works-panels";
 import { useTranslation } from "@/i18n/client";
 import { getDictionary } from "@/i18n/dictionaries";
-import { statusLabel } from "@/lib/navigation/nav-labels";
 import { cn } from "@/lib/utils";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const CHART_HEIGHTS = [40, 65, 52, 78, 58, 88, 72, 48, 82, 60, 70, 55] as const;
-
-const STATUS_TONE: Record<string, string> = {
-  confirmed: "bg-[#e8f5ee] text-[#1a4331]",
-  partial: "bg-[#fdf3dc] text-[#7a5410]",
-  inquiry: "bg-[#eef2f0] text-[#475569]",
-};
+const STEP_MS = 5000;
 
 export function HowItWorksSection() {
   const { t, locale } = useTranslation();
   const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
   const dict = useMemo(() => getDictionary(locale).landing, [locale]);
   const steps = dict.howItWorks.steps;
-  const demo = dict.heroDemo;
-  const pricing = dict.features.items[2];
+
+  // Auto-advance 1 -> 2 -> 3 -> 4 -> 1; hover/focus pauses, a click restarts the timer.
+  const auto = !paused;
+  useEffect(() => {
+    if (!auto || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = window.setTimeout(
+      () => setActive((i) => (i + 1) % steps.length),
+      STEP_MS,
+    );
+    return () => window.clearTimeout(id);
+  }, [auto, active, steps.length]);
 
   return (
     <section
@@ -54,7 +58,13 @@ export function HowItWorksSection() {
             </p>
           </div>
 
-          <ol className="flex flex-col gap-2">
+          <ol
+            className="flex flex-col gap-2"
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onFocus={() => setPaused(true)}
+            onBlur={() => setPaused(false)}
+          >
             {steps.map((item, index) => {
               const on = index === active;
               return (
@@ -64,7 +74,7 @@ export function HowItWorksSection() {
                     onClick={() => setActive(index)}
                     aria-pressed={on}
                     className={cn(
-                      "flex w-full items-start gap-4 rounded-2xl p-4 text-left transition-colors md:p-5",
+                      "relative flex w-full items-start gap-4 overflow-hidden rounded-2xl p-4 text-left transition-colors md:p-5",
                       on ? "bg-white/10" : "hover:bg-white/5",
                     )}
                   >
@@ -92,6 +102,13 @@ export function HowItWorksSection() {
                         {item.text}
                       </span>
                     </span>
+                    {on && auto ? (
+                      <span
+                        aria-hidden
+                        className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-[#85b098] motion-reduce:hidden"
+                        style={{ animation: `hiw-progress ${STEP_MS}ms linear forwards` }}
+                      />
+                    ) : null}
                   </button>
                 </li>
               );
@@ -100,90 +117,7 @@ export function HowItWorksSection() {
         </div>
 
         <div className="flex items-center" aria-hidden>
-          <div
-            key={active}
-            className="w-full rounded-3xl bg-white p-5 text-[#1a1c1a] shadow-[0_24px_64px_-24px_rgba(0,0,0,0.5)] md:p-8"
-          >
-            {active === 0 ? (
-              <ul className="divide-y divide-[#eef1ee]">
-                {demo.bookings.map((row, i) => (
-                  <li
-                    key={row.event}
-                    className={cn(
-                      "flex items-center gap-3 py-3.5 text-[15px]",
-                      i === 0 && "font-semibold",
-                    )}
-                  >
-                    <span className="min-w-0 flex-1 truncate">{row.event}</span>
-                    <span className="text-[#64748b]">{row.date}</span>
-                    <span
-                      className={cn(
-                        "rounded-full px-2.5 py-0.5 text-xs font-medium",
-                        STATUS_TONE[row.statusKey] ?? STATUS_TONE.inquiry,
-                      )}
-                    >
-                      {statusLabel(row.statusKey, t)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-
-            {active === 1 ? (
-              <div className="flex flex-col gap-6 py-4">
-                <div>
-                  <p className="font-heading text-2xl font-semibold text-[#0c1f16]">
-                    {pricing.title}
-                  </p>
-                  <p className="mt-1 text-[15px] text-[#475569]">
-                    {pricing.text}
-                  </p>
-                </div>
-                <p className="font-heading text-5xl font-bold tracking-tight text-[#1a4331]">
-                  {demo.stats[2].value}
-                </p>
-              </div>
-            ) : null}
-
-            {active === 2 ? (
-              <div className="flex flex-col gap-5 py-4">
-                <p className="font-heading text-2xl font-semibold text-[#0c1f16]">
-                  {t("landing.heroStats.outstanding")}
-                </p>
-                <p className="font-heading text-5xl font-bold tracking-tight text-[#1a4331]">
-                  {demo.stats[2].value}
-                </p>
-                <div className="h-3 overflow-hidden rounded-full bg-[#e8f5ee]">
-                  <div className="h-full w-[72%] rounded-full bg-[#1a4331]" />
-                </div>
-              </div>
-            ) : null}
-
-            {active === 3 ? (
-              <div className="flex flex-col gap-5">
-                <div className="flex items-baseline justify-between">
-                  <p className="font-heading text-lg font-semibold text-[#0c1f16]">
-                    {demo.monthlyRevenue}
-                  </p>
-                  <p className="font-heading text-lg font-bold text-[#1a4331]">
-                    {demo.demoRevenue}
-                  </p>
-                </div>
-                <div className="flex h-44 items-end gap-2">
-                  {CHART_HEIGHTS.map((h, i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "flex-1 rounded-md",
-                        i === 5 ? "bg-[#1a4331]" : "bg-[#d3e6da]",
-                      )}
-                      style={{ height: `${h}%` }}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
+          <HowItWorksPanel key={active} step={active} />
         </div>
       </div>
     </section>

@@ -20,7 +20,7 @@ import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import type { User } from "@supabase/supabase-js";
-import { MenuIcon } from "lucide-react";
+import { ArrowRightIcon, MenuIcon } from "lucide-react";
 import { BrandLockup } from "@/components/brand/brand-logo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -143,17 +143,20 @@ export function LandingHeader() {
             <LanguageSwitcher variant="compact" />
           </div>
           {!loading && isAuthenticated ? (
-            <div className="flex min-w-0 items-center gap-3 rounded-full lg:bg-[#eef2f0] lg:p-1 lg:pl-4">
-              <p className="hidden min-w-0 max-w-[14rem] truncate text-sm text-rn-text-slate lg:block xl:max-w-[20rem]">
-                {t("landing.auth.loggedInAs")}{" "}
-                <span className="font-semibold text-rn-text-heading">
-                  {displayName}
-                </span>
-              </p>
-              <Link href={LANDING_ROUTES.app} className={registerButtonClass}>
-                {t("landing.auth.goToApp")}
-              </Link>
-            </div>
+            <Link
+              href={LANDING_ROUTES.app}
+              title={`${t("landing.auth.loggedInAs")} ${displayName}`}
+              className={cn(registerButtonClass, "gap-2.5 pl-1.5 pr-4")}
+            >
+              <span
+                aria-hidden
+                className="flex size-7 items-center justify-center rounded-full bg-white/15 text-xs font-bold uppercase"
+              >
+                {displayName.trim().charAt(0)}
+              </span>
+              {t("landing.auth.goToApp")}
+              <ArrowRightIcon className="size-4" />
+            </Link>
           ) : !loading ? (
             <>
               <Link href={LANDING_ROUTES.login} className={loginButtonClass}>
