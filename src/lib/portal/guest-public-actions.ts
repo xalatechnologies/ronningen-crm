@@ -64,3 +64,30 @@ export async function setReminders(token: string, stop: boolean): Promise<{ ok: 
     .eq("id", guestId);
   return { ok: !error };
 }
+
+export type ActivityAnswerResult = { ok: true } | { ok: false; error: "not_found" | "not_invited" | "closed" | "full" | "failed" };
+
+/**
+ * Public: a guest answers an activity through their secret link. The answer, capacity and "has it started"
+ * checks all happen atomically in the database function (service role only), never in the browser.
+ */
+export async function answerActivity(token: string, activityId: string, response: "yes" | "no" | "maybe"): Promise<ActivityAnswerResult> {
+  const admin = createSupabaseAdminClient();
+  const guestId = await guestIdForToken(admin, typeof token === "string" ? token : "");
+  if (!guestId) return { ok: false, error: "not_found" };
+  if (typeof activityId !== "string" || !["yes", "no", "maybe"].includes(response)) return { ok: false, error: "not_found" };
+
+  const { data: g } = await admin.from("portal_guests" as never).select("status, party_size").eq("id", guestId).maybeSingle();
+  const guest = g as unknown as { status: string; party_size: number } | null;
+  if (!guest || guest.status === "declined") return { ok: false, error: "not_found" };
+
+  const { data, error } = await admin.rpc("portal_activity_answer" as never, {
+    p_guest_id: guestId,
+    p_activity_id: activityId,
+    p_response: response,
+    p_people: guest.status === "accepted" ? guest.party_size : 1,
+  } as never);
+  if (error) return { ok: false, error: "failed" };
+  const status = data as unknown as string;
+  return status === "ok" ? { ok: true } : { ok: false, error: (["not_found", "not_invited", "closed", "full"].includes(status) ? status : "failed") as "not_found" | "not_invited" | "closed" | "full" | "failed" };
+}

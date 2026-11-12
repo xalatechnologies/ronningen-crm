@@ -19,6 +19,7 @@ export type PublicInvite = {
   design: Pick<InviteDesign, "templateKey" | "paletteKey" | "fontKey" | "headline" | "message" | "eventDateText" | "eventTimeText" | "placeText" | "dressCode" | "rsvpDeadline">;
   venueName: string;
   hostName: string;
+  bookingId: string;
   closed: boolean;
 };
 
@@ -87,6 +88,7 @@ export async function loadPublicInvite(token: string): Promise<PublicInvite | nu
     },
     venueName: org?.name ?? "",
     hostName: customer?.name ?? "",
+    bookingId: guest.booking_id,
     closed: deadlinePassed(design.rsvp_deadline),
   };
 }

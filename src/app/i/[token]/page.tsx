@@ -1,6 +1,8 @@
 import { InviteCard } from "@/components/portal/invite-card";
 import { GuestRsvpForm } from "@/components/portal/guest-rsvp-form";
 import { getServerTranslation } from "@/i18n/server";
+import { GuestActivities } from "@/components/portal/guest-activities";
+import { listGuestActivities } from "@/lib/portal/activities";
 import { loadPublicInvite } from "@/lib/portal/guest-public";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +24,7 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
   }
 
   const { design, guest } = invite;
+  const activities = guest.status === "declined" ? [] : await listGuestActivities(guest.id, invite.bookingId);
   const deadline = design.rsvpDeadline
     ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${design.rsvpDeadline}T00:00:00Z`))
     : "";
@@ -44,6 +47,7 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
           />
         </div>
         <GuestRsvpForm token={token} guest={guest} closed={invite.closed} hostName={invite.hostName || invite.venueName} />
+        <GuestActivities token={token} activities={activities} />
       </div>
     </main>
   );
