@@ -53,3 +53,38 @@ export async function sendPortalInviteEmail(input: {
     idempotencyKey: `portal-invite:${input.accountId}:${input.token.slice(0, 8)}`,
   });
 }
+
+export async function sendPortalMessageEmail(input: {
+  to: string;
+  accountId: string;
+  organizationName: string;
+  customerName: string;
+  t: Translator;
+}) {
+  const { t } = input;
+  const url = `${contractPublicOrigin()}/portal/messages`;
+  const body = t("portal.mailMessage.body", { name: input.customerName, org: input.organizationName });
+  const cta = t("portal.mailMessage.cta");
+
+  const html = `<!DOCTYPE html>
+<html><body style="margin:0;padding:24px 12px;background:#f4f1ea;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+    <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;padding:32px 28px;color:#1c1917;">
+      <tr><td style="font-size:16px;line-height:1.6;">
+        <p style="margin:0 0 16px;">${escapeHtml(body)}</p>
+        <p style="margin:24px 0 0;"><a href="${url}" style="display:inline-block;background:#1a4331;color:#ffffff;text-decoration:none;padding:13px 22px;border-radius:10px;font-weight:600;">${escapeHtml(cta)}</a></p>
+      </td></tr>
+    </table>
+  </td></tr></table>
+</body></html>`;
+
+  // The message text is deliberately not in the e-mail: it stays inside the portal.
+  return sendEmail({
+    to: input.to,
+    from: brandedFromAddress(input.organizationName),
+    subject: t("portal.mailMessage.subject", { org: input.organizationName }),
+    html,
+    text: `${body}\n\n${cta}: ${url}`,
+    idempotencyKey: `portal-message:${input.accountId}:${Math.floor(Date.now() / (15 * 60_000))}`,
+  });
+}

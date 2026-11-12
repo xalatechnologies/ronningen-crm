@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/client";
 import { sendPortalInvite } from "@/lib/portal/actions";
 import { portalInviteState, type PortalInviteState } from "@/lib/portal/rules";
@@ -22,10 +23,11 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
   const supabase = useSupabase();
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [account, setAccount] = useState<AccountRow | null>(null);
+  const [unread, setUnread] = useState(0);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const [{ data: org }, { data: rows }] = await Promise.all([
+    const [{ data: org }, { data: rows }, { count }] = await Promise.all([
       supabase.from("organizations").select("portal_enabled" as "id").eq("id", props.organizationId).maybeSingle(),
       supabase
         .from("portal_accounts" as never)
@@ -35,7 +37,14 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
         .is("revoked_at", null)
         .order("created_at", { ascending: false })
         .limit(1),
+      supabase
+        .from("portal_messages" as never)
+        .select("id", { count: "exact", head: true })
+        .eq("booking_id", props.bookingId)
+        .eq("sender_kind", "customer")
+        .is("read_by_staff_at", null),
     ]);
+    setUnread(count ?? 0);
     setEnabled(Boolean((org as unknown as { portal_enabled?: boolean } | null)?.portal_enabled));
     setAccount(((rows as unknown as AccountRow[] | null) ?? [])[0] ?? null);
   }, [props.bookingId, props.organizationId, supabase]);
@@ -74,6 +83,15 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
     <section className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/8">
       <h3 className="font-heading text-base font-semibold">{t("portal.staff.title")}</h3>
       <p className="text-app-sm text-muted-foreground">{message}</p>
+      {state === "accepted" ? (
+        <Link
+          href={`/app/bookings/${props.bookingId}/portal`}
+          className={buttonVariants({ variant: "outline", size: "sm", className: "w-fit" })}
+        >
+          {t("portal.staffPage.open")}
+          {unread > 0 ? ` · ${t("portal.staffPage.unread", { count: unread })}` : ""}
+        </Link>
+      ) : null}
       {state !== "accepted" ? (
         <Button type="button" variant="outline" size="sm" className="w-fit" disabled={busy} onClick={() => void send()}>
           {account ? t("portal.staff.resend") : t("portal.staff.invite")}

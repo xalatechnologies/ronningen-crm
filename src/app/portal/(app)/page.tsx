@@ -1,7 +1,10 @@
-import { CalendarDays, Users } from "lucide-react";
+import { CalendarDays, ChevronRight, MessageCircle, Users } from "lucide-react";
+import Link from "next/link";
 
 import { getServerTranslation } from "@/i18n/server";
 import { getPortalContext } from "@/lib/portal/context";
+import { countUnread } from "@/lib/portal/messages";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +20,7 @@ export default async function PortalHomePage() {
   if (!ctx) return null;
   const { t, formatDate } = await getServerTranslation();
 
+  const unread = await countUnread(await createServerSupabaseClient(), ctx.booking.id, "customer");
   const days = ctx.booking.eventDate ? daysUntil(ctx.booking.eventDate) : null;
   const countdown =
     days == null
@@ -55,9 +59,28 @@ export default async function PortalHomePage() {
         </ul>
       </header>
 
-      <section className="flex flex-col gap-2 rounded-2xl bg-card p-6 ring-1 ring-foreground/8">
-        <h2 className="font-heading text-xl font-semibold">{t("portal.home.nextTitle")}</h2>
-        <p className="text-muted-foreground">{t("portal.home.nextBody")}</p>
+      <section className="flex flex-col gap-3">
+        <h2 className="font-heading text-lg font-semibold">{t("portal.home.nextTitle")}</h2>
+        <Link
+          href="/portal/messages"
+          className="flex min-h-16 items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
+        >
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-success/12 text-success">
+            <MessageCircle className="size-5" aria-hidden />
+          </span>
+          <span className="flex flex-1 flex-col">
+            <span className="font-semibold">
+              {unread > 0 ? t("portal.home.messageUnreadTitle") : t("portal.home.messageCardTitle")}
+            </span>
+            <span className="text-app-sm text-muted-foreground">
+              {unread > 0
+                ? t("portal.home.messageUnreadBody", { count: unread })
+                : t("portal.home.messageCardBody")}
+            </span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+        </Link>
+        <p className="px-1 text-app-sm text-muted-foreground">{t("portal.home.moreSoon")}</p>
       </section>
     </div>
   );

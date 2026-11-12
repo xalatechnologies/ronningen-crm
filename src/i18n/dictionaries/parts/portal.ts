@@ -1,5 +1,5 @@
 export const portalNb = {
-  nav: { overview: "Oversikt", contract: "Kontrakt", logout: "Logg ut" },
+  nav: { overview: "Oversikt", messages: "Meldinger", contract: "Kontrakt", logout: "Logg ut" },
   invite: {
     title: "Velkommen til kundeportalen",
     lead: "{org} har gjort din plan klar. Opprett en konto for å planlegge arrangementet og snakke med utleier.",
@@ -35,6 +35,11 @@ export const portalNb = {
     nextBody:
       "Her kommer invitasjon, gjesteliste, ønskeliste og dagsplan. Vi åpner dem steg for steg.",
     soon: "Kommer snart",
+    messageCardTitle: "Skriv til utleier",
+    messageCardBody: "Spør om noe eller si fra om det dere trenger. Svar kommer her.",
+    messageUnreadTitle: "Du har nye meldinger fra utleier",
+    messageUnreadBody: "{count} uleste. Trykk for å lese.",
+    moreSoon: "Invitasjon, ønskeliste og dagsplan kommer her.",
   },
   mail: {
     subject: "Din kundeportal hos {org}",
@@ -55,6 +60,39 @@ export const portalNb = {
     sent: "Invitasjon sendt",
     failed: "Kunne ikke sende invitasjonen",
   },
+  messages: {
+    title: "Meldinger",
+    lead: "Skriv til {org}. Dere ser samme samtale.",
+    empty: "Ingen meldinger ennå. Skriv første melding til utleier.",
+    placeholder: "Skriv en melding …",
+    send: "Send",
+    sending: "Sender …",
+    you: "Du",
+    tooLong: "Meldingen er for lang (maks 4000 tegn).",
+    rateLimited: "Du sender for raskt. Vent litt og prøv igjen.",
+    failed: "Kunne ikke sende meldingen. Prøv igjen.",
+    newFromVenue: "Ny melding fra utleier",
+  },
+  notify: {
+    messageTitle: "Ny melding fra kunde",
+    messageBody: "{customer} har skrevet i kundeportalen ({label}).",
+    messageAction: "Åpne samtalen",
+  },
+  mailMessage: {
+    subject: "Ny melding fra {org}",
+    body: "Hei {name}, du har en ny melding fra {org} i kundeportalen.",
+    cta: "Les meldingen",
+  },
+  staffPage: {
+    title: "Kundeportal",
+    back: "Tilbake til reservasjoner",
+    tabMessages: "Meldinger",
+    customer: "Kunde: {name}",
+    notActive: "Kunden har ikke opprettet konto ennå. Meldinger vises når kunden har logget inn.",
+    unread: "{count} uleste",
+    open: "Åpne kundeportal",
+    venueName: "Utleier",
+  },
   settings: {
     title: "Kundeportal",
     description:
@@ -65,7 +103,7 @@ export const portalNb = {
 } as const;
 
 export const portalEn = {
-  nav: { overview: "Overview", contract: "Contract", logout: "Log out" },
+  nav: { overview: "Overview", messages: "Messages", contract: "Contract", logout: "Log out" },
   invite: {
     title: "Welcome to the customer portal",
     lead: "{org} has prepared your plan. Create an account to plan your event and talk to the venue.",
@@ -101,6 +139,11 @@ export const portalEn = {
     nextBody:
       "Invitation, guest list, wishlist and day plan are coming here. We are opening them step by step.",
     soon: "Coming soon",
+    messageCardTitle: "Write to the venue",
+    messageCardBody: "Ask a question or tell them what you need. Replies appear here.",
+    messageUnreadTitle: "You have new messages from the venue",
+    messageUnreadBody: "{count} unread. Tap to read.",
+    moreSoon: "Invitation, wishlist and day plan are coming here.",
   },
   mail: {
     subject: "Your customer portal at {org}",
@@ -120,6 +163,39 @@ export const portalEn = {
     noEmail: "The customer has no email address.",
     sent: "Invitation sent",
     failed: "Could not send the invitation",
+  },
+  messages: {
+    title: "Messages",
+    lead: "Write to {org}. You both see the same conversation.",
+    empty: "No messages yet. Write the first message to the venue.",
+    placeholder: "Write a message …",
+    send: "Send",
+    sending: "Sending …",
+    you: "You",
+    tooLong: "The message is too long (max 4000 characters).",
+    rateLimited: "You are sending too fast. Wait a moment and try again.",
+    failed: "Could not send the message. Please try again.",
+    newFromVenue: "New message from the venue",
+  },
+  notify: {
+    messageTitle: "New message from customer",
+    messageBody: "{customer} wrote in the customer portal ({label}).",
+    messageAction: "Open the conversation",
+  },
+  mailMessage: {
+    subject: "New message from {org}",
+    body: "Hi {name}, you have a new message from {org} in the customer portal.",
+    cta: "Read the message",
+  },
+  staffPage: {
+    title: "Customer portal",
+    back: "Back to bookings",
+    tabMessages: "Messages",
+    customer: "Customer: {name}",
+    notActive: "The customer has not created an account yet. Messages appear once they have logged in.",
+    unread: "{count} unread",
+    open: "Open customer portal",
+    venueName: "Venue",
   },
   settings: {
     title: "Customer portal",
