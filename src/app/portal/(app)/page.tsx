@@ -1,10 +1,12 @@
-import { CalendarDays, ChevronRight, ListChecks, MessageCircle, Users } from "lucide-react";
+import { CalendarClock, CalendarDays, ChevronRight, ListChecks, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 
 import { getServerTranslation } from "@/i18n/server";
 import { getPortalContext } from "@/lib/portal/context";
 import { countUnread } from "@/lib/portal/messages";
 import { countQuoted } from "@/lib/portal/wishlist";
+import { listScheduleItems, listScheduleVersions, scheduleContentHash } from "@/lib/portal/schedule";
+import { shareState } from "@/lib/portal/schedule-rules";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -22,10 +24,20 @@ export default async function PortalHomePage() {
   const { t, formatDate } = await getServerTranslation();
 
   const supabase = await createServerSupabaseClient();
-  const [unread, quoted] = await Promise.all([
+  const [unread, quoted, entries, versions] = await Promise.all([
     countUnread(supabase, ctx.booking.id, "customer"),
     countQuoted(supabase, ctx.booking.id),
+    listScheduleItems(supabase, ctx.booking.id),
+    listScheduleVersions(supabase, ctx.booking.id),
   ]);
+  const latestVersion = versions[0] ?? null;
+  const plan = shareState({
+    itemCount: entries.length,
+    currentHash: scheduleContentHash(entries),
+    latest: latestVersion
+      ? { version: latestVersion.version, contentHash: latestVersion.contentHash, acknowledged: Boolean(latestVersion.acknowledgedAt) }
+      : null,
+  });
   const days = ctx.booking.eventDate ? daysUntil(ctx.booking.eventDate) : null;
   const countdown =
     days == null
@@ -84,6 +96,23 @@ export default async function PortalHomePage() {
           <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
         </Link>
         <Link
+          href="/portal/schedule"
+          className="flex min-h-16 items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
+        >
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-success/12 text-success">
+            <CalendarClock className="size-5" aria-hidden />
+          </span>
+          <span className="flex flex-1 flex-col">
+            <span className="font-semibold">
+              {plan.kind === "changed" ? t("portal.home.scheduleChangedTitle") : t("portal.home.scheduleCardTitle")}
+            </span>
+            <span className="text-app-sm text-muted-foreground">
+              {plan.kind === "changed" ? t("portal.home.scheduleChangedBody") : t("portal.home.scheduleCardBody")}
+            </span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+        </Link>
+        <Link
           href="/portal/messages"
           className="flex min-h-16 items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
         >
@@ -102,7 +131,6 @@ export default async function PortalHomePage() {
           </span>
           <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
         </Link>
-        <p className="px-1 text-app-sm text-muted-foreground">{t("portal.home.moreSoon")}</p>
       </section>
     </div>
   );

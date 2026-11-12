@@ -12,7 +12,7 @@ import { shouldEmailCustomer } from "./messages-rules";
 export async function emailCustomerThrottled(input: {
   organizationId: string;
   bookingId: string;
-  kind: "message" | "wishlist";
+  kind: "message" | "wishlist" | "schedule";
 }): Promise<void> {
   const admin = createSupabaseAdminClient();
   const { data } = await admin

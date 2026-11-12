@@ -1,6 +1,6 @@
 "use client";
 
-import { House, ListChecks, LogOut, MessageCircle } from "lucide-react";
+import { CalendarClock, House, ListChecks, LogOut, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -29,6 +29,7 @@ export function PortalShell({
   const items = [
     { href: "/portal", label: t("portal.nav.overview"), badge: 0, icon: House },
     { href: "/portal/wishlist", label: t("portal.nav.wishlist"), badge: quotedWishes, icon: ListChecks },
+    { href: "/portal/schedule", label: t("portal.nav.schedule"), badge: 0, icon: CalendarClock },
     { href: "/portal/messages", label: t("portal.nav.messages"), badge: unreadMessages, icon: MessageCircle },
   ];
 

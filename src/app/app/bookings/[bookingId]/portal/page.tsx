@@ -3,11 +3,13 @@ import { notFound, redirect } from "next/navigation";
 
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { StaffMessageThread } from "@/components/portal/staff-message-thread";
+import { StaffSchedule } from "@/components/portal/staff-schedule";
 import { StaffWishlist } from "@/components/portal/staff-wishlist";
 import { getServerTranslation } from "@/i18n/server";
 import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { listThread } from "@/lib/portal/messages";
+import { listScheduleVersions } from "@/lib/portal/schedule";
 import { listWishItems } from "@/lib/portal/wishlist";
 import { awaitingVenue } from "@/lib/portal/wishlist-rules";
 import { canManageBookings } from "@/lib/role-access";
@@ -24,7 +26,7 @@ export default async function BookingPortalPage({
 }) {
   const { bookingId } = await params;
   const { tab } = await searchParams;
-  const activeTab = tab === "wishes" ? "wishes" : "messages";
+  const activeTab = tab === "wishes" ? "wishes" : tab === "schedule" ? "schedule" : "messages";
   const supabase = await createServerSupabaseClient();
   const orgId = await requireServerOrganizationId();
   const { role } = await getCachedServerOrganizationContext();
@@ -52,13 +54,15 @@ export default async function BookingPortalPage({
   const customerName = customer?.name ?? "";
   const accepted = Boolean((account as { accepted_at: string | null } | null)?.accepted_at);
 
-  const [messages, wishItems] = await Promise.all([
+  const [messages, wishItems, scheduleVersions] = await Promise.all([
     activeTab === "messages"
       ? listThread(supabase, bookingId, { customerName, venueName: org?.name ?? t("portal.staffPage.venueName") })
       : Promise.resolve([]),
     listWishItems(supabase, bookingId),
+    listScheduleVersions(supabase, bookingId),
   ]);
   const waiting = awaitingVenue(wishItems);
+  const scheduleWaiting = scheduleVersions[0] && !scheduleVersions[0].acknowledgedAt ? 1 : 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -75,6 +79,7 @@ export default async function BookingPortalPage({
           [
             { id: "messages", href: `/app/bookings/${bookingId}/portal`, label: t("portal.staffPage.tabMessages"), badge: 0 },
             { id: "wishes", href: `/app/bookings/${bookingId}/portal?tab=wishes`, label: t("portal.staffWishes.tab"), badge: waiting },
+            { id: "schedule", href: `/app/bookings/${bookingId}/portal?tab=schedule`, label: t("portal.staffSchedule.tab"), badge: scheduleWaiting },
           ] as const
         ).map((item) => (
           <Link
@@ -95,6 +100,8 @@ export default async function BookingPortalPage({
       ) : null}
       {activeTab === "wishes" ? (
         <StaffWishlist bookingId={bookingId} items={wishItems} />
+      ) : activeTab === "schedule" ? (
+        <StaffSchedule bookingId={bookingId} versions={scheduleVersions} />
       ) : (
         <StaffMessageThread bookingId={bookingId} messages={messages} />
       )}

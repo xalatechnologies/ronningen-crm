@@ -25,10 +25,11 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
   const [account, setAccount] = useState<AccountRow | null>(null);
   const [unread, setUnread] = useState(0);
   const [waitingWishes, setWaitingWishes] = useState(0);
+  const [scheduleWaiting, setScheduleWaiting] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const [{ data: org }, { data: rows }, { count }, { count: wishCount }] = await Promise.all([
+    const [{ data: org }, { data: rows }, { count }, { count: wishCount }, { data: sched }] = await Promise.all([
       supabase.from("organizations").select("portal_enabled" as "id").eq("id", props.organizationId).maybeSingle(),
       supabase
         .from("portal_accounts" as never)
@@ -49,7 +50,14 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
         .select("id", { count: "exact", head: true })
         .eq("booking_id", props.bookingId)
         .in("status", ["requested", "countered"]),
+      supabase
+        .from("portal_schedule_versions" as never)
+        .select("acknowledged_at")
+        .eq("booking_id", props.bookingId)
+        .order("version", { ascending: false })
+        .limit(1),
     ]);
+    setScheduleWaiting(Boolean((sched as unknown as { acknowledged_at: string | null }[] | null)?.[0] && !(sched as unknown as { acknowledged_at: string | null }[])[0].acknowledged_at));
     setUnread(count ?? 0);
     setWaitingWishes(wishCount ?? 0);
     setEnabled(Boolean((org as unknown as { portal_enabled?: boolean } | null)?.portal_enabled));
@@ -98,6 +106,7 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
           {t("portal.staffPage.open")}
           {unread > 0 ? ` · ${t("portal.staffPage.unread", { count: unread })}` : ""}
           {waitingWishes > 0 ? ` · ${t("portal.staffWishes.pending", { count: waitingWishes })}` : ""}
+          {scheduleWaiting ? ` · ${t("portal.staffSchedule.pendingBadge")}` : ""}
         </Link>
       ) : null}
       {state !== "accepted" ? (

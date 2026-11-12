@@ -59,13 +59,14 @@ export async function sendPortalMessageEmail(input: {
   accountId: string;
   organizationName: string;
   customerName: string;
-  kind?: "message" | "wishlist";
+  kind?: "message" | "wishlist" | "schedule";
   t: Translator;
 }) {
   const { t } = input;
   const kind = input.kind ?? "message";
-  const url = `${contractPublicOrigin()}/portal/${kind === "wishlist" ? "wishlist" : "messages"}`;
-  const copy = kind === "wishlist" ? "portal.mailWish" : "portal.mailMessage";
+  const path = { message: "messages", wishlist: "wishlist", schedule: "schedule" }[kind];
+  const url = `${contractPublicOrigin()}/portal/${path}`;
+  const copy = { message: "portal.mailMessage", wishlist: "portal.mailWish", schedule: "portal.mailSchedule" }[kind];
   const body = t(`${copy}.body` as "portal.mailMessage.body", { name: input.customerName, org: input.organizationName });
   const cta = t(`${copy}.cta` as "portal.mailMessage.cta");
 
