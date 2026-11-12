@@ -5,6 +5,7 @@ import { getServerTranslation } from "@/i18n/server";
 import { getPortalContext } from "@/lib/portal/context";
 import { countUnread } from "@/lib/portal/messages";
 import { countQuoted } from "@/lib/portal/wishlist";
+import { countGuests } from "@/lib/portal/guests";
 import { listScheduleItems, listScheduleVersions, scheduleContentHash } from "@/lib/portal/schedule";
 import { shareState } from "@/lib/portal/schedule-rules";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -24,11 +25,12 @@ export default async function PortalHomePage() {
   const { t, formatDate } = await getServerTranslation();
 
   const supabase = await createServerSupabaseClient();
-  const [unread, quoted, entries, versions] = await Promise.all([
+  const [unread, quoted, entries, versions, guestCount] = await Promise.all([
     countUnread(supabase, ctx.booking.id, "customer"),
     countQuoted(supabase, ctx.booking.id),
     listScheduleItems(supabase, ctx.booking.id),
     listScheduleVersions(supabase, ctx.booking.id),
+    countGuests(supabase, ctx.booking.id),
   ]);
   const latestVersion = versions[0] ?? null;
   const plan = shareState({
@@ -78,6 +80,21 @@ export default async function PortalHomePage() {
 
       <section className="flex flex-col gap-3">
         <h2 className="font-heading text-lg font-semibold">{t("portal.home.nextTitle")}</h2>
+        <Link
+          href="/portal/guests"
+          className="flex min-h-16 items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
+        >
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-success/12 text-success">
+            <Users className="size-5" aria-hidden />
+          </span>
+          <span className="flex flex-1 flex-col">
+            <span className="font-semibold">{t("portal.home.guestsCardTitle")}</span>
+            <span className="text-app-sm text-muted-foreground">
+              {guestCount > 0 ? t("portal.home.guestsCardCount", { count: guestCount }) : t("portal.home.guestsCardEmpty")}
+            </span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+        </Link>
         <Link
           href="/portal/wishlist"
           className="flex min-h-16 items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"

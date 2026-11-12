@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, House, ListChecks, LogOut, MessageCircle } from "lucide-react";
+import { CalendarClock, House, ListChecks, LogOut, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -28,6 +28,7 @@ export function PortalShell({
   const router = useRouter();
   const items = [
     { href: "/portal", label: t("portal.nav.overview"), badge: 0, icon: House },
+    { href: "/portal/guests", label: t("portal.nav.guests"), badge: 0, icon: Users },
     { href: "/portal/wishlist", label: t("portal.nav.wishlist"), badge: quotedWishes, icon: ListChecks },
     { href: "/portal/schedule", label: t("portal.nav.schedule"), badge: 0, icon: CalendarClock },
     { href: "/portal/messages", label: t("portal.nav.messages"), badge: unreadMessages, icon: MessageCircle },
@@ -65,12 +66,12 @@ export function PortalShell({
             const active = item.href === "/portal" ? pathname === "/portal" : pathname.startsWith(item.href);
             const Icon = item.icon;
             return (
-              <li key={item.href} className="flex-1 sm:flex-none">
+              <li key={item.href} className="min-w-0 flex-1 sm:flex-none">
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex min-h-14 flex-col items-center justify-center gap-0.5 text-app-xs font-semibold transition-colors sm:min-h-11 sm:flex-row sm:gap-2 sm:border-b-2 sm:px-3 sm:text-app-sm",
+                    "flex min-h-14 flex-col items-center justify-center gap-0.5 px-0.5 text-[11px] font-semibold leading-tight transition-colors sm:min-h-11 sm:flex-row sm:gap-2 sm:border-b-2 sm:px-3 sm:text-app-sm",
                     active
                       ? "text-success sm:border-success sm:text-foreground"
                       : "text-muted-foreground hover:text-foreground sm:border-transparent",

@@ -3,12 +3,14 @@ import { notFound, redirect } from "next/navigation";
 
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { StaffMessageThread } from "@/components/portal/staff-message-thread";
+import { StaffGuests } from "@/components/portal/staff-guests";
 import { StaffSchedule } from "@/components/portal/staff-schedule";
 import { StaffWishlist } from "@/components/portal/staff-wishlist";
 import { getServerTranslation } from "@/i18n/server";
 import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { listThread } from "@/lib/portal/messages";
+import { getGuestSummary } from "@/lib/portal/guests";
 import { listScheduleVersions } from "@/lib/portal/schedule";
 import { listWishItems } from "@/lib/portal/wishlist";
 import { awaitingVenue } from "@/lib/portal/wishlist-rules";
@@ -26,7 +28,7 @@ export default async function BookingPortalPage({
 }) {
   const { bookingId } = await params;
   const { tab } = await searchParams;
-  const activeTab = tab === "wishes" ? "wishes" : tab === "schedule" ? "schedule" : "messages";
+  const activeTab = tab === "wishes" ? "wishes" : tab === "schedule" ? "schedule" : tab === "guests" ? "guests" : "messages";
   const supabase = await createServerSupabaseClient();
   const orgId = await requireServerOrganizationId();
   const { role } = await getCachedServerOrganizationContext();
@@ -54,12 +56,13 @@ export default async function BookingPortalPage({
   const customerName = customer?.name ?? "";
   const accepted = Boolean((account as { accepted_at: string | null } | null)?.accepted_at);
 
-  const [messages, wishItems, scheduleVersions] = await Promise.all([
+  const [messages, wishItems, scheduleVersions, guestSummary] = await Promise.all([
     activeTab === "messages"
       ? listThread(supabase, bookingId, { customerName, venueName: org?.name ?? t("portal.staffPage.venueName") })
       : Promise.resolve([]),
     listWishItems(supabase, bookingId),
     listScheduleVersions(supabase, bookingId),
+    activeTab === "guests" ? getGuestSummary(supabase, bookingId) : Promise.resolve(null),
   ]);
   const waiting = awaitingVenue(wishItems);
   const scheduleWaiting = scheduleVersions[0] && !scheduleVersions[0].acknowledgedAt ? 1 : 0;
@@ -79,6 +82,7 @@ export default async function BookingPortalPage({
           [
             { id: "messages", href: `/app/bookings/${bookingId}/portal`, label: t("portal.staffPage.tabMessages"), badge: 0 },
             { id: "wishes", href: `/app/bookings/${bookingId}/portal?tab=wishes`, label: t("portal.staffWishes.tab"), badge: waiting },
+            { id: "guests", href: `/app/bookings/${bookingId}/portal?tab=guests`, label: t("portal.staffGuests.tab"), badge: 0 },
             { id: "schedule", href: `/app/bookings/${bookingId}/portal?tab=schedule`, label: t("portal.staffSchedule.tab"), badge: scheduleWaiting },
           ] as const
         ).map((item) => (
@@ -100,6 +104,8 @@ export default async function BookingPortalPage({
       ) : null}
       {activeTab === "wishes" ? (
         <StaffWishlist bookingId={bookingId} items={wishItems} />
+      ) : activeTab === "guests" ? (
+        <StaffGuests summary={guestSummary} />
       ) : activeTab === "schedule" ? (
         <StaffSchedule bookingId={bookingId} versions={scheduleVersions} />
       ) : (
