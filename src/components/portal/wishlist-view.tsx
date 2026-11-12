@@ -26,6 +26,7 @@ import {
   type WishResult,
 } from "@/lib/portal/wishlist-actions";
 import {
+  approvedMixedVat,
   approvedTotalNok,
   canCounter,
   parsePriceInput,
@@ -90,6 +91,7 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
               <h2 className="text-app-sm font-semibold">{t("portal.wishlist.approvedTitle")}</h2>
               <p className="font-heading text-2xl font-bold">{nok(approved)}</p>
               <p className="text-app-sm text-muted-foreground">{t("portal.wishlist.approvedNote")}</p>
+              {approvedMixedVat(items) ? <p className="text-app-sm text-muted-foreground">{t("portal.wishlist.mixedVat")}</p> : null}
             </section>
           ) : null}
 
@@ -301,26 +303,26 @@ function WishCard({
       <footer className="flex flex-wrap gap-2">
         {item.status === "draft" ? (
           <>
-            <Button type="button" variant="outline" size="sm" onClick={onEdit}>
+            <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={onEdit}>
               {t("portal.wishlist.edit")}
             </Button>
-            <Button type="button" variant="ghost" size="sm" disabled={working} onClick={() => void run(`${item.id}:delete`, () => deleteWishItem(item.id))}>
+            <Button type="button" variant="ghost" size="sm" className="min-h-11" disabled={working} onClick={() => void run(`${item.id}:delete`, () => deleteWishItem(item.id))}>
               {t("portal.wishlist.delete")}
             </Button>
           </>
         ) : null}
         {item.status === "requested" || item.status === "quoted" || item.status === "countered" ? (
           <>
-            <Button type="button" variant="ghost" size="sm" onClick={onEdit}>
+            <Button type="button" variant="ghost" size="sm" className="min-h-11" onClick={onEdit}>
               {t("portal.wishlist.revise")}
             </Button>
-            <Button type="button" variant="ghost" size="sm" disabled={working} onClick={() => void run(`${item.id}:withdraw`, () => withdrawWish(item.id))}>
+            <Button type="button" variant="ghost" size="sm" className="min-h-11" disabled={working} onClick={() => void run(`${item.id}:withdraw`, () => withdrawWish(item.id))}>
               {t("portal.wishlist.withdraw")}
             </Button>
           </>
         ) : null}
         {item.status === "declined" || item.status === "withdrawn" || item.status === "unavailable" ? (
-          <Button type="button" variant="outline" size="sm" disabled={working} onClick={() => void run(`${item.id}:reopen`, () => reopenWish(item.id))}>
+          <Button type="button" variant="outline" size="sm" className="min-h-11" disabled={working} onClick={() => void run(`${item.id}:reopen`, () => reopenWish(item.id))}>
             {t("portal.wishlist.reopen")}
           </Button>
         ) : null}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  approvedMixedVat,
   approvedTotalNok,
   awaitingCustomer,
   awaitingVenue,
@@ -122,6 +123,11 @@ describe("summaries", () => {
       view({ status: "declined", quote: q(1) }),
     ];
     expect(approvedTotalNok(items)).toBe(750.5);
+  });
+  it("flags a total that mixes prices with and without VAT", () => {
+    const ex = { ...q(100), vatIncluded: false };
+    expect(approvedMixedVat([view({ status: "approved", quote: q(500) }), view({ status: "approved", quote: ex })])).toBe(true);
+    expect(approvedMixedVat([view({ status: "approved", quote: q(500) }), view({ status: "quoted", quote: ex })])).toBe(false);
   });
   it("counts who is waiting on whom", () => {
     const items = [view({ status: "quoted" }), view({ status: "requested" }), view({ status: "countered" }), view({ status: "draft" })];

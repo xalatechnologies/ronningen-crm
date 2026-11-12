@@ -95,6 +95,7 @@ export async function acceptPortalInvite(input: {
 
   let userId: string;
   let signInPassword: string | null = null;
+  let createdUserId: string | null = null;
 
   if (sessionUser) {
     if (normalizeEmail(sessionUser.email ?? "") !== preview.email) {
@@ -119,6 +120,7 @@ export async function acceptPortalInvite(input: {
       return { ok: false, code: exists ? "account_exists" : "failed" };
     }
     userId = created.user.id;
+    createdUserId = created.user.id;
     signInPassword = parsed.data.password;
   }
 
@@ -130,7 +132,11 @@ export async function acceptPortalInvite(input: {
     .is("accepted_at", null)
     .is("revoked_at", null)
     .select("id");
-  if (!claimed || (claimed as unknown[]).length === 0) return { ok: false, code: "invalid" };
+  if (!claimed || (claimed as unknown[]).length === 0) {
+    // Do not leave an orphaned login behind when the invitation was claimed or revoked meanwhile.
+    if (createdUserId) await admin.auth.admin.deleteUser(createdUserId);
+    return { ok: false, code: "invalid" };
+  }
 
   if (signInPassword) {
     const { error: signInError } = await supabase.auth.signInWithPassword({

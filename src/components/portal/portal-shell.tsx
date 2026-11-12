@@ -51,7 +51,7 @@ export function PortalShell({
             ) : null}
             <span className="font-heading text-lg font-semibold">{organizationName}</span>
           </div>
-          <Button type="button" variant="ghost" size="sm" onClick={() => void logout()}>
+          <Button type="button" variant="ghost" size="sm" className="min-h-11" onClick={() => void logout()}>
             <LogOut className="size-4" aria-hidden />
             {t("portal.nav.logout")}
           </Button>

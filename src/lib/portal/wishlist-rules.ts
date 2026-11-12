@@ -144,6 +144,12 @@ export function approvedTotalNok(items: readonly WishItemView[]): number {
   );
 }
 
+/** True when the approved items mix prices with and without VAT, so their sum is not one comparable figure. */
+export function approvedMixedVat(items: readonly WishItemView[]): boolean {
+  const flags = new Set(items.filter((i) => i.status === "approved" && i.quote).map((i) => i.quote!.vatIncluded));
+  return flags.size > 1;
+}
+
 /** Items waiting for the customer's answer (a price to approve, decline or counter). */
 export function awaitingCustomer(items: readonly WishItemView[]): number {
   return items.filter((item) => item.status === "quoted").length;

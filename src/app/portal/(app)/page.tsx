@@ -7,14 +7,15 @@ import { countUnread } from "@/lib/portal/messages";
 import { countQuoted } from "@/lib/portal/wishlist";
 import { countGuests } from "@/lib/portal/guests";
 import { listScheduleItems, listScheduleVersions, scheduleContentHash } from "@/lib/portal/schedule";
+import { todayInOslo } from "@/lib/portal/rsvp-rules";
 import { shareState } from "@/lib/portal/schedule-rules";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 function daysUntil(isoDate: string): number {
-  const today = new Date();
-  const start = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  const [ty, tm, td] = todayInOslo().split("-").map(Number);
+  const start = Date.UTC(ty, tm - 1, td);
   const [y, m, d] = isoDate.slice(0, 10).split("-").map(Number);
   return Math.round((Date.UTC(y, m - 1, d) - start) / 86_400_000);
 }

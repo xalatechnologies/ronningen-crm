@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/i18n/client";
 import type { TranslationKey } from "@/i18n/types";
 import { acceptCounter, markWishUnavailable, quoteWish, rejectCounter, type WishResult } from "@/lib/portal/wishlist-actions";
-import { approvedTotalNok, parsePriceInput, type WishItemView } from "@/lib/portal/wishlist-rules";
+import { approvedMixedVat, approvedTotalNok, parsePriceInput, type WishItemView } from "@/lib/portal/wishlist-rules";
 
 /** The venue's view of a booking's wishlist: price each wish, answer counter-offers. Drafts are never shown. */
 export function StaffWishlist({ bookingId, items }: { bookingId: string; items: WishItemView[] }) {
@@ -32,6 +32,7 @@ export function StaffWishlist({ bookingId, items }: { bookingId: string; items: 
         <section className="flex flex-col gap-1 rounded-2xl bg-success/10 p-4 ring-1 ring-success/25">
           <p className="font-heading text-xl font-bold">{t("portal.staffWishes.approvedTotal", { total: nok(approved) })}</p>
           <p className="text-app-sm text-muted-foreground">{t("portal.staffWishes.approvedNote")}</p>
+          {approvedMixedVat(visible) ? <p className="text-app-sm text-muted-foreground">{t("portal.wishlist.mixedVat")}</p> : null}
         </section>
       ) : null}
       <ul className="flex flex-col gap-3">
