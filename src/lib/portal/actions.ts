@@ -147,9 +147,10 @@ export async function setPortalSettings(input: {
   organizationId: string;
   enabled: boolean;
   autoInvite: boolean;
+  guestInvites?: boolean;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const parsed = z
-    .object({ organizationId: z.string().uuid(), enabled: z.boolean(), autoInvite: z.boolean() })
+    .object({ organizationId: z.string().uuid(), enabled: z.boolean(), autoInvite: z.boolean(), guestInvites: z.boolean().optional() })
     .safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid_input" };
 
@@ -172,6 +173,7 @@ export async function setPortalSettings(input: {
     .update({
       portal_enabled: parsed.data.enabled,
       portal_auto_invite: parsed.data.autoInvite,
+      ...(parsed.data.guestInvites === undefined ? {} : { portal_guest_invites_enabled: parsed.data.guestInvites }),
     } as never)
     .eq("id", parsed.data.organizationId);
   if (error) return { ok: false, error: error.message };

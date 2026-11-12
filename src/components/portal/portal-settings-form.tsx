@@ -11,16 +11,18 @@ export function PortalSettingsForm(props: {
   organizationId: string;
   enabled: boolean;
   autoInvite: boolean;
+  guestInvites: boolean;
 }) {
   const { t } = useTranslation();
   const [enabled, setEnabled] = useState(props.enabled);
   const [autoInvite, setAutoInvite] = useState(props.autoInvite);
+  const [guestInvites, setGuestInvites] = useState(props.guestInvites);
   const [busy, setBusy] = useState(false);
 
   async function save() {
     setBusy(true);
     try {
-      const result = await setPortalSettings({ organizationId: props.organizationId, enabled, autoInvite });
+      const result = await setPortalSettings({ organizationId: props.organizationId, enabled, autoInvite, guestInvites });
       if (!result.ok) {
         toast.error(result.error);
         return;
@@ -49,6 +51,10 @@ export function PortalSettingsForm(props: {
           onChange={(e) => setAutoInvite(e.target.checked)}
         />
         {t("portal.settings.autoInvite")}
+      </label>
+      <label className="flex items-center gap-3 text-sm font-medium">
+        <input type="checkbox" checked={guestInvites} disabled={!enabled} onChange={(e) => setGuestInvites(e.target.checked)} />
+        {t("portal.settings.guestInvites")}
       </label>
       <Button type="button" onClick={() => void save()} disabled={busy}>
         {t("common.actions.save")}

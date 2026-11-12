@@ -28,7 +28,7 @@ export default async function ContractSettingsPage({
 
   const { data: org } = await supabase
     .from("organizations")
-    .select("contracts_enabled, legal_terms_approved_at, portal_enabled, portal_auto_invite" as "contracts_enabled, legal_terms_approved_at")
+    .select("contracts_enabled, legal_terms_approved_at, portal_enabled, portal_auto_invite, portal_guest_invites_enabled" as "contracts_enabled, legal_terms_approved_at")
     .eq("id", orgId)
     .maybeSingle();
 
@@ -65,6 +65,7 @@ export default async function ContractSettingsPage({
         organizationId={orgId}
         enabled={Boolean((org as { portal_enabled?: boolean } | null)?.portal_enabled)}
         autoInvite={(org as { portal_auto_invite?: boolean } | null)?.portal_auto_invite ?? true}
+        guestInvites={Boolean((org as { portal_guest_invites_enabled?: boolean } | null)?.portal_guest_invites_enabled)}
       />
       {templateData ? (
         <ContractTemplateEditor

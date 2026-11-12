@@ -2,6 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import type { Database } from "@/types/database.types";
 import { DIET_TAGS, parseSummary, type DietTag, type GuestRow, type GuestStatus, type GuestSummary } from "./guest-rules";
 
@@ -18,6 +19,7 @@ type Row = {
   party_size: number;
   diet: unknown;
   responded_at: string | null;
+  last_sent_at: string | null;
   opted_out: boolean;
 };
 
@@ -34,7 +36,7 @@ function readDiet(raw: unknown): GuestRow["diet"] {
 export async function listGuests(client: Client, bookingId: string): Promise<GuestRow[]> {
   const { data } = await client
     .from("portal_guests" as never)
-    .select("id, name, email, phone, group_label, max_party, status, party_size, diet, responded_at, opted_out")
+    .select("id, name, email, phone, group_label, max_party, status, party_size, diet, responded_at, last_sent_at, opted_out")
     .eq("booking_id", bookingId)
     .order("created_at", { ascending: true });
   return ((data as unknown as Row[] | null) ?? []).map((r) => ({
@@ -48,6 +50,7 @@ export async function listGuests(client: Client, bookingId: string): Promise<Gue
     partySize: r.party_size,
     diet: readDiet(r.diet),
     respondedAt: r.responded_at,
+    lastSentAt: r.last_sent_at,
     optedOut: r.opted_out,
   }));
 }
@@ -65,4 +68,14 @@ export async function countGuests(client: Client, bookingId: string): Promise<nu
     .select("id", { count: "exact", head: true })
     .eq("booking_id", bookingId);
   return count ?? 0;
+}
+
+/** The venue's switch for customers e-mailing guests (service role: customers cannot read organizations). */
+export async function guestInvitesEnabled(organizationId: string): Promise<boolean> {
+  const { data } = await createSupabaseAdminClient()
+    .from("organizations")
+    .select("portal_guest_invites_enabled" as "id")
+    .eq("id", organizationId)
+    .maybeSingle();
+  return Boolean((data as unknown as { portal_guest_invites_enabled?: boolean } | null)?.portal_guest_invites_enabled);
 }

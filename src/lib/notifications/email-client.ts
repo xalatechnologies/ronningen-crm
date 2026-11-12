@@ -26,7 +26,7 @@ export function brandedFromAddress(displayName: string): string | undefined {
 }
 
 export type SendEmailResult =
-  | { ok: true; id?: string }
+  | { ok: true; id?: string; testSkipped?: boolean }
   | { ok: false; skipped?: boolean; error: string };
 
 export function isEmailConfigured(): boolean {
@@ -35,7 +35,23 @@ export function isEmailConfigured(): boolean {
   );
 }
 
+/**
+ * Reserved example domains (RFC 2606) and test TLDs can never receive mail. Anything addressed there is a
+ * test or placeholder, so we skip the provider call and report success: tests never mail anyone, and no
+ * bounce noise reaches the sending domain.
+ */
+export function isReservedTestAddress(address: string): boolean {
+  const domain = address.trim().toLowerCase().split("@").pop() ?? "";
+  return (
+    /(^|\.)example\.(com|org|net)$/.test(domain) ||
+    /\.(test|example|invalid|localhost)$/.test(domain) ||
+    domain === "localhost"
+  );
+}
+
 export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
+  if (isReservedTestAddress(input.to)) return { ok: true, testSkipped: true };
+
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from = process.env.RESEND_FROM_EMAIL?.trim();
 

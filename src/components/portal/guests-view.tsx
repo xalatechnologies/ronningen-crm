@@ -20,6 +20,7 @@ import {
   type GuestError,
   type GuestResult,
 } from "@/lib/portal/guest-actions";
+import { sendGuestEmails } from "@/lib/portal/guest-send-actions";
 import { MAX_PARTY, parseGuestPaste, summarizeGuests, type GuestRow, type GuestStatus } from "@/lib/portal/guest-rules";
 import { cn } from "@/lib/utils";
 
@@ -38,13 +39,16 @@ function errorText(t: ReturnType<typeof useTranslation>["t"], error: GuestError)
   return error === "duplicate" ? t("portal.guests.errDuplicate") : error === "limit" ? t("portal.guests.errLimit") : t("portal.guests.errGeneric");
 }
 
-export function GuestsView({ guests }: { guests: GuestRow[] }) {
+export type SendState = { enabled: boolean; published: boolean; inviteCount: number; reminderCount: number; missingEmail: number };
+
+export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendState: SendState }) {
   const { t } = useTranslation();
   const router = useRouter();
   const [sheet, setSheet] = useState<Draft | null>(null);
   const [importing, setImporting] = useState(false);
   const [confirmAll, setConfirmAll] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [sendMode, setSendMode] = useState<"invite" | "reminder" | null>(null);
 
   const summary = useMemo(() => summarizeGuests(guests), [guests]);
   const groups = useMemo(() => {
@@ -54,6 +58,24 @@ export function GuestsView({ guests }: { guests: GuestRow[] }) {
     if (rest.length > 0) sections.push({ label: "", rows: rest });
     return sections;
   }, [guests]);
+
+  async function send(mode: "invite" | "reminder") {
+    setBusy(true);
+    const r = await sendGuestEmails(mode);
+    setBusy(false);
+    setSendMode(null);
+    if (!r.ok) {
+      toast.error(
+        r.error === "disabled" ? t("portal.guestSend.disabled") : r.error === "no_design" ? t("portal.guestSend.needDesign") : r.error === "nothing" ? t("portal.guestSend.nothing") : t("portal.guestSend.failed"),
+      );
+    } else {
+      if (r.sent > 0 || r.failed > 0) {
+        toast.success(r.failed > 0 ? t("portal.guestSend.sentPartial", { sent: r.sent, failed: r.failed }) : t("portal.guestSend.sent", { count: r.sent }));
+      }
+      if (r.capped > 0) toast.message(t("portal.guestSend.capped", { count: r.capped }));
+    }
+    router.refresh();
+  }
 
   async function removeAll() {
     setBusy(true);
@@ -147,6 +169,49 @@ export function GuestsView({ guests }: { guests: GuestRow[] }) {
         </>
       )}
 
+      {guests.length > 0 && sendState.missingEmail > 0 ? (
+        <p className="rounded-xl bg-amber-500/10 px-4 py-3 text-app-sm">{t("portal.guestSend.missingEmail", { count: sendState.missingEmail })}</p>
+      ) : null}
+      {guests.length > 0 && sendState.published && !sendState.enabled ? (
+        <p className="rounded-xl bg-foreground/5 px-4 py-3 text-app-sm text-muted-foreground">{t("portal.guestSend.disabled")}</p>
+      ) : null}
+      {guests.length > 0 && sendState.enabled && !sendState.published ? (
+        <p className="rounded-xl bg-foreground/5 px-4 py-3 text-app-sm text-muted-foreground">{t("portal.guestSend.needDesign")}</p>
+      ) : null}
+
+      {sendState.enabled && sendState.published && (sendState.inviteCount > 0 || sendState.reminderCount > 0) ? (
+        <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-foreground/8 bg-background/95 px-4 py-3 backdrop-blur sm:bottom-4 sm:mx-0 sm:rounded-2xl sm:border">
+          <Button type="button" variant="success" size="cta" className="w-full" onClick={() => setSendMode(sendState.inviteCount > 0 ? "invite" : "reminder")}>
+            {sendState.inviteCount > 0
+              ? t("portal.guestSend.sendInvite", { count: sendState.inviteCount })
+              : t("portal.guestSend.sendReminder", { count: sendState.reminderCount })}
+          </Button>
+        </div>
+      ) : null}
+
+      <Sheet open={sendMode !== null} onOpenChange={(open) => (open ? undefined : setSendMode(null))}>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>{sendMode === "reminder" ? t("portal.guestSend.reminderTitle") : t("portal.guestSend.inviteTitle")}</SheetTitle>
+          </SheetHeader>
+          <div className="mx-auto flex w-full max-w-lg flex-col gap-4 pb-2">
+            <p className="text-muted-foreground">
+              {sendMode === "reminder"
+                ? t("portal.guestSend.reminderBody", { count: sendState.reminderCount })
+                : t("portal.guestSend.inviteBody", { count: sendState.inviteCount })}
+            </p>
+            <div className="flex gap-2">
+              <Button type="button" variant="success" size="cta" className="flex-1" disabled={busy} onClick={() => sendMode && void send(sendMode)}>
+                {t("portal.guestSend.confirm")}
+              </Button>
+              <Button type="button" variant="outline" size="cta" onClick={() => setSendMode(null)}>
+                {t("portal.guests.cancel")}
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <Sheet open={sheet !== null} onOpenChange={(open) => (open ? undefined : setSheet(null))}>
         <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto">
           {sheet ? (
@@ -154,6 +219,7 @@ export function GuestsView({ guests }: { guests: GuestRow[] }) {
               <SheetHeader>
                 <SheetTitle>{sheet.id ? t("portal.guests.editTitle") : t("portal.guests.addTitle")}</SheetTitle>
               </SheetHeader>
+              {sheet.id ? <GuestAnswer guest={guests.find((g) => g.id === sheet.id) ?? null} /> : null}
               <GuestForm
                 key={sheet.id ?? "new"}
                 initial={sheet}
@@ -379,5 +445,42 @@ function ImportForm({
         </Button>
       </div>
     </div>
+  );
+}
+
+function GuestAnswer({ guest }: { guest: GuestRow | null }) {
+  const { t } = useTranslation();
+  if (!guest || guest.status === "not_sent") return null;
+  const answered = guest.status !== "invited";
+  return (
+    <section className="mx-auto mb-4 flex w-full max-w-lg flex-col gap-2 rounded-xl bg-foreground/5 p-4">
+      <h3 className="font-heading text-base font-semibold">{t("portal.guestSend.answerTitle")}</h3>
+      {!answered ? (
+        <p className="text-app-sm text-muted-foreground">{t("portal.guestSend.answerNotYet")}</p>
+      ) : (
+        <>
+          <p className="font-semibold">
+            {t(`portal.guests.status.${guest.status}` as TranslationKey)}
+            {guest.status === "accepted" ? ` · ${t("portal.guestSend.answerParty", { count: guest.partySize })}` : ""}
+          </p>
+          {guest.status === "accepted" ? (
+            guest.diet.filter((p) => p.tags.length > 0 || p.note).length === 0 ? (
+              <p className="text-app-sm text-muted-foreground">{t("portal.guestSend.answerNoDiet")}</p>
+            ) : (
+              <ul className="flex flex-col gap-2 text-app-sm">
+                {guest.diet.map((p, i) => (p.tags.length > 0 || p.note ? { p, i } : null)).filter((x): x is { p: GuestRow["diet"][number]; i: number } => x !== null).map(({ p, i }) => (
+                  <li key={i} className="flex flex-col gap-0.5">
+                    {guest.diet.length > 1 ? <span className="font-semibold">{t("portal.guestSend.person", { n: i + 1 })}</span> : null}
+                    {p.tags.length > 0 ? <span>{p.tags.map((tag) => t(`portal.diet.tags.${tag}` as TranslationKey)).join(", ")}</span> : null}
+                    {p.note ? <span className="break-words text-muted-foreground">{p.note}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            )
+          ) : null}
+        </>
+      )}
+      {guest.optedOut ? <p className="text-app-xs text-muted-foreground">{t("portal.guestSend.optedOut")}</p> : null}
+    </section>
   );
 }

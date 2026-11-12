@@ -32,6 +32,7 @@ export type GuestRow = {
   partySize: number;
   diet: { label: string; tags: DietTag[]; note: string }[];
   respondedAt: string | null;
+  lastSentAt: string | null;
   optedOut: boolean;
 };
 
