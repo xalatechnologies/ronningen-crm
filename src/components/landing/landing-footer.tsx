@@ -77,11 +77,6 @@ export function LandingFooter() {
                     {t("landing.auth.register")}
                   </Link>
                 </li>
-                <li>
-                  <Link href="/it" className={footerLinkClass}>
-                    {t("landing.footer.forIt")}
-                  </Link>
-                </li>
               </ul>
             </nav>
           </div>
