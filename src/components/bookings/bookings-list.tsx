@@ -39,6 +39,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { useOrganizationPermissions } from "@/hooks/use-organization-permissions";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -358,6 +359,7 @@ function FindBookingsCardHeader({
   setView: (v: "list" | "calendar") => void;
 }) {
   const { t } = useTranslation();
+  const { canManageBookings } = useOrganizationPermissions();
   return (
     <header>
       <div className="bookings-list-hero">
@@ -405,13 +407,15 @@ function FindBookingsCardHeader({
                 {t("bookings.calendar")}
               </button>
             </div>
-            <Link
-              href="/app/bookings/new"
-              className={cn(buttonVariants({ variant: "success", size: "cta" }), "rounded-xl shadow-none")}
-            >
-              <Plus className="size-5" aria-hidden />
-              {t("bookings.new")}
-            </Link>
+            {canManageBookings ? (
+              <Link
+                href="/app/bookings/new"
+                className={cn(buttonVariants({ variant: "success", size: "cta" }), "rounded-xl shadow-none")}
+              >
+                <Plus className="size-5" aria-hidden />
+                {t("bookings.new")}
+              </Link>
+            ) : null}
           </div>
         }
         />
@@ -1080,13 +1084,15 @@ export function BookingsList({
         />
       ) : null}
 
-      <Link
-        href="/app/bookings/new"
-        className="fixed bottom-8 right-8 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-2xl transition-transform active:scale-95 md:hidden"
-        aria-label={t("bookings.new")}
-      >
-        <Plus className="size-7" />
-      </Link>
+      {canDeleteBookings ? (
+        <Link
+          href="/app/bookings/new"
+          className="fixed bottom-8 right-8 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-2xl transition-transform active:scale-95 md:hidden"
+          aria-label={t("bookings.new")}
+        >
+          <Plus className="size-7" />
+        </Link>
+      ) : null}
     </div>
   );
 }

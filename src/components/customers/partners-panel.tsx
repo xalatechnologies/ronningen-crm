@@ -5,6 +5,7 @@ import { CustomersPageSearchToolbar } from "@/components/customers/customers-pag
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { usePageSearch } from "@/providers/page-search-provider";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
+import { useOrganizationPermissions } from "@/hooks/use-organization-permissions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -176,6 +177,7 @@ export function PartnersPanel({
   const { t } = useTranslation();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
+  const { canManageBookings: canEdit } = useOrganizationPermissions();
   const { invalidateCustomers } = useTenantDataInvalidation();
   const { query } = usePageSearch();
   const [partnersPage, setPartnersPage] = useState(1);
@@ -548,9 +550,10 @@ export function PartnersPanel({
                 className="flex flex-1 flex-col overflow-hidden"
                 onSubmit={editForm.handleSubmit(onSavePartner)}
               >
-                <div className="flex-1 overflow-y-auto p-6">
+                <fieldset disabled={!canEdit} className="min-w-0 flex-1 overflow-y-auto border-0 p-6">
                   <PartnerFields form={editForm} idPrefix="edit" />
-                </div>
+                </fieldset>
+                {canEdit ? (
                 <div className="flex flex-col gap-2 border-t border-foreground/10 bg-card p-6">
                   <Button type="submit" variant="success" size="cta" className="w-full rounded-xl shadow-none">
                     {t("customers.partnerForm.save")}
@@ -565,6 +568,7 @@ export function PartnersPanel({
                     {t("customers.partnerForm.delete")}
                   </Button>
                 </div>
+                ) : null}
               </form>
             </div>
           ) : null}

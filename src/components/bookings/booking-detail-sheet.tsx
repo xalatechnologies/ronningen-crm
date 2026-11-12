@@ -130,7 +130,7 @@ export type BookingDetailSheetProps = {
     next: BookingStatus,
     opts?: { confirmMessage?: string },
   ) => void;
-  /** Owner/admin — permanent delete matches RLS. */
+  /** Owner/admin/manager — edit, status changes and delete match RLS; others get a read-only sheet. */
   canDeleteBooking?: boolean;
 };
 
@@ -682,7 +682,10 @@ export function BookingDetailSheet({
           className="flex min-h-0 flex-1 flex-col overflow-hidden"
           onSubmit={handleSubmit(onSave)}
         >
-          <div className={cn(RN_MODAL_SCROLL_BODY, "flex flex-col gap-6 p-6 sm:p-8")}>
+          <fieldset
+            disabled={!canDeleteBooking}
+            className={cn(RN_MODAL_SCROLL_BODY, "flex min-w-0 flex-col gap-6 border-0 p-6 sm:p-8")}
+          >
             <div aria-label={t("common.fields.status")}>
               <BookingStatusBadge status={bookingRow.status} />
             </div>
@@ -1194,9 +1197,10 @@ export function BookingDetailSheet({
                 </p>
               ) : null}
             </section>
-          </div>
+          </fieldset>
 
           <SheetFooter className="mt-0 max-h-none flex-col gap-3 border-t border-foreground/10 bg-card px-6 py-4 sm:max-h-none sm:flex-row sm:flex-wrap sm:justify-end">
+            {canDeleteBooking ? (
             <Button
               type="submit"
               variant="success"
@@ -1207,7 +1211,8 @@ export function BookingDetailSheet({
               <Save className="mr-2 size-4 shrink-0" aria-hidden />
               {t("bookings.detail.saveChanges")}
             </Button>
-            {bookingRow.status === "pending" ? (
+            ) : null}
+            {canDeleteBooking && bookingRow.status === "pending" ? (
               <Button
                 type="button"
                 variant="success"
@@ -1220,8 +1225,9 @@ export function BookingDetailSheet({
                 {t("bookings.detail.confirmBooking")}
               </Button>
             ) : null}
-            {bookingRow.status === "pending" ||
-            bookingRow.status === "confirmed" ? (
+            {canDeleteBooking &&
+            (bookingRow.status === "pending" ||
+              bookingRow.status === "confirmed") ? (
               <Button
                 type="button"
                 variant="outline"
@@ -1238,7 +1244,7 @@ export function BookingDetailSheet({
                 {t("bookings.detail.cancelBooking")}
               </Button>
             ) : null}
-            {bookingRow.status === "cancelled" ? (
+            {canDeleteBooking && bookingRow.status === "cancelled" ? (
               <Button
                 type="button"
                 variant="outline"

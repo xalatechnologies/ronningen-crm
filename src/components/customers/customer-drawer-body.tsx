@@ -1,5 +1,6 @@
 "use client";
 
+import { useOrganizationPermissions } from "@/hooks/use-organization-permissions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,6 +77,7 @@ export function CustomerDrawerBody({
   const { t, formatCurrency, formatDate } = useTranslation();
   const supabase = useSupabase();
   const { currentOrganizationId } = useCurrentOrganization();
+  const { canManageBookings: canEdit } = useOrganizationPermissions();
   const { invalidateCustomers } = useTenantDataInvalidation();
   const [notesDraft, setNotesDraft] = useState(() => customer.notes ?? "");
   const notesBaselineRef = useRef({
@@ -198,7 +200,7 @@ export function CustomerDrawerBody({
                 {t("customers.drawer.contact")}
               </h3>
             </div>
-            {!editingProfile ? (
+            {canEdit && !editingProfile ? (
               <Button
                 type="button"
                 variant="outline"
@@ -392,6 +394,7 @@ export function CustomerDrawerBody({
             <Textarea
               value={notesDraft}
               onChange={(e) => setNotesDraft(e.target.value)}
+              readOnly={!canEdit}
               className="min-h-32 resize-none rounded-xl border border-foreground/25 bg-background p-4 text-sm shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
               placeholder={t("customers.drawer.notesPlaceholder")}
             />
@@ -403,6 +406,8 @@ export function CustomerDrawerBody({
       </div>
 
       <SheetFooter className="flex-col gap-3 border-t border-foreground/10 bg-card p-6">
+        {canEdit ? (
+          <>
         <Link
           href={`/app/bookings/new?customerId=${customer.id}`}
           className={cn(
@@ -427,6 +432,8 @@ export function CustomerDrawerBody({
           <Trash2 className="mr-2 size-4 shrink-0" aria-hidden />
           {t("customers.drawer.deleteCustomer")}
         </Button>
+                </>
+        ) : null}
       </SheetFooter>
     </>
   );
