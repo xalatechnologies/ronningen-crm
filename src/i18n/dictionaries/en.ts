@@ -15,6 +15,7 @@ import { validationEn } from "@/i18n/dictionaries/parts/validation";
 import { integrationsEn } from "@/i18n/dictionaries/parts/integrations";
 import { serverErrorsEn } from "@/i18n/dictionaries/parts/serverErrors";
 import { contractsEn } from "@/i18n/dictionaries/parts/contracts";
+import { portalEn } from "@/i18n/dictionaries/parts/portal";
 
 export const en = {
   admin: adminEn,
@@ -1882,4 +1883,5 @@ export const en = {
   integrations: integrationsEn,
   serverErrors: serverErrorsEn,
   contracts: contractsEn,
+  portal: portalEn,
 } satisfies Dictionary;

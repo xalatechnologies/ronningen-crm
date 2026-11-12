@@ -7,6 +7,7 @@ import type {
 import { RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
 import { BookingContractPanel } from "@/components/contracts/booking-contract-panel";
+import { BookingPortalPanel } from "@/components/portal/booking-portal-panel";
 import { BookingPackageAddonsFields } from "@/components/bookings/booking-package-addons-fields";
 import {
   loadBookingCommercialEditor,
@@ -692,6 +693,13 @@ export function BookingDetailSheet({
 
             {currentOrganizationId ? (
               <BookingContractPanel
+                organizationId={currentOrganizationId}
+                bookingId={bookingRow.id}
+              />
+            ) : null}
+
+            {currentOrganizationId ? (
+              <BookingPortalPanel
                 organizationId={currentOrganizationId}
                 bookingId={bookingRow.id}
               />

@@ -212,6 +212,15 @@ export async function acceptContract(input: {
     console.error("[contracts] staff notify after accept failed", notifyError);
   }
   try {
+    const { autoInviteAfterContractAccepted } = await import("@/lib/portal/invite");
+    await autoInviteAfterContractAccepted({
+      organizationId: current.version.organization_id,
+      bookingId: current.version.frozen_document.booking.reservationId,
+    });
+  } catch (portalError) {
+    console.error("[portal] auto invite after accept failed", portalError);
+  }
+  try {
     await ensureAcceptedPdf(current.version.id);
   } catch (pdfError) {
     console.error("[contracts] PDF after accept failed", pdfError);

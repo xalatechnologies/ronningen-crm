@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-import { isAdminPath, isAuthPath, isProtectedPath } from "@/config/routes";
+import { isAdminPath, isAuthPath, isPortalPath, isProtectedPath } from "@/config/routes";
 import {
   ADMIN_SUPPORT_SEEN_COOKIE,
   adminSupportSeenCookieOptions,
@@ -83,7 +83,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if ((isProtectedPath(pathname) || isAdminPath(pathname)) && !user) {
+  if ((isProtectedPath(pathname) || isAdminPath(pathname) || isPortalPath(pathname)) && !user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/auth/login";
     redirectUrl.searchParams.set("redirect", pathname);

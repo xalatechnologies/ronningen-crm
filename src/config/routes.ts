@@ -13,6 +13,10 @@ export const AUTH_ROUTE_PREFIXES = [
 /** Application shell (requires session) */
 export const PROTECTED_ROUTE_PREFIX = "/app" as const;
 
+/** Customer portal (requires session, except the invitation page) */
+export const PORTAL_ROUTE_PREFIX = "/portal" as const;
+const PORTAL_PUBLIC_PREFIX = "/portal/invite";
+
 /** Platform admin console (requires session; role checked in layout) */
 export const ADMIN_ROUTE_PREFIX = "/admin" as const;
 
@@ -30,6 +34,15 @@ export function isProtectedPath(pathname: string): boolean {
   return (
     pathname === PROTECTED_ROUTE_PREFIX ||
     pathname.startsWith(`${PROTECTED_ROUTE_PREFIX}/`)
+  );
+}
+
+export function isPortalPath(pathname: string): boolean {
+  if (pathname === PORTAL_PUBLIC_PREFIX || pathname.startsWith(`${PORTAL_PUBLIC_PREFIX}/`)) {
+    return false;
+  }
+  return (
+    pathname === PORTAL_ROUTE_PREFIX || pathname.startsWith(`${PORTAL_ROUTE_PREFIX}/`)
   );
 }
 

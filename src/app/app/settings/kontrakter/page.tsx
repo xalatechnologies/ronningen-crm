@@ -4,6 +4,7 @@ import { AppPageHeader } from "@/components/layout/app-page-header";
 import { ContractTemplateList } from "@/components/contracts/contract-template-list";
 import { ContractTemplateEditor } from "@/components/contracts/contract-template-editor";
 import { listTemplates, loadTemplate } from "@/lib/contracts/templates";
+import { PortalSettingsForm } from "@/components/portal/portal-settings-form";
 import { ContractSettingsForm } from "@/components/contracts/contract-settings-form";
 import { getServerTranslation } from "@/i18n/server";
 import { contractFrom } from "@/lib/contracts/db";
@@ -27,7 +28,7 @@ export default async function ContractSettingsPage({
 
   const { data: org } = await supabase
     .from("organizations")
-    .select("contracts_enabled, legal_terms_approved_at")
+    .select("contracts_enabled, legal_terms_approved_at, portal_enabled, portal_auto_invite" as "contracts_enabled, legal_terms_approved_at")
     .eq("id", orgId)
     .maybeSingle();
 
@@ -59,6 +60,11 @@ export default async function ContractSettingsPage({
           (org as { legal_terms_approved_at?: string | null } | null)?.legal_terms_approved_at,
         )}
         hasTemplate={Boolean(template)}
+      />
+      <PortalSettingsForm
+        organizationId={orgId}
+        enabled={Boolean((org as { portal_enabled?: boolean } | null)?.portal_enabled)}
+        autoInvite={(org as { portal_auto_invite?: boolean } | null)?.portal_auto_invite ?? true}
       />
       {templateData ? (
         <ContractTemplateEditor
