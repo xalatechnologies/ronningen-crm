@@ -24,10 +24,11 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [account, setAccount] = useState<AccountRow | null>(null);
   const [unread, setUnread] = useState(0);
+  const [waitingWishes, setWaitingWishes] = useState(0);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const [{ data: org }, { data: rows }, { count }] = await Promise.all([
+    const [{ data: org }, { data: rows }, { count }, { count: wishCount }] = await Promise.all([
       supabase.from("organizations").select("portal_enabled" as "id").eq("id", props.organizationId).maybeSingle(),
       supabase
         .from("portal_accounts" as never)
@@ -43,8 +44,14 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
         .eq("booking_id", props.bookingId)
         .eq("sender_kind", "customer")
         .is("read_by_staff_at", null),
+      supabase
+        .from("portal_wish_items" as never)
+        .select("id", { count: "exact", head: true })
+        .eq("booking_id", props.bookingId)
+        .in("status", ["requested", "countered"]),
     ]);
     setUnread(count ?? 0);
+    setWaitingWishes(wishCount ?? 0);
     setEnabled(Boolean((org as unknown as { portal_enabled?: boolean } | null)?.portal_enabled));
     setAccount(((rows as unknown as AccountRow[] | null) ?? [])[0] ?? null);
   }, [props.bookingId, props.organizationId, supabase]);
@@ -90,6 +97,7 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
         >
           {t("portal.staffPage.open")}
           {unread > 0 ? ` · ${t("portal.staffPage.unread", { count: unread })}` : ""}
+          {waitingWishes > 0 ? ` · ${t("portal.staffWishes.pending", { count: waitingWishes })}` : ""}
         </Link>
       ) : null}
       {state !== "accepted" ? (

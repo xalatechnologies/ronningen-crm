@@ -1,9 +1,10 @@
-import { CalendarDays, ChevronRight, MessageCircle, Users } from "lucide-react";
+import { CalendarDays, ChevronRight, ListChecks, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 
 import { getServerTranslation } from "@/i18n/server";
 import { getPortalContext } from "@/lib/portal/context";
 import { countUnread } from "@/lib/portal/messages";
+import { countQuoted } from "@/lib/portal/wishlist";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,11 @@ export default async function PortalHomePage() {
   if (!ctx) return null;
   const { t, formatDate } = await getServerTranslation();
 
-  const unread = await countUnread(await createServerSupabaseClient(), ctx.booking.id, "customer");
+  const supabase = await createServerSupabaseClient();
+  const [unread, quoted] = await Promise.all([
+    countUnread(supabase, ctx.booking.id, "customer"),
+    countQuoted(supabase, ctx.booking.id),
+  ]);
   const days = ctx.booking.eventDate ? daysUntil(ctx.booking.eventDate) : null;
   const countdown =
     days == null
@@ -61,6 +66,23 @@ export default async function PortalHomePage() {
 
       <section className="flex flex-col gap-3">
         <h2 className="font-heading text-lg font-semibold">{t("portal.home.nextTitle")}</h2>
+        <Link
+          href="/portal/wishlist"
+          className="flex min-h-16 items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
+        >
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-success/12 text-success">
+            <ListChecks className="size-5" aria-hidden />
+          </span>
+          <span className="flex flex-1 flex-col">
+            <span className="font-semibold">
+              {quoted > 0 ? t("portal.home.wishQuotedTitle", { count: quoted }) : t("portal.home.wishCardTitle")}
+            </span>
+            <span className="text-app-sm text-muted-foreground">
+              {quoted > 0 ? t("portal.home.wishQuotedBody") : t("portal.home.wishCardBody")}
+            </span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+        </Link>
         <Link
           href="/portal/messages"
           className="flex min-h-16 items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"

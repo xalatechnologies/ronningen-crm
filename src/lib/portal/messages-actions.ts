@@ -3,17 +3,15 @@
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
-import { getServerTranslation } from "@/i18n/server";
 import { getDefaultT } from "@/lib/i18n/default-messages";
 import { buildBookingPortalActionUrl } from "@/lib/notifications/notification-events";
 import { notifyOrgMembers } from "@/lib/notifications/notify";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getPortalContext } from "./context";
-import { sendPortalMessageEmail } from "./mail";
+import { emailCustomerThrottled } from "./notify-customer";
 import {
   isRateLimited,
   normalizeMessageBody,
-  shouldEmailCustomer,
   staffNotificationContextKey,
 } from "./messages-rules";
 import { requireStaffForBooking } from "./staff";
@@ -130,51 +128,13 @@ export async function sendStaffMessage(input: { bookingId: string; body: string 
   if (error) return { ok: false, error: "failed" };
 
   try {
-    await emailCustomerOfStaffMessage(staff.organizationId, input.bookingId);
+    await emailCustomerThrottled({ organizationId: staff.organizationId, bookingId: input.bookingId, kind: "message" });
   } catch (mailError) {
     console.error("[portal] customer e-mail after staff message failed", mailError);
   }
 
   revalidatePath(`/app/bookings/${input.bookingId}/portal`);
   return { ok: true };
-}
-
-async function emailCustomerOfStaffMessage(organizationId: string, bookingId: string) {
-  const admin = createSupabaseAdminClient();
-  const { data } = await admin
-    .from("portal_accounts" as never)
-    .select("id, email, customer_id, last_customer_emailed_at")
-    .eq("booking_id", bookingId)
-    .eq("organization_id", organizationId)
-    .is("revoked_at", null)
-    .not("accepted_at", "is", null)
-    .maybeSingle();
-  const account = data as unknown as {
-    id: string;
-    email: string;
-    customer_id: string;
-    last_customer_emailed_at: string | null;
-  } | null;
-  if (!account || !shouldEmailCustomer(account.last_customer_emailed_at)) return;
-
-  const [{ data: org }, { data: customer }] = await Promise.all([
-    admin.from("organizations").select("name").eq("id", organizationId).maybeSingle(),
-    admin.from("customers").select("name").eq("id", account.customer_id).maybeSingle(),
-  ]);
-  const { t } = await getServerTranslation();
-  const sent = await sendPortalMessageEmail({
-    to: account.email,
-    accountId: account.id,
-    organizationName: org?.name ?? "",
-    customerName: customer?.name ?? "",
-    t,
-  });
-  if (sent.ok) {
-    await admin
-      .from("portal_accounts" as never)
-      .update({ last_customer_emailed_at: new Date().toISOString() } as never)
-      .eq("id", account.id);
-  }
 }
 
 /** Customer opened the thread: mark the venue's messages as read. */

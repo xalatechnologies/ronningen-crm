@@ -59,12 +59,15 @@ export async function sendPortalMessageEmail(input: {
   accountId: string;
   organizationName: string;
   customerName: string;
+  kind?: "message" | "wishlist";
   t: Translator;
 }) {
   const { t } = input;
-  const url = `${contractPublicOrigin()}/portal/messages`;
-  const body = t("portal.mailMessage.body", { name: input.customerName, org: input.organizationName });
-  const cta = t("portal.mailMessage.cta");
+  const kind = input.kind ?? "message";
+  const url = `${contractPublicOrigin()}/portal/${kind === "wishlist" ? "wishlist" : "messages"}`;
+  const copy = kind === "wishlist" ? "portal.mailWish" : "portal.mailMessage";
+  const body = t(`${copy}.body` as "portal.mailMessage.body", { name: input.customerName, org: input.organizationName });
+  const cta = t(`${copy}.cta` as "portal.mailMessage.cta");
 
   const html = `<!DOCTYPE html>
 <html><body style="margin:0;padding:24px 12px;background:#f4f1ea;font-family:Arial,Helvetica,sans-serif;">
@@ -82,9 +85,9 @@ export async function sendPortalMessageEmail(input: {
   return sendEmail({
     to: input.to,
     from: brandedFromAddress(input.organizationName),
-    subject: t("portal.mailMessage.subject", { org: input.organizationName }),
+    subject: t(`${copy}.subject` as "portal.mailMessage.subject", { org: input.organizationName }),
     html,
     text: `${body}\n\n${cta}: ${url}`,
-    idempotencyKey: `portal-message:${input.accountId}:${Math.floor(Date.now() / (15 * 60_000))}`,
+    idempotencyKey: `portal-${kind}:${input.accountId}:${Math.floor(Date.now() / (15 * 60_000))}`,
   });
 }
