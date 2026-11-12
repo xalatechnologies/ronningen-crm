@@ -77,12 +77,16 @@ function HeaderAvatarOrInitials({
 
 export function AdminHeader({ supportOpenCount = 0 }: { supportOpenCount?: number }) {
   const { t } = useTranslation();
-  const { user, loading } = useAuthUser();
+  const { user, profile, loading } = useAuthUser();
   const supabase = useSupabase();
 
   const initials = useMemo(
-    () => initialsFromUser(user?.email, user?.user_metadata?.full_name),
-    [user],
+    () =>
+      initialsFromUser(
+        user?.email,
+        profile?.fullName?.trim() || user?.user_metadata?.full_name,
+      ),
+    [user, profile],
   );
 
   const avatarUrl = useMemo(() => avatarUrlFromUser(user), [user]);

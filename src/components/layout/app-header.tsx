@@ -89,15 +89,19 @@ function HeaderAvatarOrInitials({
 
 export function AppHeader({ children }: { children?: ReactNode }) {
   const { t } = useTranslation();
-  const { user, loading } = useAuthUser();
+  const { user, profile, loading } = useAuthUser();
   const { isPlatformAdmin } = usePlatformAdmin();
   const { role: myRole } = useOrganizationPermissions();
   const supabase = useSupabase();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const initials = useMemo(
-    () => initialsFromUser(user?.email, user?.user_metadata?.full_name),
-    [user],
+    () =>
+      initialsFromUser(
+        user?.email,
+        profile?.fullName?.trim() || user?.user_metadata?.full_name,
+      ),
+    [user, profile],
   );
 
   const avatarUrl = useMemo(() => avatarUrlFromUser(user), [user]);
