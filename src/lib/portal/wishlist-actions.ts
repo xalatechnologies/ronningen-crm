@@ -1,6 +1,5 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
@@ -83,7 +82,8 @@ async function notifyStaff(
       organizationId: ctx.organization.id,
       roles: ["owner", "admin"],
       eventKey: "portal.wish",
-      contextKey: `portal_wish:${ctx.booking.id}:${randomUUID()}`,
+      // One notification per booking and kind per 10 minutes: a customer toggling wishes cannot flood the venue.
+      contextKey: `portal_wish:${ctx.booking.id}:${kind}:${Math.floor(Date.now() / 600_000)}`,
       title: t("portal.notify.wishTitle"),
       body: t(`portal.notify.${kind}`, {
         customer: ctx.fullName,
