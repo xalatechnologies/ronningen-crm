@@ -29,7 +29,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { APP_DATA_BODY, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import {
   type AssetStatusBucket,
@@ -75,10 +74,14 @@ import { toast } from "sonner";
 
 import type { AssetListItem } from "./types";
 
-const assetsTableHeadClass = cn("assets-table-head", APP_TABLE_HEAD_CELL);
-const assetsTableCellClass = "px-6 py-5 md:px-8 md:py-6";
+const assetsTableHeadClass = cn(
+  "assets-table-head",
+  APP_TABLE_HEAD_CELL,
+  "px-4 md:px-5",
+);
+const assetsTableCellClass = "px-4 py-5 md:px-5 md:py-6";
 const assetsKpiCompactStatClass =
-  "flex min-w-0 flex-col gap-1.5 rounded-md border border-rn-border-strong/55 bg-background px-4 py-3 sm:gap-2 sm:px-4 sm:py-3.5";
+  "flex min-w-0 flex-col gap-1.5 rounded-xl bg-muted/50 px-4 py-3 ring-1 ring-foreground/10 sm:gap-2 sm:px-4 sm:py-3.5";
 
 export type AssetsSectionProps = {
   assets: AssetListItem[];
@@ -172,7 +175,7 @@ function AssetsKpiSummary({
 
   return (
     <section
-      className="assets-kpi-summary border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 md:py-7 lg:px-8"
+      className="assets-kpi-summary overflow-hidden rounded-2xl bg-card px-5 py-5 ring-1 ring-foreground/8 sm:px-6 sm:py-6 md:py-7 lg:px-8"
       aria-label={t("assets.kpiAria")}
     >
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10 xl:gap-12">
@@ -208,7 +211,7 @@ function AssetsKpiSummary({
       </div>
 
       {hasActiveFilters ? (
-        <p className="assets-filter-hint mt-5 border-t border-rn-border-strong/50 pt-5 text-muted-foreground lg:mt-6">
+        <p className="assets-filter-hint mt-5 border-t border-foreground/10 pt-5 text-muted-foreground lg:mt-6">
           <span className="font-semibold text-foreground">{t("assets.filteredLabel")}</span>{" "}
           {formatCurrency(filteredStats.totalValue)} · {filteredStats.totalUnits}{" "}
           {t("assets.unitsWord")} ({filteredCount}{" "}
@@ -420,7 +423,7 @@ function AssetFormFields({
 
   return (
     <>
-      <DialogHeader className="space-y-0 border-b border-rn-border-strong/60 pb-5 pr-10 text-left sm:pr-12">
+      <DialogHeader className="space-y-0 border-b border-foreground/10 pb-5 pr-10 text-left sm:pr-12">
         <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading sm:text-2xl">
           {title}
         </DialogTitle>
@@ -459,7 +462,7 @@ function AssetFormFields({
             <Input
               id={idName}
               aria-invalid={!!formState.errors.name}
-              className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
+              className="h-12 rounded-xl border border-foreground/25 bg-background px-4 text-base shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 aria-invalid:border-destructive"
               {...register("name")}
             />
             {formState.errors.name ? (
@@ -479,7 +482,7 @@ function AssetFormFields({
               <Input
                 id={idQty}
                 aria-invalid={!!formState.errors.quantity}
-                className="h-12 rounded-md border-2 border-rn-border-strong text-base tabular-nums focus-visible:border-success focus-visible:ring-success/25"
+                className="h-12 rounded-xl border border-foreground/25 bg-background px-4 text-base tabular-nums shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 aria-invalid:border-destructive"
                 type="number"
                 min={0}
                 step={1}
@@ -506,7 +509,7 @@ function AssetFormFields({
               <PriceInput
                 id={idValue}
                 aria-invalid={!!formState.errors.value}
-                className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
+                className="h-12 rounded-xl border border-foreground/25 bg-background px-4 text-base shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 aria-invalid:border-destructive"
                 {...register("value", {
                   setValueAs: (v) => {
                     if (v === "" || v == null) return 0;
@@ -559,12 +562,12 @@ function AssetFormFields({
           </div>
         </div>
 
-        <DialogFooter className="-mx-6 -mb-6 mt-2 gap-3 border-t border-rn-border-strong/60 bg-muted/40 px-6 py-4 sm:-mx-6 sm:justify-end">
+        <DialogFooter className="-mx-6 -mb-6 mt-2 gap-3 border-t border-foreground/10 bg-card px-6 py-4 sm:-mx-6 sm:justify-end">
           <Button
             type="button"
             variant="outline"
             size="cta"
-            className="border-2 border-rn-border-strong"
+            className="rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted"
             onClick={onClose}
             disabled={isSubmitting}
           >
@@ -720,14 +723,8 @@ export function AssetsSection({
 
   return (
     <div className="assets-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
-      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div
-          className={cn(
-            "assets-page-header border-b-2 border-rn-border-strong bg-card/80",
-            "px-[length:var(--app-card-padding)] sm:px-[length:calc(var(--app-card-padding)+0.25rem)] md:px-[length:calc(var(--app-card-padding)+0.5rem)] lg:px-[length:calc(var(--app-card-padding)+0.75rem)]",
-            "py-6 md:py-7",
-          )}
-        >
+      <div className="flex min-w-0 flex-col gap-6">
+        <div className="assets-page-header">
           <AppPageHeader
             className="mb-0 gap-3 md:gap-4"
             surface="default"
@@ -744,7 +741,7 @@ export function AssetsSection({
                       ? t("assets.addVenuesFirst")
                       : undefined
                 }
-                className={cn(buttonVariants({ variant: "success", size: "cta" }))}
+                className={cn(buttonVariants({ variant: "success", size: "cta" }), "rounded-xl shadow-none")}
               >
                 <Plus className="size-5" aria-hidden />
                 {t("assets.newItem")}
@@ -754,22 +751,16 @@ export function AssetsSection({
         </div>
 
         {loadError ? (
-          <div
-            className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
-            role="alert"
-          >
-            <div className="assets-load-error rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive">
+          <div role="alert">
+            <div className="assets-load-error rounded-xl bg-destructive/10 px-4 py-3 text-destructive">
               {t("assets.loadError", { error: loadError })}
             </div>
           </div>
         ) : null}
 
         {!loadError && properties.length === 0 ? (
-          <div
-            className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
-            role="status"
-          >
-            <div className="assets-setup-hint rounded-md border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-amber-950 dark:text-amber-50">
+          <div role="status">
+            <div className="assets-setup-hint rounded-xl bg-amber-500/10 px-4 py-3 text-amber-950 dark:text-amber-50">
               {t("assets.noVenuesHint")}{" "}
               <Link
                 href="/app/settings/lokaler"
@@ -793,8 +784,8 @@ export function AssetsSection({
           />
         ) : null}
 
-        <div className="min-w-0">
-          <div className="border-t-2 border-b-2 border-rn-border-strong/50 bg-card px-4 py-3 sm:px-6 md:px-8 md:py-4">
+        <div className="min-w-0 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
+          <div className="border-b border-foreground/8 px-4 py-4 sm:px-6 md:px-8">
           <div className="flex min-h-12 flex-nowrap items-center gap-2 overflow-x-auto sm:gap-3 md:min-h-14 md:gap-4">
             {assets.length === 0 || hasActiveFilters ? (
               <div className="flex shrink-0 items-center pr-1">
@@ -825,7 +816,7 @@ export function AssetsSection({
                   setPage(1);
                 }}
                 aria-label={t("assets.filterVenueAria")}
-                className="assets-filter-select h-12 min-h-12 rounded-md py-0 pl-12 md:h-14 md:min-h-14 md:pl-14"
+                className="assets-filter-select h-12 min-h-12 rounded-xl border border-foreground/25 py-0 pl-12 shadow-none md:h-14 md:min-h-14 md:pl-14"
                 placeholder={t("assets.allVenues")}
                 options={toIdNameOptions(properties)}
               />
@@ -843,7 +834,7 @@ export function AssetsSection({
                   setPage(1);
                 }}
                 aria-label={t("assets.filterConditionAria")}
-                className="assets-filter-select h-12 min-h-12 rounded-md py-0 pl-12 md:h-14 md:min-h-14 md:pl-14"
+                className="assets-filter-select h-12 min-h-12 rounded-xl border border-foreground/25 py-0 pl-12 shadow-none md:h-14 md:min-h-14 md:pl-14"
                 options={STATUS_FILTER_IDS.map((id) => ({
                   value: id,
                   label: statusFilterLabel(id, t),
@@ -855,7 +846,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="assets-toolbar-btn h-12 min-h-12 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong px-3 font-semibold sm:px-4 md:h-14 md:min-h-14 md:px-5"
+                className="assets-toolbar-btn h-12 min-h-12 shrink-0 gap-2 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted disabled:border-foreground/15 px-3 font-semibold sm:px-4 md:h-14 md:min-h-14 md:px-5"
                 disabled={filtered.length === 0}
                 onClick={() => downloadAssetsCsv(filtered, t)}
                 aria-label={t("assets.downloadCsvAria")}
@@ -867,7 +858,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="assets-toolbar-btn h-12 min-h-12 shrink-0 rounded-md border-2 border-rn-border-strong px-4 font-semibold md:h-14 md:min-h-14 md:px-5"
+                className="assets-toolbar-btn h-12 min-h-12 shrink-0 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted disabled:border-foreground/15 px-4 font-semibold md:h-14 md:min-h-14 md:px-5"
                 disabled={!hasActiveFilters}
                 title={
                   hasActiveFilters
@@ -885,7 +876,7 @@ export function AssetsSection({
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-4 px-6 py-16 text-center md:gap-5 md:px-8 md:py-20">
             <div
-              className="flex size-16 items-center justify-center rounded-md border-2 border-rn-border-strong bg-muted/40 md:size-18"
+              className="flex size-16 items-center justify-center rounded-2xl bg-muted md:size-18"
               aria-hidden
             >
               <Package className="size-8 text-muted-foreground md:size-9" />
@@ -922,7 +913,7 @@ export function AssetsSection({
         ) : (
           <Table className="min-w-[920px]">
             <TableHeader>
-              <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
+              <TableRow className="border-0 bg-muted/60 hover:bg-muted/60">
                 <TableHead className={assetsTableHeadClass}>{t("common.fields.name")}</TableHead>
                 <TableHead className={assetsTableHeadClass}>{t("finance.filterVenue")}</TableHead>
                 <TableHead
@@ -937,7 +928,7 @@ export function AssetsSection({
                 </TableHead>
                 <TableHead
                   className={cn(
-                    "min-w-[5.5rem] px-3 py-2.5 text-right sm:min-w-28 md:px-8",
+                    "min-w-[5.5rem] px-3 py-2.5 text-right sm:min-w-28 md:px-5",
                     assetsTableHeadClass,
                   )}
                 >
@@ -956,13 +947,13 @@ export function AssetsSection({
                       if (canEdit) setDialog({ open: true, row: a });
                     }}
                     className={cn(
-                      "border-rn-border-strong/40 hover:bg-rn-surface-row-hover",
+                      "border-foreground/6 hover:bg-muted/50",
                       canEdit && "cursor-pointer",
                     )}
                   >
                     <TableCell className={assetsTableCellClass}>
                       <div className="flex items-center gap-3">
-                        <div className="flex size-11 shrink-0 items-center justify-center rounded-md border border-success/20 bg-rn-surface-gradient-from text-success md:size-12">
+                        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-success md:size-12">
                           <Icon className="size-5 md:size-6" aria-hidden />
                         </div>
                         <span className={cn("assets-row-name", APP_DATA_PRIMARY, "text-success")}>
@@ -1011,10 +1002,10 @@ export function AssetsSection({
                         className={cn(
                           "assets-insurance-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-bold",
                           ins.tone === "ok" &&
-                            "border border-success/25 bg-success/15 text-success",
+                            "bg-success/15 text-success",
                           ins.tone === "bad" && "bg-destructive/15 text-destructive",
                           ins.tone === "warn" &&
-                            "border border-amber-500/30 bg-amber-500/10 text-amber-950 dark:text-amber-100",
+                            "bg-amber-500/10 text-amber-950 dark:text-amber-100",
                         )}
                       >
                         <span
@@ -1039,7 +1030,7 @@ export function AssetsSection({
                           variant="ghost"
                           size="icon-sm"
                           disabled={!canEdit}
-                          className="size-10 shrink-0 rounded-md text-muted-foreground hover:text-foreground disabled:opacity-40"
+                          className="size-10 shrink-0 rounded-xl text-foreground disabled:opacity-40"
                           aria-label={t("assets.editAria", { name: a.name })}
                           onClick={() => setDialog({ open: true, row: a })}
                         >
@@ -1050,7 +1041,7 @@ export function AssetsSection({
                           variant="ghost"
                           size="icon-sm"
                           disabled={!canEdit}
-                          className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                          className="size-10 shrink-0 rounded-xl text-destructive hover:bg-destructive/10 disabled:opacity-40"
                           aria-label={t("assets.deleteAria", { name: a.name })}
                           onClick={() =>
                             setDeleteTarget({ id: a.id, name: a.name })
@@ -1068,7 +1059,7 @@ export function AssetsSection({
         )}
 
         {filtered.length > 0 ? (
-          <div className="assets-page-footer flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
+          <div className="assets-page-footer flex flex-col gap-3 border-t border-foreground/8 bg-muted/40 px-6 py-5 text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
             <span>
               {t("assets.footerShowing", {
                 from: pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0,
@@ -1083,7 +1074,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="assets-toolbar-btn h-12 min-h-12 gap-1 rounded-md border-2 border-rn-border-strong px-4 font-semibold md:h-14 md:min-h-14 md:px-5"
+                className="assets-toolbar-btn h-12 min-h-12 gap-1 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted disabled:border-foreground/15 px-4 font-semibold md:h-14 md:min-h-14 md:px-5"
                 disabled={currentPage <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
@@ -1099,7 +1090,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="assets-toolbar-btn h-12 min-h-12 gap-1 rounded-md border-2 border-rn-border-strong px-4 font-semibold md:h-14 md:min-h-14 md:px-5"
+                className="assets-toolbar-btn h-12 min-h-12 gap-1 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted disabled:border-foreground/15 px-4 font-semibold md:h-14 md:min-h-14 md:px-5"
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
@@ -1120,7 +1111,7 @@ export function AssetsSection({
         }}
       >
         <DialogContent
-          className="max-h-[90vh] max-w-lg gap-0 overflow-y-auto rounded-md border-2 border-rn-border-strong/60 bg-card p-6 text-base shadow-xl sm:max-w-xl md:max-w-2xl md:p-8"
+          className="max-h-[90vh] max-w-lg gap-0 overflow-y-auto rounded-2xl border border-foreground/10 bg-card p-6 text-base shadow-xl sm:max-w-xl md:max-w-2xl md:p-8"
           showCloseButton
         >
           {dialog.open ? (
@@ -1148,7 +1139,7 @@ export function AssetsSection({
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-12 rounded-md border-2 border-rn-border-strong px-6 text-base font-semibold"
+                    className="h-12 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted disabled:border-foreground/15 px-6 text-base font-semibold"
                     onClick={() => setDialog({ open: false, row: null })}
                   >
                     {t("common.actions.close")}

@@ -23,7 +23,7 @@ import { CustomersPageTabBar } from "@/components/customers/customers-page-tab-b
 import { useCustomersPageTab } from "@/components/customers/use-customers-page-tab";
 import { useTranslation } from "@/i18n/client";
 import type { TranslationKey } from "@/i18n/types";
-import { RN_CARD_SHELL, RN_PAGE_SEARCH_ACTIONS } from "@/lib/rn-ui";
+import { RN_PAGE_SEARCH_ACTIONS } from "@/lib/rn-ui";
 import { APP_DATA_AMOUNT, APP_DATA_BODY, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import { deleteCustomerWithClient } from "@/lib/customers/delete-customer";
@@ -256,7 +256,7 @@ export function CustomersSection({
     <div className="customers-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
       {loadError ? (
         <div
-          className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
+          className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
           role="alert"
         >
           {t("customers.loadError", { error: loadError })}
@@ -264,8 +264,8 @@ export function CustomersSection({
       ) : null}
 
       {!loadError ? (
-        <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-          <div className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
+        <div className="flex min-w-0 flex-col gap-6">
+          <div>
             <div className="customers-page-hero">
               <AppPageHeader
                 className="mb-0"
@@ -307,6 +307,7 @@ export function CustomersSection({
             id="tabpanel-customers"
             aria-labelledby="tab-customers"
             hidden={tab !== "customers"}
+            className={cn(tab === "customers" && "overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8")}
           >
             {customers.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-4 px-6 py-14 text-center md:px-8 md:py-16">
@@ -319,7 +320,7 @@ export function CustomersSection({
                 <div className="app-table overflow-x-auto">
                   <table className="w-full min-w-[720px] text-left text-app-base">
                     <thead>
-                      <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+                      <tr className="border-0 bg-muted/60">
                         <th className={customersTableHeadClass}>{t("common.fields.name")}</th>
                         <th className={customersTableHeadClass}>{t("common.fields.phone")}</th>
                         <th className={customersTableHeadClass}>{t("common.fields.email")}</th>
@@ -337,7 +338,7 @@ export function CustomersSection({
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-rn-border-strong/50">
+                    <tbody className="divide-y divide-foreground/6">
                       {pageRows.map((c) => {
                       const st = stats.get(c.id) ?? {
                         count: 0,
@@ -349,8 +350,8 @@ export function CustomersSection({
                         <tr
                           key={c.id}
                           className={cn(
-                            "cursor-pointer transition-colors hover:bg-rn-surface-row-hover",
-                            isActive && "bg-rn-surface-row-hover",
+                            "cursor-pointer transition-colors hover:bg-muted/50",
+                            isActive && "bg-muted/60",
                           )}
                           onClick={() => setSelectedId(c.id)}
                         >
@@ -400,7 +401,7 @@ export function CustomersSection({
                 </div>
 
                 {filtered.length > 0 ? (
-                  <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
+                  <div className="flex flex-col gap-3 border-t border-foreground/8 bg-muted/40 px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
                     <span>
                       {filtered.length <= TENANT_LIST_PAGE_SIZE
                         ? t("customers.footer.showingCount", {
@@ -425,7 +426,7 @@ export function CustomersSection({
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
+                        className="h-11 gap-1 rounded-xl border border-foreground/30 bg-card px-4 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
                         disabled={currentPage <= 1}
                         onClick={() =>
                           setCustomersPage((p) => Math.max(1, p - 1))
@@ -443,7 +444,7 @@ export function CustomersSection({
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
+                        className="h-11 gap-1 rounded-xl border border-foreground/30 bg-card px-4 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
                         disabled={currentPage >= totalPages}
                         onClick={() =>
                           setCustomersPage((p) =>
@@ -467,6 +468,7 @@ export function CustomersSection({
             id="tabpanel-partners"
             aria-labelledby="tab-partners"
             hidden={tab !== "partners"}
+            className={cn(tab === "partners" && "overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8")}
           >
             <PartnersPanel
               partners={partners}
@@ -488,8 +490,7 @@ export function CustomersSection({
           side="right"
           showCloseButton={false}
           className={cn(
-            "w-full max-w-[min(100vw,36rem)] gap-0 border-l-2 border-rn-border-strong bg-card p-0 sm:max-w-[36rem]",
-            "shadow-rn-card",
+            "w-full max-w-[min(100vw,36rem)] gap-0 border-l border-foreground/10 bg-card p-0 sm:max-w-[36rem]",
           )}
         >
           {selected && detailStats ? (
@@ -516,7 +517,7 @@ export function CustomersSection({
       >
         <DialogContent
           showCloseButton
-          className="max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-6 shadow-xl sm:max-w-md"
+          className="max-w-[calc(100%-2rem)] gap-4 rounded-2xl border border-foreground/10 bg-card p-6 shadow-xl sm:max-w-md"
         >
           {customerDeleteTarget ? (
             <>
@@ -535,7 +536,7 @@ export function CustomersSection({
                   type="button"
                   variant="outline"
                   size="cta"
-                  className="w-full border-2 border-rn-border-strong sm:w-auto"
+                  className="w-full rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted sm:w-auto"
                   onClick={() => setCustomerDeleteTarget(null)}
                 >
                   {t("common.actions.cancel")}
@@ -544,7 +545,7 @@ export function CustomersSection({
                   type="button"
                   size="cta"
                   disabled={deleteBusyId != null}
-                  className="w-full border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700 sm:w-auto"
+                  className="w-full rounded-xl border-0 bg-red-600 !text-white shadow-none hover:bg-red-700 sm:w-auto"
                   onClick={() => void confirmCustomerDelete()}
                 >
                   {t("customers.delete.confirm")}
@@ -557,7 +558,7 @@ export function CustomersSection({
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent
-          className="max-w-md rounded-md"
+          className="max-w-md rounded-2xl border border-foreground/10"
           showCloseButton
         >
           <DialogHeader>
@@ -573,7 +574,8 @@ export function CustomersSection({
               <Label>{t("common.fields.name")}</Label>
               <Input
                 {...addForm.register("name")}
-                className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
+                aria-invalid={!!addForm.formState.errors.name}
+                className="h-12 rounded-xl border border-foreground/25 bg-background px-4 shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
               />
               {addForm.formState.errors.name ? (
                 <p className="text-xs text-destructive">
@@ -585,7 +587,7 @@ export function CustomersSection({
               <Label>{t("common.fields.phone")}</Label>
               <Input
                 {...addForm.register("phone")}
-                className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
+                className="h-12 rounded-xl border border-foreground/25 bg-background px-4 shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
               />
             </div>
             <div className="space-y-2">
@@ -593,13 +595,14 @@ export function CustomersSection({
               <Input
                 type="email"
                 {...addForm.register("email")}
-                className="h-11 rounded-md border-2 border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25"
+                className="h-12 rounded-xl border border-foreground/25 bg-background px-4 shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
               />
             </div>
             <DialogFooter className="gap-2 sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
+                className="rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted"
                 onClick={() => setAddOpen(false)}
               >
                 {t("common.actions.cancel")}
@@ -608,6 +611,7 @@ export function CustomersSection({
                 type="submit"
                 variant="success"
                 size="cta"
+                className="rounded-xl shadow-none"
                 disabled={addIsSubmitting}
               >
                 {t("common.actions.create")}

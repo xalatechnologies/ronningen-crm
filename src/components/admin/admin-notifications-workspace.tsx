@@ -65,16 +65,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 const kpiTileClass =
-  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
+  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 sm:p-6";
 
 const tableHeadClass = APP_TABLE_HEAD_CELL_ADMIN;
 const tableCellClass =
   "px-4 py-4 align-middle sm:px-6 sm:py-5 md:px-8 md:py-6";
 
 const kpiInteractiveClass =
-  "group w-full text-left transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30";
+  "group w-full text-left transition-colors hover:bg-muted/60 hover:ring-success/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30";
 
-const kpiActiveClass = "border-success/40 bg-muted/20 ring-2 ring-success/25";
+const kpiActiveClass = "bg-success/8 ring-2 ring-success/40";
 
 function NotificationsKpiTile({
   label,
@@ -83,7 +83,7 @@ function NotificationsKpiTile({
   icon: Icon,
   active,
   href,
-  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconContainerClassName = "rounded-xl bg-accent p-2 dark:bg-white/10",
   iconClassName = "size-6 text-primary dark:text-white",
   valueClassName = "text-success",
 }: {
@@ -101,7 +101,7 @@ function NotificationsKpiTile({
   const content = (
     <>
       <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="dashboard-kpi-label min-w-0 break-words">{label}</span>
+        <span className="dashboard-kpi-label min-w-0 break-words !normal-case !tracking-normal">{label}</span>
         <div className={cn(iconContainerClassName, "shrink-0")}>
           <Icon className={iconClassName} aria-hidden />
         </div>
@@ -137,7 +137,7 @@ function campaignStatusBadgeClass(status: string): string {
     case "paused":
       return "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300";
     default:
-      return "border-rn-border-strong bg-muted/30 text-muted-foreground";
+      return "border-foreground/15 bg-muted/50 text-muted-foreground";
   }
 }
 
@@ -150,7 +150,7 @@ function deliveryStatusBadgeClass(status: string): string {
     case "delivered":
       return "border-sky-500/40 bg-sky-500/10 text-sky-800 dark:text-sky-300";
     default:
-      return "border-rn-border-strong bg-muted/30 text-muted-foreground";
+      return "border-foreground/15 bg-muted/50 text-muted-foreground";
   }
 }
 
@@ -292,7 +292,7 @@ function CreateTemplateForm({ onCreated }: { onCreated: () => void }) {
   return (
     <form
       onSubmit={(event) => void handleSubmit(event)}
-      className="mb-6 space-y-4 rounded-md border border-rn-border-strong/60 bg-muted/10 p-4"
+      className="mb-6 space-y-4 rounded-2xl border border-foreground/15 bg-muted/30 p-4"
     >
       <h3 className="app-section-title">{t("admin.opprett_mal")}</h3>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -303,7 +303,7 @@ function CreateTemplateForm({ onCreated }: { onCreated: () => void }) {
             value={key}
             onChange={(event) => setKey(event.target.value)}
             placeholder="trial_reminder"
-            className="border-2 border-rn-border-strong font-mono"
+            className="border border-foreground/25 font-mono"
             required
           />
         </div>
@@ -313,7 +313,7 @@ function CreateTemplateForm({ onCreated }: { onCreated: () => void }) {
             id="new-template-subject"
             value={subject}
             onChange={(event) => setSubject(event.target.value)}
-            className="border-2 border-rn-border-strong"
+            className="border border-foreground/25"
             required
           />
         </div>
@@ -325,7 +325,7 @@ function CreateTemplateForm({ onCreated }: { onCreated: () => void }) {
           value={bodyHtml}
           onChange={(event) => setBodyHtml(event.target.value)}
           rows={5}
-          className="w-full rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-3 py-2 font-mono text-app-sm outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+          className="w-full rounded-xl border border-foreground/25 bg-background px-3 py-2 font-mono text-app-sm outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
           required
         />
       </div>
@@ -378,7 +378,7 @@ function CreateCampaignForm({
   return (
     <form
       onSubmit={(event) => void handleSubmit(event)}
-      className="mb-6 space-y-4 rounded-md border border-rn-border-strong/60 bg-muted/10 p-4"
+      className="mb-6 space-y-4 rounded-2xl border border-foreground/15 bg-muted/30 p-4"
     >
       <h3 className="app-section-title">{t("admin.opprett_kampanje")}</h3>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -388,7 +388,7 @@ function CreateCampaignForm({
             id="new-campaign-name"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="border-2 border-rn-border-strong"
+            className="border border-foreground/25"
             required
           />
         </div>
@@ -580,9 +580,9 @@ export function AdminNotificationsWorkspace({
     ) : undefined;
 
   return (
-    <div className="admin-page-workspace admin-notifications-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
+    <div className="admin-page-workspace admin-notifications-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-6 pb-8">
       <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
+        <div className="dashboard-oversikt-hero px-5 py-5 sm:px-6 lg:px-6">
           <AppPageHeader
             className="mb-0"
             surface="default"
@@ -591,9 +591,11 @@ export function AdminNotificationsWorkspace({
             description={t("admin.e_postmaler_kampanjer_og_leveringsstatus")}
           />
         </div>
+      </div>
 
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section
-          className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
+          className="px-5 py-5 sm:px-6 sm:py-6"
           aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
@@ -618,7 +620,7 @@ export function AdminNotificationsWorkspace({
               value={stats.deliveryFailed}
               caption={t("admin.e_post_som_ikke_ble_levert")}
               icon={MailX}
-              iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
+              iconContainerClassName="rounded-xl bg-rn-danger-soft p-2"
               iconClassName="size-6 text-rn-danger-ink"
               valueClassName={
                 stats.deliveryFailed > 0 ? "text-destructive" : "text-success"
@@ -637,8 +639,10 @@ export function AdminNotificationsWorkspace({
             />
           </div>
         </section>
+      </div>
 
-        <section className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8">
+      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
+        <section className="px-5 py-4 sm:px-6">
           <AdminNotificationFilterBar
             embedded
             search={search}
@@ -657,7 +661,7 @@ export function AdminNotificationsWorkspace({
         </section>
 
         {showCreate && view === "templates" ? (
-          <section className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8">
+          <section className="border-t border-foreground/10 px-5 py-4 sm:px-6">
             <CreateTemplateForm
               onCreated={() => {
                 setShowCreate(false);
@@ -667,7 +671,7 @@ export function AdminNotificationsWorkspace({
           </section>
         ) : null}
         {showCreate && view === "campaigns" ? (
-          <section className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8">
+          <section className="border-t border-foreground/10 px-5 py-4 sm:px-6">
             <CreateCampaignForm
               templates={templates}
               onCreated={() => {
@@ -678,30 +682,30 @@ export function AdminNotificationsWorkspace({
           </section>
         ) : null}
 
-        <div className="app-table -mx-px max-w-full overflow-x-auto border-t border-rn-border-strong/50 overscroll-x-contain">
+        <div className="app-table max-w-full overflow-x-auto border-t border-foreground/10 overscroll-x-contain">
           {view === "templates" ? (
             <table className="w-full min-w-[40rem] text-left text-app-base">
               <thead>
-                <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+                <tr className="border-b border-foreground/15 bg-muted/50">
                   <th className={cn(tableHeadClass, "w-10")} />
                   <th className={tableHeadClass}>{t("adminLabels.fields.template")}</th>
                   <th className={tableHeadClass}>{t("adminLabels.fields.subject")}</th>
                   <th className={tableHeadClass}>{t("adminLabels.fields.lastChanged")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-rn-border-strong/50">
+              <tbody className="divide-y divide-foreground/10">
                 {filteredTemplates.map((template) => {
                   const expanded = expandedKey === template.key;
                   return (
                     <Fragment key={template.key}>
-                      <tr className="transition-colors hover:bg-rn-surface-row-hover">
+                      <tr className="transition-colors hover:bg-muted/40">
                         <td className={tableCellClass}>
                           <button
                             type="button"
                             onClick={() =>
                               setExpandedKey(expanded ? null : template.key)
                             }
-                            className="inline-flex size-8 items-center justify-center rounded-md border-2 border-rn-border-strong text-muted-foreground transition-colors hover:bg-muted/40"
+                            className="inline-flex size-8 items-center justify-center rounded-full border border-foreground/25 text-muted-foreground transition-colors hover:bg-muted/40"
                             aria-expanded={expanded ? "true" : "false"}
                             aria-label={
                               expanded ? t("admin.skjul_detaljer") : t("admin.vis_detaljer")
@@ -758,7 +762,7 @@ export function AdminNotificationsWorkspace({
           {view === "campaigns" ? (
             <table className="w-full min-w-[48rem] text-left text-app-base">
               <thead>
-                <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+                <tr className="border-b border-foreground/15 bg-muted/50">
                   <th className={cn(tableHeadClass, "w-10")} />
                   <th className={tableHeadClass}>{t("adminLabels.fields.name")}</th>
                   <th className={tableHeadClass}>{t("adminLabels.fields.template")}</th>
@@ -767,19 +771,19 @@ export function AdminNotificationsWorkspace({
                   <th className={tableHeadClass}>{t("adminLabels.actions.actions")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-rn-border-strong/50">
+              <tbody className="divide-y divide-foreground/10">
                 {filteredCampaigns.map((campaign) => {
                   const expanded = expandedKey === campaign.id;
                   return (
                     <Fragment key={campaign.id}>
-                      <tr className="transition-colors hover:bg-rn-surface-row-hover">
+                      <tr className="transition-colors hover:bg-muted/40">
                         <td className={tableCellClass}>
                           <button
                             type="button"
                             onClick={() =>
                               setExpandedKey(expanded ? null : campaign.id)
                             }
-                            className="inline-flex size-8 items-center justify-center rounded-md border-2 border-rn-border-strong text-muted-foreground transition-colors hover:bg-muted/40"
+                            className="inline-flex size-8 items-center justify-center rounded-full border border-foreground/25 text-muted-foreground transition-colors hover:bg-muted/40"
                             aria-expanded={expanded ? "true" : "false"}
                             aria-label={
                               expanded ? t("admin.skjul_detaljer") : t("admin.vis_detaljer")
@@ -801,7 +805,7 @@ export function AdminNotificationsWorkspace({
                         <td className={tableCellClass}>
                           <span
                             className={cn(
-                              "inline-flex rounded-md border-2 px-2.5 py-0.5 text-app-xs font-semibold",
+                              "inline-flex rounded-full border px-2.5 py-0.5 text-app-xs font-semibold",
                               campaignStatusBadgeClass(campaign.status),
                             )}
                           >
@@ -852,25 +856,25 @@ export function AdminNotificationsWorkspace({
           {view === "deliveries" ? (
             <table className="w-full min-w-[40rem] text-left text-app-base">
               <thead>
-                <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+                <tr className="border-b border-foreground/15 bg-muted/50">
                   <th className={tableHeadClass}>{t("adminLabels.fields.recipient")}</th>
                   <th className={tableHeadClass}>{t("adminLabels.fields.campaign")}</th>
                   <th className={tableHeadClass}>{t("admin.status")}</th>
                   <th className={tableHeadClass}>{t("adminLabels.fields.timestamp")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-rn-border-strong/50">
+              <tbody className="divide-y divide-foreground/10">
                 {filteredDeliveries.map((delivery) => (
                   <tr
                     key={delivery.id}
-                    className="transition-colors hover:bg-rn-surface-row-hover"
+                    className="transition-colors hover:bg-muted/40"
                   >
                     <td className={tableCellClass}>{delivery.recipientEmail}</td>
                     <td className={tableCellClass}>{delivery.campaignName}</td>
                     <td className={tableCellClass}>
                       <span
                         className={cn(
-                          "inline-flex rounded-md border-2 px-2.5 py-0.5 text-app-xs font-semibold",
+                          "inline-flex rounded-full border px-2.5 py-0.5 text-app-xs font-semibold",
                           deliveryStatusBadgeClass(delivery.status),
                         )}
                       >
@@ -898,13 +902,13 @@ export function AdminNotificationsWorkspace({
           ) : null}
         </div>
 
-        <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
+        <div className="border-t border-foreground/10 px-5 py-3 sm:px-6">
           <p className="app-text-secondary">{resultSummary}</p>
         </div>
 
         <p
           className={cn(
-            "border-t border-rn-border-strong/50 px-4 py-4 text-app-sm sm:px-5 md:px-6 lg:px-8",
+            "border-t border-foreground/10 px-4 py-4 text-app-sm sm:px-5 md:px-6 lg:px-8",
             emailConfigured ? "text-success" : "text-amber-700 dark:text-amber-300",
           )}
         >

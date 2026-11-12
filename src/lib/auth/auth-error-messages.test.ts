@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { mapAuthErrorToNorwegian } from "./auth-error-messages";
+import { mapAuthErrorToNorwegian, mapAuthErrorToUserMessage } from "./auth-error-messages";
 
 describe("mapAuthErrorToNorwegian", () => {
   it("translates email rate limit", () => {
@@ -22,5 +22,20 @@ describe("mapAuthErrorToNorwegian", () => {
       message: 'Email address "post@example.no" is invalid',
     });
     expect(msg).toContain("E-postadressen ble avvist");
+  });
+});
+
+describe("mapAuthErrorToUserMessage", () => {
+  it("explains a banned account in plain language instead of the raw Supabase text", () => {
+    const nb = mapAuthErrorToUserMessage({ message: "User is banned", code: "user_banned" }, "nb");
+    expect(nb).not.toMatch(/banned/i);
+    expect(nb).toMatch(/deaktivert/i);
+    expect(mapAuthErrorToUserMessage({ message: "User is banned" }, "en")).toMatch(/deactivated/i);
+  });
+
+  it("keeps the existing wrong-password message", () => {
+    expect(mapAuthErrorToUserMessage({ message: "Invalid login credentials" }, "nb")).toBe(
+      "Feil e-post eller passord.",
+    );
   });
 });

@@ -39,6 +39,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { useOrganizationPermissions } from "@/hooks/use-organization-permissions";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -46,7 +47,6 @@ import { toast } from "sonner";
 
 import { useSupabase } from "@/providers/supabase-provider";
 
-import { RN_CARD_SHELL, RN_SEGMENT_CONTROL } from "@/lib/rn-ui";
 import { computeBookingsQuickStats } from "@/lib/bookings/quick-stats";
 
 const bookingsTableHeadClass = cn(
@@ -57,7 +57,12 @@ const bookingsTableHeadClass = cn(
 import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
 const filterEyebrowClass =
-  "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
+  "mb-1.5 block text-[13px] font-semibold text-foreground";
+
+const cardClass = "overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8";
+
+const filterFieldClass =
+  "h-11 min-h-11 w-full min-w-0 rounded-xl border border-foreground/25 text-app-sm shadow-none sm:h-12 sm:min-h-12 sm:text-app-base";
 
 type BookingStatusFilter = "all" | "confirmed" | "pending" | "cancelled";
 type BookingPaymentFilter = "" | "unpaid" | "partial" | "paid";
@@ -156,7 +161,7 @@ function BookingsFiltersSection({
 
   return (
     <section
-      className="bookings-list-filters border-t border-rn-border-strong/35 px-4 py-5 sm:px-6 md:px-8 md:py-6"
+      className={cn("bookings-list-filters px-4 py-5 sm:px-6 md:px-8 md:py-6", cardClass)}
       aria-label={t("bookings.searchFilterAria")}
     >
       <div className="flex min-w-0 flex-col gap-4">
@@ -182,32 +187,39 @@ function BookingsFiltersSection({
                     type="button"
                     onClick={() => setFilter(key)}
                     className={cn(
-                      "flex min-h-12 w-full min-w-0 items-center justify-between gap-2 rounded-md border-2 px-3 py-3 text-left transition-all sm:gap-3 sm:px-4 md:min-h-[3.25rem] md:rounded-md md:px-4 md:py-3.5",
+                      "flex min-h-12 w-full min-w-0 items-center justify-between gap-2 rounded-xl px-4 py-3 text-left transition-colors sm:gap-3 md:min-h-[3.25rem] md:py-3.5",
                       active
-                        ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
-                        : tone === "emerald"
-                          ? "border-emerald-400/90 bg-card text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50 dark:text-emerald-100 dark:hover:bg-emerald-950/40"
-                          : tone === "amber"
-                            ? "border-amber-400/90 bg-card text-amber-950 hover:border-amber-500 hover:bg-amber-50 dark:text-amber-100 dark:hover:bg-amber-950/40"
-                            : tone === "rose"
-                              ? "border-red-400/90 bg-card text-red-950 hover:border-red-500 hover:bg-red-50 dark:text-red-200 dark:hover:bg-red-950/40"
-                              : "border-rn-border-strong bg-card text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
+                        ? "bg-success !text-white [&_svg]:!text-white"
+                        : "bg-card text-foreground ring-1 ring-foreground/20 hover:bg-muted hover:ring-foreground/35",
                     )}
                   >
-                    <span
-                      className={cn(
-                        "truncate font-heading text-app-sm font-semibold sm:text-app-base",
-                        active ? "!text-white" : undefined,
-                      )}
-                    >
-                      {label}
+                    <span className="flex min-w-0 items-center gap-2">
+                      {tone ? (
+                        <span
+                          className={cn(
+                            "size-2 shrink-0 rounded-full",
+                            tone === "emerald" && "bg-emerald-500",
+                            tone === "amber" && "bg-amber-500",
+                            tone === "rose" && "bg-red-500",
+                          )}
+                          aria-hidden
+                        />
+                      ) : null}
+                      <span
+                        className={cn(
+                          "truncate font-heading text-app-sm font-semibold sm:text-app-base",
+                          active ? "!text-white" : undefined,
+                        )}
+                      >
+                        {label}
+                      </span>
                     </span>
                     <span
                       className={cn(
-                        "bookings-list-filter-count inline-flex shrink-0 min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-app-sm font-bold tabular-nums",
+                        "bookings-list-filter-count inline-flex shrink-0 min-w-[1.75rem] items-center justify-center rounded-full px-2 py-0.5 text-app-sm font-bold tabular-nums",
                         active
-                          ? "border-white/30 bg-white/20 !text-white"
-                          : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
+                          ? "bg-white/20 !text-white"
+                          : "bg-muted text-foreground",
                       )}
                     >
                       {count}
@@ -229,7 +241,7 @@ function BookingsFiltersSection({
               onChange={setDateFrom}
               maxYmd={dateTo || undefined}
               variant="toolbar"
-              className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+              className={filterFieldClass}
             />
           </div>
           <div className="min-w-0">
@@ -242,7 +254,7 @@ function BookingsFiltersSection({
               onChange={setDateTo}
               minYmd={dateFrom || undefined}
               variant="toolbar"
-              className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+              className={filterFieldClass}
             />
           </div>
           <div className="min-w-0">
@@ -254,7 +266,7 @@ function BookingsFiltersSection({
               value={paymentFilter}
               onValueChange={(v) => setPaymentFilter(v as BookingPaymentFilter)}
               aria-label={t("bookings.filterPaymentAria")}
-              className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+              className={filterFieldClass}
               placeholder={t("bookings.allPayments")}
               options={BOOKING_PAYMENT_STATUS_VALUES.filter((v) =>
                 ["unpaid", "partial", "paid"].includes(v),
@@ -273,7 +285,7 @@ function BookingsFiltersSection({
               value={audienceFilter}
               onValueChange={(v) => setAudienceFilter(v as BookingAudienceFilter)}
               aria-label={t("bookings.filterTypeAria")}
-              className="h-11 min-h-11 w-full min-w-0 text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+              className={filterFieldClass}
               placeholder={t("bookings.allTypes")}
               options={[
                 { value: "Privat", label: t("bookings.private") },
@@ -286,7 +298,7 @@ function BookingsFiltersSection({
               type="button"
               variant="outline"
               disabled={!hasActiveFilters}
-              className="h-11 w-full min-w-0 gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold sm:h-12 sm:text-app-base xl:w-auto xl:min-w-[11.5rem]"
+              className="h-11 w-full min-w-0 gap-2 rounded-xl border border-foreground/30 bg-card px-4 font-heading text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15 sm:h-12 sm:text-app-base xl:w-auto xl:min-w-[11.5rem]"
               onClick={onResetFilters}
             >
               <RotateCcw className="size-4 shrink-0" aria-hidden />
@@ -296,7 +308,7 @@ function BookingsFiltersSection({
         </div>
 
         {secondaryRowEnd ? (
-          <div className="flex min-w-0 flex-wrap items-end justify-end gap-2 border-t border-rn-border-strong/35 pt-3">
+          <div className="flex min-w-0 flex-wrap items-end justify-end gap-2 border-t border-foreground/10 pt-3">
             {secondaryRowEnd}
           </div>
         ) : null}
@@ -326,13 +338,15 @@ function BookingsCalendarPanel({
         {...filters}
         secondaryRowEnd={<BookingsMonthCalendarToolbar {...navigation} />}
       />
-      <BookingsMonthCalendar
-        rows={filtered}
-        totalBookingsCount={totalBookingsCount}
-        onSelectBooking={onSelectBooking}
-        navigation={navigation}
-        hideToolbar
-      />
+      <div className={cardClass}>
+        <BookingsMonthCalendar
+          rows={filtered}
+          totalBookingsCount={totalBookingsCount}
+          onSelectBooking={onSelectBooking}
+          navigation={navigation}
+          hideToolbar
+        />
+      </div>
     </>
   );
 }
@@ -345,8 +359,9 @@ function FindBookingsCardHeader({
   setView: (v: "list" | "calendar") => void;
 }) {
   const { t } = useTranslation();
+  const { canManageBookings } = useOrganizationPermissions();
   return (
-    <header className="border-b-2 border-rn-border-strong bg-card/80 px-6 py-5 md:px-8 md:py-6">
+    <header>
       <div className="bookings-list-hero">
         <AppPageHeader
           className="mb-0"
@@ -355,7 +370,7 @@ function FindBookingsCardHeader({
           actions={
           <div className="flex flex-wrap items-center gap-3 lg:shrink-0">
             <div
-              className={RN_SEGMENT_CONTROL}
+              className="inline-flex rounded-xl bg-muted p-1"
               role="tablist"
               aria-label={t("bookings.switchViewAria")}
             >
@@ -365,11 +380,11 @@ function FindBookingsCardHeader({
                 aria-selected={view === "list"}
                 onClick={() => setView("list")}
                 className={cn(
-                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border-2 border-transparent px-5 py-2.5 text-app-sm font-semibold transition-all outline-none select-none md:min-h-12 md:px-6 md:text-app-base",
+                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-app-sm font-semibold transition-colors outline-none select-none md:min-h-12 md:px-6 md:text-app-base",
                   "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
                   view === "list"
-                    ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
-                    : "text-rn-text-body hover:border-rn-badge-border hover:bg-card",
+                    ? "bg-success !text-white [&_svg]:!text-white"
+                    : "text-rn-text-body hover:bg-card",
                 )}
               >
                 <List className="size-5 shrink-0 opacity-90" aria-hidden />
@@ -381,24 +396,26 @@ function FindBookingsCardHeader({
                 aria-selected={view === "calendar"}
                 onClick={() => setView("calendar")}
                 className={cn(
-                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border-2 border-transparent px-5 py-2.5 text-app-sm font-semibold transition-all outline-none select-none md:min-h-12 md:px-6 md:text-app-base",
+                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-app-sm font-semibold transition-colors outline-none select-none md:min-h-12 md:px-6 md:text-app-base",
                   "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
                   view === "calendar"
-                    ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
-                    : "text-rn-text-body hover:border-rn-badge-border hover:bg-card",
+                    ? "bg-success !text-white [&_svg]:!text-white"
+                    : "text-rn-text-body hover:bg-card",
                 )}
               >
                 <CalendarDays className="size-5 shrink-0 opacity-90" aria-hidden />
                 {t("bookings.calendar")}
               </button>
             </div>
-            <Link
-              href="/app/bookings/new"
-              className={cn(buttonVariants({ variant: "success", size: "cta" }))}
-            >
-              <Plus className="size-5" aria-hidden />
-              {t("bookings.new")}
-            </Link>
+            {canManageBookings ? (
+              <Link
+                href="/app/bookings/new"
+                className={cn(buttonVariants({ variant: "success", size: "cta" }), "rounded-xl shadow-none")}
+              >
+                <Plus className="size-5" aria-hidden />
+                {t("bookings.new")}
+              </Link>
+            ) : null}
           </div>
         }
         />
@@ -582,7 +599,7 @@ export function BookingsList({
     <div className="flex w-full flex-col gap-8 pb-24 md:pb-10">
       {loadError ? (
         <div
-          className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-app-sm text-destructive md:text-app-base"
+          className="rounded-xl bg-destructive/10 px-4 py-3 text-app-sm text-destructive md:text-app-base"
           role="alert"
         >
           {t("bookings.loadError", { error: loadError })}
@@ -590,7 +607,7 @@ export function BookingsList({
       ) : null}
 
       {view === "calendar" ? (
-        <div className={cn("bookings-list-workspace overflow-hidden", RN_CARD_SHELL)}>
+        <div className="bookings-list-workspace flex flex-col gap-6">
           <FindBookingsCardHeader view={view} setView={setView} />
           <BookingsCalendarPanel
             filtered={filtered}
@@ -618,7 +635,7 @@ export function BookingsList({
 
       {view === "list" ? (
         <>
-          <div className={cn("bookings-list-workspace overflow-hidden", RN_CARD_SHELL)}>
+          <div className="bookings-list-workspace flex flex-col gap-6">
             <FindBookingsCardHeader view={view} setView={setView} />
 
             <BookingsFiltersSection
@@ -638,6 +655,7 @@ export function BookingsList({
               filterCounts={filterCounts}
             />
 
+            <div className={cardClass}>
             <div className={cn("grid grid-cols-12", APP_TABLE_HEAD_BAR)}>
               <div className={cn("col-span-12 sm:col-span-4", bookingsTableHeadClass)}>
                 {t("bookings.tableCustomerEvent")}
@@ -676,7 +694,7 @@ export function BookingsList({
               </div>
             </div>
 
-            <div className="divide-y divide-rn-border-strong/50">
+            <div className="divide-y divide-foreground/6">
               {filtered.length === 0 ? (
                 <div className="space-y-4 px-6 py-16 text-center sm:px-10 sm:py-20 md:px-8">
                   <p className="bookings-list-empty-title font-heading font-bold tracking-tight text-rn-text-heading">
@@ -827,7 +845,7 @@ export function BookingsList({
               )}
             </div>
 
-            <div className="flex flex-col items-stretch justify-between gap-4 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
+            <div className="flex flex-col items-stretch justify-between gap-4 border-t border-foreground/8 bg-muted/40 px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
               <span className="bookings-list-footer-caption font-medium text-rn-footer-text">
                 {bookings.length === 0
                   ? t("bookings.footer.noBookings")
@@ -866,7 +884,7 @@ export function BookingsList({
                   type="button"
                   variant="outline"
                   size="icon-sm"
-                  className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
+                  className="size-10 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted disabled:border-foreground/15"
                   disabled={currentPage <= 1}
                   aria-label={t("common.pagination.prevPage")}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -883,7 +901,7 @@ export function BookingsList({
                   type="button"
                   variant="outline"
                   size="icon-sm"
-                  className="size-10 rounded-md border-2 border-rn-border-strong bg-background"
+                  className="size-10 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted disabled:border-foreground/15"
                   disabled={currentPage >= totalPages}
                   aria-label={t("common.pagination.nextPage")}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -893,14 +911,15 @@ export function BookingsList({
               </div>
               ) : null}
             </div>
+            </div>
           </div>
         </>
       ) : null}
 
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-8">
-          <div className="flex min-w-0 flex-col justify-between rounded-md border-2 border-rn-accent-border bg-success p-7 text-white shadow-rn-hero-success md:p-9">
+          <div className="flex min-w-0 flex-col justify-between rounded-2xl bg-success p-7 text-white md:p-9">
             <div className="min-w-0">
-              <div className="mb-5 flex size-12 items-center justify-center rounded-md border border-white/20 bg-white/12 md:size-14">
+              <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-white/12 md:size-14">
                 <TrendingUp className="size-6 md:size-7" aria-hidden />
               </div>
               <h2 className="font-heading text-app-xl font-bold leading-snug text-white md:text-app-2xl">
@@ -954,14 +973,13 @@ export function BookingsList({
           <div
             className={cn(
               "flex flex-col gap-8 md:col-span-2 md:flex-row md:gap-10",
-              RN_CARD_SHELL,
-              "p-7 md:p-9",
+              "rounded-2xl bg-card p-7 ring-1 ring-foreground/8 md:p-9",
             )}
           >
             <div className="min-w-0 flex-1">
               <div className="grid grid-cols-1 gap-4">
-                <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
-                  <p className="mb-3 text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-app-sm">
+                <div className="rounded-xl bg-muted/50 p-5 md:p-6">
+                  <p className="mb-3 text-app-sm font-semibold text-muted-foreground">
                     {t("bookings.stats.calendarCoverage")}
                   </p>
                   <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
@@ -971,8 +989,8 @@ export function BookingsList({
                     {t("bookings.stats.calendarCoverageDesc")}
                   </p>
                 </div>
-                <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
-                  <p className="mb-3 text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-app-sm">
+                <div className="rounded-xl bg-muted/50 p-5 md:p-6">
+                  <p className="mb-3 text-app-sm font-semibold text-muted-foreground">
                     {t("bookings.stats.avgGuests")}
                   </p>
                   <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
@@ -984,16 +1002,16 @@ export function BookingsList({
                 </div>
               </div>
             </div>
-            <div className="flex w-full flex-col justify-between rounded-md border-2 border-success/50 bg-gradient-to-b from-rn-surface-gradient-from to-muted p-6 md:w-[38%] md:max-w-[340px] md:p-8">
+            <div className="flex w-full flex-col justify-between rounded-xl bg-muted/50 p-6 md:w-[38%] md:max-w-[340px] md:p-8">
               <div>
-                <p className="text-app-xs font-semibold tracking-wider text-success uppercase dark:!text-white md:text-app-sm">
+                <p className="text-app-sm font-semibold text-success dark:!text-white">
                   {t("bookings.stats.thisMonth")}
                 </p>
                 <p className="mt-3 dashboard-kpi-value text-success dark:!text-white md:text-app-3xl">
                   {formatCurrency(quickStats.currentMonthRevenue)}
                 </p>
               </div>
-              <div className="mt-8 space-y-3 border-t-2 border-success/20 pt-5">
+              <div className="mt-8 space-y-3 border-t border-foreground/10 pt-5">
                 <div className="flex justify-between text-app-base md:text-app-lg">
                   <span className="font-medium text-rn-text-body">
                     {t("bookings.stats.prevMonthLabel")}
@@ -1002,7 +1020,7 @@ export function BookingsList({
                     {formatCurrency(quickStats.prevMonthRevenue)}
                   </span>
                 </div>
-                <div className="h-2.5 overflow-hidden rounded-full border border-rn-border-strong/40 bg-muted">
+                <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full rounded-full bg-success transition-[width]"
                     style={{
@@ -1066,13 +1084,15 @@ export function BookingsList({
         />
       ) : null}
 
-      <Link
-        href="/app/bookings/new"
-        className="fixed bottom-8 right-8 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-2xl transition-transform active:scale-95 md:hidden"
-        aria-label={t("bookings.new")}
-      >
-        <Plus className="size-7" />
-      </Link>
+      {canDeleteBookings ? (
+        <Link
+          href="/app/bookings/new"
+          className="fixed bottom-8 right-8 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-2xl transition-transform active:scale-95 md:hidden"
+          aria-label={t("bookings.new")}
+        >
+          <Plus className="size-7" />
+        </Link>
+      ) : null}
     </div>
   );
 }

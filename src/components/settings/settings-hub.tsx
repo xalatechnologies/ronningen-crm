@@ -34,15 +34,15 @@ export function SettingsHub({ propertyCount, teamCount }: SettingsHubProps) {
           <p className="mt-2 text-muted-foreground">{t("settings.loadingOrg")}</p>
         ) : currentOrganization ? (
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="rounded-md border-2 border-rn-border-strong bg-card px-3 py-1 text-sm font-semibold text-foreground">
+            <span className="rounded-full border border-foreground/25 bg-card px-3 py-1 text-sm font-semibold text-foreground">
               {currentOrganization.name}
             </span>
             {role ? (
-              <span className="rounded-md border-2 border-rn-accent-border/50 bg-rn-surface-gradient-from px-3 py-1 text-sm font-semibold text-success dark:!text-white">
+              <span className="rounded-full border border-success/30 bg-success/10 px-3 py-1 text-sm font-semibold text-success dark:!text-white">
                 {roleLabel(role, t)}
               </span>
             ) : null}
-            <span className="rounded-md border-2 border-rn-border-strong/60 bg-muted/30 px-3 py-1 text-sm text-muted-foreground">
+            <span className="rounded-full border border-foreground/15 bg-muted/50 px-3 py-1 text-sm text-muted-foreground">
               {statusLabel(currentOrganization.subscriptionStatus, t)}
             </span>
           </div>
@@ -78,12 +78,12 @@ export function SettingsHub({ propertyCount, teamCount }: SettingsHubProps) {
             <Link
               href={href}
               className={cn(
-                "group flex h-full flex-col gap-3 p-6 transition-colors hover:bg-rn-surface-row-hover md:p-8",
+                "group flex h-full flex-col gap-3 p-6 transition-colors hover:bg-muted/40 md:p-6",
                 RN_CARD_SHELL,
               )}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-md border-2 border-rn-accent-border bg-rn-surface-gradient-from text-success dark:!text-white">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border-0 bg-success/12 ring-1 ring-success/20 text-success dark:!text-white">
                   <Icon className="size-6" aria-hidden />
                 </div>
                 <ChevronRight

@@ -1,13 +1,18 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-import { isAdminPath, isAuthPath, isProtectedPath } from "@/config/routes";
+import { isAdminPath, isAuthPath, isPortalPath, isProtectedPath } from "@/config/routes";
 import {
   ADMIN_SUPPORT_SEEN_COOKIE,
   adminSupportSeenCookieOptions,
   isAdminSupportPath,
 } from "@/lib/admin/support-nav-badge";
 import { safeInternalRedirect } from "@/lib/security/safe-redirect";
+import {
+  REMEMBER_COOKIE,
+  isRemembered,
+  withSessionLifetime,
+} from "@/lib/auth/session-lifetime";
 import {
   getSupabasePublicEnvForClient,
   isSupabasePublicConfigured,
@@ -47,6 +52,8 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  const remember = isRemembered(request.cookies.get(REMEMBER_COOKIE)?.value);
+
   const supabase = createServerClient<Database>(url, anon, {
     cookies: {
       getAll() {
@@ -58,7 +65,7 @@ export async function updateSession(request: NextRequest) {
         });
         response = NextResponse.next({ request: { headers: request.headers } });
         cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
+          response.cookies.set(name, value, withSessionLifetime(options, remember));
         });
       },
     },
@@ -76,7 +83,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if ((isProtectedPath(pathname) || isAdminPath(pathname)) && !user) {
+  if ((isProtectedPath(pathname) || isAdminPath(pathname) || isPortalPath(pathname)) && !user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/auth/login";
     redirectUrl.searchParams.set("redirect", pathname);

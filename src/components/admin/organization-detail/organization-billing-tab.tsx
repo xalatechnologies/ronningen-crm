@@ -42,61 +42,61 @@ export function OrganizationBillingTab({
       }
     >
       <dl className="grid gap-4 sm:grid-cols-2">
-        <div>
+        <div className="rounded-xl bg-muted/40 p-4 ring-1 ring-foreground/10">
           <dt className="app-text-muted">{t("adminLabels.fields.stripeMode")}</dt>
           <dd className="mt-1 font-heading text-app-md font-semibold">
             {getStripeModeLabel()}
           </dd>
         </div>
-        <div>
+        <div className="rounded-xl bg-muted/40 p-4 ring-1 ring-foreground/10">
           <dt className="app-text-muted">{t("adminLabels.fields.stripeCustomer")}</dt>
           <dd className="mt-1 font-mono text-app-sm">
             {org.providerCustomerId ?? "—"}
           </dd>
         </div>
-        <div>
+        <div className="rounded-xl bg-muted/40 p-4 ring-1 ring-foreground/10">
           <dt className="app-text-muted">{t("adminLabels.fields.stripeSubscription")}</dt>
           <dd className="mt-1 font-mono text-app-sm">
             {org.providerSubscriptionId ?? "—"}
           </dd>
         </div>
-        <div>
+        <div className="rounded-xl bg-muted/40 p-4 ring-1 ring-foreground/10">
           <dt className="app-text-muted">{t("adminLabels.fields.stripePriceId")}</dt>
           <dd className="mt-1 font-mono text-app-sm">
             {org.providerPriceId ?? "—"}
           </dd>
         </div>
-        <div>
+        <div className="rounded-xl bg-muted/40 p-4 ring-1 ring-foreground/10">
           <dt className="app-text-muted">{t("adminLabels.fields.periodStart")}</dt>
           <dd className="mt-1 font-heading text-app-md font-semibold">
             {formatDateTime(org.subscriptionPeriodStart, locale)}
           </dd>
         </div>
-        <div>
+        <div className="rounded-xl bg-muted/40 p-4 ring-1 ring-foreground/10">
           <dt className="app-text-muted">{t("adminLabels.fields.periodEnd")}</dt>
           <dd className="mt-1 font-heading text-app-md font-semibold">
             {formatDateTime(org.subscriptionPeriodEnd, locale)}
           </dd>
         </div>
-        <div>
+        <div className="rounded-xl bg-muted/40 p-4 ring-1 ring-foreground/10">
           <dt className="app-text-muted">{t("adminLabels.fields.trialUntil")}</dt>
           <dd className="mt-1 font-heading text-app-md font-semibold">
             {formatDateTime(org.trialEndsAt, locale)}
           </dd>
         </div>
-        <div>
+        <div className="rounded-xl bg-muted/40 p-4 ring-1 ring-foreground/10">
           <dt className="app-text-muted">{t("adminLabels.fields.cancelAtPeriodEnd")}</dt>
           <dd className="mt-1 font-heading text-app-md font-semibold">
             {org.cancelAtPeriodEnd ? t("adminLabels.fields.yes") : t("adminLabels.fields.no")}
           </dd>
         </div>
-        <div>
+        <div className="rounded-xl bg-muted/40 p-4 ring-1 ring-foreground/10">
           <dt className="app-text-muted">{t("adminLabels.fields.lastSynced")}</dt>
           <dd className="mt-1 font-heading text-app-md font-semibold">
             {formatDateTime(org.lastSyncedAt, locale)}
           </dd>
         </div>
-        <div>
+        <div className="rounded-xl bg-muted/40 p-4 ring-1 ring-foreground/10">
           <dt className="app-text-muted">{t("adminLabels.fields.billingEmail")}</dt>
           <dd className="mt-1 font-heading text-app-md font-semibold">
             {org.billingEmail ?? "—"}

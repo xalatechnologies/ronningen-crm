@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { UserRole } from "@/constants/roles";
+import { hasPortalAccount } from "@/lib/portal/context";
 import {
   fetchActiveOrganizationId,
   fetchUserOrganizations,
@@ -87,7 +88,7 @@ export async function resolvePostAuthRedirect(
 ): Promise<string> {
   const memberships = await fetchUserOrganizations(supabase, userId);
   if (memberships.length === 0) {
-    return TENANT_ONBOARDING_PATH;
+    return (await hasPortalAccount(supabase, userId)) ? "/portal" : TENANT_ONBOARDING_PATH;
   }
 
   const activeOrganizationId = await fetchActiveOrganizationId(supabase, userId);

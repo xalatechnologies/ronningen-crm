@@ -62,7 +62,7 @@ export function AdminPlanDistributionPanel({
               return (
                 <li
                   key={plan}
-                  className="flex items-center justify-between gap-3 rounded-md px-2 py-2 app-text"
+                  className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 app-text"
                 >
                   {content}
                 </li>
@@ -73,7 +73,7 @@ export function AdminPlanDistributionPanel({
               <li key={plan}>
                 <Link
                   href={href}
-                  className="flex items-center justify-between gap-3 rounded-md px-2 py-2 transition-colors hover:bg-muted/40"
+                  className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-muted/40"
                 >
                   {content}
                 </Link>

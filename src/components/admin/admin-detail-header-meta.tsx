@@ -17,7 +17,7 @@ export function AdminDetailHeaderMeta({
   return (
     <div className={cn("flex flex-col gap-2.5", className)}>
       {lead ? (
-        <span className="inline-flex w-fit rounded-md border-2 border-rn-border-strong bg-muted/30 px-2.5 py-0.5 font-mono text-app-xs text-muted-foreground sm:text-app-sm">
+        <span className="inline-flex w-fit rounded-md border border-foreground/25 bg-muted/30 px-2.5 py-0.5 font-mono text-app-xs text-muted-foreground sm:text-app-sm">
           {lead}
         </span>
       ) : null}

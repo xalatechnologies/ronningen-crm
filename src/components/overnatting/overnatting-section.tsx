@@ -57,7 +57,7 @@ import {
   ymAdd,
 } from "@/lib/overnatting-month";
 import { computeAccommodationQuickStats } from "@/lib/overnatting/quick-stats";
-import { RN_CARD_SHELL, RN_MODAL_FOOTER, RN_MODAL_MAX_HEIGHT, RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
+import { RN_MODAL_FOOTER, RN_MODAL_MAX_HEIGHT, RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
 import {
   APP_TABLE_CELL_BODY,
   APP_TABLE_CELL_DATE,
@@ -79,13 +79,19 @@ import { Controller, useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
 const fieldClass =
-  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-app-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-app-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-12 w-full rounded-xl border border-foreground/25 bg-background px-4 text-app-base text-foreground shadow-none outline-none transition-colors hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 disabled:opacity-60 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
 
-const labelClass =
-  "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-app-xs";
+const labelClass = "text-[13px] font-semibold text-foreground md:text-sm";
 
-const filterEyebrowClass =
-  "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground";
+const filterEyebrowClass = "mb-1.5 block text-[13px] font-semibold text-foreground";
+
+const cardClass = "overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8";
+
+const filterFieldClass =
+  "h-11 min-h-11 w-full rounded-xl border border-foreground/25 text-app-sm shadow-none sm:h-12 sm:min-h-12 sm:text-app-base";
+
+const outlineBtnClass =
+  "rounded-xl border border-foreground/30 bg-card font-semibold shadow-none hover:bg-muted";
 
 type AccommodationStatusFilter = "all" | "tentative" | "confirmed" | "cancelled";
 
@@ -119,8 +125,7 @@ function matchesAccommodationDateRange(
   return true;
 }
 
-const dialogSectionTitleClass =
-  "text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground";
+const dialogSectionTitleClass = "text-xs font-semibold text-muted-foreground";
 
 function ymNow(): string {
   const t = new Date();
@@ -579,21 +584,21 @@ export function OvernattingSection({
 
   return (
     <div className="overnatting-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
-      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div className="border-b-2 border-rn-border-strong bg-card/80 px-[length:var(--app-card-padding)] py-6 md:py-7">
+      <div className="flex min-w-0 flex-col gap-6">
+        <div>
           <AppPageHeader
             className="mb-0 gap-3 md:gap-4"
             surface="default"
             title={t("overnatting.title")}
             actionsClassName="justify-end"
             actions={
-              <div className="flex flex-wrap items-center justify-end gap-2">
+              <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-end">
                 {canManage ? (
                   <Link
                     href="/app/overnatting/new"
                     className={cn(
                       buttonVariants({ variant: "success", size: "cta" }),
-                      "inline-flex items-center justify-center gap-2",
+                      "inline-flex w-full items-center justify-center gap-2 rounded-xl shadow-none sm:w-auto",
                     )}
                   >
                     <Plus className="size-5" aria-hidden />
@@ -605,7 +610,7 @@ export function OvernattingSection({
                     type="button"
                     variant="outline"
                     size="cta"
-                    className="gap-2 border-2 border-rn-border-strong font-semibold"
+                    className={cn("w-full gap-2 sm:w-auto", outlineBtnClass)}
                     onClick={openNewUnit}
                   >
                     <BedDouble className="size-5" aria-hidden />
@@ -617,7 +622,7 @@ export function OvernattingSection({
                     type="button"
                     variant="outline"
                     size="cta"
-                    className="gap-2 border-2 border-rn-border-strong font-semibold"
+                    className={cn("w-full gap-2 sm:w-auto", outlineBtnClass)}
                     aria-expanded={calendarOpen}
                     onClick={() => setCalendarOpen((v) => !v)}
                   >
@@ -631,25 +636,22 @@ export function OvernattingSection({
         </div>
 
         {loadError ? (
-          <div
-            className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
-            role="alert"
-          >
-            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive">
+          <div role="alert">
+            <div className="rounded-xl bg-destructive/10 px-4 py-3 text-destructive">
               {t("overnatting.loadError", { error: loadError })}
             </div>
           </div>
         ) : null}
 
         {!loadError && calendarOpen ? (
-          <div className="border-t border-rn-border-strong/50 bg-gradient-to-b from-muted/10 to-transparent px-4 py-3 sm:px-5 lg:px-6">
+          <div className={cn("px-4 py-4 sm:px-6", cardClass)}>
             <div
               className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2"
               role="toolbar"
               aria-label={t("overnatting.availabilityLegend")}
             >
               <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                <span className="text-xs font-semibold text-muted-foreground">
                   {t("overnatting.availability")}
                 </span>
                 {loadingRes ? (
@@ -659,21 +661,21 @@ export function OvernattingSection({
                 ) : null}
               </div>
               <div className="flex min-w-0 max-sm:basis-full flex-wrap items-center justify-end gap-2 sm:shrink-0">
-                <span className="inline-flex items-center gap-2 rounded-full border border-rn-border-strong/50 bg-card px-3 py-1.5 text-app-xs font-medium text-rn-text-body shadow-sm">
+                <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-app-xs font-medium text-rn-text-body">
                   <span
                     className="size-2.5 shrink-0 rounded-full bg-emerald-500/90 ring-2 ring-emerald-500/25 shadow-sm dark:bg-emerald-400"
                     aria-hidden
                   />
                   {statusLabel("confirmed", t)}
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-rn-border-strong/50 bg-card px-3 py-1.5 text-app-xs font-medium text-rn-text-body shadow-sm">
+                <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-app-xs font-medium text-rn-text-body">
                   <span
                     className="size-2.5 shrink-0 rounded-full bg-amber-500/90 ring-2 ring-amber-500/25 shadow-sm dark:bg-amber-400"
                     aria-hidden
                   />
                   {statusLabel("tentative", t)}
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-rn-border-strong/50 bg-card px-3 py-1.5 text-app-xs font-medium text-rn-text-body shadow-sm">
+                <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-app-xs font-medium text-rn-text-body">
                   <span
                     className="size-2.5 shrink-0 rounded-full bg-rose-500/90 ring-2 ring-rose-500/25 shadow-sm dark:bg-rose-400"
                     aria-hidden
@@ -694,10 +696,10 @@ export function OvernattingSection({
         ) : null}
 
         {!loadError && sortedUnits.length > 0 ? (
-          <div className="border-t border-rn-border-strong/40 bg-linear-to-b from-muted/15 to-transparent px-4 py-6 sm:px-6 lg:px-8">
+          <div className={cn("px-4 py-6 sm:px-6 lg:px-8", cardClass)}>
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                <p className="text-xs font-semibold text-muted-foreground">
                   {t("overnatting.title")}
                 </p>
                 <h3 className="mt-1 font-heading text-app-lg font-bold tracking-tight text-rn-text-heading md:text-app-xl">
@@ -722,16 +724,16 @@ export function OvernattingSection({
                 <li key={u.id}>
                   <div
                     className={cn(
-                      "flex h-full flex-col rounded-[length:var(--app-radius)] border-2 bg-card p-4 shadow-sm transition-[box-shadow, border-color] sm:p-5",
+                      "flex h-full flex-col rounded-2xl p-5 transition-colors",
                       u.active
-                        ? "border-rn-border-strong/55 hover:border-rn-border-strong hover:shadow-md"
-                        : "border-dashed border-rn-border-strong/45 bg-muted/20 opacity-90 hover:border-rn-border-strong/70",
+                        ? "bg-muted/70 ring-1 ring-foreground/20 hover:bg-muted hover:ring-foreground/35"
+                        : "border border-dashed border-foreground/35 bg-muted/40 opacity-85",
                     )}
                   >
                     <div className="flex min-w-0 flex-1 gap-3">
                       <div
                         className={cn(
-                          "flex size-11 shrink-0 items-center justify-center rounded-[length:var(--app-radius)] border border-rn-border-strong/35 bg-rn-surface-wash/80 shadow-sm",
+                          "flex size-11 shrink-0 items-center justify-center rounded-xl bg-card ring-1 ring-foreground/15",
                           !u.active && "grayscale-[0.35]",
                         )}
                         aria-hidden
@@ -745,10 +747,10 @@ export function OvernattingSection({
                           </span>
                           <span
                             className={cn(
-                              "inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                              "inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold",
                               u.active
-                                ? "border-success/35 bg-success/10 text-success"
-                                : "border-muted-foreground/30 bg-muted text-muted-foreground",
+                                ? "bg-success/15 text-success"
+                                : "bg-muted text-muted-foreground",
                             )}
                           >
                             {u.active ? t("statuses.active") : t("statuses.inactive")}
@@ -784,12 +786,12 @@ export function OvernattingSection({
                       </div>
                     </div>
                     {canManage ? (
-                      <div className="mt-4 flex flex-wrap gap-2 border-t border-rn-border-strong/30 pt-3 sm:mt-5 sm:justify-end">
+                      <div className="mt-4 flex flex-wrap gap-2 border-t border-foreground/10 pt-3 sm:mt-5 sm:justify-end">
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="border-2 border-rn-border-strong/70 font-semibold"
+                          className={outlineBtnClass}
                           onClick={() => openEditUnit(u)}
                         >
                           {t("common.actions.edit")}
@@ -798,7 +800,7 @@ export function OvernattingSection({
                           type="button"
                           variant="destructive"
                           size="sm"
-                          className="font-semibold"
+                          className="rounded-xl font-semibold shadow-none"
                           onClick={() => setDeleteUnitTarget(u)}
                         >
                           {t("common.actions.delete")}
@@ -813,7 +815,7 @@ export function OvernattingSection({
         ) : null}
 
         {!loadError ? (
-          <div className="border-t-2 border-rn-border-strong px-4 py-6 sm:px-5 lg:px-6">
+          <div className={cn("px-4 py-6 sm:px-6", cardClass)}>
             <h2 className="font-heading text-app-lg font-bold capitalize text-rn-text-heading md:text-app-xl">
               {t("overnatting.reservationsMonth", { month: monthLabel })}
             </h2>
@@ -860,32 +862,39 @@ export function OvernattingSection({
                             type="button"
                             onClick={() => setStatusFilter(key)}
                             className={cn(
-                              "flex min-h-12 w-full min-w-0 items-center justify-between gap-2 rounded-md border-2 px-3 py-3 text-left transition-all sm:gap-3 sm:px-4 md:min-h-[3.25rem] md:rounded-md md:px-4 md:py-3.5",
+                              "flex min-h-12 w-full min-w-0 items-center justify-between gap-2 rounded-xl px-4 py-3 text-left transition-colors sm:gap-3 md:min-h-[3.25rem] md:py-3.5",
                               active
-                                ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
-                                : tone === "emerald"
-                                  ? "border-emerald-400/90 bg-card text-emerald-950 hover:border-emerald-500 hover:bg-emerald-50 dark:text-emerald-100 dark:hover:bg-emerald-950/40"
-                                  : tone === "amber"
-                                    ? "border-amber-400/90 bg-card text-amber-950 hover:border-amber-500 hover:bg-amber-50 dark:text-amber-100 dark:hover:bg-amber-950/40"
-                                    : tone === "rose"
-                                      ? "border-red-400/90 bg-card text-red-950 hover:border-red-500 hover:bg-red-50 dark:text-red-200 dark:hover:bg-red-950/40"
-                                      : "border-rn-border-strong bg-card text-foreground hover:border-rn-border-strong-hover hover:bg-rn-surface-wash",
+                                ? "bg-success !text-white [&_svg]:!text-white"
+                                : "bg-card text-foreground ring-1 ring-foreground/20 hover:bg-muted hover:ring-foreground/35",
                             )}
                           >
-                            <span
-                              className={cn(
-                                "truncate font-heading text-app-sm font-semibold sm:text-app-base",
-                                active ? "!text-white" : undefined,
-                              )}
-                            >
-                              {label}
+                            <span className="flex min-w-0 items-center gap-2">
+                              {tone ? (
+                                <span
+                                  className={cn(
+                                    "size-2 shrink-0 rounded-full",
+                                    tone === "emerald" && "bg-emerald-500",
+                                    tone === "amber" && "bg-amber-500",
+                                    tone === "rose" && "bg-red-500",
+                                  )}
+                                  aria-hidden
+                                />
+                              ) : null}
+                              <span
+                                className={cn(
+                                  "truncate font-heading text-app-sm font-semibold sm:text-app-base",
+                                  active ? "!text-white" : undefined,
+                                )}
+                              >
+                                {label}
+                              </span>
                             </span>
                             <span
                               className={cn(
-                                "overnatting-list-filter-count inline-flex shrink-0 min-w-[1.75rem] items-center justify-center rounded-md border px-2 py-0.5 text-app-sm font-bold tabular-nums",
+                                "overnatting-list-filter-count inline-flex shrink-0 min-w-[1.75rem] items-center justify-center rounded-full px-2 py-0.5 text-app-sm font-bold tabular-nums",
                                 active
-                                  ? "border-white/30 bg-white/20 !text-white"
-                                  : "border-rn-badge-border bg-rn-badge-surface text-rn-text-ink",
+                                  ? "bg-white/20 !text-white"
+                                  : "bg-muted text-foreground",
                               )}
                             >
                               {count}
@@ -906,7 +915,7 @@ export function OvernattingSection({
                       value={unitFilter}
                       onValueChange={setUnitFilter}
                       aria-label={t("overnatting.filterUnitAria")}
-                      className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+                      className={filterFieldClass}
                       placeholder={t("overnatting.allUnits")}
                       options={toIdNameOptions(sortedUnits)}
                     />
@@ -921,7 +930,7 @@ export function OvernattingSection({
                       onChange={setDateFrom}
                       maxYmd={dateTo || undefined}
                       variant="toolbar"
-                      className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+                      className={filterFieldClass}
                     />
                   </div>
                   <div className="min-w-0">
@@ -934,7 +943,7 @@ export function OvernattingSection({
                       onChange={setDateTo}
                       minYmd={dateFrom || undefined}
                       variant="toolbar"
-                      className="h-11 min-h-11 w-full text-app-sm sm:h-12 sm:min-h-12 sm:text-app-base"
+                      className={filterFieldClass}
                     />
                   </div>
                   <div className="flex min-w-0 sm:col-span-2 lg:col-span-1">
@@ -942,7 +951,7 @@ export function OvernattingSection({
                       type="button"
                       variant="outline"
                       disabled={!hasActiveFilters}
-                      className="h-11 w-full gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold sm:h-12 sm:text-app-base"
+                      className="h-11 w-full gap-2 rounded-xl border border-foreground/30 bg-card px-4 font-heading text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15 sm:h-12 sm:text-app-base"
                       onClick={resetFilters}
                     >
                       <RotateCcw className="size-4 shrink-0" aria-hidden />
@@ -956,7 +965,7 @@ export function OvernattingSection({
             <div className="mt-4 overflow-x-auto">
               <Table className="min-w-[720px]">
                 <TableHeader>
-                  <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
+                  <TableRow className="border-0 bg-muted/60 hover:bg-muted/60">
                     <TableHead>{t("overnatting.tableCustomer")}</TableHead>
                     <TableHead>{t("overnatting.tableUnit")}</TableHead>
                     <TableHead>{t("overnatting.tableArrival")}</TableHead>
@@ -1001,7 +1010,19 @@ export function OvernattingSection({
                           {r.guestCount}
                         </TableCell>
                         <TableCell className={APP_TABLE_CELL_BODY}>
-                          {statusLabel(r.status, t)}
+                          <span
+                            className={cn(
+                              "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
+                              r.status === "confirmed" &&
+                                "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200",
+                              r.status === "tentative" &&
+                                "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
+                              r.status === "cancelled" &&
+                                "bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-200",
+                            )}
+                          >
+                            {statusLabel(r.status, t)}
+                          </span>
                         </TableCell>
                         {canManage ? (
                           <TableCell className="text-right">
@@ -1009,6 +1030,7 @@ export function OvernattingSection({
                               type="button"
                               variant="outline"
                               size="sm"
+                              className={outlineBtnClass}
                               onClick={() => openEditRes(r)}
                             >
                               {t("common.actions.edit")}
@@ -1027,9 +1049,9 @@ export function OvernattingSection({
 
       {!loadError ? (
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-8">
-          <div className="flex min-w-0 flex-col justify-between rounded-md border-2 border-rn-accent-border bg-success p-7 text-white shadow-rn-hero-success md:p-9">
+          <div className="flex min-w-0 flex-col justify-between rounded-2xl bg-success p-7 text-white md:p-9">
             <div className="min-w-0">
-              <div className="mb-5 flex size-12 items-center justify-center rounded-md border border-white/20 bg-white/12 md:size-14">
+              <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-white/12 md:size-14">
                 <TrendingUp className="size-6 md:size-7" aria-hidden />
               </div>
               <h2 className="font-heading text-app-xl font-bold leading-snug text-white md:text-app-2xl">
@@ -1081,14 +1103,13 @@ export function OvernattingSection({
           <div
             className={cn(
               "flex flex-col gap-8 md:col-span-2 md:flex-row md:gap-10",
-              RN_CARD_SHELL,
-              "p-7 md:p-9",
+              "rounded-2xl bg-card p-7 ring-1 ring-foreground/8 md:p-9",
             )}
           >
             <div className="min-w-0 flex-1">
               <div className="grid grid-cols-1 gap-4">
-                <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
-                  <p className="mb-3 text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-app-sm">
+                <div className="rounded-xl bg-muted/50 p-5 md:p-6">
+                  <p className="mb-3 text-app-sm font-semibold text-muted-foreground">
                     {t("overnatting.occupancyRate")}
                   </p>
                   <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
@@ -1098,8 +1119,8 @@ export function OvernattingSection({
                     {t("overnatting.occupancyDescription")}
                   </p>
                 </div>
-                <div className="rounded-md border-2 border-rn-border-strong bg-rn-surface-segment p-5 md:p-6">
-                  <p className="mb-3 text-app-xs font-semibold tracking-wider text-muted-foreground uppercase md:text-app-sm">
+                <div className="rounded-xl bg-muted/50 p-5 md:p-6">
+                  <p className="mb-3 text-app-sm font-semibold text-muted-foreground">
                     {t("overnatting.avgGuests")}
                   </p>
                   <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
@@ -1111,16 +1132,16 @@ export function OvernattingSection({
                 </div>
               </div>
             </div>
-            <div className="flex w-full flex-col justify-between rounded-md border-2 border-success/50 bg-gradient-to-b from-rn-surface-gradient-from to-muted p-6 md:w-[38%] md:max-w-[340px] md:p-8">
+            <div className="flex w-full flex-col justify-between rounded-xl bg-muted/50 p-6 md:w-[38%] md:max-w-[340px] md:p-8">
               <div>
-                <p className="text-app-xs font-semibold tracking-wider text-success uppercase dark:!text-white md:text-app-sm">
+                <p className="text-app-sm font-semibold text-success dark:!text-white">
                   {quickStats.monthLabel}
                 </p>
                 <p className="mt-3 dashboard-kpi-value text-success dark:!text-white md:text-app-3xl">
                   {formatCurrency(quickStats.currentMonthRevenue)}
                 </p>
               </div>
-              <div className="mt-8 space-y-3 border-t-2 border-success/20 pt-5">
+              <div className="mt-8 space-y-3 border-t border-foreground/10 pt-5">
                 <div className="flex justify-between text-app-base md:text-app-lg">
                   <span className="font-medium text-rn-text-body">
                     {t("overnatting.prevMonth")}
@@ -1129,7 +1150,7 @@ export function OvernattingSection({
                     {formatCurrency(quickStats.prevMonthRevenue)}
                   </span>
                 </div>
-                <div className="h-2.5 overflow-hidden rounded-full border border-rn-border-strong/40 bg-muted">
+                <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full rounded-full bg-success transition-[width]"
                     style={{
@@ -1150,7 +1171,7 @@ export function OvernattingSection({
       ) : null}
 
       <Dialog open={unitDialogOpen} onOpenChange={setUnitDialogOpen}>
-        <DialogContent className="max-w-lg border-2 border-rn-border-strong" showCloseButton>
+        <DialogContent className="max-w-lg rounded-2xl border border-foreground/10" showCloseButton>
           <DialogHeader>
             <DialogTitle className="font-heading">
               {editingUnit ? t("overnatting.editUnit") : t("overnatting.newUnitTitle")}
@@ -1229,7 +1250,7 @@ export function OvernattingSection({
               </Label>
               <Textarea
                 id={`${rid}-unote`}
-                className="rounded-md border-2 border-rn-border-strong bg-background p-3"
+                className="rounded-xl border border-foreground/25 bg-background p-3 shadow-none focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
                 rows={2}
                 {...unitForm.register("notes")}
               />
@@ -1237,7 +1258,7 @@ export function OvernattingSection({
             <label className="flex cursor-pointer items-center gap-2 text-app-sm font-medium">
               <input
                 type="checkbox"
-                className="size-4 rounded border-2 border-rn-border-strong"
+                className="size-5 rounded-md border border-foreground/40 accent-[#1a4331]"
                 {...unitForm.register("active")}
               />
               {t("overnatting.activeForBooking")}
@@ -1246,11 +1267,12 @@ export function OvernattingSection({
               <Button
                 type="button"
                 variant="outline"
+                className={outlineBtnClass}
                 onClick={() => setUnitDialogOpen(false)}
               >
                 {t("common.actions.cancel")}
               </Button>
-              <Button type="submit" variant="success">
+              <Button type="submit" variant="success" className="rounded-xl shadow-none">
                 {t("common.actions.save")}
               </Button>
             </DialogFooter>
@@ -1261,13 +1283,13 @@ export function OvernattingSection({
       <Dialog open={editResOpen} onOpenChange={setEditResOpen}>
         <DialogContent
           className={cn(
-            "max-w-lg gap-0 overflow-hidden border-2 border-rn-border-strong p-0 sm:max-w-xl",
+            "max-w-lg gap-0 overflow-hidden rounded-2xl border border-foreground/10 p-0 sm:max-w-xl",
             RN_MODAL_MAX_HEIGHT,
             "flex flex-col",
           )}
           showCloseButton
         >
-          <DialogHeader className="shrink-0 border-b border-rn-border-strong/50 px-6 pb-4 pt-6 sm:px-8">
+          <DialogHeader className="shrink-0 border-b border-foreground/10 px-6 pb-4 pt-6 sm:px-8">
             <DialogTitle className="font-heading text-app-lg md:text-app-xl">
               {t("overnatting.editReservation")}
             </DialogTitle>
@@ -1281,7 +1303,7 @@ export function OvernattingSection({
               }}
             >
               <div className={cn(RN_MODAL_SCROLL_BODY, "space-y-5 px-6 py-5 sm:px-8")}>
-                <div className="rounded-md border border-rn-border-strong/45 bg-muted/25 px-3.5 py-3">
+                <div className="rounded-xl bg-muted/50 px-4 py-3">
                   <p className={dialogSectionTitleClass}>{t("overnatting.customerSection")}</p>
                   <p className="mt-1 font-heading text-app-base font-semibold text-rn-text-heading">
                     {editingRes.customerName === UNKNOWN_CUSTOMER
@@ -1314,7 +1336,7 @@ export function OvernattingSection({
                   ) : null}
                 </div>
 
-                <div className="space-y-3 rounded-md border-2 border-rn-border-strong/40 bg-rn-surface-wash/25 p-4 sm:p-5">
+                <div className="space-y-3 rounded-xl bg-muted/50 p-4 sm:p-5">
                   <div className="space-y-1">
                     <p className={dialogSectionTitleClass}>{t("overnatting.timeSection")}</p>
                     <p className="text-app-xs leading-snug text-muted-foreground">
@@ -1333,7 +1355,7 @@ export function OvernattingSection({
                           <DatePickerField
                             id={`${rid}-ercid`}
                             variant="toolbar"
-                            className={cn(fieldClass, "shadow-sm")}
+                            className={fieldClass}
                             value={field.value ?? ""}
                             onChange={field.onChange}
                           />
@@ -1356,7 +1378,7 @@ export function OvernattingSection({
                           <DatePickerField
                             id={`${rid}-ercod`}
                             variant="toolbar"
-                            className={cn(fieldClass, "shadow-sm")}
+                            className={fieldClass}
                             value={field.value ?? ""}
                             onChange={field.onChange}
                           />
@@ -1473,7 +1495,7 @@ export function OvernattingSection({
                   <Textarea
                     id={`${rid}-rn`}
                     rows={3}
-                    className="rounded-md border-2 border-rn-border-strong bg-background p-3 text-app-sm focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25 md:text-app-base"
+                    className="rounded-xl border border-foreground/25 bg-background p-3 text-app-sm shadow-none focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 md:text-app-base"
                     {...editResForm.register("notes")}
                   />
                 </div>
@@ -1482,7 +1504,7 @@ export function OvernattingSection({
               <DialogFooter
                 className={cn(
                   RN_MODAL_FOOTER,
-                  "mx-0 mb-0 mt-0 flex flex-col gap-3 rounded-b-[length:var(--app-radius)] border-t border-rn-border-strong/50 bg-muted/25 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-8 sm:py-4",
+                  "mx-0 mb-0 mt-0 flex flex-col gap-3 rounded-b-[length:var(--app-radius)] border-t border-foreground/10 bg-card px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-8 sm:py-4",
                 )}
               >
                 <Button
@@ -1497,7 +1519,7 @@ export function OvernattingSection({
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full sm:w-auto"
+                    className={cn("w-full sm:w-auto", outlineBtnClass)}
                     onClick={() => setEditResOpen(false)}
                   >
                     {t("common.actions.cancel")}
@@ -1505,7 +1527,7 @@ export function OvernattingSection({
                   <Button
                     type="submit"
                     variant="success"
-                    className="w-full sm:w-auto"
+                    className="w-full rounded-xl shadow-none sm:w-auto"
                     disabled={editResSubmitting}
                   >
                     {t("common.actions.save")}

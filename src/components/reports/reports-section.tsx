@@ -3,7 +3,6 @@
 import { useTranslation } from "@/i18n/client";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { Button } from "@/components/ui/button";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
@@ -31,7 +30,7 @@ function formatPct(n: number | null, digits = 1) {
 }
 
 const KPI_TILE_CLASS =
-  "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
+  "flex flex-col justify-between rounded-2xl bg-muted/50 p-6 ring-1 ring-foreground/10";
 
 const KPI_GRID =
   "grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4";
@@ -123,7 +122,7 @@ function OkonomiSection({
   return (
     <section
       id="okonomi"
-      className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
+      className="overflow-hidden rounded-2xl bg-card px-5 py-5 ring-1 ring-foreground/8 sm:px-6 sm:py-6 lg:px-8"
       aria-label={t("reports.economy.aria")}
     >
       <ReportsSectionHeader
@@ -131,7 +130,7 @@ function OkonomiSection({
         description={t("reports.economy.description")}
       />
       {isEmpty ? (
-        <div className="mt-4 rounded-md border border-rn-border-strong/60 bg-muted/20 px-4 py-3 text-app-sm text-muted-foreground">
+        <div className="mt-4 rounded-xl bg-muted/60 px-4 py-3 text-app-sm text-muted-foreground">
           {t("reports.economy.empty", { period: periodLabel })}{" "}
           <Link
             href="/app/bookings/new"
@@ -242,7 +241,7 @@ function PipelineSection({
   return (
     <section
       id="pipeline"
-      className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
+      className="overflow-hidden rounded-2xl bg-card px-5 py-5 ring-1 ring-foreground/8 sm:px-6 sm:py-6 lg:px-8"
       aria-label={t("reports.pipeline.aria")}
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -269,7 +268,7 @@ function PipelineSection({
         </div>
       </div>
       {isEmpty ? (
-        <div className="mt-4 rounded-md border border-rn-border-strong/60 bg-muted/20 px-4 py-3 text-app-sm text-muted-foreground">
+        <div className="mt-4 rounded-xl bg-muted/60 px-4 py-3 text-app-sm text-muted-foreground">
           {t("reports.pipeline.empty")}
         </div>
       ) : null}
@@ -324,7 +323,7 @@ function InventarSection({ facility }: { facility: ReportsFacilityStats }) {
   return (
     <section
       id="inventar"
-      className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
+      className="overflow-hidden rounded-2xl bg-card px-5 py-5 ring-1 ring-foreground/8 sm:px-6 sm:py-6 lg:px-8"
       aria-label={t("reports.inventory.aria")}
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -340,7 +339,7 @@ function InventarSection({ facility }: { facility: ReportsFacilityStats }) {
         </Link>
       </div>
       {isEmpty ? (
-        <div className="mt-4 rounded-md border border-rn-border-strong/60 bg-muted/20 px-4 py-3 text-app-sm text-muted-foreground">
+        <div className="mt-4 rounded-xl bg-muted/60 px-4 py-3 text-app-sm text-muted-foreground">
           {t("reports.inventory.empty")}{" "}
           <Link
             href="/app/assets"
@@ -402,7 +401,7 @@ function ReportsDetailsCollapsible({
 
   return (
     <section
-      className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
+      className="overflow-hidden rounded-2xl bg-card px-5 py-5 ring-1 ring-foreground/8 sm:px-6 sm:py-6 lg:px-8"
       aria-label={t("reports.details.aria")}
     >
       <Button
@@ -431,7 +430,7 @@ function ReportsDetailsCollapsible({
       {open ? (
         <div className="mt-6 space-y-8">
           <div>
-            <h3 className="mb-4 text-app-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <h3 className="mb-4 text-app-sm font-semibold text-muted-foreground">
               {t("reports.details.finance")}
             </h3>
             <div className={KPI_GRID}>
@@ -453,7 +452,7 @@ function ReportsDetailsCollapsible({
           </div>
 
           <div>
-            <h3 className="mb-4 text-app-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <h3 className="mb-4 text-app-sm font-semibold text-muted-foreground">
               {t("reports.details.invoices")}
             </h3>
             <p className="mb-4 text-app-sm text-muted-foreground">
@@ -489,7 +488,7 @@ function ReportsDetailsCollapsible({
           </div>
 
           <div>
-            <h3 className="mb-4 text-app-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <h3 className="mb-4 text-app-sm font-semibold text-muted-foreground">
               {t("reports.details.inquiries")}
             </h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
@@ -507,7 +506,7 @@ function ReportsDetailsCollapsible({
           </div>
 
           <div>
-            <h3 className="mb-4 text-app-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <h3 className="mb-4 text-app-sm font-semibold text-muted-foreground">
               {t("reports.details.accommodation")}
             </h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
@@ -525,7 +524,7 @@ function ReportsDetailsCollapsible({
           {showDriftAlert ? (
             <div>
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <h3 className="text-app-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <h3 className="text-app-sm font-semibold text-muted-foreground">
                   {t("reports.details.inventoryAlert")}
                 </h3>
                 <Link
@@ -574,7 +573,7 @@ function ReportsDetailsCollapsible({
 function ReportsModuleFooter() {
   const { t } = useTranslation();
   return (
-    <div className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6">
+    <div className="px-1">
       <p className="text-app-sm text-muted-foreground">
         {t("reports.footer.seeAlso")}{" "}
         <Link
@@ -648,7 +647,7 @@ function FestTypeBreakdownRow({
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <span
           className={cn(
-            "reports-breakdown-pill inline-flex w-fit rounded-full px-3 py-1.5 font-bold tracking-wide md:px-4 md:py-2",
+            "reports-breakdown-pill inline-flex w-fit rounded-full px-3 py-1.5 font-semibold md:px-4 md:py-2",
             eventPillClass(row.festType),
           )}
         >
@@ -696,7 +695,7 @@ function BreakdownRow({
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <span
           className={cn(
-            "reports-breakdown-pill inline-flex w-fit rounded-full px-3 py-1.5 font-bold tracking-wide uppercase md:px-4 md:py-2",
+            "reports-breakdown-pill inline-flex w-fit rounded-full px-3 py-1.5 font-semibold md:px-4 md:py-2",
             eventPillClass(row.eventType),
           )}
         >
@@ -748,14 +747,15 @@ export function ReportsSection({
   hasRegisteredActivity,
 }: ReportsSectionProps) {
   const { t, locale } = useTranslation();
-  const paddedCard = (extra?: string) => cn("p-6", RN_CARD_SHELL, extra);
+  const paddedCard = (extra?: string) =>
+    cn("rounded-2xl bg-card p-6 ring-1 ring-foreground/8", extra);
 
   const { revenue, bookings, inquiries, finance } = kpis;
 
   return (
     <div className="reports-page-workspace mx-auto flex w-full flex-col gap-8 pb-8">
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <div className="px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
+      <div className="flex flex-col gap-6">
+        <div>
           <AppPageHeader
             className="mb-0"
             surface="default"
@@ -795,19 +795,16 @@ export function ReportsSection({
         </div>
 
         {loadError ? (
-          <div
-            className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
-            role="alert"
-          >
-            <div className="reports-load-error rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive">
+          <div role="alert">
+            <div className="reports-load-error rounded-xl bg-destructive/10 px-4 py-3 text-destructive">
               {t("reports.loadError", { error: loadError })}
             </div>
           </div>
         ) : null}
 
         {!loadError && !hasRegisteredActivity ? (
-          <div className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6">
-            <div className="rounded-md border border-rn-border-strong/60 bg-muted/20 px-4 py-4 text-app-sm text-muted-foreground">
+          <div>
+            <div className="rounded-2xl bg-card px-5 py-5 text-app-sm text-muted-foreground ring-1 ring-foreground/8">
               <p className="font-medium text-foreground">
                 {t("reports.noActivityTitle")}
               </p>
@@ -876,7 +873,7 @@ export function ReportsSection({
                 <BreakdownRow key={row.eventType} row={row} index={i} />
               ))}
               {festTypeBreakdown.length > 0 ? (
-                <div className="border-t border-rn-border-strong/40 pt-8">
+                <div className="border-t border-foreground/10 pt-8">
                   <h3 className="mb-6 text-app-base font-bold tracking-tight text-foreground">
                     {t("reports.breakdown.eventTypes")}
                   </h3>

@@ -19,13 +19,17 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { AppHeaderSearch } from "@/components/layout/app-header-search";
+import { LanguageSwitcher } from "@/components/language/language-switcher";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { OrganizationSwitcher } from "@/components/organizations/organization-switcher";
 import { APP_NAME } from "@/config/app";
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { useOrganizationPermissions } from "@/hooks/use-organization-permissions";
+import { roleLabel } from "@/lib/navigation/nav-labels";
 import { usePlatformAdmin } from "@/hooks/use-platform-admin";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
-import { MenuIcon, ChevronDown } from "lucide-react";
+import { ChevronDown, LogOut, MenuIcon, Settings, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { signOutToLogin } from "@/lib/auth/sign-out";
 import { useTranslation } from "@/i18n/client";
@@ -63,7 +67,7 @@ function HeaderAvatarOrInitials({
   const [broken, setBroken] = useState(false);
   const fallback = (
     <span
-      className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-sm font-bold text-success dark:!text-white"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full border border-foreground/20 bg-muted font-heading text-app-xs font-bold text-success dark:!text-white"
       aria-hidden
     >
       {loading ? "…" : initials}
@@ -74,9 +78,9 @@ function HeaderAvatarOrInitials({
     <img
       src={avatarUrl}
       alt=""
-      width={44}
-      height={44}
-      className="size-11 shrink-0 rounded-full border-2 border-rn-border-strong object-cover"
+      width={32}
+      height={32}
+      className="size-8 shrink-0 rounded-full border border-foreground/20 object-cover"
       referrerPolicy="no-referrer"
       onError={() => setBroken(true)}
     />
@@ -85,14 +89,19 @@ function HeaderAvatarOrInitials({
 
 export function AppHeader({ children }: { children?: ReactNode }) {
   const { t } = useTranslation();
-  const { user, loading } = useAuthUser();
+  const { user, profile, loading } = useAuthUser();
   const { isPlatformAdmin } = usePlatformAdmin();
+  const { role: myRole } = useOrganizationPermissions();
   const supabase = useSupabase();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const initials = useMemo(
-    () => initialsFromUser(user?.email, user?.user_metadata?.full_name),
-    [user],
+    () =>
+      initialsFromUser(
+        user?.email,
+        profile?.fullName?.trim() || user?.user_metadata?.full_name,
+      ),
+    [user, profile],
   );
 
   const avatarUrl = useMemo(() => avatarUrlFromUser(user), [user]);
@@ -104,7 +113,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex min-h-[length:var(--app-header-height)] items-center justify-between gap-[length:var(--spacing-app-gap)] border-b-2 border-rn-border-strong bg-card px-[length:var(--app-page-padding-mobile)] py-[length:calc(var(--app-card-padding)*0.65)] shadow-rn-card md:px-[length:var(--app-page-padding-tablet)] md:py-[length:calc(var(--app-card-padding)*0.75)] lg:px-[length:var(--app-page-padding-desktop)]",
+        "sticky top-0 z-30 flex min-h-[length:var(--app-header-height)] items-center justify-between gap-[length:var(--spacing-app-gap)] border-b border-foreground/10 bg-card px-[length:var(--app-page-padding-mobile)] py-[length:calc(var(--app-card-padding)*0.65)] md:px-[length:var(--app-page-padding-tablet)] md:py-[length:calc(var(--app-card-padding)*0.75)] lg:px-[length:var(--app-page-padding-desktop)]",
       )}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -124,10 +133,10 @@ export function AppHeader({ children }: { children?: ReactNode }) {
           />
           <SheetContent
             side="left"
-            className="w-[min(100%,280px)] border-sidebar-border bg-sidebar p-0 text-sidebar-foreground"
+            className="w-[min(100%,280px)] border-sidebar-border bg-sidebar p-0 text-sidebar-foreground [&_[data-slot=sheet-close]]:bg-white/10 [&_[data-slot=sheet-close]]:text-white [&_[data-slot=sheet-close]]:hover:bg-white/20"
           >
             <SheetHeader className="border-b border-sidebar-border px-4 py-3 text-left">
-              <SheetTitle className="font-heading !text-app-md font-bold tracking-tight text-sidebar-foreground">
+              <SheetTitle className="font-heading !text-app-md font-bold tracking-tight !text-white">
                 {APP_NAME}
               </SheetTitle>
             </SheetHeader>
@@ -140,13 +149,17 @@ export function AppHeader({ children }: { children?: ReactNode }) {
       </div>
 
       <div className="flex min-w-0 items-center gap-2 md:gap-3">
+        <div className="hidden shrink-0 items-center gap-1.5 md:flex">
+          <LanguageSwitcher variant="header" />
+          <ThemeToggle variant="header" />
+        </div>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">{children}</div>
         <OrganizationSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              "flex shrink-0 items-center gap-2 rounded-[length:var(--app-radius)] border-2 border-transparent py-1.5 pr-1 pl-1 outline-none transition-colors",
-              "hover:bg-muted/45 focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              "flex h-10 shrink-0 items-center gap-1.5 rounded-xl border border-foreground/20 bg-muted/60 py-0 pr-2 pl-1 outline-none transition-colors",
+              "hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               "disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-muted/30",
             )}
             disabled={loading}
@@ -161,7 +174,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
               />
             ) : (
               <span
-                className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-rn-border-strong bg-rn-surface-segment font-heading text-app-sm font-bold text-success dark:!text-white"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-foreground/20 bg-muted font-heading text-app-xs font-bold text-success dark:!text-white"
                 aria-hidden
               >
                 {loading ? "…" : initials}
@@ -175,32 +188,56 @@ export function AppHeader({ children }: { children?: ReactNode }) {
           <DropdownMenuContent
             align="end"
             sideOffset={8}
-            className="min-w-64 max-w-[min(100vw-1.5rem,20rem)] rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-2.5 text-app-base shadow-rn-card"
+            className="min-w-72 max-w-[min(100vw-1.5rem,22rem)] rounded-2xl border border-foreground/10 bg-popover p-2 text-app-base shadow-lg"
           >
             <DropdownMenuGroup>
-              <DropdownMenuLabel className="px-3 py-2 font-heading text-app-sm font-semibold text-foreground truncate md:px-3.5 md:py-2.5 md:text-app-md">
-                {user?.email ?? t("common.account.loggedIn")}
+              <DropdownMenuLabel className="flex items-center gap-3 px-3 py-3">
+                <span
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted font-heading text-app-sm font-bold text-success dark:!text-white"
+                  aria-hidden
+                >
+                  {initials}
+                </span>
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate font-heading text-app-sm font-semibold text-foreground md:text-app-md">
+                    {user?.email ?? t("common.account.loggedIn")}
+                  </span>
+                  {myRole ? (
+                    <span className="mt-0.5 w-fit rounded-full bg-success/12 px-2 py-0.5 text-app-xs font-semibold text-success dark:!text-white">
+                      {roleLabel(myRole, t)}
+                    </span>
+                  ) : null}
+                </span>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator className="my-2 bg-border" />
+              <DropdownMenuSeparator className="my-1.5 bg-border" />
               <DropdownMenuItem
-                className="px-3 py-2.5 font-heading text-app-md md:px-3.5 md:py-3"
+                className="gap-3 rounded-lg px-3 py-2.5 font-heading text-app-md"
                 render={<Link href="/app/settings" />}
               >
+                <Settings className="size-5 text-muted-foreground" aria-hidden />
                 {t("common.account.settings")}
               </DropdownMenuItem>
               {isPlatformAdmin ? (
                 <DropdownMenuItem
-                  className="px-3 py-2.5 font-heading text-app-md md:px-3.5 md:py-3"
+                  className="gap-3 rounded-lg px-3 py-2.5 font-heading text-app-md"
                   render={<Link href="/admin" />}
                 >
+                  <ShieldCheck className="size-5 text-muted-foreground" aria-hidden />
                   {t("common.account.platformAdmin")}
                 </DropdownMenuItem>
               ) : null}
-              <DropdownMenuSeparator className="my-2 bg-border" />
+              <div className="md:hidden [&_.grid]:rounded-xl [&_.grid]:border-0 [&_.grid]:bg-muted [&_[role=radio]]:rounded-lg">
+                <DropdownMenuSeparator className="my-1.5 bg-border" />
+                <ThemeToggle variant="menu" />
+                <LanguageSwitcher variant="menu" />
+              </div>
+              <DropdownMenuSeparator className="my-1.5 bg-border" />
               <DropdownMenuItem
-                className="px-3 py-2.5 font-heading text-app-md font-bold md:px-3.5 md:py-3"
+                variant="destructive"
+                className="gap-3 rounded-lg px-3 py-2.5 font-heading text-app-md font-semibold"
                 onSelect={() => void signOut()}
               >
+                <LogOut className="size-5" aria-hidden />
                 {t("common.account.logout")}
               </DropdownMenuItem>
             </DropdownMenuGroup>

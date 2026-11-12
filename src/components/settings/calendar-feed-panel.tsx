@@ -136,8 +136,8 @@ export function CalendarFeedPanel({
       className={cn(RN_CARD_SHELL, "flex flex-col gap-6 p-5 md:p-6")}
       aria-labelledby="calendar-feed-heading"
     >
-      <div className="flex items-start gap-3 border-b border-rn-border-strong/50 pb-5">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-rn-border-strong/70 bg-muted/30 text-muted-foreground">
+      <div className="flex items-start gap-3 border-b border-foreground/10 pb-5">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 ring-1 ring-foreground/10 text-muted-foreground">
           <CalendarClock className="size-5" aria-hidden />
         </div>
         <div>
@@ -157,8 +157,8 @@ export function CalendarFeedPanel({
 
       {feed && feedUrl ? (
         <div className="flex flex-col gap-5">
-          <div className="rounded-md border border-rn-border-strong/60 bg-muted/20 p-4">
-            <p className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="rounded-xl bg-muted/50 ring-1 ring-foreground/10 p-4">
+            <p className="text-app-xs font-semibold text-muted-foreground">
               {t("settings.integrations.calendarFeed.securityWarningTitle")}
             </p>
             <p className="mt-1.5 text-app-sm leading-relaxed text-muted-foreground">
@@ -169,7 +169,7 @@ export function CalendarFeedPanel({
           <div className="flex flex-col gap-2">
             <Label
               htmlFor="calendar-feed-url"
-              className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              className="text-app-xs font-semibold text-muted-foreground"
             >
               {t("settings.integrations.calendarFeed.urlLabel")}
             </Label>
@@ -213,7 +213,7 @@ export function CalendarFeedPanel({
 
           <dl className="grid gap-3 sm:grid-cols-3">
             <div>
-              <dt className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <dt className="text-app-xs font-semibold text-muted-foreground">
                 {t("settings.integrations.calendarFeed.createdAt")}
               </dt>
               <dd className="mt-1 text-app-sm text-foreground">
@@ -221,7 +221,7 @@ export function CalendarFeedPanel({
               </dd>
             </div>
             <div>
-              <dt className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <dt className="text-app-xs font-semibold text-muted-foreground">
                 {t("settings.integrations.calendarFeed.rotatedAt")}
               </dt>
               <dd className="mt-1 text-app-sm text-foreground">
@@ -229,7 +229,7 @@ export function CalendarFeedPanel({
               </dd>
             </div>
             <div>
-              <dt className="text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <dt className="text-app-xs font-semibold text-muted-foreground">
                 {t("settings.integrations.calendarFeed.lastAccessedAt")}
               </dt>
               <dd className="mt-1 text-app-sm text-foreground">
@@ -238,7 +238,7 @@ export function CalendarFeedPanel({
             </div>
           </dl>
 
-          <div className="flex flex-wrap gap-3 border-t border-rn-border-strong/50 pt-4">
+          <div className="flex flex-wrap gap-3 border-t border-foreground/10 pt-4">
             <Button
               type="button"
               variant="outline"

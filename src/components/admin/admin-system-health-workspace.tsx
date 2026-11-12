@@ -35,7 +35,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
 const kpiTileClass =
-  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
+  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 sm:p-6";
 
 const tableHeadClass = APP_TABLE_HEAD_CELL_ADMIN;
 const tableCellClass =
@@ -47,7 +47,7 @@ function HealthKpiTile({
   caption,
   icon: Icon,
   href,
-  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconContainerClassName = "rounded-xl bg-accent p-2 dark:bg-white/10",
   iconClassName = "size-6 text-primary dark:text-white",
   valueClassName = "text-success",
 }: {
@@ -64,7 +64,7 @@ function HealthKpiTile({
   const content = (
     <>
       <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="dashboard-kpi-label min-w-0 break-words">{label}</span>
+        <span className="dashboard-kpi-label min-w-0 break-words !normal-case !tracking-normal">{label}</span>
         <div className={cn(iconContainerClassName, "shrink-0")}>
           <Icon className={iconClassName} aria-hidden />
         </div>
@@ -130,7 +130,7 @@ function InfrastructureComponentTile({
   component: SystemHealthComponent;
 }) {
   return (
-    <div className="flex h-full flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6">
+    <div className="flex h-full flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           {component.href ? (
@@ -178,9 +178,9 @@ export function AdminSystemHealthWorkspace({
 
   const overallIconContainer =
     data.overallStatus === "critical"
-      ? "rounded-md bg-rn-danger-soft p-2"
+      ? "rounded-xl bg-rn-danger-soft p-2"
       : data.overallStatus === "warning"
-        ? "rounded-md bg-amber-500/10 p-2"
+        ? "rounded-xl bg-amber-500/10 p-2"
         : undefined;
 
   const overallIconClass =
@@ -191,9 +191,9 @@ export function AdminSystemHealthWorkspace({
         : undefined;
 
   return (
-    <div className="admin-page-workspace admin-system-health-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
+    <div className="admin-page-workspace admin-system-health-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-6 pb-8">
       <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
+        <div className="dashboard-oversikt-hero px-5 py-5 sm:px-6 lg:px-6">
           <AppPageHeader
             className="mb-0"
             surface="default"
@@ -205,9 +205,11 @@ export function AdminSystemHealthWorkspace({
             }
           />
         </div>
+      </div>
 
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section
-          className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
+          className="px-5 py-5 sm:px-6 sm:py-6"
           aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
@@ -238,7 +240,7 @@ export function AdminSystemHealthWorkspace({
               value={data.openSupportCount}
               caption={supportCaption}
               icon={LifeBuoy}
-              iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
+              iconContainerClassName="rounded-xl bg-rn-danger-soft p-2"
               iconClassName="size-6 text-rn-danger-ink"
               valueClassName={
                 data.openSupportCount > 0 ? "text-destructive" : "text-success"
@@ -254,8 +256,10 @@ export function AdminSystemHealthWorkspace({
             />
           </div>
         </section>
+      </div>
 
-        <section className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8">
+      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
+        <section className="px-5 py-5 sm:px-6 sm:py-6">
           <SectionIntro
             title={t("admin.infrastruktur")}
             description={t("admin.tilstand_for_database_autentisering_betaling_og_planlagte_jo")}
@@ -307,33 +311,33 @@ export function AdminSystemHealthWorkspace({
       </section>
 
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <section className="px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8">
+        <section className="px-5 py-5 sm:px-6 sm:py-6">
           <SectionIntro
             title={t("admin.hendelseslogg")}
             description={t("admin.siste_stripe_webhooks_og_bakgrunnsjobber")}
           />
         </section>
 
-        <div className="grid border-t border-rn-border-strong/50 lg:grid-cols-2">
-          <div className="border-rn-border-strong/50 lg:border-r">
-            <div className="flex items-center gap-2 border-b-2 border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8 md:py-5">
+        <div className="grid border-t border-foreground/10 lg:grid-cols-2">
+          <div className="border-foreground/10 lg:border-r">
+            <div className="flex items-center gap-2 border-b border-foreground/15 px-5 py-4 sm:px-6 md:py-5">
               <Server className="size-5 text-primary dark:text-white" aria-hidden />
               <h3 className="app-section-title">{t("adminLabels.sections.stripeWebhooks")}</h3>
             </div>
-            <div className="app-table -mx-px max-w-full overflow-x-auto overscroll-x-contain">
+            <div className="app-table max-w-full overflow-x-auto overscroll-x-contain">
               <table className="w-full min-w-[320px] text-left text-app-base">
                 <thead>
-                  <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+                  <tr className="border-b border-foreground/15 bg-muted/50">
                     <th className={tableHeadClass}>{t("adminLabels.fields.event")}</th>
                     <th className={tableHeadClass}>{t("adminLabels.fields.type")}</th>
                     <th className={tableHeadClass}>{t("adminLabels.fields.timestamp")}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-rn-border-strong/50">
+                <tbody className="divide-y divide-foreground/10">
                   {data.recentWebhooks.map((event) => (
                     <tr
                       key={event.eventId}
-                      className="transition-colors hover:bg-rn-surface-row-hover"
+                      className="transition-colors hover:bg-muted/40"
                     >
                       <td className={cn(tableCellClass, "font-mono text-app-xs")}>
                         {event.eventId.slice(0, 12)}…
@@ -363,24 +367,24 @@ export function AdminSystemHealthWorkspace({
           </div>
 
           <div>
-            <div className="flex items-center gap-2 border-b-2 border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8 md:py-5">
+            <div className="flex items-center gap-2 border-b border-foreground/15 px-5 py-4 sm:px-6 md:py-5">
               <Activity className="size-5 text-primary dark:text-white" aria-hidden />
               <h3 className="app-section-title">{t("adminLabels.sections.backgroundJobs")}</h3>
             </div>
-            <div className="app-table -mx-px max-w-full overflow-x-auto overscroll-x-contain">
+            <div className="app-table max-w-full overflow-x-auto overscroll-x-contain">
               <table className="w-full min-w-[320px] text-left text-app-base">
                 <thead>
-                  <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+                  <tr className="border-b border-foreground/15 bg-muted/50">
                     <th className={tableHeadClass}>{t("adminLabels.fields.job")}</th>
                     <th className={tableHeadClass}>{t("admin.status")}</th>
                     <th className={tableHeadClass}>{t("adminLabels.fields.completed")}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-rn-border-strong/50">
+                <tbody className="divide-y divide-foreground/10">
                   {data.recentJobRuns.map((run) => (
                     <tr
                       key={run.id}
-                      className="transition-colors hover:bg-rn-surface-row-hover"
+                      className="transition-colors hover:bg-muted/40"
                     >
                       <td className={tableCellClass}>
                         <span className="font-medium">{run.jobName}</span>
@@ -415,7 +419,7 @@ export function AdminSystemHealthWorkspace({
           </div>
         </div>
 
-        <p className="border-t border-rn-border-strong/50 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
+        <p className="border-t border-foreground/10 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
           Miljøvariabler, integrasjoner og plattformadministratorer finnes under{" "}
           <Link
             href={adminSettingsHref("integrations")}

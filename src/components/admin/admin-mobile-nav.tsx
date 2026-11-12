@@ -39,13 +39,13 @@ export function AdminMobileNav({ supportOpenCount = 0 }: { supportOpenCount?: nu
       />
       <SheetContent
         side="left"
-        className="w-[min(100%,280px)] border-sidebar-border bg-sidebar p-0 text-sidebar-foreground"
+        className="w-[min(100%,280px)] border-sidebar-border bg-sidebar p-0 text-sidebar-foreground [&_[data-slot=sheet-close]]:bg-white/10 [&_[data-slot=sheet-close]]:text-white [&_[data-slot=sheet-close]]:hover:bg-white/20"
       >
         <SheetHeader className="border-b border-sidebar-border px-4 py-3 text-left">
           <SheetTitle
             className={cn(
               RN_TEXT_NAV_LINK,
-              "font-heading !text-app-md font-bold tracking-tight text-sidebar-foreground",
+              "font-heading !text-app-md font-bold tracking-tight !text-white",
             )}
           >
             {APP_NAME} — Admin
@@ -61,7 +61,7 @@ export function AdminMobileNav({ supportOpenCount = 0 }: { supportOpenCount?: nu
               supportOpenCount={supportOpenCount}
             />
           </nav>
-          <div className="mt-auto border-t border-rn-border-strong/50 px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)]">
+          <div className="mt-auto border-t border-sidebar-border px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)]">
             <AdminContextSwitch active="platform" onNavigate={close} />
           </div>
         </div>

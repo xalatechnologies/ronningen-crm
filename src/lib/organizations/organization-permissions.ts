@@ -27,6 +27,34 @@ export function canManageMembers(role: UserRole | null): boolean {
   return role === "owner" || role === "admin";
 }
 
+/**
+ * Roles `actor` may hand out on the Team page. «owner» is never assigned here
+ * (ownership transfer is a separate, deliberate flow).
+ */
+export function assignableRoles(actor: UserRole | null): UserRole[] {
+  if (actor === "owner") return ["admin", "manager", "accountant", "viewer"];
+  if (actor === "admin") return ["manager", "accountant", "viewer"];
+  return [];
+}
+
+/** May `actor` change the role of a member who currently has role `target`? */
+export function canChangeMemberRole(
+  actor: UserRole | null,
+  target: UserRole | null,
+): boolean {
+  return target != null && assignableRoles(actor).includes(target);
+}
+
+/** May `actor` remove a member with role `target`? Owners can remove anyone; admins only below them. */
+export function canRemoveMember(
+  actor: UserRole | null,
+  target: UserRole | null,
+): boolean {
+  if (!actor || !target) return false;
+  if (actor === "owner") return true;
+  return canChangeMemberRole(actor, target);
+}
+
 export function canAccessRoute(role: UserRole | null, pathname: string): boolean {
   if (!role) return false;
   void pathname;

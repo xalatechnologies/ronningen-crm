@@ -20,9 +20,9 @@ import { useCallback, useMemo } from "react";
 const MONTH_ALL = "alle";
 
 const selectTriggerBaseClass = cn(
-  "reports-filter-trigger rounded-md border-2 border-rn-border-strong bg-rn-surface-segment px-3 font-heading font-semibold leading-snug shadow-rn-segment-inset sm:px-4 md:px-5",
+  "reports-filter-trigger rounded-xl border border-foreground/25 bg-card px-3 font-heading font-semibold leading-snug shadow-none hover:border-foreground/40 sm:px-4 md:px-5",
   "data-[size=default]:h-12 data-[size=default]:min-h-12 md:data-[size=default]:h-14 md:data-[size=default]:min-h-14 md:py-3.5",
-  "focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 data-popup-open:border-rn-accent-border",
+  "focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 data-popup-open:border-success",
   "[&_svg:not([class*='size-'])]:size-5",
 );
 
@@ -38,7 +38,7 @@ const monthSelectTriggerClass = cn(
 
 const filterButtonClass = cn(
   selectTriggerBaseClass,
-  "w-fit min-w-0 shrink-0 px-3 md:px-4",
+  "inline-flex h-12 min-h-12 w-fit min-w-0 shrink-0 items-center justify-center px-3 md:h-14 md:min-h-14 md:px-4",
   "transition-colors",
 );
 
@@ -187,7 +187,7 @@ export function ReportsYearMonthCalendar({
         </SelectTrigger>
         <SelectContent
           align="end"
-          className="max-h-72 min-w-[var(--anchor-width)] rounded-md border-2 border-rn-border-strong"
+          className="max-h-72 min-w-[var(--anchor-width)] rounded-xl border border-foreground/10 shadow-lg"
         >
           {yearOptions.map((year) => (
             <SelectItem
@@ -219,7 +219,7 @@ export function ReportsYearMonthCalendar({
         </SelectTrigger>
         <SelectContent
           align="end"
-          className="min-w-[var(--anchor-width)] max-h-72 rounded-md border-2 border-rn-border-strong"
+          className="min-w-[var(--anchor-width)] max-h-72 rounded-xl border border-foreground/10 shadow-lg"
         >
           <SelectItem
             value={MONTH_ALL}

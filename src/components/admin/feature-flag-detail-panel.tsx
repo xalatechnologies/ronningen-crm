@@ -132,7 +132,7 @@ export function FeatureFlagDetailPanel({
   return (
     <div className="space-y-6 p-1">
       {flag.key === "billing_enabled" && billingEnvEnabled && !flag.enabledGlobal ? (
-        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-app-sm text-amber-900 dark:text-amber-200">
+        <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-app-sm text-amber-900 dark:text-amber-200">
           {t("adminLabels.billingFlagHint")}
           <code className="font-mono text-app-xs">BILLING_ENABLED</code>).
         </p>
@@ -224,7 +224,7 @@ export function FeatureFlagDetailPanel({
             {overrideEntries.map(([orgId, enabled]) => (
               <li
                 key={orgId}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-rn-border-strong/60 bg-muted/20 px-3 py-2"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-foreground/15 bg-muted/40 px-3 py-2"
               >
                 <div>
                   <Link
@@ -262,7 +262,7 @@ export function FeatureFlagDetailPanel({
               value={newOrgId}
               onChange={(event) => setNewOrgId(event.target.value)}
               placeholder={t("admin.uuid_for_organisasjon")}
-              className="border-2 border-rn-border-strong font-mono text-app-sm"
+              className="border border-foreground/25 font-mono text-app-sm"
             />
           </div>
           <div className="min-w-[8rem]">

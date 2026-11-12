@@ -60,10 +60,10 @@ type AdminOrganizationsWorkspaceProps = {
 };
 
 const kpiTileClass =
-  "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
+  "flex flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 sm:p-6";
 
-const tableHeadClass = cn(APP_TABLE_HEAD_CELL, "text-left text-app-base");
-const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
+const tableHeadClass = cn(APP_TABLE_HEAD_CELL, "px-4 py-3 text-left text-app-xs font-semibold tracking-wide text-muted-foreground md:px-5");
+const tableCellClass = "px-4 py-4 align-middle md:px-5";
 
 function OrganizationsKpiTile({
   label,
@@ -72,7 +72,7 @@ function OrganizationsKpiTile({
   icon: Icon,
   active,
   onClick,
-  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconContainerClassName = "rounded-xl bg-accent p-2 dark:bg-white/10",
   iconClassName = "size-6 text-primary dark:text-white",
   valueClassName = "text-success",
 }: {
@@ -93,12 +93,12 @@ function OrganizationsKpiTile({
       aria-pressed={active}
       className={cn(
         kpiTileClass,
-        "group w-full text-left transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
-        active && "border-success/40 bg-muted/20 ring-2 ring-success/25",
+        "group w-full text-left transition-colors hover:bg-muted/60 hover:ring-success/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
+        active && "bg-success/8 ring-2 ring-success/40",
       )}
     >
       <div className="mb-3 flex items-start justify-between">
-        <span className="dashboard-kpi-label">{label}</span>
+        <span className="dashboard-kpi-label !normal-case !tracking-normal">{label}</span>
         <div className={iconContainerClassName}>
           <Icon className={iconClassName} aria-hidden />
         </div>
@@ -275,9 +275,9 @@ export function AdminOrganizationsWorkspace({
       : t("admin.ufullstendig_forfalt_eller_suspendert");
 
   return (
-    <div className="admin-page-workspace admin-organizations-dashboard mx-auto flex w-full min-w-0 flex-col gap-8 pb-8">
+    <div className="admin-page-workspace admin-organizations-dashboard mx-auto flex w-full min-w-0 flex-col gap-6 pb-8">
       <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
-        <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
+        <div className="dashboard-oversikt-hero px-5 py-5 sm:px-6 lg:px-6">
           <AppPageHeader
             className="mb-0"
             surface="default"
@@ -295,9 +295,11 @@ export function AdminOrganizationsWorkspace({
             }
           />
         </div>
+      </div>
 
+      <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
         <section
-          className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
+          className="px-5 py-5 sm:px-6 sm:py-6"
           aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
@@ -325,7 +327,7 @@ export function AdminOrganizationsWorkspace({
               value={overview.needsFollowUp}
               caption={followUpCaption}
               icon={AlertTriangle}
-              iconContainerClassName="rounded-md bg-amber-500/10 p-2"
+              iconContainerClassName="rounded-xl bg-amber-500/10 p-2"
               iconClassName="size-6 text-amber-800 dark:text-amber-300"
               valueClassName={
                 overview.needsFollowUp > 0
@@ -348,8 +350,10 @@ export function AdminOrganizationsWorkspace({
             />
           </div>
         </section>
+      </div>
 
-        <section className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8">
+      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+        <section className="px-5 py-4 sm:px-6">
           <AdminOrgFilters
             embedded
             search={search}
@@ -361,7 +365,7 @@ export function AdminOrganizationsWorkspace({
         </section>
 
         {selected.size > 0 ? (
-          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center justify-end gap-3 border-y border-success/25 bg-success/8 px-5 py-3 sm:px-6">
             <div className="flex flex-wrap gap-2">
               <AdminActionButton
                 type="button"
@@ -385,17 +389,17 @@ export function AdminOrganizationsWorkspace({
           </div>
         ) : null}
 
-        <div className="app-table overflow-x-auto border-t border-rn-border-strong/50">
+        <div className="app-table overflow-x-auto border-t border-foreground/10">
           <table className="w-full min-w-[960px] text-left text-app-base">
             <thead>
-              <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+              <tr className="border-b border-foreground/15 bg-muted/50">
                 <th className={cn(tableHeadClass, "w-12")}>
                   <input
                     type="checkbox"
                     checked={allSelected}
                     onChange={(e) => toggleAll(e.target.checked)}
                     aria-label={t("admin.velg_alle")}
-                    className="size-4 rounded border-rn-border-strong"
+                    className="size-4 rounded accent-success"
                   />
                 </th>
                 <th className={tableHeadClass}>{t("adminLabels.fields.name")}</th>
@@ -408,19 +412,32 @@ export function AdminOrganizationsWorkspace({
                 <th className={tableHeadClass}>{t("adminLabels.fields.lastActivity")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-rn-border-strong/50">
+            <tbody className="divide-y divide-foreground/10">
               {filtered.map((org) => (
                 <tr
                   key={org.id}
-                  className="transition-colors hover:bg-rn-surface-row-hover"
+                  className="cursor-pointer transition-colors hover:bg-muted/40"
+                  onClick={(event) => {
+                    if (
+                      (event.target as HTMLElement).closest(
+                        "a, button, input, label",
+                      )
+                    ) {
+                      return;
+                    }
+                    router.push(adminRoutes.organizationDetail(org.id));
+                  }}
                 >
-                  <td className={tableCellClass}>
+                  <td
+                    className={tableCellClass}
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <input
                       type="checkbox"
                       checked={selected.has(org.id)}
                       onChange={(e) => toggleOne(org.id, e.target.checked)}
                       aria-label={t("adminLabels.selectOrganizationAria", { name: org.name })}
-                      className="size-4 rounded border-rn-border-strong"
+                      className="size-4 rounded accent-success"
                     />
                   </td>
                   <td className="p-0 align-middle">
@@ -428,6 +445,7 @@ export function AdminOrganizationsWorkspace({
                       href={adminRoutes.organizationDetail(org.id)}
                       title={org.name}
                       subtitle={org.slug}
+                      className="px-4 md:px-5"
                     />
                   </td>
                   <td className={tableCellClass}>
@@ -488,7 +506,7 @@ export function AdminOrganizationsWorkspace({
           </table>
         </div>
 
-        <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
+        <div className="border-t border-foreground/10 px-5 py-3 sm:px-6">
           <p className="app-text-secondary">
             {t("admin.viser_av_organisasjoner", {
               shown: filtered.length,
@@ -520,7 +538,7 @@ export function AdminOrganizationsWorkspace({
               value={suspendReason}
               onChange={(event) => setSuspendReason(event.target.value)}
               placeholder={t("admin.f_eks_manglende_betaling")}
-              className="border-2 border-rn-border-strong"
+              className="rounded-xl border-foreground/25"
             />
           </div>
           <DialogFooter className="gap-2 sm:gap-2">
@@ -559,7 +577,7 @@ export function AdminOrganizationsWorkspace({
               min={1}
               value={trialDays}
               onChange={(event) => setTrialDays(event.target.value)}
-              className="border-2 border-rn-border-strong"
+              className="rounded-xl border-foreground/25"
             />
           </div>
           <DialogFooter className="gap-2 sm:gap-2">

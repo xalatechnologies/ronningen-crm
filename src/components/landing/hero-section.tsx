@@ -14,12 +14,12 @@ import Link from "next/link";
 
 const primaryCtaClass = cn(
   buttonVariants({ variant: "success", size: "cta" }),
-  "w-full sm:w-auto",
+  "w-full shadow-none sm:w-auto",
 );
 
 const secondaryCtaClass = cn(
   buttonVariants({ variant: "outline", size: "cta" }),
-  "w-full border-2 border-rn-border-strong bg-background font-semibold shadow-sm hover:bg-muted sm:w-auto",
+  "w-full border-0 bg-[#eef2f0] font-semibold shadow-none hover:bg-[#e3eae6] sm:w-auto",
 );
 
 export function HeroSection() {
@@ -29,25 +29,25 @@ export function HeroSection() {
     <section
       aria-labelledby="landing-hero-title"
       className={cn(
-        "border-b border-rn-border-strong/40 bg-background py-16 md:py-24",
+        "overflow-x-clip bg-background pt-10 pb-16 md:pt-16 md:pb-24 lg:pt-20 lg:pb-32",
         LANDING_SECTION_X,
       )}
     >
       <div
         className={cn(
           LANDING_CONTAINER,
-          "grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16",
+          "grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center lg:gap-20",
         )}
       >
-        <div className="flex flex-col gap-6 md:gap-8">
-          <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-8 md:gap-10">
+          <div className="flex flex-col gap-5 md:gap-6">
             <h1
               id="landing-hero-title"
-              className="landing-hero-headline leading-tight tracking-tight"
+              className="max-w-[20ch] text-[clamp(38px,8vw,64px)] leading-[1.04] font-bold tracking-[-0.035em] text-[#0c1f16] lg:text-[clamp(44px,4.6vw,72px)]"
             >
               {t("landing.hero.headline")}
             </h1>
-            <p className="landing-subhead max-w-2xl leading-relaxed">
+            <p className="landing-subhead max-w-[48ch] leading-relaxed">
               {t("landing.hero.subheadline", { appName: APP_NAME })}
             </p>
           </div>
@@ -61,7 +61,7 @@ export function HeroSection() {
             </a>
           </div>
 
-          <p className="text-sm text-rn-text-slate md:text-base">
+          <p className="max-w-[46ch] text-sm text-rn-text-slate">
             {t("landing.hero.trust")}
           </p>
         </div>

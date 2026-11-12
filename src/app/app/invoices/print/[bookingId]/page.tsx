@@ -180,119 +180,115 @@ export default async function InvoicePrintPage({ params }: PageProps) {
       >
         <article
           className={cn(
-            "invoice-print-document mx-auto max-w-[210mm] bg-white text-[13px] leading-relaxed text-zinc-900 shadow-sm ring-1 ring-zinc-200/90",
-            "px-6 py-8 sm:px-10 sm:py-10",
-            "print:max-w-none print:shadow-none print:ring-0 print:px-0 print:py-0",
+            "invoice-print-document mx-auto max-w-[210mm] rounded-2xl bg-white text-[13px] leading-relaxed text-zinc-900 shadow-sm ring-1 ring-zinc-200/90",
+            "px-6 py-8 sm:px-12 sm:py-12",
+            "print:max-w-none print:rounded-none print:shadow-none print:ring-0 print:px-0 print:py-0",
           )}
         >
-          <header className="invoice-print-avoid-break border-b-2 border-zinc-900 pb-8">
-            <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-              <div className="min-w-0 lg:max-w-[55%]">
-                <p className="font-heading text-2xl font-bold tracking-tight text-zinc-950 sm:text-3xl">
-                  {ISSUER.name}
-                </p>
-                <p className="mt-1 text-sm font-medium text-emerald-800">{ISSUER.tagline}</p>
-                <p className="mt-3 text-sm text-zinc-600">{ISSUER.subtitle}</p>
+          <header className="invoice-print-avoid-break flex flex-col gap-8 border-b border-zinc-200 pb-10 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 sm:max-w-[60%]">
+              <p className="font-heading text-2xl font-bold tracking-tight text-zinc-950">
+                {ISSUER.name}
+              </p>
+              <p className="mt-1 text-sm font-medium text-emerald-800">{ISSUER.tagline}</p>
+              <p className="mt-3 text-sm text-zinc-600">{ISSUER.subtitle}</p>
+              <div className="mt-3 space-y-0.5 text-sm text-zinc-700">
                 {ISSUER.orgNo ? (
-                  <p className="mt-2 text-sm text-zinc-700">{t("invoices.orgNumberPrefix", { number: ISSUER.orgNo })}</p>
+                  <p>{t("invoices.orgNumberPrefix", { number: ISSUER.orgNo })}</p>
                 ) : null}
                 {ISSUER.addressLines.map((line) => (
-                  <p key={line} className="text-sm text-zinc-700">
-                    {line}
-                  </p>
+                  <p key={line}>{line}</p>
                 ))}
-                {ISSUER.contactEmail || ISSUER.contactPhone ? (
-                  <div className="mt-3 space-y-0.5 text-sm text-zinc-700">
-                    {ISSUER.contactEmail ? (
-                      <p>{t("invoices.emailPrefix", { email: ISSUER.contactEmail })}</p>
-                    ) : null}
-                    {ISSUER.contactPhone ? <p>{t("invoices.phonePrefix", { phone: ISSUER.contactPhone })}</p> : null}
-                  </div>
-                ) : null}
               </div>
+              {ISSUER.contactEmail || ISSUER.contactPhone ? (
+                <div className="mt-3 space-y-0.5 text-sm text-zinc-700">
+                  {ISSUER.contactEmail ? (
+                    <p className="break-all">{t("invoices.emailPrefix", { email: ISSUER.contactEmail })}</p>
+                  ) : null}
+                  {ISSUER.contactPhone ? <p>{t("invoices.phonePrefix", { phone: ISSUER.contactPhone })}</p> : null}
+                </div>
+              ) : null}
+            </div>
 
-              <div className="w-full min-w-0 rounded-md border-2 border-zinc-900 bg-zinc-50/80 p-5 sm:w-auto sm:min-w-68 sm:p-6 lg:shrink-0 print:border-zinc-900 print:bg-white">
-                <p className="text-center font-heading text-xs font-bold tracking-[0.25em] text-zinc-500 uppercase">
-                  {t("invoices.title")}
-                </p>
-                <dl className="mt-4 space-y-3 text-sm">
-                  <div className="flex justify-between gap-6 border-b border-zinc-200 pb-2">
-                    <dt className="text-zinc-600">{t("invoices.invoiceNumber")}</dt>
-                    <dd className="text-right font-semibold tabular-nums text-zinc-950">
-                      {invoiceNo}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-6 border-b border-zinc-200 pb-2">
-                    <dt className="text-zinc-600">{t("invoices.printInvoiceDate")}</dt>
-                    <dd className="text-right font-medium tabular-nums text-zinc-900">
-                      {invoiceDateLabel}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-6 border-b border-zinc-200 pb-2">
-                    <dt className="text-zinc-600">{t("invoices.dueDate")}</dt>
-                    <dd className="text-right font-semibold tabular-nums text-zinc-950">
-                      {formatLongDate(locale, dueIso)}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-6">
-                    <dt className="text-zinc-600">{t("invoices.print.bookingId")}</dt>
-                    <dd className="max-w-48 truncate text-right font-mono text-xs text-zinc-800">
-                      {r.id}
-                    </dd>
-                  </div>
-                </dl>
-                <p className="mt-4 border-t border-zinc-200 pt-3 text-xs leading-snug text-zinc-600">
-                  {dueNote}
-                </p>
-              </div>
+            <div className="order-first sm:order-none sm:text-right">
+              <h1 className="font-heading text-4xl font-bold tracking-tight text-zinc-950">
+                {t("invoices.title")}
+              </h1>
+              <p className="mt-1 font-mono text-sm tabular-nums text-zinc-500">
+                {invoiceNo}
+              </p>
             </div>
           </header>
 
-          <section className="invoice-print-avoid-break mt-10">
-            <h2 className="text-xs font-bold tracking-[0.14em] text-zinc-500 uppercase">
-              {t("invoices.billTo")}
-            </h2>
-            <div className="mt-3 rounded-md border border-zinc-200 bg-white p-5 sm:p-6">
-              <p className="font-heading text-lg font-semibold text-zinc-950">
+          <section className="invoice-print-avoid-break mt-10 grid gap-10 sm:grid-cols-2">
+            <div className="min-w-0">
+              <h2 className="text-[11px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">
+                {t("invoices.billTo")}
+              </h2>
+              <p className="mt-3 font-heading text-lg font-semibold text-zinc-950">
                 {customerName}
               </p>
               {r.customers?.address ? (
-                <p className="mt-2 whitespace-pre-line text-sm text-zinc-800">
+                <p className="mt-1.5 whitespace-pre-line text-sm text-zinc-700">
                   {r.customers.address}
                 </p>
               ) : null}
-              <div className="mt-3 space-y-1 text-sm text-zinc-700">
-                {r.customers?.email ? <p>{r.customers.email}</p> : null}
+              <div className="mt-2 space-y-0.5 text-sm text-zinc-700">
+                {r.customers?.email ? <p className="break-all">{r.customers.email}</p> : null}
                 {r.customers?.phone ? (
                   <p>{t("invoices.print.phonePrefix", { phone: r.customers.phone })}</p>
                 ) : null}
               </div>
             </div>
+
+            <div className="min-w-0">
+              <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 text-sm">
+                <dt className="text-zinc-500">{t("invoices.invoiceNumber")}</dt>
+                <dd className="text-right font-semibold tabular-nums text-zinc-950">
+                  {invoiceNo}
+                </dd>
+                <dt className="text-zinc-500">{t("invoices.printInvoiceDate")}</dt>
+                <dd className="text-right font-medium tabular-nums text-zinc-900">
+                  {invoiceDateLabel}
+                </dd>
+                <dt className="text-zinc-500">{t("invoices.dueDate")}</dt>
+                <dd className="text-right font-semibold tabular-nums text-zinc-950">
+                  {formatLongDate(locale, dueIso)}
+                </dd>
+                <dt className="text-zinc-500">{t("invoices.print.bookingId")}</dt>
+                <dd className="min-w-0 truncate text-right font-mono text-xs text-zinc-700">
+                  {r.id}
+                </dd>
+              </dl>
+              <p className="mt-3 text-xs leading-snug text-zinc-500 sm:text-right">
+                {dueNote}
+              </p>
+            </div>
           </section>
 
-          <section className="invoice-print-avoid-break mt-10">
-            <h2 className="text-xs font-bold tracking-[0.14em] text-zinc-500 uppercase">
+          <section className="invoice-print-avoid-break mt-12">
+            <h2 className="text-[11px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">
               {t("invoices.print.specification")}
             </h2>
-            <div className="mt-3 overflow-x-auto rounded-md border border-zinc-200">
+            <div className="mt-3 overflow-x-auto">
               <table className="w-full min-w-lg border-collapse text-left text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 bg-zinc-50 text-xs font-bold tracking-wide text-zinc-600 uppercase">
-                    <th className="px-4 py-3 sm:px-5">{t("invoices.print.colText")}</th>
+                  <tr className="border-b border-zinc-300 text-[11px] font-semibold tracking-wide text-zinc-500 uppercase">
+                    <th className="py-3 pr-3">{t("invoices.print.colText")}</th>
                     <th className="w-20 px-3 py-3 text-right whitespace-nowrap sm:w-24">
                       {t("invoices.print.colQty")}
                     </th>
                     <th className="w-32 px-3 py-3 text-right whitespace-nowrap sm:w-36">
                       {t("invoices.print.colUnitPrice")}
                     </th>
-                    <th className="w-36 px-4 py-3 text-right whitespace-nowrap sm:px-5">
+                    <th className="w-36 py-3 pl-3 text-right whitespace-nowrap">
                       {t("invoices.print.colAmount")}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr className="align-top">
-                    <td className="border-b border-zinc-100 px-4 py-4 sm:px-5">
+                    <td className="border-b border-zinc-200 py-5 pr-3">
                       <p className="font-semibold text-zinc-900">{lineTitle}</p>
                       <ul className="mt-2 list-inside list-disc space-y-1 text-zinc-600">
                         {lineDetailParts.map((part) => (
@@ -311,13 +307,13 @@ export default async function InvoicePrintPage({ params }: PageProps) {
                         </p>
                       ) : null}
                     </td>
-                    <td className="border-b border-zinc-100 px-3 py-4 text-right tabular-nums text-zinc-900">
+                    <td className="border-b border-zinc-200 px-3 py-5 text-right tabular-nums text-zinc-900">
                       1
                     </td>
-                    <td className="border-b border-zinc-100 px-3 py-4 text-right tabular-nums text-zinc-900">
+                    <td className="border-b border-zinc-200 px-3 py-5 text-right tabular-nums text-zinc-900">
                       {formatNok(locale, unitPrice)}
                     </td>
-                    <td className="border-b border-zinc-100 px-4 py-4 text-right text-base font-bold tabular-nums text-zinc-950 sm:px-5">
+                    <td className="border-b border-zinc-200 py-5 pl-3 text-right text-base font-bold tabular-nums text-zinc-950">
                       {formatNok(locale, remaining)}
                     </td>
                   </tr>
@@ -325,9 +321,9 @@ export default async function InvoicePrintPage({ params }: PageProps) {
               </table>
             </div>
 
-            <div className="mt-6 flex flex-col items-stretch gap-4 sm:flex-row sm:justify-end">
-              <div className="w-full rounded-md border-2 border-zinc-900 bg-zinc-50 p-5 text-right sm:max-w-sm sm:p-6 print:bg-white">
-                <p className="text-xs font-bold tracking-[0.14em] text-zinc-500 uppercase">
+            <div className="mt-6 flex sm:justify-end">
+              <div className="w-full rounded-2xl bg-emerald-50 p-6 text-right sm:max-w-xs print:bg-white print:ring-1 print:ring-zinc-900">
+                <p className="text-[11px] font-semibold tracking-[0.12em] text-emerald-900 uppercase print:text-zinc-600">
                   {t("invoices.print.amountDue")}
                 </p>
                 <p className="mt-2 font-heading text-3xl font-bold tabular-nums text-zinc-950">
@@ -340,8 +336,8 @@ export default async function InvoicePrintPage({ params }: PageProps) {
             </div>
           </section>
 
-          <section className="invoice-print-avoid-break mt-10 rounded-md border border-dashed border-zinc-300 bg-zinc-50/50 p-5 sm:p-6 print:bg-white">
-            <h2 className="text-xs font-bold tracking-[0.14em] text-zinc-500 uppercase">
+          <section className="invoice-print-avoid-break mt-12 rounded-2xl bg-zinc-50 p-6 print:bg-white print:ring-1 print:ring-zinc-200">
+            <h2 className="text-[11px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">
               {t("invoices.print.paymentInfo")}
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-zinc-800">{ISSUER.bankInfo}</p>
@@ -351,8 +347,8 @@ export default async function InvoicePrintPage({ params }: PageProps) {
           </section>
 
           {r.notes?.trim() ? (
-            <section className="invoice-print-avoid-break mt-8 rounded-md border border-zinc-200 bg-amber-50/40 p-5 sm:p-6 print:bg-white">
-              <h2 className="text-xs font-bold tracking-[0.14em] text-zinc-600 uppercase">
+            <section className="invoice-print-avoid-break mt-6 rounded-2xl bg-amber-50/70 p-6 print:bg-white print:ring-1 print:ring-zinc-200">
+              <h2 className="text-[11px] font-semibold tracking-[0.12em] text-zinc-600 uppercase">
                 {t("invoices.print.note")}
               </h2>
               <p className="mt-2 whitespace-pre-line text-sm text-zinc-900">

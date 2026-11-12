@@ -6,7 +6,7 @@ import {
 import { sortInvoicesByUrgency } from "@/lib/invoice-row-utils";
 import { formatBookingListDateLabel } from "@/lib/booking-period";
 import type { TenantSupabaseClient } from "@/lib/queries/types";
-import { canManageFinance } from "@/lib/role-access";
+import { canManageBookings, canManageFinance } from "@/lib/role-access";
 import type { UserRole } from "@/constants/roles";
 
 type RawBooking = {
@@ -51,7 +51,8 @@ export async function fetchInvoicesPageData(
   orgId: string,
   role: UserRole | null,
 ): Promise<InvoicesPageData> {
-  const canMarkInvoicesPaid = canManageFinance(role);
+  // Marking paid writes the booking row, which RLS only lets owner/admin/manager update.
+  const canMarkInvoicesPaid = canManageFinance(role) && canManageBookings(role);
   const todayYmd = toLocalYmd(new Date());
 
   const { data: rawList, error } = await supabase

@@ -5,7 +5,6 @@ import {
   chartEmptyBarClass,
 } from "@/lib/charts/chart-theme";
 import { useTranslation } from "@/i18n/client";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
 
@@ -94,8 +93,8 @@ export function ReportsMonthlyChart({
   const allZero = totalFakturert === 0;
 
   return (
-    <div className={cn("overflow-hidden lg:col-span-2", RN_CARD_SHELL)}>
-      <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:gap-4 md:px-6 md:py-6">
+    <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8 lg:col-span-2">
+      <div className="flex flex-col gap-3 px-5 pt-5 sm:flex-row sm:items-start sm:justify-between sm:gap-4 md:px-6 md:pt-6">
         <div>
           <h2 className="app-section-title">
             {allYears ? t("reports.yearlyRevenue") : t("reports.monthlyRevenue")}
@@ -104,15 +103,15 @@ export function ReportsMonthlyChart({
             {t("reports.subtitle")}
           </p>
         </div>
-        <span className="inline-flex shrink-0 items-center rounded-full border border-rn-border-strong/60 bg-muted/30 px-3 py-1.5 text-app-xs font-semibold tabular-nums text-foreground sm:text-app-sm">
+        <span className="inline-flex shrink-0 items-center rounded-full bg-muted px-3 py-1.5 text-app-xs font-semibold tabular-nums text-foreground sm:text-app-sm">
           {periodBadge}
         </span>
       </div>
 
-      <div className="border-t border-rn-border-strong/35 px-4 py-5 md:px-6 md:py-6">
+      <div className="px-4 py-5 md:px-6 md:py-6">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-app-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="text-app-sm font-semibold text-muted-foreground">
               {t("reports.totalInPeriod")}
             </p>
             <p className="mt-1 text-2xl font-bold tabular-nums tracking-tight text-success md:text-3xl">
@@ -130,7 +129,7 @@ export function ReportsMonthlyChart({
         </div>
 
         {allZero ? (
-          <div className="flex min-h-[13rem] flex-col items-center justify-center rounded-md border border-dashed border-rn-border-strong/50 bg-muted/15 px-4 py-10 text-center">
+          <div className="flex min-h-[13rem] flex-col items-center justify-center rounded-xl bg-muted/50 px-4 py-10 text-center">
             <p className="font-medium text-foreground">{t("reports.noRevenue")}</p>
             <p className="mt-2 max-w-sm text-app-sm text-muted-foreground">
               {allYears
@@ -167,7 +166,7 @@ export function ReportsMonthlyChart({
                     >
                       {formatNokChartAxis(bar.amount)}
                     </span>
-                    <div className="relative flex min-h-[7rem] flex-1 flex-col justify-end border-b-2 border-rn-border-strong/55 sm:min-h-[8.5rem] md:min-h-[10rem]">
+                    <div className="relative flex min-h-[7rem] flex-1 flex-col justify-end border-b border-foreground/15 sm:min-h-[8.5rem] md:min-h-[10rem]">
                       {bar.hasValue ? (
                         <div
                           className={cn(
@@ -190,7 +189,7 @@ export function ReportsMonthlyChart({
               ))}
             </div>
             <div
-              className="mt-2.5 flex w-full justify-between gap-0.5 border-t border-dashed border-rn-border-strong/40 pt-2.5"
+              className="mt-2.5 flex w-full justify-between gap-0.5 pt-2.5"
               aria-hidden
             >
               {chartBars.map((bar) => (

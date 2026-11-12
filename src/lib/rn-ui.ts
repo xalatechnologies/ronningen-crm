@@ -3,7 +3,7 @@
  * Tailwind theme: src/app/globals.css).
  */
 export const RN_CARD_SHELL =
-  "rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card shadow-rn-card";
+  "rounded-2xl bg-card ring-1 ring-foreground/8";
 
 export const RN_SEGMENT_CONTROL =
   "inline-flex rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment p-1.5 shadow-rn-segment-inset";

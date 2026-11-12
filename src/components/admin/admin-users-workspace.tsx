@@ -32,11 +32,10 @@ import { useMemo, useState } from "react";
 export type { AdminUserFilter } from "@/components/admin/admin-user-filters";
 
 const kpiTileClass =
-  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
+  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 sm:p-6";
 
-const tableHeadClass = APP_TABLE_HEAD_CELL_ADMIN;
-const tableCellClass =
-  "px-4 py-4 align-middle sm:px-6 sm:py-5 md:px-8 md:py-6";
+const tableHeadClass = cn(APP_TABLE_HEAD_CELL_ADMIN, "px-4 py-3 text-app-xs font-semibold tracking-wide text-muted-foreground sm:px-4 md:px-5");
+const tableCellClass = "px-4 py-4 align-middle md:px-5";
 
 function UsersKpiTile({
   label,
@@ -45,7 +44,7 @@ function UsersKpiTile({
   icon: Icon,
   active,
   onClick,
-  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconContainerClassName = "rounded-xl bg-accent p-2 dark:bg-white/10",
   iconClassName = "size-6 text-primary dark:text-white",
   valueClassName = "text-success",
 }: {
@@ -66,12 +65,12 @@ function UsersKpiTile({
       aria-pressed={active}
       className={cn(
         kpiTileClass,
-        "group w-full text-left transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
-        active && "border-success/40 bg-muted/20 ring-2 ring-success/25",
+        "group w-full text-left transition-colors hover:bg-muted/60 hover:ring-success/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
+        active && "bg-success/8 ring-2 ring-success/40",
       )}
     >
       <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="dashboard-kpi-label min-w-0 break-words">{label}</span>
+        <span className="dashboard-kpi-label min-w-0 break-words !normal-case !tracking-normal">{label}</span>
         <div className={cn(iconContainerClassName, "shrink-0")}>
           <Icon className={iconClassName} aria-hidden />
         </div>
@@ -91,12 +90,12 @@ function userStatus(user: AdminUserRow, t: Translator): {
   className: string;
 } {
   if (user.isDisabled) {
-    return { label: t("admin.deaktivert"), className: "font-semibold text-destructive" };
+    return { label: t("admin.deaktivert"), className: "rounded-full border border-destructive/40 bg-destructive/10 px-2.5 py-0.5 text-app-xs font-semibold text-destructive" };
   }
   if (isInactiveUser(user)) {
-    return { label: t("admin.inaktiv"), className: "font-semibold text-muted-foreground" };
+    return { label: t("admin.inaktiv"), className: "rounded-full border border-foreground/15 bg-muted/50 px-2.5 py-0.5 text-app-xs font-semibold text-muted-foreground" };
   }
-  return { label: t("admin.aktiv"), className: "font-semibold text-success" };
+  return { label: t("admin.aktiv"), className: "rounded-full border border-success/35 bg-success/10 px-2.5 py-0.5 text-app-xs font-semibold text-success dark:!text-white" };
 }
 
 function orgSubtitle(user: AdminUserRow, t: Translator): string | undefined {
@@ -165,9 +164,9 @@ export function AdminUsersWorkspace({
   const noOrgCount = overview.total - overview.withOrganization;
 
   return (
-    <div className="admin-page-workspace admin-users-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
+    <div className="admin-page-workspace admin-users-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-6 pb-8">
       <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
+        <div className="dashboard-oversikt-hero px-5 py-5 sm:px-6 lg:px-6">
           <AppPageHeader
             className="mb-0"
             surface="default"
@@ -176,9 +175,11 @@ export function AdminUsersWorkspace({
             description={t("admin.oversikt_over_registrerte_brukere_plattformadministratorer_o")}
           />
         </div>
+      </div>
 
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section
-          className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
+          className="px-5 py-5 sm:px-6 sm:py-6"
           aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
@@ -220,7 +221,7 @@ export function AdminUsersWorkspace({
               value={overview.inactive}
               caption={t("admin.inactive_no_sign_in_90d")}
               icon={UserRoundX}
-              iconContainerClassName="rounded-md bg-muted/60 p-2"
+              iconContainerClassName="rounded-xl bg-muted/60 p-2"
               iconClassName="size-6 text-muted-foreground"
               valueClassName={
                 overview.inactive > 0 ? "text-muted-foreground" : "text-success"
@@ -230,8 +231,10 @@ export function AdminUsersWorkspace({
             />
           </div>
         </section>
+      </div>
 
-        <section className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8">
+      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
+        <section className="px-5 py-4 sm:px-6">
           <AdminUserFilterBar
             embedded
             search={search}
@@ -242,10 +245,10 @@ export function AdminUsersWorkspace({
           />
         </section>
 
-        <div className="app-table -mx-px max-w-full overflow-x-auto border-t border-rn-border-strong/50 overscroll-x-contain">
+        <div className="app-table max-w-full overflow-x-auto border-t border-foreground/10 overscroll-x-contain">
           <table className="w-full min-w-[52rem] text-left text-app-base">
             <thead>
-              <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+              <tr className="border-b border-foreground/15 bg-muted/50">
                 <th className={tableHeadClass}>{t("adminLabels.fields.name")}</th>
                 <th className={tableHeadClass}>{t("admin.e_post")}</th>
                 <th className={tableHeadClass}>{t("admin.status")}</th>
@@ -255,7 +258,7 @@ export function AdminUsersWorkspace({
                 <th className={tableHeadClass}>{t("adminLabels.fields.registered")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-rn-border-strong/50">
+            <tbody className="divide-y divide-foreground/10">
               {filtered.map((user) => {
                 const status = userStatus(user, t);
 
@@ -263,15 +266,24 @@ export function AdminUsersWorkspace({
                   <tr
                     key={user.id}
                     className={cn(
-                      "transition-colors hover:bg-rn-surface-row-hover",
+                      "cursor-pointer transition-colors hover:bg-muted/40",
                       user.isDisabled && "bg-destructive/5",
                     )}
+                    onClick={(event) => {
+                      const target = event.target as HTMLElement;
+                      if (!event.currentTarget.contains(target)) return;
+                      if (target.closest("a, button, input, label, select, [role='combobox']")) {
+                        return;
+                      }
+                      router.push(adminRoutes.userDetail(user.id));
+                    }}
                   >
                     <td className="p-0 align-middle">
                       <AdminTableDetailLink
                         href={adminRoutes.userDetail(user.id)}
                         title={user.fullName ?? "—"}
                         subtitle={orgSubtitle(user, t)}
+                        className="px-4 md:px-5"
                       />
                     </td>
                     <td className={cn(tableCellClass, "max-w-[11rem] truncate text-muted-foreground sm:max-w-xs md:max-w-md")}>
@@ -280,7 +292,10 @@ export function AdminUsersWorkspace({
                       </span>
                     </td>
                     <td className={tableCellClass}>
-                      <span className={status.className}>{status.label}</span>
+                      <span className={cn("inline-flex items-center gap-1.5", status.className)}>
+                        <span className="size-1.5 rounded-full bg-current" aria-hidden />
+                        {status.label}
+                      </span>
                     </td>
                     <td className={cn(tableCellClass, "text-muted-foreground")}>
                       {user.lastSignInAt
@@ -294,7 +309,10 @@ export function AdminUsersWorkspace({
                     </td>
                     <td className={tableCellClass}>
                       {user.isPlatformAdmin ? (
-                        <span className="font-semibold text-success">{t("adminLabels.fields.yes")}</span>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-success/35 bg-success/10 px-2.5 py-0.5 text-app-xs font-semibold text-success dark:!text-white">
+                          <ShieldCheck className="size-3.5" aria-hidden />
+                          {t("adminLabels.fields.yes")}
+                        </span>
                       ) : (
                         <span className="text-muted-foreground">{t("adminLabels.fields.no")}</span>
                       )}
@@ -329,7 +347,7 @@ export function AdminUsersWorkspace({
           </table>
         </div>
 
-        <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
+        <div className="border-t border-foreground/10 px-5 py-3 sm:px-6">
           <p className="app-text-secondary">
             {t("admin.viser_av_brukere", {
               shown: filtered.length,
@@ -338,7 +356,7 @@ export function AdminUsersWorkspace({
           </p>
         </div>
 
-        <p className="border-t border-rn-border-strong/50 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
+        <p className="border-t border-foreground/10 px-5 py-4 app-text-muted sm:px-6">
           {t("admin.inaktive_brukere_hint")}
         </p>
       </div>

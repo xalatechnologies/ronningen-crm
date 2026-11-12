@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RN_SEGMENT_CONTROL, RN_MODAL_FOOTER, RN_MODAL_MAX_HEIGHT, RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
+import { RN_MODAL_FOOTER, RN_MODAL_MAX_HEIGHT, RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
 import { APP_DATA_BODY, APP_DATA_DATE, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import {
   transactionFormSchema,
@@ -73,8 +73,12 @@ import type { TransactionListItem } from "./types";
 const financeTableHeadClass = cn("finance-table-head", APP_TABLE_HEAD_CELL);
 const financeTableCellClass = "px-6 py-5 md:px-8 md:py-6";
 
-const txDialogFieldLabel =
-  "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs";
+const txDialogFieldLabel = "text-[13px] font-semibold text-foreground md:text-sm";
+
+const cardClass = "overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8";
+
+const txFieldClass =
+  "h-12 rounded-xl border border-foreground/25 bg-background text-base shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 md:text-base";
 
 export type FinanceSectionProps = {
   transactions: TransactionListItem[];
@@ -356,7 +360,7 @@ function TransactionFormInner({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="shrink-0 border-b border-rn-border-strong/50 px-5 pb-4 pt-5 pr-12 sm:px-8 sm:pt-6 sm:pb-5 sm:pr-14">
+      <div className="shrink-0 border-b border-foreground/10 px-5 pb-4 pt-5 pr-12 sm:px-8 sm:pt-6 sm:pb-5 sm:pr-14">
         <DialogHeader className="gap-2 text-left">
           <DialogTitle className="font-heading text-2xl font-bold tracking-tight text-rn-text-heading">
             {isEdit ? t("finance.editTransaction") : t("finance.newTransaction")}
@@ -401,7 +405,7 @@ function TransactionFormInner({
           <div className="space-y-2">
             <span className={cn(txDialogFieldLabel, "block")}>{t("common.fields.type")}</span>
             <div
-              className={cn(RN_SEGMENT_CONTROL, "flex w-full gap-1.5 p-1.5")}
+              className="flex w-full gap-1 rounded-xl bg-muted p-1"
               role="group"
               aria-label={t("finance.transactionTypeAria")}
             >
@@ -415,10 +419,10 @@ function TransactionFormInner({
               <label
                 htmlFor={`tx-type-income-${formFieldId}`}
                 className={cn(
-                  "flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border-2 px-4 py-3 font-heading text-base font-semibold transition-all outline-none sm:min-h-11",
+                  "flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-3 font-heading text-base font-semibold transition-colors outline-none sm:min-h-11",
                   txType === "income"
-                    ? "border-rn-accent-border bg-success !text-white shadow-md [&_svg]:!text-white"
-                    : "border-transparent bg-transparent text-foreground hover:bg-muted/60",
+                    ? "bg-success !text-white [&_svg]:!text-white"
+                    : "bg-transparent text-foreground hover:bg-card",
                 )}
               >
                 <TrendingUp className="size-5 shrink-0" aria-hidden />
@@ -434,10 +438,10 @@ function TransactionFormInner({
               <label
                 htmlFor={`tx-type-expense-${formFieldId}`}
                 className={cn(
-                  "flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border-2 px-4 py-3 font-heading text-base font-semibold transition-all outline-none sm:min-h-11",
+                  "flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-3 font-heading text-base font-semibold transition-colors outline-none sm:min-h-11",
                   txType === "expense"
-                    ? "border-destructive/60 bg-destructive !text-white shadow-md [&_svg]:!text-white"
-                    : "border-transparent bg-transparent text-foreground hover:bg-muted/60",
+                    ? "bg-destructive !text-white [&_svg]:!text-white"
+                    : "bg-transparent text-foreground hover:bg-card",
                 )}
               >
                 <TrendingDown className="size-5 shrink-0" aria-hidden />
@@ -464,7 +468,7 @@ function TransactionFormInner({
                   placeholder={t("finance.categoryPlaceholder")}
                   aria-label={t("finance.categoryAria")}
                   className="w-full"
-                  inputClassName="h-12 rounded-md border-2 border-rn-border-strong pl-12 text-base md:text-base focus-visible:border-success focus-visible:ring-success/25"
+                  inputClassName={cn(txFieldClass, "pl-12")}
                 />
               </div>
               {formState.errors.category ? (
@@ -485,12 +489,13 @@ function TransactionFormInner({
                 />
                 <PriceInput
                   className={cn(
-                    "h-12 rounded-md border-2 bg-background pl-12 text-base font-semibold transition-colors focus-visible:ring-2 md:text-base",
+                    "h-12 rounded-xl border bg-background pl-12 text-base font-semibold shadow-none transition-colors focus-visible:ring-3 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-base",
                     txType === "expense"
                       ? "border-destructive/50 focus-visible:border-destructive focus-visible:ring-destructive/20"
-                      : "border-rn-border-strong focus-visible:border-success focus-visible:ring-success/25",
+                      : "border-foreground/25 hover:border-foreground/40 focus-visible:border-success focus-visible:ring-success/20",
                   )}
                   step={1}
+                  aria-invalid={!!formState.errors.amount}
                   {...register("amount")}
                   id={`tx-amt-${formFieldId}`}
                 />
@@ -520,7 +525,7 @@ function TransactionFormInner({
               </span>
             </Label>
             <Input
-              className="h-12 rounded-md border-2 border-rn-border-strong text-base md:text-base focus-visible:border-success focus-visible:ring-success/25"
+              className={txFieldClass}
               placeholder={t("finance.descriptionPlaceholder")}
               {...register("description")}
               id={`tx-desc-${formFieldId}`}
@@ -541,7 +546,7 @@ function TransactionFormInner({
                 })
               }
               variant="toolbar"
-              className="h-12 text-base"
+              className="h-12 rounded-xl border border-foreground/25 text-base shadow-none"
               aria-invalid={!!formState.errors.transactionDate}
             />
             <input
@@ -560,14 +565,14 @@ function TransactionFormInner({
         <DialogFooter
           className={cn(
             RN_MODAL_FOOTER,
-            "mx-0 mb-0 flex-col-reverse gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-5 py-4 sm:flex-row sm:justify-end sm:px-8 sm:py-5",
+            "mx-0 mb-0 flex-col-reverse gap-3 border-t border-foreground/10 bg-card px-5 py-4 sm:flex-row sm:justify-end sm:px-8 sm:py-5",
           )}
         >
           <Button
             type="button"
             variant="outline"
             size="cta"
-            className="w-full border-2 border-rn-border-strong sm:w-auto"
+            className="w-full rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted sm:w-auto"
             onClick={onClose}
           >
             {t("common.actions.cancel")}
@@ -576,7 +581,7 @@ function TransactionFormInner({
             type="submit"
             variant="success"
             size="cta"
-            className="w-full sm:w-auto"
+            className="w-full rounded-xl shadow-none sm:w-auto"
           >
             {isEdit ? t("common.actions.update") : t("finance.saveTransaction")}
           </Button>
@@ -587,7 +592,7 @@ function TransactionFormInner({
 }
 
 const financeToolbarControlClass =
-  "box-border h-12 min-h-12 max-h-12 shrink-0 py-0 md:h-14 md:min-h-14 md:max-h-14";
+  "box-border h-12 min-h-12 max-h-12 shrink-0 rounded-xl border border-foreground/25 py-0 shadow-none md:h-14 md:min-h-14 md:max-h-14";
 
 export function FinanceSection({
   transactions,
@@ -730,14 +735,14 @@ export function FinanceSection({
   }
 
   const kpiTileClass =
-    "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
+    "flex flex-col justify-between rounded-2xl bg-card p-6 ring-1 ring-foreground/20";
 
   return (
     <div className="mx-auto flex w-full flex-col pb-24 md:pb-8">
       <div className="finance-page-workspace flex w-full flex-col">
       {loadError ? (
         <div
-          className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
+          className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-base"
           role="alert"
         >
           {t("finance.loadError", { error: loadError })}
@@ -745,13 +750,14 @@ export function FinanceSection({
       ) : null}
       <AppPageHeader
         className="mb-0"
+        surface="default"
         title={t("finance.title")}
         actions={
           properties.length === 0 && canManageTransactions ? (
             <Button
               nativeButton={false}
               render={<Link href="/app/settings/lokaler" />}
-              className={cn(buttonVariants({ variant: "success", size: "cta" }))}
+              className={cn(buttonVariants({ variant: "success", size: "cta" }), "rounded-xl shadow-none")}
             >
               <Plus className="size-5" aria-hidden />
               {t("finance.addVenue")}
@@ -768,28 +774,29 @@ export function FinanceSection({
                     ? t("finance.addVenuesFirst")
                     : undefined
               }
-              className={cn(buttonVariants({ variant: "success", size: "cta" }))}
+              className={cn(buttonVariants({ variant: "success", size: "cta" }), "rounded-xl shadow-none")}
             >
               <Plus className="size-5" aria-hidden />
               {t("finance.newTransaction")}
             </Button>
           )
         }
-        toolbar={
-          <>
+      />
+      <div className="mt-6 flex min-w-0 flex-col gap-6">
+            <div className="overflow-x-auto rounded-2xl bg-card p-5 ring-1 ring-foreground/8">
             <section className="grid w-full min-w-max grid-cols-[minmax(12rem,1fr)_10.5rem_10.5rem_auto] gap-x-4 gap-y-2 md:gap-x-5">
-                <Label className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase">
+                <Label className="finance-filter-label font-semibold text-foreground">
                   {t("finance.filterVenue")}
                 </Label>
                 <Label
                   htmlFor="finance-filter-from"
-                  className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase"
+                  className="finance-filter-label font-semibold text-foreground"
                 >
                   {t("finance.fromDate")}
                 </Label>
                 <Label
                   htmlFor="finance-filter-to"
-                  className="finance-filter-label font-semibold tracking-wider text-muted-foreground uppercase"
+                  className="finance-filter-label font-semibold text-foreground"
                 >
                   {t("finance.toDate")}
                 </Label>
@@ -835,7 +842,7 @@ export function FinanceSection({
                     type="button"
                     variant="outline"
                     className={cn(
-                      "gap-2 rounded-md border-2 border-rn-border-strong px-5 text-base font-semibold",
+                      "gap-2 rounded-xl border border-foreground/30 bg-card px-5 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15",
                       financeToolbarControlClass,
                     )}
                     onClick={() => {
@@ -852,7 +859,7 @@ export function FinanceSection({
                     variant="outline"
                     disabled={!hasActiveFilters}
                     className={cn(
-                      "gap-2 rounded-md border-2 border-rn-border-strong px-5 text-base font-semibold",
+                      "gap-2 rounded-xl border border-foreground/30 bg-card px-5 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15",
                       financeToolbarControlClass,
                     )}
                     onClick={resetFilters}
@@ -862,13 +869,11 @@ export function FinanceSection({
                   </Button>
                 </div>
               </section>
+            </div>
 
             {!loadError && properties.length === 0 ? (
-              <div
-                className="mt-6 border-t border-rn-border-strong/50 pt-6"
-                role="status"
-              >
-                <div className="rounded-md border-2 border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-50">
+              <div role="status">
+                <div className="rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-50">
                   {t("finance.noVenuesHint")}{" "}
                   <Link
                     href="/app/settings/lokaler"
@@ -882,7 +887,7 @@ export function FinanceSection({
             ) : null}
 
             {range.from && range.to && range.from > range.to ? (
-              <div className="mt-6 border-t border-rn-border-strong/50 pt-4">
+              <div>
                 <p className="finance-range-hint text-muted-foreground">
                   {t("finance.rangeHint")}
                 </p>
@@ -890,7 +895,6 @@ export function FinanceSection({
             ) : null}
 
             <section
-              className="mt-6 border-t border-rn-border-strong/50 pt-6 sm:pt-8"
               aria-label={t("finance.kpiAria")}
             >
               <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3">
@@ -900,7 +904,7 @@ export function FinanceSection({
                   {t("finance.kpiIncome")}
                 </span>
                 <TrendingUp
-                  className="size-9 rounded-md bg-success/15 p-2 text-success dark:bg-white/10 dark:!text-white md:size-10"
+                  className="size-9 rounded-xl bg-success/15 p-2 text-success dark:bg-white/10 dark:!text-white md:size-10"
                   aria-hidden
                 />
               </div>
@@ -936,7 +940,7 @@ export function FinanceSection({
                   {t("finance.kpiExpense")}
                 </span>
                 <TrendingDown
-                  className="size-9 rounded-md bg-destructive/15 p-2 text-destructive md:size-10"
+                  className="size-9 rounded-xl bg-destructive/15 p-2 text-destructive md:size-10"
                   aria-hidden
                 />
               </div>
@@ -966,13 +970,13 @@ export function FinanceSection({
               )}
             </div>
 
-            <div className="flex flex-col justify-between rounded-md border-2 border-rn-accent-border bg-success p-6 text-white shadow-rn-hero-success">
+            <div className="flex flex-col justify-between rounded-2xl bg-[#1a4331] p-6 text-white">
               <div className="mb-3 flex items-start justify-between">
                 <span className="finance-kpi-label text-white/80">
                   {t("finance.kpiResult")}
                 </span>
                 <Wallet
-                  className="size-9 rounded-md bg-white/10 p-2 text-primary-light md:size-10"
+                  className="size-9 rounded-xl bg-white/10 p-2 text-primary-light md:size-10"
                   aria-hidden
                 />
               </div>
@@ -998,8 +1002,8 @@ export function FinanceSection({
           </div>
             </section>
 
-            <div className="mt-6 border-t border-rn-border-strong/50 pt-6 sm:pt-8">
-              <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong pb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:pb-6">
+            <div className={cardClass}>
+              <div className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:px-8 md:py-6">
                 <h2 className="finance-transactions-title app-section-title">
                   {t("finance.transactions")}
                 </h2>
@@ -1007,7 +1011,7 @@ export function FinanceSection({
             <Button
               type="button"
               variant="outline"
-              className="size-12 shrink-0 rounded-md border-2 border-rn-border-strong"
+              className="size-12 shrink-0 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted"
               onClick={() => downloadTransactionsCsv(filtered, t)}
               disabled={filtered.length === 0}
               aria-label={t("finance.downloadCsvAria")}
@@ -1039,7 +1043,7 @@ export function FinanceSection({
         ) : (
           <Table className="min-w-[720px]">
             <TableHeader>
-              <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
+              <TableRow className="border-0 bg-muted/60 hover:bg-muted/60">
                 <TableHead className={financeTableHeadClass}>{t("finance.tableDate")}</TableHead>
                 <TableHead className={financeTableHeadClass}>
                   {t("finance.tableDescription")}
@@ -1067,7 +1071,7 @@ export function FinanceSection({
                 return (
                   <TableRow
                     key={r.id}
-                    className="border-rn-border-strong/40 hover:bg-rn-surface-row-hover"
+                    className="border-foreground/6 hover:bg-muted/50"
                   >
                     <TableCell
                       className={cn(
@@ -1142,7 +1146,7 @@ export function FinanceSection({
                             type="button"
                             variant="ghost"
                             size="icon-sm"
-                            className="size-10 shrink-0 rounded-md text-muted-foreground hover:text-foreground"
+                            className="size-10 shrink-0 rounded-xl text-foreground"
                             aria-label={t("finance.editTransactionAria", {
                               date: formatDisplayDate(r.transaction_date, formatDate),
                             })}
@@ -1154,7 +1158,7 @@ export function FinanceSection({
                             type="button"
                             variant="ghost"
                             size="icon-sm"
-                            className="size-10 shrink-0 rounded-md text-destructive hover:bg-destructive/10"
+                            className="size-10 shrink-0 rounded-xl text-destructive hover:bg-destructive/10"
                             aria-label={t("finance.deleteTransactionAria", {
                               date: formatDisplayDate(r.transaction_date, formatDate),
                             })}
@@ -1173,7 +1177,7 @@ export function FinanceSection({
         )}
 
         {filtered.length > 0 ? (
-          <div className="finance-page-footer flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
+          <div className="finance-page-footer flex flex-col gap-3 border-t border-foreground/8 bg-muted/40 px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
             <span>
               {t("finance.footerShowing", {
                 from: pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0,
@@ -1185,7 +1189,7 @@ export function FinanceSection({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
+                className="h-11 gap-1 rounded-xl border border-foreground/30 bg-card px-4 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
                 disabled={currentPage <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
@@ -1201,7 +1205,7 @@ export function FinanceSection({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 gap-1 rounded-md border-2 border-rn-border-strong px-4 text-base font-semibold"
+                className="h-11 gap-1 rounded-xl border border-foreground/30 bg-card px-4 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
@@ -1212,15 +1216,13 @@ export function FinanceSection({
           </div>
         ) : null}
             </div>
-            </>
-          }
-        />
+      </div>
       </div>
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent
           className={cn(
-            "flex w-[calc(100%-1.25rem)] max-w-lg flex-col gap-0 overflow-hidden rounded-md border-2 border-rn-border-strong bg-card p-0 text-foreground shadow-xl sm:max-w-xl",
+            "flex w-[calc(100%-1.25rem)] max-w-lg flex-col gap-0 overflow-hidden rounded-2xl border border-foreground/10 bg-card p-0 text-foreground shadow-xl sm:max-w-xl",
             RN_MODAL_MAX_HEIGHT,
           )}
           showCloseButton
@@ -1245,7 +1247,7 @@ export function FinanceSection({
       >
         <DialogContent
           className={cn(
-            "flex w-[calc(100%-1.25rem)] max-w-lg flex-col gap-0 overflow-hidden rounded-md border-2 border-rn-border-strong bg-card p-0 text-foreground shadow-xl sm:max-w-xl",
+            "flex w-[calc(100%-1.25rem)] max-w-lg flex-col gap-0 overflow-hidden rounded-2xl border border-foreground/10 bg-card p-0 text-foreground shadow-xl sm:max-w-xl",
             RN_MODAL_MAX_HEIGHT,
           )}
           showCloseButton
@@ -1270,7 +1272,7 @@ export function FinanceSection({
       >
         <DialogContent
           showCloseButton
-          className="max-w-[calc(100%-2rem)] gap-4 rounded-md border-2 border-rn-border-strong bg-card p-6 shadow-xl sm:max-w-md"
+          className="max-w-[calc(100%-2rem)] gap-4 rounded-2xl border border-foreground/10 bg-card p-6 shadow-xl sm:max-w-md"
         >
           {deleteTarget ? (
             <>
@@ -1290,7 +1292,7 @@ export function FinanceSection({
                   type="button"
                   variant="outline"
                   size="cta"
-                  className="w-full border-2 border-rn-border-strong sm:w-auto"
+                  className="w-full rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted sm:w-auto"
                   disabled={deleteBusy}
                   onClick={() => setDeleteTarget(null)}
                 >
@@ -1300,7 +1302,7 @@ export function FinanceSection({
                   type="button"
                   size="cta"
                   disabled={deleteBusy}
-                  className="w-full border-2 border-red-200 bg-red-600 !text-white hover:bg-red-700 sm:w-auto"
+                  className="w-full rounded-xl border-0 bg-red-600 !text-white shadow-none hover:bg-red-700 sm:w-auto"
                   onClick={() => void confirmDeleteTransaction()}
                 >
                   {deleteBusy ? t("common.deleting") : t("finance.delete.confirm")}

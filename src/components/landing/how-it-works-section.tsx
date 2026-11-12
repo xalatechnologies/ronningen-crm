@@ -4,17 +4,31 @@ import {
   LANDING_CONTAINER,
   LANDING_SECTION_X,
 } from "@/components/landing/landing-layout";
+import { HowItWorksPanel } from "@/components/landing/how-it-works-panels";
 import { useTranslation } from "@/i18n/client";
 import { getDictionary } from "@/i18n/dictionaries";
 import { cn } from "@/lib/utils";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const STEP_MS = 5000;
 
 export function HowItWorksSection() {
   const { t, locale } = useTranslation();
-  const steps = useMemo(
-    () => getDictionary(locale).landing.howItWorks.steps,
-    [locale],
-  );
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const dict = useMemo(() => getDictionary(locale).landing, [locale]);
+  const steps = dict.howItWorks.steps;
+
+  // Auto-advance 1 -> 2 -> 3 -> 4 -> 1; hover/focus pauses, a click restarts the timer.
+  const auto = !paused;
+  useEffect(() => {
+    if (!auto || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = window.setTimeout(
+      () => setActive((i) => (i + 1) % steps.length),
+      STEP_MS,
+    );
+    return () => window.clearTimeout(id);
+  }, [auto, active, steps.length]);
 
   return (
     <section
@@ -22,56 +36,88 @@ export function HowItWorksSection() {
       aria-labelledby="landing-how-title"
       className={cn(
         LANDING_SECTION_X,
-        "border-y-2 border-rn-accent-border bg-success py-16 text-white md:py-24",
+        "bg-[#1a4331] py-16 text-white md:py-24 lg:py-32",
       )}
     >
-      <div className={cn(LANDING_CONTAINER, "flex flex-col gap-10 md:gap-14")}>
-        <div className="mx-auto flex max-w-3xl flex-col gap-3 text-center">
-          <p className="text-app-sm font-semibold tracking-wide text-primary-light uppercase">
-            {t("landing.howItWorks.eyebrow")}
-          </p>
-          <h2
-            id="landing-how-title"
-            className="landing-headline tracking-tight !text-white"
+      <div
+        className={cn(
+          LANDING_CONTAINER,
+          "grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-20",
+        )}
+      >
+        <div className="flex flex-col gap-10">
+          <div className="flex flex-col gap-5">
+            <h2
+              id="landing-how-title"
+              className="max-w-[20ch] text-[clamp(30px,5vw,52px)] leading-[1.06] font-bold tracking-[-0.03em] !text-white"
+            >
+              {t("landing.sections.howItWorks")}
+            </h2>
+            <p className="max-w-[44ch] text-lg leading-relaxed !text-[#d6e6dc]">
+              {t("landing.howItWorks.subtitle")}
+            </p>
+          </div>
+
+          <ol
+            className="flex flex-col gap-2"
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onFocus={() => setPaused(true)}
+            onBlur={() => setPaused(false)}
           >
-            {t("landing.sections.howItWorks")}
-          </h2>
-          <p className="landing-body leading-relaxed !text-white/90">
-            {t("landing.howItWorks.subtitle")}
-          </p>
+            {steps.map((item, index) => {
+              const on = index === active;
+              return (
+                <li key={item.title}>
+                  <button
+                    type="button"
+                    onClick={() => setActive(index)}
+                    aria-pressed={on}
+                    className={cn(
+                      "relative flex w-full items-start gap-4 overflow-hidden rounded-2xl p-4 text-left transition-colors md:p-5",
+                      on ? "bg-white/10" : "hover:bg-white/5",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors",
+                        on
+                          ? "bg-white text-[#1a4331]"
+                          : "bg-white/15 text-[#d6e6dc]",
+                      )}
+                      aria-hidden
+                    >
+                      {index + 1}
+                    </span>
+                    <span className="flex flex-col gap-1">
+                      <span className="font-heading text-lg font-semibold !text-white md:text-xl">
+                        {item.title}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-base leading-relaxed text-[#d6e6dc]",
+                          !on && "hidden lg:block lg:opacity-70",
+                        )}
+                      >
+                        {item.text}
+                      </span>
+                    </span>
+                    {on && auto ? (
+                      <span
+                        aria-hidden
+                        className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-[#85b098] motion-reduce:hidden"
+                        style={{ animation: `hiw-progress ${STEP_MS}ms linear forwards` }}
+                      />
+                    ) : null}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
         </div>
 
-        <div className="relative">
-          <ol className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
-            {steps.map((item, index) => (
-              <li
-                key={item.title}
-                className="relative flex flex-col items-center gap-4"
-              >
-                {index < steps.length - 1 ? (
-                  <div
-                    className="pointer-events-none absolute top-6 left-[calc(50%+1.5rem)] z-0 hidden h-[2px] w-[calc(100%-1.75rem)] overflow-visible lg:block"
-                    aria-hidden
-                  >
-                    <div className="h-full w-full rounded-full bg-linear-to-r from-primary-light/30 via-white/70 to-primary-light/30" />
-                    <span className="absolute top-1/2 right-0 size-2 -translate-y-1/2 rounded-full bg-primary-light/80 ring-2 ring-success" />
-                  </div>
-                ) : null}
-
-                <span
-                  className="relative z-10 flex size-12 shrink-0 items-center justify-center rounded-full border-2 border-rn-accent-border bg-white text-app-lg font-bold text-success shadow-rn-hero-success ring-4 ring-success/30"
-                  aria-hidden
-                >
-                  {index + 1}
-                </span>
-
-                <article className="flex w-full flex-1 flex-col gap-3 rounded-[length:var(--app-radius)] border-2 border-rn-accent-border/40 bg-card p-5 text-center shadow-rn-hero-success md:p-6 lg:text-left">
-                  <h3 className="app-card-title md:text-app-xl">{item.title}</h3>
-                  <p className="landing-body leading-relaxed">{item.text}</p>
-                </article>
-              </li>
-            ))}
-          </ol>
+        <div className="flex items-center" aria-hidden>
+          <HowItWorksPanel key={active} step={active} />
         </div>
       </div>
     </section>

@@ -29,7 +29,7 @@ function MetadataDiff({
       {keys.map((key) => (
         <div
           key={key}
-          className="rounded-md border border-rn-border-strong/60 bg-muted/20 px-3 py-2"
+          className="rounded-xl border border-foreground/15 bg-muted/40 px-3 py-2"
         >
           <dt className="text-app-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {key}
@@ -76,7 +76,7 @@ export function AuditEntryDetailPanel({ entry }: { entry: AdminAuditEntry }) {
           t={t}
         />
       ) : (
-        <pre className="overflow-x-auto rounded-md bg-muted/40 p-3 text-app-xs">
+        <pre className="overflow-x-auto rounded-xl bg-muted/40 p-3 text-app-xs">
           {JSON.stringify(entry.metadata, null, 2)}
         </pre>
       )}

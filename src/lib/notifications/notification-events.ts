@@ -20,6 +20,9 @@ export type NotificationEventKey =
   | "support.ticket_reply"
   | "booking.created"
   | "booking.contract_accepted"
+  | "portal.message"
+  | "portal.wish"
+  | "portal.schedule"
   | "inquiry.created"
   | "accommodation.created"
   | "team.member_added";
@@ -38,6 +41,9 @@ const EVENT_DEFAULTS: Record<NotificationEventKey, EventDefaults> = {
   "support.ticket_reply": { category: "support", priority: "normal" },
   "booking.created": { category: "booking", priority: "normal" },
   "booking.contract_accepted": { category: "booking", priority: "high" },
+  "portal.message": { category: "booking", priority: "normal" },
+  "portal.wish": { category: "booking", priority: "normal" },
+  "portal.schedule": { category: "booking", priority: "normal" },
   "inquiry.created": { category: "inquiry", priority: "normal" },
   "accommodation.created": { category: "accommodation", priority: "normal" },
   "team.member_added": { category: "team", priority: "normal" },
@@ -73,6 +79,10 @@ export function buildBookingActionUrl(bookingId: string): string {
 
 export function buildBookingContractActionUrl(bookingId: string): string {
   return `/app/bookings/${bookingId}/contract`;
+}
+
+export function buildBookingPortalActionUrl(bookingId: string, tab?: "wishes" | "schedule"): string {
+  return `/app/bookings/${bookingId}/portal${tab ? `?tab=${tab}` : ""}`;
 }
 
 export function buildInquiryActionUrl(inquiryId: string): string {

@@ -13,7 +13,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 
 const kpiTileClass =
-  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
+  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 sm:p-6";
 
 function UserDetailKpiTile({
   label,
@@ -62,7 +62,7 @@ function UserDetailKpiTile({
         className={cn(
           kpiTileClass,
           "group w-full text-left transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
-          active && "border-success/40 bg-muted/20 ring-2 ring-success/25",
+          active && "bg-success/8 ring-2 ring-success/40",
         )}
       >
         {content}

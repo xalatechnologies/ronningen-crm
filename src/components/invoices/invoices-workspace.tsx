@@ -30,9 +30,13 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-const invoicesTableHeadClass = cn("invoices-table-head", APP_TABLE_HEAD_CELL);
+const invoicesTableHeadClass = cn(
+  "invoices-table-head",
+  APP_TABLE_HEAD_CELL,
+  "px-4 md:px-5",
+);
 const invoicesTableCellClass =
-  "px-6 py-5 align-top md:px-8 md:py-6";
+  "px-4 py-5 align-top md:px-5 md:py-6";
 
 function paidSharePct(row: UnpaidInvoiceRow): number {
   if (row.totalNok <= 0) return 0;
@@ -83,14 +87,14 @@ function DueAndWarnings({
         {overdue ? (
           <Badge
             variant="destructive"
-            className="invoices-alert-pill h-auto w-fit rounded-md px-2.5 py-1 font-bold leading-snug"
+            className="invoices-alert-pill h-auto w-fit rounded-full px-3 py-1 font-bold leading-snug"
           >
             {t("invoices.workspace.overdueBadge", { label: relLabel })}
           </Badge>
         ) : rel === 0 ? (
           <Badge
             variant="secondary"
-            className="invoices-alert-pill h-auto w-fit rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 font-bold text-amber-900"
+            className="invoices-alert-pill h-auto w-fit rounded-full border-0 bg-amber-50 px-3 py-1 font-bold text-amber-900"
           >
             {t("invoices.workspace.dueToday")}
           </Badge>
@@ -100,7 +104,7 @@ function DueAndWarnings({
         {row.collectionNoticeSentAt ? (
           <Badge
             variant="secondary"
-            className="invoices-alert-pill h-auto w-fit max-w-full flex-wrap items-start gap-1 rounded-md border border-violet-200 bg-violet-50 py-1.5 pl-2 pr-2 text-left font-semibold leading-snug text-violet-900"
+            className="invoices-alert-pill h-auto w-fit max-w-full flex-wrap items-start gap-1 rounded-xl border-0 bg-violet-50 py-1.5 pl-2.5 pr-2.5 text-left font-semibold leading-snug text-violet-900"
           >
             <Scale className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             {t("invoices.workspace.collectionNotice", {
@@ -110,7 +114,7 @@ function DueAndWarnings({
         ) : suggestInkasso ? (
           <Badge
             variant="outline"
-            className="invoices-alert-pill h-auto w-fit max-w-full items-start gap-1 rounded-md border-amber-300 bg-amber-50/80 py-1.5 pl-2 pr-2 text-left font-semibold leading-snug text-amber-950"
+            className="invoices-alert-pill h-auto w-fit max-w-full items-start gap-1 rounded-xl border-0 bg-amber-50 py-1.5 pl-2.5 pr-2.5 text-left font-semibold leading-snug text-amber-950"
           >
             <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-700" aria-hidden />
             {t("invoices.workspace.suggestCollection")}
@@ -129,18 +133,18 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
   const badgeClass = (() => {
     switch (row.paymentStatus) {
       case "paid":
-        return "rounded-md border border-emerald-200 bg-emerald-50 font-bold text-emerald-950";
+        return "rounded-full border-0 bg-emerald-50 font-bold text-emerald-950";
       case "unpaid":
-        return "rounded-md border border-border font-bold";
+        return "rounded-full border border-foreground/25 bg-card font-bold";
       case "partial":
-        return "rounded-md border border-amber-200 bg-amber-50 font-bold text-amber-950";
+        return "rounded-full border-0 bg-amber-50 font-bold text-amber-950";
       case "waived":
-        return "rounded-md border border-border bg-muted font-bold text-foreground";
+        return "rounded-full border-0 bg-muted font-bold text-foreground";
       case "disputed":
-        return "rounded-md border border-orange-300 bg-orange-50 font-bold text-orange-950";
+        return "rounded-full border-0 bg-orange-50 font-bold text-orange-950";
       case "other":
       default:
-        return "rounded-md border border-violet-200 bg-violet-50 font-bold text-violet-950";
+        return "rounded-full border-0 bg-violet-50 font-bold text-violet-950";
     }
   })();
 
@@ -151,7 +155,7 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
       <Badge
         variant="outline"
         className={cn(
-          "invoices-status-pill h-auto w-fit px-2.5 py-1 font-bold",
+          "invoices-status-pill h-auto w-fit px-3 py-1 font-bold",
           badgeClass,
         )}
       >
@@ -212,7 +216,7 @@ function MarkInvoicePaidButton({
       disabled={busy || row.remainingNok <= 0}
       title={t("invoices.markPaidTitle")}
       className={cn(
-        "invoices-action-btn h-10 w-full justify-center gap-1.5 rounded-md border-2 border-success/60 bg-success/10 px-3 font-heading font-bold text-emerald-950 shadow-sm hover:bg-success/20 md:h-11 md:gap-2 md:px-4 dark:text-emerald-100",
+        "invoices-action-btn h-10 w-full justify-center gap-1.5 rounded-xl border border-success/50 bg-success/10 px-3 font-heading font-bold text-emerald-950 shadow-none hover:bg-success/20 md:h-11 md:gap-2 md:px-4 dark:text-emerald-100",
         busy && "opacity-70",
       )}
       onClick={onRequestConfirm}
@@ -292,7 +296,7 @@ export function InvoicesWorkspace({
       <section className="min-w-0" aria-label={t("invoices.noOutstandingAria")}>
         <div className="flex flex-col items-center gap-4 px-6 py-16 text-center md:gap-5 md:px-8 md:py-20">
           <div
-            className="flex size-16 items-center justify-center rounded-md border-2 border-rn-border-strong bg-muted/40 md:size-18"
+            className="flex size-16 items-center justify-center rounded-2xl bg-muted md:size-18"
             aria-hidden
           >
             <FileText className="size-8 text-muted-foreground md:size-9" />
@@ -304,7 +308,7 @@ export function InvoicesWorkspace({
             href="/app/bookings"
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "invoices-action-btn h-12 rounded-md border-2 border-rn-border-strong px-6 font-heading font-bold",
+              "invoices-action-btn h-12 rounded-xl border border-foreground/30 bg-card px-6 font-heading font-bold shadow-none hover:bg-muted",
             )}
           >
             {t("invoices.workspace.goToBookings")}
@@ -333,7 +337,7 @@ export function InvoicesWorkspace({
         <div className="app-table overflow-x-auto">
           <table className="min-w-[920px] w-full border-collapse text-left">
             <thead>
-              <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+              <tr className="border-0 bg-muted/60">
                 <th className={invoicesTableHeadClass}>{t("invoices.customer")}</th>
                 <th
                   className={cn(
@@ -369,11 +373,11 @@ export function InvoicesWorkspace({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-rn-border-strong/50">
+            <tbody className="divide-y divide-foreground/6">
               {filtered.map((r) => (
                 <tr
                   key={r.id}
-                  className="transition-colors hover:bg-rn-surface-row-hover"
+                  className="transition-colors hover:bg-muted/50"
                 >
                   <td className={invoicesTableCellClass}>
                     <div className="min-w-0 max-w-64">
@@ -405,7 +409,7 @@ export function InvoicesWorkspace({
                     )}
                   >
                     <div className="flex min-w-0 max-w-56 flex-col gap-2">
-                      <span className="invoices-row-pill inline-flex w-fit rounded-md border border-success/30 bg-emerald-50 px-2.5 py-1 font-bold text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-100">
+                      <span className="invoices-row-pill inline-flex w-fit rounded-full bg-emerald-50 px-3 py-1 font-bold text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-100">
                         {r.eventType}
                       </span>
                       <div className={cn("invoices-row-meta", APP_DATA_DATE)}>
@@ -460,7 +464,7 @@ export function InvoicesWorkspace({
                         rel="noopener noreferrer"
                         className={cn(
                           buttonVariants({ variant: "outline" }),
-                          "invoices-action-btn inline-flex h-10 items-center justify-center gap-1.5 rounded-md border-2 border-rn-border-strong px-3 font-heading font-bold md:h-11 md:gap-2 md:px-4",
+                          "invoices-action-btn inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-foreground/30 bg-card px-3 font-heading font-bold shadow-none hover:bg-muted md:h-11 md:gap-2 md:px-4",
                         )}
                       >
                         {t("invoices.title")}
@@ -492,7 +496,7 @@ export function InvoicesWorkspace({
                   customer: markPaidConfirmRow.customerName,
                 })}
               </p>
-              <div className="rounded-md border-2 border-rn-border-strong/60 bg-muted/30 px-4 py-3">
+              <div className="rounded-xl bg-muted/50 px-4 py-3">
                 <dl className="space-y-2 text-sm">
                   <div className="flex items-baseline justify-between gap-4">
                     <dt className="text-muted-foreground">
@@ -519,7 +523,7 @@ export function InvoicesWorkspace({
         confirmLabel={t("invoices.workspace.confirmMarkPaid")}
         busy={markingBusy}
         busyLabel={t("invoices.workspace.registering")}
-        confirmClassName="border-2 border-success/70 bg-success !text-white hover:bg-success/90"
+        confirmClassName="rounded-xl border-0 bg-success !text-white hover:bg-success/90"
         onConfirm={confirmMarkPaid}
       />
     </section>

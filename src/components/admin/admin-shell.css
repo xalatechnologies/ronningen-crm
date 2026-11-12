@@ -6,7 +6,7 @@
   font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--muted-foreground);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .admin-sidebar-link {
@@ -80,6 +80,21 @@
   text-decoration: underline;
 }
 
+/* Buttons styled as inline actions: give them a visible resting outline. */
+button.admin-ops-inline-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 28%, transparent);
+  border-radius: 0.75rem;
+  background: var(--card);
+}
+
+button.admin-ops-inline-link:hover {
+  background: var(--muted);
+  text-decoration: none;
+}
+
 .admin-ops-inline-actions {
   display: flex;
   flex-wrap: wrap;
@@ -125,11 +140,12 @@
 }
 
 .platform-admin .admin-action-btn--secondary {
-  border-width: 2px !important;
-  border-color: var(--rn-border-strong) !important;
+  border-width: 1px !important;
+  border-color: color-mix(in srgb, var(--foreground) 30%, transparent) !important;
+  border-radius: 0.75rem;
   background-color: var(--card);
   font-weight: 600;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+  box-shadow: none;
 }
 
 .platform-admin .admin-action-btn--secondary:hover {

@@ -1,4 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+
+import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
+import { canManageBookings } from "@/lib/role-access";
 
 import { ContractReviewWorkspace } from "@/components/contracts/contract-review-workspace";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
@@ -18,6 +21,9 @@ export default async function ContractReviewPage({
   const { bookingId } = await params;
   const supabase = await createServerSupabaseClient();
   const orgId = await requireServerOrganizationId();
+  // Review, edit and send are staff actions (owner/admin/manager), same as the server actions.
+  const { role } = await getCachedServerOrganizationContext();
+  if (!canManageBookings(role)) redirect("/app/bookings");
 
   const { data: contract } = await contractFrom(supabase, "rental_contracts")
     .select("id")

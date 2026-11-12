@@ -17,7 +17,6 @@ import {
   accommodationReservationFormSchema,
   type AccommodationReservationFormInput,
 } from "@/lib/validations";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { notifyAccommodationCreated } from "@/lib/notifications/actions/org-events";
 import { generateClientRequestId } from "@/lib/customers/customer-identity";
@@ -44,10 +43,9 @@ import { bookingConflictMessageKey } from "@/lib/bookings/booking-conflict-error
 import { toast } from "sonner";
 
 const fieldClass =
-  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-app-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-app-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-12 w-full rounded-xl border border-foreground/25 bg-background px-4 text-app-base text-foreground shadow-none outline-none transition-colors hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 disabled:opacity-60 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
 
-const labelClass =
-  "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-app-xs";
+const labelClass = "text-[13px] font-semibold text-foreground md:text-sm";
 
 export type NewAccommodationReservationFormProps = {
   units: { id: string; name: string; maxGuests: number; active: boolean }[];
@@ -173,7 +171,7 @@ export function NewAccommodationReservationForm({
   if (!canManage) {
     return (
       <div className="mx-auto w-full max-w-lg space-y-4 pb-12">
-        <div className="rounded-lg border-2 border-rn-border-strong bg-card p-6 shadow-rn-card">
+        <div className="rounded-2xl bg-card p-6 ring-1 ring-foreground/8">
           <p className="text-rn-text-body">
             {t("overnatting.noAccess")}
           </p>
@@ -195,14 +193,14 @@ export function NewAccommodationReservationForm({
 
   return (
     <div className="mx-auto w-full pb-12 md:pb-8">
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <header className="flex items-center gap-3 border-b-2 border-rn-border-strong bg-card px-3 py-3 sm:gap-4 sm:px-4 md:px-5">
+      <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
+        <header className="flex items-center gap-3 border-b border-foreground/8 bg-card px-4 py-4 sm:gap-4 sm:px-6 md:px-8">
           <Link
             href="/app/overnatting"
             aria-label={t("overnatting.backToOvernatting")}
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
-              "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
+              "shrink-0 rounded-full text-rn-text-heading hover:bg-muted",
             )}
           >
             <ArrowLeft className="size-5 text-success" aria-hidden />
@@ -220,7 +218,7 @@ export function NewAccommodationReservationForm({
             aria-label={t("overnatting.close")}
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
-              "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
+              "shrink-0 rounded-full text-rn-text-heading hover:bg-muted",
             )}
           >
             <X className="size-5 text-rn-text-slate" aria-hidden />
@@ -353,7 +351,7 @@ export function NewAccommodationReservationForm({
             ) : null}
             </section>
 
-            <section className="space-y-4 border-t-2 border-rn-border-strong/40 pt-6">
+            <section className="space-y-4 rounded-2xl bg-muted/50 p-5 md:p-6">
               <header className="space-y-1.5">
                 <p className={labelClass}>{t("overnatting.timeSection")}</p>
                 <p className="text-app-sm leading-snug text-muted-foreground">
@@ -372,7 +370,7 @@ export function NewAccommodationReservationForm({
                       <DatePickerField
                         id={`${rid}-checkin`}
                         variant="toolbar"
-                        className={cn(fieldClass, "shadow-sm")}
+                        className={fieldClass}
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         aria-invalid={!!form.formState.errors.checkInDate}
@@ -396,7 +394,7 @@ export function NewAccommodationReservationForm({
                       <DatePickerField
                         id={`${rid}-checkout`}
                         variant="toolbar"
-                        className={cn(fieldClass, "shadow-sm")}
+                        className={fieldClass}
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         aria-invalid={!!form.formState.errors.checkOutDate}
@@ -448,7 +446,7 @@ export function NewAccommodationReservationForm({
               </div>
             </section>
 
-            <section className="space-y-4 border-t-2 border-rn-border-strong/40 pt-6">
+            <section className="space-y-4 rounded-2xl bg-muted/50 p-5 md:p-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label className={labelClass} htmlFor={`${rid}-guests`}>
@@ -509,19 +507,19 @@ export function NewAccommodationReservationForm({
               <Textarea
                 id={`${rid}-notes`}
                 rows={3}
-                className="rounded-md border-2 border-rn-border-strong bg-background p-3 focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+                className="rounded-xl border border-foreground/25 bg-background p-3 shadow-none focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
                 {...form.register("notes")}
               />
             </div>
             </section>
           </div>
 
-          <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-muted/35 px-6 py-4 sm:flex-row sm:justify-end sm:px-8">
+          <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-foreground/10 bg-card/95 px-6 py-4 backdrop-blur sm:flex-row sm:justify-end sm:px-8">
             <Link
               href="/app/overnatting"
               className={cn(
                 buttonVariants({ variant: "outline", size: "cta" }),
-                "inline-flex items-center justify-center border-2 border-rn-border-strong font-heading font-bold",
+                "inline-flex items-center justify-center rounded-xl border border-foreground/30 bg-card font-heading font-bold text-foreground shadow-none hover:bg-muted",
               )}
             >
               {t("common.actions.cancel")}
@@ -530,6 +528,7 @@ export function NewAccommodationReservationForm({
               type="submit"
               variant="success"
               size="cta"
+              className="rounded-xl shadow-none"
               disabled={isSubmitting || activeUnits.length === 0}
             >
               {t("overnatting.registerReservation")}

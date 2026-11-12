@@ -314,8 +314,10 @@ export function ContractReviewWorkspace(props: {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 md:px-8">
+      <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
       <AppPageHeader
-        className="mb-0"
+        surface="default"
+        className="mb-0 p-5 md:p-6"
         compact
         detailLayout
         title={t("contracts.reviewTitle")}
@@ -440,14 +442,16 @@ export function ContractReviewWorkspace(props: {
             ) : null}
           </div>
         }
+        toolbarClassName="!pt-4"
       />
+      </div>
       {inviteUrl ? (
         <p className="text-sm text-muted-foreground">{t("contracts.copyInviteHint")}</p>
       ) : null}
 
       {props.outOfSync && current.status !== "draft" ? (
         <div
-          className="flex flex-col gap-3 rounded-lg border-2 border-amber-500/40 bg-amber-500/10 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-5 py-4 text-sm sm:flex-row sm:items-center sm:justify-between"
           role="alert"
         >
           <p className="font-medium">
@@ -478,7 +482,7 @@ export function ContractReviewWorkspace(props: {
 
       {!props.emailConfigured && current.status !== "accepted" ? (
         <div
-          className="rounded-lg border-2 border-amber-500/40 bg-amber-500/10 p-4 text-sm"
+          className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-5 py-4 text-sm"
           role="status"
         >
           {t("contracts.emailNotConfigured")}
@@ -486,7 +490,7 @@ export function ContractReviewWorkspace(props: {
       ) : null}
       {current.status === "accepted" ? (
         <div
-          className="rounded-lg border-2 border-emerald-700/35 bg-emerald-500/10 p-4 text-sm"
+          className="rounded-2xl border border-emerald-700/30 bg-emerald-500/10 px-5 py-4 text-sm font-medium"
           role="status"
         >
           {t("contracts.customerAccepted", {
@@ -502,7 +506,7 @@ export function ContractReviewWorkspace(props: {
       ) : emailError ||
         (props.inviteDelivery && props.inviteDelivery.status === "failed") ? (
         <div
-          className="rounded-lg border-2 border-destructive/40 bg-destructive/10 p-4 text-sm"
+          className="rounded-2xl border border-destructive/40 bg-destructive/10 px-5 py-4 text-sm"
           role="status"
         >
           {t("contracts.emailNotDelivered", {
@@ -513,7 +517,7 @@ export function ContractReviewWorkspace(props: {
 
       {sendGaps.length ? (
         <div
-          className="space-y-3 rounded-lg border-2 border-amber-500/40 bg-amber-500/10 p-4 text-sm"
+          className="space-y-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-5 py-4 text-sm"
           role="status"
         >
           <p className="font-medium">
@@ -535,7 +539,7 @@ export function ContractReviewWorkspace(props: {
               {venues.length ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <select
-                    className="h-10 rounded-md border-2 border-rn-border-strong bg-background px-3 text-sm"
+                    className="h-10 rounded-xl border border-foreground/25 bg-background px-3 text-sm outline-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
                     value={propertyId}
                     onChange={(e) => setPropertyId(e.target.value)}
                   >
@@ -579,19 +583,21 @@ export function ContractReviewWorkspace(props: {
         />
       ) : null}
 
-      <div className={cn(RN_CARD_SHELL, "space-y-3 p-5")}>
-        <p className="text-xs font-semibold uppercase tracking-wide text-rn-text-slate">
+      <div className={cn(RN_CARD_SHELL, "space-y-3 !rounded-2xl !border-0 p-5 ring-1 ring-foreground/8 !shadow-none md:p-6")}>
+        <p className="inline-flex rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
           {t("contracts.contractOnly")}
         </p>
-        <label className="block text-sm font-medium">{t("contracts.specialTerms")}</label>
+        <label className="block text-sm font-semibold">{t("contracts.specialTerms")}</label>
         <Textarea
+          className="rounded-xl border-foreground/25 hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
           value={special}
           onChange={(e) => setSpecial(e.target.value)}
           disabled={!editable || !editing}
           rows={6}
         />
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2.5 text-sm font-medium">
           <input
+            className="size-4 accent-success"
             type="checkbox"
             checked={includeNotes}
             disabled={!editable || !editing}
@@ -601,20 +607,22 @@ export function ContractReviewWorkspace(props: {
         </label>
         <p className="text-xs text-muted-foreground">{t("contracts.notesStayPrivate")}</p>
         {includeNotes ? (
-          <Textarea value={facing} onChange={(e) => setFacing(e.target.value)} disabled={!editable || !editing} />
+          <Textarea className="rounded-xl border-foreground/25 hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20" value={facing} onChange={(e) => setFacing(e.target.value)} disabled={!editable || !editing} />
         ) : null}
       </div>
 
-      <section className="space-y-2">
-        <h2 className="font-heading text-lg font-bold">{t("contracts.history")}</h2>
-        <ul className="text-sm">
+      <section className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
+        <h2 className="border-b border-foreground/10 px-5 py-4 font-heading text-base font-bold md:px-6">
+          {t("contracts.history")}
+        </h2>
+        <ul className="divide-y divide-foreground/10 text-sm">
           {props.versions.map((version) => (
-            <li key={version.id}>
+            <li key={version.id} className="px-5 py-3 md:px-6">
               v{version.version_number} · {t(`contracts.status.${version.status}`)}
               {" "}
               ·{" "}
               <a
-                className="underline"
+                className="font-semibold text-success underline underline-offset-2 dark:!text-white"
                 href={`/api/contracts/staff-pdf?bookingId=${props.bookingId}&versionId=${version.id}`}
               >
                 {t("contracts.downloadPdf")}

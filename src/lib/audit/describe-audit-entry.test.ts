@@ -69,6 +69,34 @@ describe("describeAuditEntry", () => {
     expect(deleted.kind).toBe("deleted");
   });
 
+  it("shows what a deleted inquiry was", () => {
+    const deleted = describeAuditEntry(
+      {
+        ...base,
+        table_name: "booking_inquiries",
+        op: "DELETE",
+        old_data: {
+          event_type: "Privat",
+          preferred_event_date: "2027-03-13",
+          guest_count: 100,
+          estimated_total: 43000,
+          status: "new",
+          internal_notes: "not shown",
+        },
+      },
+      "nb",
+    );
+    expect(deleted.kind).toBe("deleted");
+    expect(deleted.table).toBe("booking_inquiries");
+    expect(deleted.summary.map((s) => s.fieldKey)).toEqual([
+      "event_type",
+      "preferred_event_date",
+      "guest_count",
+      "estimated_total",
+      "status",
+    ]);
+  });
+
   it("never throws on missing or unexpected data", () => {
     const d = describeAuditEntry(
       {

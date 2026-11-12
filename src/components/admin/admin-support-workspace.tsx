@@ -52,7 +52,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const kpiTileClass =
-  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-5 shadow-sm sm:p-6";
+  "flex min-h-[length:var(--app-tap-target-min)] flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 sm:p-6";
 
 const tableHeadClass = APP_TABLE_HEAD_CELL_ADMIN;
 const tableCellClass =
@@ -65,7 +65,7 @@ function SupportKpiTile({
   icon: Icon,
   active,
   onClick,
-  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconContainerClassName = "rounded-xl bg-accent p-2 dark:bg-white/10",
   iconClassName = "size-6 text-primary dark:text-white",
   valueClassName = "text-success",
 }: {
@@ -86,12 +86,12 @@ function SupportKpiTile({
       aria-pressed={active}
       className={cn(
         kpiTileClass,
-        "group w-full text-left transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
-        active && "border-success/40 bg-muted/20 ring-2 ring-success/25",
+        "group w-full text-left transition-colors hover:bg-muted/60 hover:ring-success/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
+        active && "bg-success/8 ring-2 ring-success/40",
       )}
     >
       <div className="mb-3 flex items-start justify-between gap-3">
-        <span className="dashboard-kpi-label min-w-0 break-words">{label}</span>
+        <span className="dashboard-kpi-label min-w-0 break-words !normal-case !tracking-normal">{label}</span>
         <div className={cn(iconContainerClassName, "shrink-0")}>
           <Icon className={iconClassName} aria-hidden />
         </div>
@@ -222,12 +222,12 @@ function SupportNoteThread({
             <li
               key={note.id}
               className={cn(
-                "rounded-md border-2 px-4 py-3",
+                "rounded-xl border px-4 py-3",
                 note.isInternal
                   ? "border-dashed border-muted-foreground/40 bg-muted/10 opacity-80"
                   : note.authorIsPlatformAdmin
                     ? "border-success/30 bg-success/5"
-                    : "border-rn-border-strong bg-muted/20",
+                    : "border-foreground/15 bg-muted/40",
               )}
             >
               <p className="whitespace-pre-wrap text-app-sm">{note.body}</p>
@@ -252,7 +252,7 @@ function SupportNoteThread({
             value={body}
             onChange={(event) => setBody(event.target.value)}
             rows={3}
-            className="w-full rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-4 py-3 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+            className="w-full rounded-xl border border-foreground/25 bg-background px-4 py-3 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
             placeholder={
               isInternal
                 ? t("admin.intern_oppfolging_ikke_synlig_for_kunden")
@@ -265,7 +265,7 @@ function SupportNoteThread({
             type="checkbox"
             checked={isInternal}
             onChange={(event) => setIsInternal(event.target.checked)}
-            className="size-4 rounded border-2 border-rn-border-strong"
+            className="size-4 rounded border border-foreground/25"
           />
           Intern notat (ikke synlig for kunde)
         </label>
@@ -316,7 +316,7 @@ function CreateSupportTicketForm({
   return (
     <form
       onSubmit={(event) => void handleSubmit(event)}
-      className="space-y-4 rounded-md border-2 border-rn-border-strong bg-muted/15 p-4 sm:p-5"
+      className="space-y-4 rounded-xl border border-foreground/25 bg-muted/15 p-4 sm:p-5"
     >
       <h3 className="app-section-title">{t("adminLabels.sections.createSupportTicket")}</h3>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -339,7 +339,7 @@ function CreateSupportTicketForm({
             value={subject}
             onChange={(event) => setSubject(event.target.value)}
             placeholder={t("admin.kort_beskrivelse_av_saken")}
-            className="box-border min-h-11 w-full rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-background px-4 py-2.5 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
+            className="box-border min-h-11 w-full rounded-xl border border-foreground/25 bg-background px-4 py-2.5 text-app-base outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25"
           />
         </div>
       </div>
@@ -445,16 +445,9 @@ export function AdminSupportWorkspace({
       : t("admin.venter_pa_kunde_eller_intern");
 
   return (
-    <div className="admin-page-workspace admin-support-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-8 pb-8">
-      <AdminQueuePanel
-        title={t("admin.apne_saker")}
-        items={data.openQueue}
-        emptyLabel={t("admin.ingen_apne_support_saker")}
-        onViewAll={showOpenTickets}
-      />
-
+    <div className="admin-page-workspace admin-support-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-6 pb-8">
       <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
+        <div className="dashboard-oversikt-hero px-5 py-5 sm:px-6 lg:px-6">
           <AppPageHeader
             className="mb-0"
             surface="default"
@@ -471,9 +464,11 @@ export function AdminSupportWorkspace({
             }
           />
         </div>
+      </div>
 
+      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
         <section
-          className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
+          className="px-5 py-5 sm:px-6 sm:py-6"
           aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
@@ -493,7 +488,7 @@ export function AdminSupportWorkspace({
               value={overview.open}
               caption={openCaption}
               icon={Inbox}
-              iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
+              iconContainerClassName="rounded-xl bg-rn-danger-soft p-2"
               iconClassName="size-6 text-rn-danger-ink"
               valueClassName={
                 overview.open > 0 ? "text-destructive" : "text-success"
@@ -506,7 +501,7 @@ export function AdminSupportWorkspace({
               value={overview.waiting}
               caption={waitingCaption}
               icon={Clock}
-              iconContainerClassName="rounded-md bg-amber-500/10 p-2"
+              iconContainerClassName="rounded-xl bg-amber-500/10 p-2"
               iconClassName="size-6 text-amber-800 dark:text-amber-300"
               valueClassName={
                 overview.waiting > 0
@@ -526,8 +521,17 @@ export function AdminSupportWorkspace({
             />
           </div>
         </section>
+      </div>
 
-        <section className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8">
+      <AdminQueuePanel
+        title={t("admin.apne_saker")}
+        items={data.openQueue}
+        emptyLabel={t("admin.ingen_apne_support_saker")}
+        onViewAll={showOpenTickets}
+      />
+
+      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
+        <section className="px-5 py-4 sm:px-6">
           <AdminSupportFilterBar
             embedded
             search={search}
@@ -539,7 +543,7 @@ export function AdminSupportWorkspace({
         </section>
 
         {showCreate ? (
-          <section className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8">
+          <section className="border-t border-foreground/10 px-5 py-4 sm:px-6">
             <CreateSupportTicketForm
               orgOptions={data.orgOptions}
               onCreated={() => {
@@ -553,11 +557,11 @@ export function AdminSupportWorkspace({
 
         <div
           id="support-ticket-list"
-          className="app-table -mx-px max-w-full overflow-x-auto border-t border-rn-border-strong/50 overscroll-x-contain"
+          className="app-table max-w-full overflow-x-auto border-t border-foreground/10 overscroll-x-contain"
         >
           <table className="w-full min-w-[52rem] text-left text-app-base">
             <thead>
-              <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+              <tr className="border-b border-foreground/15 bg-muted/50">
                 <th className={cn(tableHeadClass, "w-10")} />
                 <th className={tableHeadClass}>{t("adminLabels.fields.organization")}</th>
                 <th className={tableHeadClass}>{t("adminLabels.fields.subject")}</th>
@@ -568,14 +572,14 @@ export function AdminSupportWorkspace({
                 <th className={tableHeadClass}>{t("adminLabels.actions.actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-rn-border-strong/50">
+            <tbody className="divide-y divide-foreground/10">
               {filtered.map((ticket) => {
                 const expanded = expandedId === ticket.id;
                 return (
                   <Fragment key={ticket.id}>
                     <tr
                       className={cn(
-                        "transition-colors hover:bg-rn-surface-row-hover",
+                        "transition-colors hover:bg-muted/40",
                         ticketRowClass(ticket.status),
                       )}
                     >
@@ -585,7 +589,7 @@ export function AdminSupportWorkspace({
                           onClick={() =>
                             setExpandedId(expanded ? null : ticket.id)
                           }
-                          className="inline-flex size-8 items-center justify-center rounded-md border-2 border-rn-border-strong text-muted-foreground transition-colors hover:bg-muted/40"
+                          className="inline-flex size-8 items-center justify-center rounded-full border border-foreground/25 text-muted-foreground transition-colors hover:bg-muted/40"
                           aria-expanded={expanded}
                           aria-label={
                             expanded ? t("admin.skjul_notater") : t("admin.vis_notater")
@@ -681,7 +685,7 @@ export function AdminSupportWorkspace({
           </table>
         </div>
 
-        <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
+        <div className="border-t border-foreground/10 px-5 py-3 sm:px-6">
           <p className="app-text-secondary">
             {t("admin.viser_av_saker", {
               shown: filtered.length,
@@ -690,7 +694,7 @@ export function AdminSupportWorkspace({
           </p>
         </div>
 
-        <p className="border-t border-rn-border-strong/50 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
+        <p className="border-t border-foreground/10 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
           {t("admin.support_workspace_footer")}
         </p>
       </div>

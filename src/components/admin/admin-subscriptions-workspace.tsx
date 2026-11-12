@@ -50,10 +50,10 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const kpiTileClass =
-  "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
+  "flex flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 sm:p-6";
 
-const tableHeadClass = cn(APP_TABLE_HEAD_CELL, "text-left text-app-base");
-const tableCellClass = "px-6 py-5 align-middle md:px-8 md:py-6";
+const tableHeadClass = cn(APP_TABLE_HEAD_CELL, "px-4 py-3 text-left text-app-xs font-semibold tracking-wide text-muted-foreground md:px-5");
+const tableCellClass = "px-4 py-4 align-middle md:px-5";
 
 function SubscriptionsKpiTile({
   label,
@@ -62,7 +62,7 @@ function SubscriptionsKpiTile({
   icon: Icon,
   active,
   onClick,
-  iconContainerClassName = "rounded-md bg-accent p-2 dark:bg-white/10",
+  iconContainerClassName = "rounded-xl bg-accent p-2 dark:bg-white/10",
   iconClassName = "size-6 text-primary dark:text-white",
   valueClassName = "text-success",
 }: {
@@ -83,12 +83,12 @@ function SubscriptionsKpiTile({
       aria-pressed={active}
       className={cn(
         kpiTileClass,
-        "group w-full text-left transition-colors hover:border-success/40 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
-        active && "border-success/40 bg-muted/20 ring-2 ring-success/25",
+        "group w-full text-left transition-colors hover:bg-muted/60 hover:ring-success/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
+        active && "bg-success/8 ring-2 ring-success/40",
       )}
     >
       <div className="mb-3 flex items-start justify-between">
-        <span className="dashboard-kpi-label">{label}</span>
+        <span className="dashboard-kpi-label !normal-case !tracking-normal">{label}</span>
         <div className={iconContainerClassName}>
           <Icon className={iconClassName} aria-hidden />
         </div>
@@ -289,9 +289,9 @@ export function AdminSubscriptionsWorkspace({
         });
 
   return (
-    <div className="admin-page-workspace admin-subscriptions-dashboard mx-auto flex w-full min-w-0 flex-col gap-8 pb-8">
+    <div className="admin-page-workspace admin-subscriptions-dashboard mx-auto flex w-full min-w-0 flex-col gap-6 pb-8">
       <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
-        <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
+        <div className="dashboard-oversikt-hero px-5 py-5 sm:px-6 lg:px-6">
           <AppPageHeader
             className="mb-0"
             surface="default"
@@ -300,9 +300,11 @@ export function AdminSubscriptionsWorkspace({
             description={t("admin.abonnementsoperasjoner_stripe_kobling_og_effektiv_app_tilgan")}
           />
         </div>
+      </div>
 
+      <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
         <section
-          className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8"
+          className="px-5 py-5 sm:px-6 sm:py-6"
           aria-label={t("admin.nokkeltall")}
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
@@ -344,8 +346,10 @@ export function AdminSubscriptionsWorkspace({
             />
           </div>
         </section>
+      </div>
 
-        <section className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 md:px-6 lg:px-8">
+      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+        <section className="px-5 py-4 sm:px-6">
           <AdminSubscriptionFilterBar
             embedded
             search={search}
@@ -356,10 +360,10 @@ export function AdminSubscriptionsWorkspace({
           />
         </section>
 
-        <div className="app-table overflow-x-auto border-t border-rn-border-strong/50">
+        <div className="app-table overflow-x-auto border-t border-foreground/10">
           <table className="w-full min-w-[1024px] text-left text-app-base">
             <thead>
-              <tr className="border-b-2 border-rn-border-strong/50 bg-rn-surface-table-head">
+              <tr className="border-b border-foreground/15 bg-muted/50">
                 <th className={tableHeadClass}>{t("adminLabels.fields.organization")}</th>
                 <th className={tableHeadClass}>{t("admin.abonnement")}</th>
                 <th className={tableHeadClass}>{t("admin.plan")}</th>
@@ -370,7 +374,7 @@ export function AdminSubscriptionsWorkspace({
                 <th className={cn(tableHeadClass, "text-right")}>{t("admin.medlemmer")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-rn-border-strong/50">
+            <tbody className="divide-y divide-foreground/10">
               {filtered.map((row) => {
                 const access = resolveTenantAccess(
                   {
@@ -378,6 +382,7 @@ export function AdminSubscriptionsWorkspace({
                     subscription_status: row.subscriptionStatus,
                     current_period_end: row.periodEnd,
                     provider_subscription_id: row.providerSubscriptionId,
+                    billing_exempt: row.billingExempt,
                   },
                   { billingEnabled },
                 );
@@ -395,18 +400,28 @@ export function AdminSubscriptionsWorkspace({
                   <tr
                     key={row.id}
                     className={cn(
-                      "transition-colors hover:bg-rn-surface-row-hover",
+                      "cursor-pointer transition-colors hover:bg-muted/40",
                       row.isSuspended && "bg-destructive/5",
                     )}
+                    onClick={(event) => {
+                      const target = event.target as HTMLElement;
+                      // Ignore clicks from portalled menus (status select) and interactive controls.
+                      if (!event.currentTarget.contains(target)) return;
+                      if (target.closest("a, button, input, label, select, [role='combobox']")) {
+                        return;
+                      }
+                      router.push(adminRoutes.organizationDetail(row.id));
+                    }}
                   >
                     <td className="p-0 align-middle">
                       <AdminTableDetailLink
                         href={adminRoutes.organizationDetail(row.id)}
                         title={row.name}
                         subtitle={row.slug}
+                        className="px-4 md:px-5"
                       />
                       {row.isSuspended ? (
-                        <p className="px-[length:calc(var(--app-card-padding)*0.4)] pb-2 text-app-xs font-semibold text-destructive">
+                        <p className="px-4 pb-2 text-app-xs font-semibold text-destructive md:px-5">
                           Suspendert av admin
                         </p>
                       ) : null}
@@ -497,7 +512,7 @@ export function AdminSubscriptionsWorkspace({
           </table>
         </div>
 
-        <div className="border-t border-rn-border-strong/50 px-4 py-3 sm:px-5 md:px-6 lg:px-8">
+        <div className="border-t border-foreground/10 px-5 py-3 sm:px-6">
           <p className="app-text-secondary">
             {t("admin.viser_av_organisasjoner", {
               shown: filtered.length,
@@ -506,7 +521,7 @@ export function AdminSubscriptionsWorkspace({
           </p>
         </div>
 
-        <p className="border-t border-rn-border-strong/50 px-4 py-4 app-text-muted sm:px-5 md:px-6 lg:px-8">
+        <p className="border-t border-foreground/10 px-5 py-4 app-text-muted sm:px-6">
           {t("admin.subscriptions_workspace_footer")}
         </p>
       </div>

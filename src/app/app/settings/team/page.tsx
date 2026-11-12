@@ -4,6 +4,7 @@ import {
 } from "@/components/settings/team-members-section";
 import { getServerTranslation } from "@/i18n/server";
 import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
+import { listPendingInvitations } from "@/lib/organizations/invitations/queries";
 import { canManageMembers } from "@/lib/organizations/organization-permissions";
 import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-client";
 import { isUserRole } from "@/lib/validations";
@@ -71,6 +72,9 @@ export default async function TeamSettingsPage() {
     })
     .filter((m): m is TeamMemberRow => m !== null);
 
+  // The invitations table ships with its own migration; until it is applied the Team page keeps working.
+  const invitations = await listPendingInvitations(orgId).catch(() => []);
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -79,7 +83,7 @@ export default async function TeamSettingsPage() {
           {t("appPages.settings.team.description")}
         </p>
       </div>
-      <TeamMembersSection members={members} />
+      <TeamMembersSection members={members} invitations={invitations} />
     </div>
   );
 }

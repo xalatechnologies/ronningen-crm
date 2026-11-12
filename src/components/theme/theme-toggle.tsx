@@ -13,7 +13,7 @@ import {
 import { useTheme } from "@/hooks/use-theme";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Monitor, Moon, Sun } from "lucide-react";
+import { Monitor, Moon, Sun } from "lucide-react";
 
 const themeOptions: {
   value: ThemePreference;
@@ -52,8 +52,8 @@ export function ThemeToggle({
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            "inline-flex h-9 shrink-0 items-center gap-1 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment px-2 outline-none transition-colors sm:h-10 sm:gap-1.5 sm:px-2.5",
-            "hover:bg-muted/45 focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-foreground/20 bg-muted/60 outline-none transition-colors",
+            "hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             "data-popup-open:bg-muted/30",
             className,
           )}
@@ -61,18 +61,14 @@ export function ThemeToggle({
           title={current.label}
         >
           <CurrentIcon className="size-4 shrink-0 text-foreground" aria-hidden />
-          <ChevronDown
-            className="size-4 shrink-0 text-muted-foreground opacity-70"
-            aria-hidden
-          />
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
           sideOffset={8}
-          className="min-w-44 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-popover p-2 shadow-rn-card"
+          className="min-w-48 rounded-2xl border border-foreground/10 bg-popover p-2 shadow-lg"
         >
           <DropdownMenuGroup>
-            <DropdownMenuLabel className="px-2 py-1.5 font-heading text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <DropdownMenuLabel className="px-3 py-2 font-heading text-app-xs font-semibold text-muted-foreground">
               {t("common.theme.label")}
             </DropdownMenuLabel>
             <DropdownMenuRadioGroup
@@ -86,7 +82,7 @@ export function ThemeToggle({
                 <DropdownMenuRadioItem
                   key={value}
                   value={value}
-                  className="gap-2 font-heading text-app-sm font-medium"
+                  className="gap-2.5 rounded-lg px-3 py-2.5 font-heading text-app-sm font-medium"
                 >
                   <Icon className="size-4 shrink-0" aria-hidden />
                   {label}
@@ -106,10 +102,10 @@ export function ThemeToggle({
         role="radiogroup"
         aria-label={t("common.theme.chooseAria")}
       >
-        <p className="mb-2 font-heading text-app-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="mb-2 font-heading text-app-xs font-semibold text-muted-foreground">
           {t("common.theme.label")}
         </p>
-        <div className="grid w-full min-w-0 grid-cols-3 gap-1 rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-rn-surface-segment p-1">
+        <div className="grid w-full min-w-0 grid-cols-3 gap-1 rounded-xl bg-muted p-1">
           {options.map(({ value, label, icon: Icon }) => {
             const active = theme === value;
             return (
@@ -122,7 +118,7 @@ export function ThemeToggle({
                 title={label}
                 onClick={() => setTheme(value)}
                 className={cn(
-                  "flex min-w-0 flex-col items-center justify-center gap-1 rounded-[calc(var(--app-radius)-2px)] px-1 py-2 font-heading text-app-xs font-semibold transition-colors",
+                  "flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 py-2 font-heading text-app-xs font-semibold transition-colors",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   active
                     ? "bg-card text-foreground shadow-sm"

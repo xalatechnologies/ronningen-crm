@@ -50,7 +50,7 @@ export function ContractTemplateList(props: {
     <section className={cn(RN_CARD_SHELL, "space-y-3 p-5")}>
       <h2 className="font-heading text-lg font-bold">{t("contracts.template.listTitle")}</h2>
       <p className="text-sm text-muted-foreground">{t("contracts.template.listHint")}</p>
-      <ul className="divide-y divide-rn-border-strong/60 text-sm">
+      <ul className="divide-y divide-foreground/10 text-sm">
         {props.templates.map((template) => (
           <li key={template.id} className="flex items-center justify-between gap-3 py-2">
             <span className={template.id === props.activeTemplateId ? "font-semibold" : undefined}>

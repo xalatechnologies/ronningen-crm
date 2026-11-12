@@ -16,6 +16,7 @@ import {
 import { resolveTenantAppOrganization } from "@/lib/organizations/resolve-tenant-app-organization";
 import { isAllowedDuringTenantSetup } from "@/lib/organizations/tenant-setup";
 import { fetchTenantSetupStatus } from "@/lib/organizations/tenant-setup-queries";
+import { hasPortalAccount } from "@/lib/portal/context";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { cache } from "react";
 import { redirect } from "next/navigation";
@@ -142,6 +143,15 @@ const getTenantAppAccessCached = cache(async function getTenantAppAccessCached(
   };
 });
 
+/** Customers (portal accounts without a venue membership) belong in /portal, never in tenant onboarding. */
+async function redirectPortalOnlyUser(userId: string): Promise<void> {
+  const supabase = await createServerSupabaseClient();
+  const memberships = await fetchUserOrganizations(supabase, userId);
+  if (memberships.length === 0 && (await hasPortalAccount(supabase, userId))) {
+    redirect("/portal");
+  }
+}
+
 async function requireAuthenticatedUser(): Promise<{ userId: string }> {
   const supabase = await createServerSupabaseClient();
   const {
@@ -155,6 +165,7 @@ async function requireAuthenticatedUser(): Promise<{ userId: string }> {
 export async function requireTenantAppAccess(pathname: string): Promise<TenantAppAccessContext> {
   if (EXEMPT_PATH_PREFIXES.some((prefix) => pathname === prefix)) {
     const { userId } = await requireAuthenticatedUser();
+    if (pathname === TENANT_ONBOARDING_PATH) await redirectPortalOnlyUser(userId);
     return {
       userId,
       organizationId: null,
@@ -167,6 +178,7 @@ export async function requireTenantAppAccess(pathname: string): Promise<TenantAp
   if (!ctx) redirect("/auth/login");
 
   if (!ctx.organizationId && pathname !== TENANT_ONBOARDING_PATH) {
+    await redirectPortalOnlyUser(ctx.userId);
     redirect(TENANT_ONBOARDING_PATH);
   }
 

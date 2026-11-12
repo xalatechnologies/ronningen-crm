@@ -17,8 +17,8 @@ export type EditableInstallment = {
   amountNok: number;
 };
 
-const cell = "border border-rn-border-strong px-2 py-2 align-top";
-const head = cn(cell, "bg-muted/60 font-semibold");
+const cell = "border-b border-foreground/10 px-3 py-2.5 align-top";
+const head = cn(cell, "bg-muted/60 text-xs font-semibold text-muted-foreground");
 
 export function ContractPaymentPlan(props: {
   eventStart: string;
@@ -59,8 +59,8 @@ export function ContractPaymentPlan(props: {
   return (
     <div className="space-y-3">
       <p className="text-sm font-bold uppercase tracking-wide">Betalingsplan</p>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-rn-border-strong text-left text-sm">
+      <div className="overflow-x-auto rounded-xl ring-1 ring-foreground/10">
+        <table className="w-full border-collapse text-left text-sm">
           <thead>
             <tr>
               <th className={cn(head, "w-10")}>#</th>

@@ -9,6 +9,9 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { parseInquiryCommercial } from "@/lib/bookings/commercial-lines";
 import { sortBookingPackagesByCatalogOrder } from "@/lib/validations";
+import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
+import { canManageBookings } from "@/lib/role-access";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 export default async function NewBookingPage({
@@ -18,6 +21,8 @@ export default async function NewBookingPage({
 }) {
   const supabase = await createServerSupabaseClient();
   const orgId = await requireServerOrganizationId();
+  const { role } = await getCachedServerOrganizationContext();
+  if (!canManageBookings(role)) redirect("/app/bookings");
   const sp = await searchParams;
 
   let inquiryPrefill: InquiryPrefill | null = null;

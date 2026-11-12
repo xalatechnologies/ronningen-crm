@@ -9,7 +9,6 @@ import {
   setPackageContractTemplate,
 } from "@/lib/contracts/templates";
 import { AppPageHeader } from "@/components/layout/app-page-header";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { APP_DATA_AMOUNT, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import {
   Dialog,
@@ -233,7 +232,7 @@ function PricingCatalogFields({
         <div className="space-y-2">
           <Label>{t("common.fields.name")}</Label>
           <Input
-            className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
+            className="h-12 rounded-xl border border-foreground/25 bg-background px-4 text-base shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
             {...register("name")}
           />
           {formState.errors.name ? (
@@ -250,7 +249,7 @@ function PricingCatalogFields({
           </Label>
           <Textarea
             className={cn(
-              "rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25",
+              "rounded-xl border border-foreground/25 bg-background p-4 text-base shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20",
               kind === "packages" ? "min-h-36" : "min-h-28",
             )}
             placeholder={
@@ -269,7 +268,7 @@ function PricingCatalogFields({
         <div className="space-y-2">
           <Label>{t("pricing.priceNok")}</Label>
           <PriceInput
-            className="h-12 rounded-md border-2 border-rn-border-strong text-base focus-visible:border-success focus-visible:ring-success/25"
+            className="h-12 rounded-xl border border-foreground/25 bg-background px-4 text-base shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
             {...register("price")}
           />
           {formState.errors.price ? (
@@ -282,7 +281,7 @@ function PricingCatalogFields({
           <div className="space-y-2">
             <Label>{t("contracts.template.forPackage")}</Label>
             <select
-              className="h-12 w-full rounded-md border-2 border-rn-border-strong bg-background px-3 text-base"
+              className="h-12 w-full rounded-xl border border-foreground/25 bg-background px-4 text-base shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
               value={templateId}
               onChange={(e) => setTemplateId(e.target.value)}
             >
@@ -306,10 +305,10 @@ function PricingCatalogFields({
           <span>{t("pricing.activeInCatalog")}</span>
         </label>
         <DialogFooter className="gap-2 sm:justify-end">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="outline" className="rounded-xl shadow-none" onClick={onClose}>
             {t("common.actions.cancel")}
           </Button>
-          <Button type="submit" variant="success" size="cta">
+          <Button type="submit" variant="success" size="cta" className="rounded-xl shadow-none">
             {isEdit ? t("common.actions.save") : t("common.actions.create")}
           </Button>
         </DialogFooter>
@@ -331,7 +330,7 @@ function PricingCatalogDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-md" showCloseButton>
+      <DialogContent className="max-w-md rounded-2xl border border-foreground/10" showCloseButton>
         {open ? (
           <PricingCatalogFields
             key={row?.id ?? `new-${kind}`}
@@ -399,10 +398,10 @@ export function PricingSection({
 
   const catalogActionButtonClass = (isPopular: boolean) =>
     cn(
-      "rounded-md p-2.5 transition-colors",
+      "rounded-lg p-2.5 transition-colors",
       isPopular
-        ? "text-white/70 hover:bg-white/10 hover:text-white"
-        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+        ? "bg-white/10 text-white hover:bg-white/20 hover:text-white"
+        : "bg-muted text-foreground hover:bg-muted/70 hover:text-foreground",
     );
 
   const sortedPackages = useMemo(
@@ -424,10 +423,10 @@ export function PricingSection({
   }, [sortedPackages]);
 
   const packageCardLight = cn(
-    "relative flex min-h-[420px] flex-col overflow-hidden rounded-md border-2 border-rn-border-strong bg-card p-9 shadow-sm transition-all sm:p-10 md:p-11 lg:p-12",
+    "relative flex flex-col overflow-hidden rounded-2xl bg-card p-7 ring-1 ring-foreground/20 transition-all sm:p-8 lg:min-h-[420px]",
   );
   const packageCardDark = cn(
-    "relative flex min-h-[420px] flex-col overflow-hidden rounded-md border-2 border-stone-500 bg-stone-900 p-9 text-white shadow-xl ring-1 ring-white/15 sm:p-10 md:p-11 lg:p-12",
+    "relative flex flex-col overflow-hidden rounded-2xl bg-[#1a4331] p-7 text-white sm:p-8 lg:min-h-[420px]",
   );
 
   return (
@@ -435,20 +434,14 @@ export function PricingSection({
       <div className="pricing-page-workspace flex w-full flex-col gap-8">
       {loadError ? (
         <div
-          className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-app-base"
+          className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive md:text-app-base"
           role="alert"
         >
           {t("pricing.loadError", { error: loadError })}
         </div>
       ) : null}
-      <div className={cn("min-w-0 overflow-x-hidden", RN_CARD_SHELL)}>
-        <div
-          className={cn(
-            "pricing-page-header border-b-2 border-rn-border-strong bg-card/80",
-            "px-[length:var(--app-card-padding)] sm:px-[length:calc(var(--app-card-padding)+0.25rem)] md:px-[length:calc(var(--app-card-padding)+0.5rem)] lg:px-[length:calc(var(--app-card-padding)+0.75rem)]",
-            "py-6 md:py-7",
-          )}
-        >
+      <div className="flex min-w-0 flex-col gap-8">
+        <div className="pricing-page-header">
           <AppPageHeader
             className="mb-0"
             surface="default"
@@ -457,7 +450,7 @@ export function PricingSection({
               <>
               <Link
                 href="/app/settings/kontrakter#mal"
-                className={cn(buttonVariants({ variant: "outline", size: "cta" }))}
+                className={cn(buttonVariants({ variant: "outline", size: "cta" }), "w-full rounded-xl shadow-none sm:w-auto")}
               >
                 {t("contracts.template.title")}
               </Link>
@@ -468,7 +461,7 @@ export function PricingSection({
                 title={
                   !canEdit ? t("pricing.requiresFinanceAccess") : undefined
                 }
-                className={cn(buttonVariants({ variant: "success", size: "cta" }))}
+                className={cn(buttonVariants({ variant: "success", size: "cta" }), "w-full rounded-xl shadow-none sm:w-auto")}
               >
                 <Plus className="size-5" aria-hidden />
                 {t("pricing.newPackage")}
@@ -477,17 +470,17 @@ export function PricingSection({
             }
           />
         </div>
-        <div className="min-w-0 px-[length:var(--app-card-padding)] py-[length:calc(var(--app-card-padding)*0.85)] sm:px-[length:calc(var(--app-card-padding)+0.25rem)] sm:py-[length:calc(var(--app-card-padding)*0.95)] md:px-[length:calc(var(--app-card-padding)+0.5rem)] md:py-[length:var(--app-card-padding)] lg:px-[length:calc(var(--app-card-padding)+0.75rem)]">
+        <div className="min-w-0">
           <h2 className="pricing-section-title app-section-title mb-6 md:mb-8">
             {t("pricing.packageTiers")}
           </h2>
-          <div className="grid min-w-0 grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 md:gap-8 xl:grid-cols-3 xl:gap-10">
+          <div className="grid min-w-0 grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 md:gap-8 xl:grid-cols-3 xl:gap-8">
         {sortedPackages.map((pkg) => {
           const { tagline, features } = parsePackageDescription(pkg.description);
           const isPopular = pkg.id === popularId;
           const priceOnRequest = pkg.price <= 0;
           const checkClass = isPopular
-            ? "text-amber-400/90"
+            ? "text-[#85b098]"
             : "text-success";
           return (
             <div
@@ -498,48 +491,52 @@ export function PricingSection({
                 isPopular && "z-1 md:scale-[1.02]",
               )}
             >
-              {isPopular ? (
-                <span className="absolute top-4 right-4 z-10 rounded-full bg-amber-500 px-2.5 py-1 pricing-popular-badge font-bold tracking-wide text-stone-900 shadow-sm">
-                  {t("pricing.mostPopular")}
-                </span>
-              ) : null}
-              {canEdit ? (
-                <div className="absolute top-4 left-4 z-10 flex items-center gap-0.5">
-                  <button
-                    type="button"
-                    className={catalogActionButtonClass(isPopular)}
-                    title={t("pricing.editPackage")}
-                    onClick={() => setPackageDialog({ open: true, row: pkg })}
-                    aria-label={t("pricing.editPackageAria", { name: pkg.name })}
-                  >
-                    <Pencil className="size-5" aria-hidden />
-                  </button>
-                  <button
-                    type="button"
-                    className={cn(
-                      catalogActionButtonClass(isPopular),
-                      !isPopular && "hover:text-destructive",
-                      isPopular && "hover:text-red-300",
-                    )}
-                    title={t("pricing.deleteServiceTitleAttr")}
-                    onClick={() =>
-                      setDeleteTarget({
-                        kind: "packages",
-                        id: pkg.id,
-                        name: pkg.name,
-                      })
-                    }
-                    aria-label={t("pricing.deletePackageAria", { name: pkg.name })}
-                  >
-                    <Trash2 className="size-5" aria-hidden />
-                  </button>
-                </div>
-              ) : null}
-              <div className={cn("pr-2", canEdit && "pl-[4.75rem]")}>
+              <div className="mb-5 flex min-h-10 items-center justify-between gap-2">
+                {canEdit ? (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      className={catalogActionButtonClass(isPopular)}
+                      title={t("pricing.editPackage")}
+                      onClick={() => setPackageDialog({ open: true, row: pkg })}
+                      aria-label={t("pricing.editPackageAria", { name: pkg.name })}
+                    >
+                      <Pencil className="size-5" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      className={cn(
+                        catalogActionButtonClass(isPopular),
+                        !isPopular && "hover:text-destructive",
+                        isPopular && "hover:text-red-300",
+                      )}
+                      title={t("pricing.deleteServiceTitleAttr")}
+                      onClick={() =>
+                        setDeleteTarget({
+                          kind: "packages",
+                          id: pkg.id,
+                          name: pkg.name,
+                        })
+                      }
+                      aria-label={t("pricing.deletePackageAria", { name: pkg.name })}
+                    >
+                      <Trash2 className="size-5" aria-hidden />
+                    </button>
+                  </div>
+                ) : (
+                  <span />
+                )}
+                {isPopular ? (
+                  <span className="rounded-full bg-amber-500 px-2.5 py-1 pricing-popular-badge font-bold tracking-wide text-stone-900">
+                    {t("pricing.mostPopular")}
+                  </span>
+                ) : null}
+              </div>
+              <div>
                 <span
                   className={cn(
                     "pricing-package-tier-label mb-3 block font-semibold tracking-wider uppercase",
-                    isPopular ? "text-stone-400" : "text-muted-foreground",
+                    isPopular ? "text-[#b9d3c4]" : "text-muted-foreground",
                   )}
                 >
                   {pkg.name.toUpperCase()}
@@ -569,7 +566,7 @@ export function PricingSection({
                   <p
                     className={cn(
                       "pricing-package-body mt-3 leading-relaxed",
-                      isPopular ? "text-stone-300" : "text-muted-foreground",
+                      isPopular ? "text-[#d6e6dc]" : "text-muted-foreground",
                     )}
                   >
                     {tagline}
@@ -578,15 +575,15 @@ export function PricingSection({
               </div>
               <div
                 className={cn(
-                  "my-5 shrink-0 border-t-2",
-                  isPopular ? "border-white/30" : "border-rn-border-strong/70",
+                  "my-5 shrink-0 border-t",
+                  isPopular ? "border-white/20" : "border-foreground/12",
                 )}
               />
               {features.length > 0 ? (
                 <ul
                   className={cn(
                     "pricing-package-list mb-8 flex-1 divide-y leading-snug",
-                    isPopular ? "divide-white/20" : "divide-rn-border-strong/55",
+                    isPopular ? "divide-white/15" : "divide-foreground/8",
                   )}
                 >
                   {features.map((line, i) => (
@@ -594,7 +591,7 @@ export function PricingSection({
                       key={`${pkg.id}-${i}`}
                       className={cn(
                         "flex gap-3 py-3.5 first:pt-0 last:pb-0",
-                        isPopular ? "text-stone-200" : "text-foreground",
+                        isPopular ? "text-white" : "text-foreground",
                       )}
                     >
                       <CheckCircle2
@@ -612,7 +609,7 @@ export function PricingSection({
                 <p
                   className={cn(
                     "pricing-package-body mb-8 flex-1 leading-relaxed",
-                    isPopular ? "text-stone-400" : "text-muted-foreground",
+                    isPopular ? "text-[#b9d3c4]" : "text-muted-foreground",
                   )}
                 >
                   {t("pricing.emptyFeaturesHint")}
@@ -623,8 +620,8 @@ export function PricingSection({
         })}
       </div>
 
-              <div className="mt-8 border-t-2 border-rn-border-strong/80 pt-8 sm:mt-10 sm:pt-10">
-                <div className="flex flex-col gap-4 border-b-2 border-rn-border-strong pb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:pb-8">
+              <div className="mt-10 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
+                <div className="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:px-8 md:py-6">
                   <h3 className="pricing-services-title app-section-title">
                     {t("pricing.addOnServices")}
                   </h3>
@@ -637,7 +634,7 @@ export function PricingSection({
                     }
                     className={cn(
                       buttonVariants({ variant: "success", size: "cta" }),
-                      "shrink-0 self-start sm:self-auto",
+                      "shrink-0 self-start rounded-xl shadow-none sm:self-auto",
                     )}
                   >
                     <Plus className="size-5" aria-hidden />
@@ -652,7 +649,7 @@ export function PricingSection({
                 ) : (
                   <Table>
             <TableHeader>
-              <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
+              <TableRow className="border-0 bg-muted/60 hover:bg-muted/60">
                 <TableHead className={pricingTableHeadClass}>{t("pricing.tableService")}</TableHead>
                 <TableHead className={pricingTableHeadClass}>{t("pricing.tablePrice")}</TableHead>
                 <TableHead className={pricingTableHeadClass}>{t("pricing.tableStatus")}</TableHead>
@@ -669,13 +666,13 @@ export function PricingSection({
                 return (
                   <TableRow
                     key={svc.id}
-                    className="border-rn-border-strong/40 hover:bg-rn-surface-row-hover"
+                    className="border-foreground/6 hover:bg-muted/50"
                   >
                     <TableCell
                       className={cn(pricingTableCellClass, "whitespace-normal")}
                     >
                       <div className="flex items-center gap-4">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-success/20 bg-rn-surface-gradient-from text-success md:size-12">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-success md:size-12">
                           <Icon className="size-5 md:size-7" aria-hidden />
                         </div>
                         <span className={cn("pricing-service-name", APP_DATA_PRIMARY, "text-success")}>
@@ -705,9 +702,9 @@ export function PricingSection({
                     <TableCell className={pricingTableCellClass}>
                       <span
                         className={cn(
-                          "pricing-service-status-pill inline-flex rounded-full px-2.5 py-1 font-bold tracking-wide uppercase md:px-3 md:py-1.5",
+                          "pricing-service-status-pill inline-flex rounded-full px-2.5 py-1 font-semibold md:px-3 md:py-1.5",
                           svc.active
-                            ? "border border-success/25 bg-success/15 text-success"
+                            ? "bg-success/15 text-success"
                             : "bg-muted text-muted-foreground",
                         )}
                       >
@@ -724,7 +721,7 @@ export function PricingSection({
                           type="button"
                           variant="ghost"
                           size="icon-sm"
-                          className="size-11 rounded-md text-muted-foreground disabled:opacity-40 md:size-12"
+                          className="size-11 rounded-xl text-foreground disabled:opacity-40 md:size-12"
                           disabled={!canEdit}
                           title={
                             !canEdit
@@ -742,7 +739,7 @@ export function PricingSection({
                           type="button"
                           variant="ghost"
                           size="icon-sm"
-                          className="size-11 rounded-md text-muted-foreground hover:text-destructive disabled:opacity-40 md:size-12"
+                          className="size-11 rounded-xl text-foreground hover:text-destructive disabled:opacity-40 md:size-12"
                           disabled={!canEdit}
                           title={
                             !canEdit

@@ -5,8 +5,6 @@ import { InvoiceSegmentFilter } from "@/components/invoices/invoice-segment-filt
 import { InvoicesWorkspace } from "@/components/invoices/invoices-workspace";
 import { useTranslation } from "@/i18n/client";
 import { localCalendarTodayYmd, type InvoiceRowFilter } from "@/lib/invoice-row-utils";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
-import { cn } from "@/lib/utils";
 import { usePageSearch } from "@/providers/page-search-provider";
 import { useMemo, useState } from "react";
 
@@ -30,21 +28,15 @@ export function InvoicesShell({
     <div className="invoices-page-workspace mx-auto flex w-full flex-col gap-8 pb-8">
       {loadError ? (
         <div
-          className="invoices-load-error rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive"
+          className="invoices-load-error rounded-xl bg-destructive/10 px-4 py-3 text-destructive"
           role="alert"
         >
           Kunne ikke laste fakturaer: {loadError}
         </div>
       ) : null}
 
-      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <div
-          className={cn(
-            "invoices-page-header border-b-2 border-rn-border-strong bg-card/80",
-            "px-[length:var(--app-card-padding)] sm:px-[length:calc(var(--app-card-padding)+0.25rem)] md:px-[length:calc(var(--app-card-padding)+0.5rem)] lg:px-[length:calc(var(--app-card-padding)+0.75rem)]",
-            "py-6 md:py-7",
-          )}
-        >
+      <div className="flex min-w-0 flex-col gap-6">
+        <div className="invoices-page-header">
           <AppPageHeader
             className="mb-0"
             surface="default"
@@ -64,13 +56,15 @@ export function InvoicesShell({
           />
         </div>
 
-        <InvoicesWorkspace
-          rows={rows}
-          filter={filter}
-          searchQuery={query}
-          todayYmd={todayYmd}
-          canMarkInvoicesPaid={canMarkInvoicesPaid}
-        />
+        <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
+          <InvoicesWorkspace
+            rows={rows}
+            filter={filter}
+            searchQuery={query}
+            todayYmd={todayYmd}
+            canMarkInvoicesPaid={canMarkInvoicesPaid}
+          />
+        </div>
       </div>
     </div>
   );

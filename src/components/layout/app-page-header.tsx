@@ -47,7 +47,7 @@ export function AppPageHeader({
     <Link
       href={backLink.href}
       className={cn(
-        "admin-inline-link group mb-3 inline-flex w-fit max-w-full items-center gap-1.5 rounded-md border-2 border-rn-border-strong bg-muted/35 px-3 py-1.5 text-app-sm font-semibold text-foreground shadow-sm transition-all",
+        "admin-inline-link group mb-3 inline-flex w-fit max-w-full items-center gap-1.5 rounded-xl border border-foreground/25 bg-card px-3 py-1.5 text-app-sm font-semibold text-foreground transition-all",
         "hover:border-success/45 hover:bg-success/10 hover:text-success",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
       )}
@@ -95,7 +95,7 @@ export function AppPageHeader({
     return (
       <header
         className={cn(
-          "flex max-w-full min-w-0 flex-col overflow-x-hidden overflow-y-visible rounded-[length:var(--app-radius)] border-2 border-rn-border-strong bg-card shadow-rn-card",
+          "flex max-w-full min-w-0 flex-col overflow-x-hidden overflow-y-visible rounded-2xl bg-card ring-1 ring-foreground/8",
           compact ? "mb-0" : "mb-8",
           className,
         )}
@@ -126,7 +126,7 @@ export function AppPageHeader({
         {toolbar ? (
           <div
             className={cn(
-              "min-w-0 max-w-full overflow-x-auto border-t border-rn-border-strong/50 px-[length:var(--app-card-padding)] py-[length:calc(var(--app-card-padding)*0.75)] sm:px-[length:calc(var(--app-card-padding)+0.25rem)] sm:py-[length:calc(var(--app-card-padding)*0.85)] md:px-[length:calc(var(--app-card-padding)+0.5rem)] md:py-[length:calc(var(--app-card-padding)*0.9)] lg:px-[length:calc(var(--app-card-padding)+0.75rem)]",
+              "min-w-0 max-w-full overflow-x-auto border-t border-foreground/10 px-[length:var(--app-card-padding)] py-[length:calc(var(--app-card-padding)*0.75)] sm:px-[length:calc(var(--app-card-padding)+0.25rem)] sm:py-[length:calc(var(--app-card-padding)*0.85)] md:px-[length:calc(var(--app-card-padding)+0.5rem)] md:py-[length:calc(var(--app-card-padding)*0.9)] lg:px-[length:calc(var(--app-card-padding)+0.75rem)]",
               toolbarClassName,
             )}
           >

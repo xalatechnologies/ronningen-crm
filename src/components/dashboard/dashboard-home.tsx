@@ -2,10 +2,6 @@
 
 import type { DashboardHomeData } from "@/components/dashboard/types";
 import { AppPageHeader } from "@/components/layout/app-page-header";
-import {
-  chartBarFillClass,
-  chartEmptyBarClass,
-} from "@/lib/charts/chart-theme";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Select,
@@ -25,17 +21,18 @@ import {
 import { useTranslation } from "@/i18n/client";
 import { defaultCalendarYearOptions } from "@/lib/calendar/year-range";
 import { statusLabel } from "@/lib/navigation/nav-labels";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import {
   AlertCircle,
+  ArrowUpRight,
   BellDot,
   CalendarCheck,
   CheckCircle2,
   Clock,
-  ExternalLink,
-  LayoutDashboard,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -197,112 +194,133 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
         ? t("dashboard.venuesInSystem", { count: kpis.propertyCount })
         : t("dashboard.venuesInSystemPlural", { count: kpis.propertyCount });
 
-  const kpiTileClass =
-    "flex flex-col justify-between rounded-md border border-rn-border-strong/55 bg-background p-6 shadow-sm";
+  const tile =
+    "flex min-h-44 flex-col justify-between gap-6 rounded-2xl p-6 ring-1 ring-foreground/8";
+  const label =
+    "text-[13px] font-semibold tracking-wide text-muted-foreground";
+  const value =
+    "font-heading text-[clamp(28px,2.6vw,40px)] leading-none font-bold tracking-[-0.03em] tabular-nums";
+  const card = "overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8";
+
+  const deltaUp =
+    kpis.invoicedMonthDeltaPct != null && kpis.invoicedMonthDeltaPct >= 0;
+  const DeltaIcon = deltaUp ? TrendingUp : TrendingDown;
+  const paidPct = Math.min(
+    100,
+    Math.max(0, Math.round(kpis.paidShareOfInvoicedPct ?? 0)),
+  );
+  const chartMax = Math.max(0, ...chartMonthAmounts);
 
   return (
-    <div className="mx-auto flex w-full flex-col gap-8 pb-8">
-      <div className={cn("dashboard-oversikt-card overflow-hidden", RN_CARD_SHELL)}>
-        <div className="dashboard-oversikt-hero px-4 py-4 sm:px-5 sm:py-5 lg:px-6">
-          <AppPageHeader
-            className="mb-0"
-            surface="default"
-            title={t("dashboard.title")}
-          />
+    <div className="mx-auto flex w-full flex-col gap-6 pb-8 lg:gap-8">
+      <AppPageHeader
+        className="mb-0"
+        surface="default"
+        title={t("dashboard.title")}
+      />
+
+      {data.loadError ? (
+        <div role="alert">
+          <div className="rounded-xl bg-destructive/10 px-4 py-3 text-app-sm text-destructive md:text-app-base">
+            {t("dashboard.loadError", { error: data.loadError })}
+          </div>
         </div>
-        {data.loadError ? (
-          <div
-            className="border-t border-rn-border-strong/50 px-4 py-4 sm:px-5 lg:px-6"
-            role="alert"
-          >
-            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-app-sm text-destructive md:text-app-base">
-              {t("dashboard.loadError", { error: data.loadError })}
+      ) : null}
+
+      <section aria-label={t("dashboard.kpiAria")}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className={cn(tile, "bg-[#1a4331] text-white ring-0")}>
+            <div className="flex items-center justify-between gap-3">
+              <span className={cn(label, "text-[#b9d3c4]")}>
+                {t("dashboard.totalInvoiced")}
+              </span>
+              <Wallet className="size-5 text-[#85b098]" aria-hidden />
+            </div>
+            <div className="flex flex-col gap-3">
+              <p className={cn(value, "text-white")}>
+                {formatCurrency(kpis.totalInvoicedNok)}
+              </p>
+              <p className="text-[13px] leading-snug text-[#b9d3c4]">
+                {t("dashboard.kpiBookingsScopeAllYears")}
+              </p>
+              <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-xs font-semibold text-white">
+                {kpis.invoicedMonthDeltaPct != null ? (
+                  <DeltaIcon className="size-3.5" aria-hidden />
+                ) : null}
+                {formatPctDelta(kpis.invoicedMonthDeltaPct)}
+              </p>
             </div>
           </div>
-        ) : null}
-        <section
-          className="border-t border-rn-border-strong/50 px-4 py-5 sm:px-5 sm:py-6 md:px-6 lg:px-8 md:py-6"
-          aria-label={t("dashboard.kpiAria")}
-        >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <div className={kpiTileClass}>
-              <div className="mb-3 flex items-start justify-between">
-                <span className="dashboard-kpi-label">{t("dashboard.totalInvoiced")}</span>
-                <div className="rounded-md bg-accent p-2 dark:bg-white/10">
-                  <LayoutDashboard className="size-6 text-primary dark:text-white" aria-hidden />
-                </div>
-              </div>
-              <div>
-                <p className="dashboard-kpi-value text-success">
-                  {formatCurrency(kpis.totalInvoicedNok)}
-                </p>
-                <p className="dashboard-kpi-caption mt-3 text-muted-foreground">
-                  {t("dashboard.kpiBookingsScopeAllYears")}
-                </p>
-                <p className="dashboard-kpi-caption mt-1 text-muted-foreground">
-                  {formatPctDelta(kpis.invoicedMonthDeltaPct)}
-                </p>
-              </div>
-            </div>
 
-            <div className={kpiTileClass}>
-              <div className="mb-3 flex items-start justify-between">
-                <span className="dashboard-kpi-label">{t("dashboard.paid")}</span>
-                <div className="rounded-md bg-accent p-2 dark:bg-white/10">
-                  <CheckCircle2 className="size-6 text-primary dark:text-white" aria-hidden />
-                </div>
-              </div>
-              <div>
-                <p className="dashboard-kpi-value text-success">
-                  {formatCurrency(kpis.totalPaidNok)}
-                </p>
-                <p className="dashboard-kpi-caption mt-3 text-muted-foreground">
-                  {paidShareLabel}
-                </p>
-              </div>
+          <div className={cn(tile, "bg-card")}>
+            <div className="flex items-center justify-between gap-3">
+              <span className={label}>{t("dashboard.paid")}</span>
+              <CheckCircle2 className="size-5 text-success" aria-hidden />
             </div>
-
-            <div className={kpiTileClass}>
-              <div className="mb-3 flex items-start justify-between">
-                <span className="dashboard-kpi-label">{t("dashboard.unpaid")}</span>
-                <div className="rounded-md bg-rn-danger-soft p-2">
-                  <Clock className="size-6 text-rn-danger-ink" aria-hidden />
-                </div>
+            <div className="flex flex-col gap-3">
+              <p className={cn(value, "text-foreground")}>
+                {formatCurrency(kpis.totalPaidNok)}
+              </p>
+              <div
+                className="h-2 overflow-hidden rounded-full bg-muted"
+                aria-hidden
+              >
+                <div
+                  className="h-full rounded-full bg-success"
+                  style={{ width: `${paidPct}%` }}
+                />
               </div>
-              <div>
-                <p className="dashboard-kpi-value text-destructive">
-                  {formatCurrency(kpis.totalUnpaidNok)}
-                </p>
-                <p className="dashboard-kpi-caption mt-3 flex items-center gap-1 text-destructive">
+              <p className="text-[13px] leading-snug text-muted-foreground">
+                {paidShareLabel}
+              </p>
+            </div>
+          </div>
+
+          <div className={cn(tile, "bg-rn-danger-surface/35")}>
+            <div className="flex items-center justify-between gap-3">
+              <span className={label}>{t("dashboard.unpaid")}</span>
+              <Clock className="size-5 text-destructive" aria-hidden />
+            </div>
+            <div className="flex flex-col gap-3">
+              <p className={cn(value, "text-destructive")}>
+                {formatCurrency(kpis.totalUnpaidNok)}
+              </p>
+              <p
+                className={cn(
+                  "flex items-center gap-1.5 text-[13px] leading-snug",
+                  kpis.overdueUnpaidCount > 0
+                    ? "font-medium text-destructive"
+                    : "text-muted-foreground",
+                )}
+              >
+                {kpis.overdueUnpaidCount > 0 ? (
                   <AlertCircle className="size-4 shrink-0" aria-hidden />
-                  {overdueLabel}
-                </p>
-              </div>
-            </div>
-
-            <div className={kpiTileClass}>
-              <div className="mb-3 flex items-start justify-between">
-                <span className="dashboard-kpi-label">{t("dashboard.bookings")}</span>
-                <div className="rounded-md bg-accent p-2 dark:bg-white/10">
-                  <CalendarCheck className="size-6 text-primary dark:text-white" aria-hidden />
-                </div>
-              </div>
-              <div>
-                <p className="dashboard-kpi-value text-success">
-                  {formatNumber(kpis.activeBookingCount)}
-                </p>
-                <p className="dashboard-kpi-caption mt-3 text-muted-foreground">
-                  {venuesLabel}
-                </p>
-              </div>
+                ) : null}
+                {overdueLabel}
+              </p>
             </div>
           </div>
-        </section>
-      </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className={cn("lg:col-span-2 overflow-hidden", RN_CARD_SHELL)}>
-          <div className="flex flex-col gap-3 border-b-2 border-rn-border-strong px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:px-8 md:py-6">
+          <div className={cn(tile, "bg-card")}>
+            <div className="flex items-center justify-between gap-3">
+              <span className={label}>{t("dashboard.bookings")}</span>
+              <CalendarCheck className="size-5 text-success" aria-hidden />
+            </div>
+            <div className="flex flex-col gap-3">
+              <p className={cn(value, "text-foreground")}>
+                {formatNumber(kpis.activeBookingCount)}
+              </p>
+              <p className="text-[13px] leading-snug text-muted-foreground">
+                {venuesLabel}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+        <div className={cn("lg:col-span-2", card)}>
+          <div className="flex flex-col gap-3 px-6 pt-6 sm:flex-row sm:items-start sm:justify-between sm:gap-4 md:px-8 md:pt-7">
             <div>
               <h2 className="app-section-title">
                 {t("dashboard.monthlyRevenue")}
@@ -317,10 +335,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
             >
               <SelectTrigger
                 aria-label={t("dashboard.selectYearAria")}
-                className={cn(
-                  "h-12 min-w-[8.5rem] rounded-md border-2 border-rn-border-strong bg-rn-surface-segment px-4 font-heading text-app-base font-semibold shadow-rn-segment-inset",
-                  "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 data-popup-open:border-rn-accent-border",
-                )}
+                className="h-10 min-w-[7.5rem] rounded-xl border-0 bg-muted px-4 font-heading text-app-base font-semibold shadow-none focus-visible:ring-2 focus-visible:ring-success/40"
               >
                 <SelectValue />
               </SelectTrigger>
@@ -342,74 +357,73 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               </SelectContent>
             </Select>
           </div>
-          <div className="border-t border-rn-border-strong/35 px-3 py-4 md:px-5 md:py-5">
+
+          <div className="px-4 pt-5 pb-6 md:px-8 md:pb-8">
             <div
-              className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between"
+              className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between"
               aria-hidden
             >
-              <span className="text-app-xs font-semibold text-foreground md:text-app-sm">
+              <span className="text-app-sm font-semibold text-foreground">
                 {t("dashboard.revenuePerMonth", { year: chartYear })}
               </span>
-              <span className="text-[11px] tabular-nums text-muted-foreground md:text-app-xs">
+              <span className="text-app-xs tabular-nums text-muted-foreground">
                 {t("dashboard.highest", {
-                  amount: formatCurrency(Math.max(...chartMonthAmounts, 0)),
+                  amount: formatCurrency(chartMax),
                 })}
               </span>
             </div>
             <div
-              className="flex h-[min(20rem,calc(100vw-4rem))] min-h-[13.5rem] w-full items-stretch gap-0.5 sm:gap-1 md:gap-1.5"
+              className="flex h-64 w-full items-stretch gap-1.5 md:h-72 md:gap-2.5"
               role="img"
               aria-label={t("dashboard.chartAria", { year: chartYear })}
             >
               {chartBars.map((bar) => (
                 <div
                   key={bar.key}
-                  className="flex h-full min-h-0 min-w-0 flex-1 flex-col justify-end"
+                  className="group flex h-full min-w-0 flex-1 flex-col justify-end gap-1.5"
+                  title={`${bar.label}: ${formatCurrency(bar.amount)}`}
                 >
-                  <div className="flex min-h-0 flex-1 flex-col justify-end gap-1">
-                    <span
-                      className={cn(
-                        "line-clamp-2 min-h-8 px-px text-center text-[9px] font-semibold leading-tight tracking-tight tabular-nums sm:text-[10px] md:min-h-0 md:text-[11px]",
-                        bar.hasValue
-                          ? "text-foreground"
-                          : "text-muted-foreground",
-                      )}
-                      title={`${bar.label}: ${formatCurrency(bar.amount)}`}
-                    >
-                      {formatNokChartAxis(bar.amount)}
-                    </span>
-                    <div className="relative flex min-h-[7rem] flex-1 flex-col justify-end border-b-2 border-rn-border-strong/55 sm:min-h-[8.5rem] md:min-h-[10rem]">
-                      {bar.hasValue ? (
-                        <div
-                          className={cn(
-                            "w-full min-h-[6px] rounded-t-md transition-colors",
-                            chartBarFillClass(bar.highlight),
-                          )}
-                          style={{ height: `${bar.heightPct}%` }}
-                          title={`${bar.label}: ${formatCurrency(bar.amount)}`}
-                        />
-                      ) : (
-                        <div
-                          className={chartEmptyBarClass()}
-                          title={`${bar.label}: ${formatCurrency(bar.amount)}`}
-                          aria-hidden
-                        />
-                      )}
-                    </div>
+                  <span
+                    className={cn(
+                      "min-h-4 text-center text-[10px] leading-none font-semibold tabular-nums md:text-[11px]",
+                      bar.highlight
+                        ? "text-foreground"
+                        : "text-muted-foreground group-hover:text-foreground",
+                      !bar.hasValue && "invisible",
+                    )}
+                  >
+                    {formatNokChartAxis(bar.amount)}
+                  </span>
+                  <div className="flex min-h-0 flex-1 flex-col justify-end">
+                    {bar.hasValue ? (
+                      <div
+                        className={cn(
+                          "w-full min-h-1.5 rounded-t-lg transition-colors",
+                          bar.highlight
+                            ? "bg-success"
+                            : "bg-emerald-500/30 group-hover:bg-emerald-500/55",
+                        )}
+                        style={{ height: `${bar.heightPct}%` }}
+                      />
+                    ) : (
+                      <div
+                        className="h-1 w-full rounded-full bg-muted"
+                        aria-hidden
+                      />
+                    )}
                   </div>
                 </div>
               ))}
             </div>
-            <div
-              className="mt-2.5 flex w-full justify-between gap-0.5 border-t border-dashed border-rn-border-strong/40 pt-2.5"
-              aria-hidden
-            >
+            <div className="mt-3 flex w-full gap-1.5 md:gap-2.5" aria-hidden>
               {chartBars.map((bar) => (
                 <span
                   key={`${bar.key}-axis`}
                   className={cn(
-                    "min-w-0 flex-1 select-none text-center text-[9px] font-semibold uppercase leading-none tracking-tight text-muted-foreground sm:text-[10px] md:text-[11px]",
-                    bar.highlight && "font-bold text-primary",
+                    "min-w-0 flex-1 text-center text-[10px] font-medium uppercase select-none md:text-[11px]",
+                    bar.highlight
+                      ? "font-bold text-foreground"
+                      : "text-muted-foreground",
                   )}
                 >
                   {bar.label}
@@ -419,30 +433,25 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
           </div>
         </div>
 
-        <div
-          className={cn(
-            "flex flex-col rounded-md border-2 border-rn-danger-surface bg-rn-danger-surface/30 p-6 shadow-rn-card md:p-8",
-          )}
-        >
-          <div className="mb-6 flex items-center gap-2 md:mb-8 md:gap-3">
-            <BellDot
-              className="size-5 shrink-0 text-destructive md:size-6"
-              aria-hidden
-            />
-            <h2 className="app-section-title text-rn-danger-ink">
+        <div className={cn("flex flex-col p-6 md:p-8", card)}>
+          <div className="mb-5 flex items-center gap-2.5">
+            <span className="flex size-8 items-center justify-center rounded-full bg-rn-danger-surface/50 text-destructive">
+              <BellDot className="size-4" aria-hidden />
+            </span>
+            <h2 className="app-section-title">
               {t("dashboard.paymentAlerts")}
             </h2>
           </div>
-          <div className="flex flex-1 flex-col gap-4 md:gap-5">
+          <div className="flex flex-1 flex-col gap-3">
             {data.paymentAlerts.length === 0 ? (
-              <p className="text-app-sm text-muted-foreground md:text-app-base">
+              <p className="rounded-xl bg-muted/60 px-4 py-5 text-app-sm text-muted-foreground md:text-app-base">
                 {t("dashboard.noPaymentAlerts")}
               </p>
             ) : (
               data.paymentAlerts.map((a) => (
                 <div
                   key={a.bookingId}
-                  className="flex flex-col gap-3 rounded-md border-2 border-rn-border-strong/60 bg-card/90 p-4 shadow-sm md:p-5"
+                  className="flex flex-col gap-2.5 rounded-xl bg-muted/60 p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <span className="min-w-0 text-app-base font-semibold text-foreground">
@@ -452,14 +461,14 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                       {formatCurrency(a.amountNok)}
                     </span>
                   </div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-app-sm text-muted-foreground md:text-app-base">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-app-sm text-muted-foreground">
                     <span>{t("dashboard.event", { label: a.dueLabel })}</span>
                     {a.status === "overdue" ? (
-                      <span className="inline-flex rounded-full bg-rn-danger-surface px-2.5 py-1 text-[11px] font-bold tracking-wide text-destructive uppercase md:px-3 md:py-1.5 md:text-app-xs">
+                      <span className="inline-flex rounded-full bg-rn-danger-surface/70 px-2.5 py-1 text-[11px] font-bold tracking-wide text-rn-danger-ink uppercase">
                         {t("dashboard.overdue")}
                       </span>
                     ) : (
-                      <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold tracking-wide text-amber-900 uppercase dark:bg-amber-950/40 dark:text-amber-100 md:px-3 md:py-1.5 md:text-app-xs">
+                      <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold tracking-wide text-amber-900 uppercase dark:bg-amber-950/40 dark:text-amber-100">
                         {t("dashboard.today")}
                       </span>
                     )}
@@ -472,19 +481,19 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
             href="/app/invoices"
             className={cn(
               buttonVariants({ variant: "success", size: "cta" }),
-              "mt-6 w-full",
+              "mt-6 w-full rounded-xl shadow-none",
             )}
           >
             {t("dashboard.goToInvoices")}
-            <ExternalLink className="size-4" aria-hidden />
+            <ArrowUpRight className="size-4" aria-hidden />
           </Link>
         </div>
       </div>
 
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
+      <div className={card}>
         <Table>
           <TableHeader>
-            <TableRow className="border-rn-border-strong/50 bg-rn-surface-table-head hover:bg-rn-surface-table-head">
+            <TableRow className="border-0 bg-muted/60 hover:bg-muted/60">
               <TableHead className={tableHeadClass}>{t("dashboard.tableDateTime")}</TableHead>
               <TableHead className={tableHeadClass}>{t("dashboard.tableCustomer")}</TableHead>
               <TableHead className={tableHeadClass}>{t("dashboard.tableType")}</TableHead>
@@ -515,22 +524,22 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               data.upcoming.map((row) => (
                 <TableRow
                   key={row.bookingId}
-                  className="border-rn-border-strong/40 hover:bg-rn-surface-row-hover"
+                  className="border-foreground/6 hover:bg-muted/50"
                 >
                   <TableCell className={cn(tableCellClass, "whitespace-normal")}>
                     <div className="flex flex-col gap-0.5">
                       <span className="text-app-base font-semibold text-foreground">
                         {row.dateLabel}
                       </span>
-                      <span className="text-app-sm md:text-app-base">
+                      <span className="text-app-sm text-muted-foreground">
                         {row.timeLabel}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell className={cn(tableCellClass, "whitespace-normal")}>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       <div
-                        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-app-sm font-semibold text-primary dark:bg-rn-surface-segment dark:!text-white md:size-11 md:text-app-base"
+                        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-app-sm font-semibold text-primary dark:bg-rn-surface-segment dark:!text-white"
                         aria-hidden
                       >
                         {row.initials}
@@ -543,7 +552,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   <TableCell className={tableCellClass}>
                     <span
                       className={cn(
-                        "inline-flex rounded-md px-2.5 py-1 text-app-xs font-bold md:px-3 md:text-app-sm",
+                        "inline-flex rounded-full px-3 py-1 text-app-xs font-semibold",
                         dashboardEventPillClass(row.type),
                       )}
                     >
@@ -567,7 +576,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                       className="inline-flex items-center gap-1 text-app-sm font-semibold text-success underline-offset-2 hover:underline dark:!text-white md:text-app-base"
                     >
                       {t("dashboard.listLink")}
-                      <ExternalLink className="size-4 shrink-0 opacity-70" aria-hidden />
+                      <ArrowUpRight className="size-4 shrink-0 opacity-70" aria-hidden />
                     </Link>
                   </TableCell>
                 </TableRow>

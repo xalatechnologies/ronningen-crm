@@ -2,6 +2,16 @@
 
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Globe } from "lucide-react";
 
 const localeOptions = ["nb", "en"] as const;
 
@@ -25,11 +35,58 @@ export function LanguageSwitcher({
   variant = "menu",
 }: {
   className?: string;
-  variant?: "menu" | "compact" | "segment";
+  variant?: "menu" | "compact" | "segment" | "header";
 }) {
   const { locale, setLocale, t } = useTranslation();
   const compact = variant === "compact";
   const segmentStyle = variant === "segment";
+
+  if (variant === "header") {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className={cn(
+            "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl border border-foreground/20 bg-muted/60 px-3 font-heading text-xs font-semibold text-foreground outline-none transition-colors",
+            "hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "data-popup-open:bg-muted/30",
+            className,
+          )}
+          aria-label={`${t("common.language.label")}: ${localeLabel(locale, t, false)}`}
+          title={localeLabel(locale, t, false)}
+        >
+          <Globe className="size-4 shrink-0" aria-hidden />
+          {localeLabel(locale, t, true)}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          sideOffset={8}
+          className="min-w-48 rounded-2xl border border-foreground/10 bg-popover p-2 shadow-lg"
+        >
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="px-3 py-2 font-heading text-app-xs font-semibold text-muted-foreground">
+              {t("common.language.label")}
+            </DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={locale}
+              onValueChange={(value) => {
+                if (value === "nb" || value === "en") setLocale(value);
+              }}
+            >
+              {localeOptions.map((value) => (
+                <DropdownMenuRadioItem
+                  key={value}
+                  value={value}
+                  className="gap-2.5 rounded-lg px-3 py-2.5 font-heading text-app-sm font-medium"
+                >
+                  {localeLabel(value, t, false)}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
 
   const segment = (
     <div

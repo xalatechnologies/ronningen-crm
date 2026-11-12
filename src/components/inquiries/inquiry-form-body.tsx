@@ -37,10 +37,9 @@ import {
 } from "react-hook-form";
 
 const fieldClass =
-  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-12 w-full rounded-xl border border-foreground/25 bg-background px-4 text-base text-foreground shadow-none outline-none transition-colors hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 disabled:opacity-60 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
 
-const labelClass =
-  "text-[11px] font-semibold tracking-wider text-muted-foreground uppercase md:text-xs";
+const labelClass = "text-[13px] font-semibold text-foreground md:text-sm";
 
 function RequiredMark() {
   return <span className="font-bold text-destructive">*</span>;
@@ -59,9 +58,9 @@ function FormSection({
 }) {
   if (variant === "flat") {
     return (
-      <section className="space-y-4 border-t-2 border-rn-border-strong/40 pt-6 first:border-t-0 first:pt-0">
+      <section className="space-y-5 rounded-2xl bg-muted/50 p-5 md:p-6">
         <header className="space-y-1">
-          <h3 className="font-heading text-base font-bold tracking-tight text-rn-text-heading md:text-lg">
+          <h3 className="font-heading text-lg font-bold tracking-tight text-rn-text-heading md:text-xl">
             {title}
           </h3>
           {hint ? (
@@ -74,7 +73,7 @@ function FormSection({
   }
 
   return (
-    <section className="space-y-4 rounded-lg border-2 border-rn-border-strong/45 bg-card/70 p-4 shadow-sm sm:p-5">
+    <section className="space-y-4 rounded-2xl bg-muted/50 p-4 sm:p-5">
       <header className="space-y-1">
         <h3 className="font-heading text-base font-bold tracking-tight text-rn-text-heading md:text-lg">
           {title}
@@ -175,7 +174,7 @@ export function InquiryFormBody({
             control={control}
             id={`${rid}-customer`}
             disabled={disabled}
-            className="font-medium"
+            className={cn(fieldClass, "font-medium")}
             placeholder={t("inquiries.form.newCustomerPlaceholder")}
             options={toIdNameOptions(customers)}
           />
@@ -196,6 +195,7 @@ export function InquiryFormBody({
             className={fieldClass}
             autoComplete="name"
             placeholder={t("inquiries.form.customerNamePlaceholder")}
+            aria-invalid={Boolean(errors.newCustomerName)}
             {...register("newCustomerName")}
           />
           {errors.newCustomerName ? (
@@ -215,6 +215,7 @@ export function InquiryFormBody({
             inputMode="tel"
             autoComplete="tel"
             placeholder={t("bookings.form.phonePlaceholder")}
+            aria-invalid={Boolean(errors.newCustomerPhone)}
             {...register("newCustomerPhone")}
           />
           {errors.newCustomerPhone ? (
@@ -234,6 +235,7 @@ export function InquiryFormBody({
             className={fieldClass}
             autoComplete="email"
             placeholder={t("bookings.form.emailPlaceholder")}
+            aria-invalid={Boolean(errors.newCustomerEmail)}
             {...register("newCustomerEmail")}
           />
           {errors.newCustomerEmail ? (
@@ -294,7 +296,7 @@ export function InquiryFormBody({
             control={control}
             id={`${rid}-event-type`}
             disabled={disabled}
-            className="font-medium"
+            className={cn(fieldClass, "font-medium")}
             options={eventTypeOptions}
           />
           {errors.eventType ? (
@@ -326,9 +328,10 @@ export function InquiryFormBody({
             render={({ field }) => (
               <DatePickerField
                 id={`${rid}-date-start`}
+                aria-invalid={Boolean(errors.preferredEventDate)}
                 variant="toolbar"
                 disabled={disabled}
-                className={cn(fieldClass, "shadow-sm")}
+                className={fieldClass}
                 value={field.value ?? ""}
                 onChange={field.onChange}
               />
@@ -352,7 +355,7 @@ export function InquiryFormBody({
                 id={`${rid}-date-end`}
                 variant="toolbar"
                 disabled={disabled}
-                className={cn(fieldClass, "shadow-sm")}
+                className={fieldClass}
                 value={field.value ?? ""}
                 onChange={field.onChange}
               />
@@ -377,6 +380,7 @@ export function InquiryFormBody({
             min={1}
             disabled={disabled}
             className={cn(fieldClass, "tabular-nums")}
+            aria-invalid={Boolean(errors.guestCount)}
             {...register("guestCount", { valueAsNumber: false })}
           />
           {errors.guestCount ? (
@@ -433,7 +437,7 @@ export function InquiryFormBody({
             control={control}
             id={`${rid}-status`}
             disabled={disabled}
-            className="font-medium"
+            className={cn(fieldClass, "font-medium")}
             options={statusOptions}
           />
           {errors.status ? (
@@ -452,7 +456,7 @@ export function InquiryFormBody({
                 id={`${rid}-followup`}
                 variant="toolbar"
                 disabled={disabled}
-                className={cn(fieldClass, "shadow-sm")}
+                className={fieldClass}
                 value={field.value ?? ""}
                 onChange={field.onChange}
                 aria-invalid={Boolean(errors.nextFollowUpAt)}
@@ -475,7 +479,7 @@ export function InquiryFormBody({
           id={`${rid}-notes`}
           disabled={disabled}
           rows={4}
-          className="min-h-[6rem] rounded-md border-2 border-rn-border-strong bg-background p-3 text-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25 md:p-4"
+          className="min-h-[7rem] rounded-xl border border-foreground/25 bg-background p-4 text-base shadow-none transition-colors hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20"
           placeholder={t("inquiries.form.internalNotesPlaceholder")}
           {...register("internalNotes")}
         />
@@ -488,7 +492,7 @@ export function InquiryFormBody({
 
   if (sectioned) {
     return (
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-4 md:gap-5">
         <FormSection
           variant="flat"
           title={t("inquiries.form.customerSection")}

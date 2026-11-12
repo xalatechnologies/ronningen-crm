@@ -41,7 +41,7 @@ export function OrganizationSwitcher() {
       }}
       items={selectItems}
     >
-      <SelectTrigger className="h-9 min-w-[10rem] max-w-[14rem] border-2 border-rn-border-strong bg-card text-app-sm">
+      <SelectTrigger className="h-11 min-w-[10rem] max-w-[14rem] rounded-xl border border-foreground/20 bg-muted/60 text-app-sm shadow-none hover:bg-muted">
         <SelectValue placeholder={t("admin.velg_organisasjon")} />
       </SelectTrigger>
       <SelectContent align="start" alignItemWithTrigger={false}>

@@ -25,7 +25,6 @@ import {
   type NewBookingFestTypeField,
   type NewBookingFormInput,
 } from "@/lib/validations";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import {
   referenceYearFromEventDate,
@@ -71,12 +70,12 @@ import {
 import { toast } from "sonner";
 
 const fieldClass =
-  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-app-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-app-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-12 w-full rounded-xl border border-foreground/25 bg-background px-4 text-app-base text-foreground shadow-none outline-none transition-colors hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 disabled:opacity-60 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
 
 const sectionIconWrap = "text-rn-text-slate";
 
 const labelClass =
-  "text-[12px] font-semibold uppercase tracking-wider text-rn-text-slate";
+  "text-[13px] font-semibold text-foreground md:text-sm";
 
 function RequiredMark() {
   return (
@@ -616,14 +615,14 @@ export function NewBookingForm({
 
   return (
     <div className="mx-auto w-full pb-12 md:pb-8">
-      <div className={cn("overflow-hidden", RN_CARD_SHELL)}>
-        <header className="flex items-center gap-3 border-b-2 border-rn-border-strong bg-card px-3 py-3 sm:gap-4 sm:px-4 md:px-5">
+      <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
+        <header className="flex items-center gap-3 border-b border-foreground/8 bg-card px-4 py-4 sm:gap-4 sm:px-6 md:px-8">
           <Link
             href="/app/bookings"
             aria-label={t("bookings.backToBookings")}
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
-              "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
+              "shrink-0 rounded-full text-rn-text-heading hover:bg-muted",
             )}
           >
             <ArrowLeft className="size-5 text-success" aria-hidden />
@@ -641,7 +640,7 @@ export function NewBookingForm({
             aria-label={t("bookings.closeGoToBookings")}
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
-              "shrink-0 rounded-full border-2 border-transparent text-rn-text-heading hover:border-rn-border-strong/60 hover:bg-rn-surface-row-hover",
+              "shrink-0 rounded-full text-rn-text-heading hover:bg-muted",
             )}
           >
             <X className="size-5 text-rn-text-slate" aria-hidden />
@@ -650,7 +649,7 @@ export function NewBookingForm({
 
         {existingCustomer ? (
           <div
-            className="border-b-2 border-rn-border-strong bg-success/5 px-4 py-3 text-app-sm text-rn-text-body sm:px-6 md:px-8"
+            className="border-b border-foreground/8 bg-success/5 px-4 py-3 text-app-sm text-rn-text-body sm:px-6 md:px-8"
             role="status"
           >
             {t("bookings.form.existingCustomerBanner")}
@@ -666,7 +665,7 @@ export function NewBookingForm({
           )}
           className="flex flex-col"
         >
-        <div className="border-b-2 border-rn-border-strong/40 bg-card px-6 py-4 md:px-8">
+        <div className="border-b border-foreground/8 bg-card px-6 py-4 md:px-8">
           <div className="flex flex-col gap-4">
             <div className="min-w-0 flex-1 space-y-2">
               <Label className={labelClass}>{t("bookings.form.referenceNumber")}</Label>
@@ -681,7 +680,7 @@ export function NewBookingForm({
                   type="button"
                   variant="outline"
                   disabled={isGeneratingReference}
-                  className="h-11 shrink-0 gap-2 rounded-md border-2 border-rn-border-strong px-4 font-heading text-app-sm font-semibold md:h-12"
+                  className="h-11 shrink-0 gap-2 rounded-xl border border-foreground/30 bg-card px-4 font-heading text-app-sm font-semibold shadow-none hover:bg-muted md:h-12"
                   onClick={() => void generateBookingReference({ force: true })}
                 >
                   <RefreshCw
@@ -706,7 +705,7 @@ export function NewBookingForm({
             </div>
           </div>
         </div>
-        <div className="border-b-2 border-rn-border-strong/40 bg-card p-6 md:p-8">
+        <div className="border-b border-foreground/8 bg-card p-6 md:p-8">
           <div className="mb-6 flex items-center gap-2">
             <User className={cn("size-5", sectionIconWrap)} aria-hidden />
             <h3 className="app-card-title md:text-app-xl">
@@ -805,7 +804,7 @@ export function NewBookingForm({
           </div>
         </div>
 
-        <div className="border-b-2 border-rn-border-strong/40 bg-card p-6 md:p-8">
+        <div className="border-b border-foreground/8 bg-card p-6 md:p-8">
           <div className="mb-6 flex items-center gap-2">
             <Calendar className={cn("size-5", sectionIconWrap)} aria-hidden />
             <h3 className="app-card-title md:text-app-xl">
@@ -1034,7 +1033,7 @@ export function NewBookingForm({
           </div>
         </div>
 
-        <div className="border-b-2 border-rn-border-strong/40 bg-card p-6 md:p-8">
+        <div className="border-b border-foreground/8 bg-card p-6 md:p-8">
           <div className="mb-6 flex items-center gap-2">
             <Package className={cn("size-5", sectionIconWrap)} aria-hidden />
             <h3 className="app-card-title md:text-app-xl">
@@ -1179,12 +1178,12 @@ export function NewBookingForm({
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer px-6 py-5 sm:flex-row sm:justify-end md:px-8">
+        <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-foreground/10 bg-card/95 px-6 py-4 backdrop-blur sm:flex-row sm:justify-end md:px-8">
           <Link
             href="/app/bookings"
             className={cn(
               buttonVariants({ variant: "outline", size: "cta" }),
-              "inline-flex items-center justify-center border-2 border-rn-border-strong font-heading font-bold",
+              "inline-flex items-center justify-center rounded-xl border border-foreground/30 bg-card font-heading font-bold text-foreground shadow-none hover:bg-muted",
             )}
           >
             {t("common.actions.cancel")}
@@ -1193,6 +1192,7 @@ export function NewBookingForm({
             type="submit"
             variant="success"
             size="cta"
+            className="rounded-xl shadow-none"
             disabled={isSubmitting || catalogPackageBlocked}
           >
             {isSubmitting ? t("bookings.saving") : t("bookings.form.saveBooking")}

@@ -7,6 +7,7 @@ import type {
 import { RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
 import { BookingContractPanel } from "@/components/contracts/booking-contract-panel";
+import { BookingPortalPanel } from "@/components/portal/booking-portal-panel";
 import { BookingPackageAddonsFields } from "@/components/bookings/booking-package-addons-fields";
 import {
   loadBookingCommercialEditor,
@@ -81,10 +82,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 const fieldClass =
-  "h-11 w-full rounded-md border-2 border-rn-border-strong bg-background px-3.5 text-app-sm text-foreground shadow-sm outline-none md:h-12 md:px-4 md:text-app-base focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/25";
+  "h-12 w-full rounded-xl border border-foreground/25 bg-background px-4 text-app-base text-foreground shadow-none outline-none transition-colors hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 disabled:opacity-60 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
 
 const labelClass =
-  "text-[12px] font-semibold uppercase tracking-wider text-rn-text-slate";
+  "text-[13px] font-semibold text-foreground md:text-sm";
 
 function RequiredMark() {
   return (
@@ -130,7 +131,7 @@ export type BookingDetailSheetProps = {
     next: BookingStatus,
     opts?: { confirmMessage?: string },
   ) => void;
-  /** Owner/admin — permanent delete matches RLS. */
+  /** Owner/admin/manager — edit, status changes and delete match RLS; others get a read-only sheet. */
   canDeleteBooking?: boolean;
 };
 
@@ -658,7 +659,7 @@ export function BookingDetailSheet({
           "shadow-rn-card",
         )}
       >
-        <SheetHeader className="flex shrink-0 flex-row items-center justify-between gap-4 border-b-2 border-rn-border-strong bg-rn-surface-table-head px-6 py-5 sm:px-8 sm:py-6">
+        <SheetHeader className="flex shrink-0 flex-row items-center justify-between gap-4 border-b border-foreground/10 bg-card px-6 py-5 sm:px-8 sm:py-6">
           <SheetTitle className="app-section-title min-w-0 flex-1 text-left tracking-tight">
             {t("bookings.detail.title")}
           </SheetTitle>
@@ -682,13 +683,23 @@ export function BookingDetailSheet({
           className="flex min-h-0 flex-1 flex-col overflow-hidden"
           onSubmit={handleSubmit(onSave)}
         >
-          <div className={cn(RN_MODAL_SCROLL_BODY, "flex flex-col gap-6 p-6 sm:p-8")}>
+          <fieldset
+            disabled={!canDeleteBooking}
+            className={cn(RN_MODAL_SCROLL_BODY, "flex min-w-0 flex-col gap-6 border-0 p-6 sm:p-8")}
+          >
             <div aria-label={t("common.fields.status")}>
               <BookingStatusBadge status={bookingRow.status} />
             </div>
 
             {currentOrganizationId ? (
               <BookingContractPanel
+                organizationId={currentOrganizationId}
+                bookingId={bookingRow.id}
+              />
+            ) : null}
+
+            {currentOrganizationId ? (
+              <BookingPortalPanel
                 organizationId={currentOrganizationId}
                 bookingId={bookingRow.id}
               />
@@ -1194,40 +1205,43 @@ export function BookingDetailSheet({
                 </p>
               ) : null}
             </section>
-          </div>
+          </fieldset>
 
-          <SheetFooter className="mt-0 max-h-none flex-col gap-3 border-t-2 border-rn-border-strong bg-rn-surface-footer/50 p-6 sm:max-h-none sm:flex-row sm:flex-wrap sm:justify-stretch">
+          <SheetFooter className="mt-0 max-h-none flex-col gap-3 border-t border-foreground/10 bg-card px-6 py-4 sm:max-h-none sm:flex-row sm:flex-wrap sm:justify-end">
+            {canDeleteBooking ? (
             <Button
               type="submit"
               variant="success"
               size="cta"
               disabled={busy}
-              className="w-full sm:order-first sm:flex-1"
+              className="w-full sm:order-last sm:w-auto"
             >
               <Save className="mr-2 size-4 shrink-0" aria-hidden />
               {t("bookings.detail.saveChanges")}
             </Button>
-            {bookingRow.status === "pending" ? (
+            ) : null}
+            {canDeleteBooking && bookingRow.status === "pending" ? (
               <Button
                 type="button"
                 variant="success"
                 size="cta"
                 disabled={busy}
-                className="w-full sm:flex-1"
+                className="w-full sm:w-auto"
                 onClick={() => onSetStatus(bookingRow.id, "confirmed")}
               >
                 <CheckCircle2 className="mr-2 size-4 shrink-0" aria-hidden />
                 {t("bookings.detail.confirmBooking")}
               </Button>
             ) : null}
-            {bookingRow.status === "pending" ||
-            bookingRow.status === "confirmed" ? (
+            {canDeleteBooking &&
+            (bookingRow.status === "pending" ||
+              bookingRow.status === "confirmed") ? (
               <Button
                 type="button"
                 variant="outline"
                 size="cta"
                 disabled={busy}
-                className="w-full border-2 border-destructive/40 font-heading font-bold text-destructive hover:bg-destructive/10 sm:flex-1"
+                className="w-full border border-destructive/40 font-heading font-bold text-destructive hover:bg-destructive/10 sm:w-auto"
                 onClick={() =>
                   onSetStatus(bookingRow.id, "cancelled", {
                     confirmMessage: t("bookings.cancelConfirm"),
@@ -1238,13 +1252,13 @@ export function BookingDetailSheet({
                 {t("bookings.detail.cancelBooking")}
               </Button>
             ) : null}
-            {bookingRow.status === "cancelled" ? (
+            {canDeleteBooking && bookingRow.status === "cancelled" ? (
               <Button
                 type="button"
                 variant="outline"
                 size="cta"
                 disabled={busy}
-                className="w-full border-2 border-rn-border-strong font-heading font-bold sm:flex-1"
+                className="w-full rounded-xl border border-foreground/30 bg-card font-heading font-bold shadow-none hover:bg-muted sm:w-auto"
                 onClick={() =>
                   onSetStatus(bookingRow.id, "pending", {
                     confirmMessage: t("bookings.detail.moveToPendingConfirm"),
@@ -1260,7 +1274,7 @@ export function BookingDetailSheet({
                 variant="outline"
                 size="cta"
                 disabled={busy}
-                className="w-full border-2 border-destructive/40 font-heading font-bold text-destructive hover:bg-destructive/10 sm:w-full"
+                className="w-full border border-destructive/40 font-heading font-bold text-destructive hover:bg-destructive/10 sm:w-auto"
                 onClick={() => setDeleteDialogOpen(true)}
               >
                 <Trash2 className="mr-2 size-4 shrink-0" aria-hidden />
@@ -1303,7 +1317,7 @@ export function BookingDetailSheet({
               type="button"
               variant="outline"
               size="cta"
-              className="w-full border-2 border-rn-border-strong sm:w-auto"
+              className="w-full rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted sm:w-auto"
               disabled={deleteBusy}
               onClick={() => setDeleteDialogOpen(false)}
             >
