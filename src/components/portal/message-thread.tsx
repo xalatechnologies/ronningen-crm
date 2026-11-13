@@ -20,6 +20,7 @@ export function MessageThread({
   send,
   markRead,
   stickyOffsetClassName = "bottom-0",
+  roomy = false,
 }: {
   viewer: Viewer;
   messages: PortalMessage[];
@@ -27,6 +28,8 @@ export function MessageThread({
   markRead: () => Promise<void>;
   /** Where the composer sticks: the customer portal lifts it above its bottom tab bar on phones. */
   stickyOffsetClassName?: string;
+  /** Venue workspace: the conversation sits in one large card with its composer. */
+  roomy?: boolean;
 }) {
   const { t, locale } = useTranslation();
   const router = useRouter();
@@ -96,8 +99,13 @@ export function MessageThread({
   let lastDay = "";
 
   return (
-    <div className="flex min-h-[calc(100svh-20rem)] flex-col gap-4 sm:min-h-0">
-      <ol className="flex min-h-40 flex-1 flex-col gap-3" aria-live="polite">
+    <div
+      className={cn(
+        "flex min-h-[calc(100svh-20rem)] flex-col gap-4 sm:min-h-0",
+        roomy && "min-h-[32rem] gap-0 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8 sm:min-h-[32rem]",
+      )}
+    >
+      <ol className={cn("flex min-h-40 flex-1 flex-col gap-3", roomy && "max-h-[60vh] gap-5 overflow-y-auto p-5 sm:p-6")} aria-live="polite">
         {messages.length === 0 ? (
           <li className="rounded-2xl bg-card px-6 py-10 text-center text-app-base text-muted-foreground ring-1 ring-foreground/8">
             {t("portal.messages.empty")}
@@ -120,9 +128,12 @@ export function MessageThread({
                 <p
                   className={cn(
                     "max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-app-base",
+                    roomy && "max-w-[75%] px-5 py-3.5 text-[1.0625rem] leading-relaxed",
                     mine
                       ? "rounded-br-md bg-success !text-white"
-                      : "rounded-bl-md bg-card ring-1 ring-foreground/8",
+                      : roomy
+                        ? "rounded-bl-md bg-muted/70"
+                        : "rounded-bl-md bg-card ring-1 ring-foreground/8",
                   )}
                 >
                   {m.body}
@@ -139,6 +150,7 @@ export function MessageThread({
         className={cn(
           "sticky z-10 -mx-4 flex flex-col gap-2 border-t border-foreground/8 bg-background/95 px-4 pt-3 backdrop-blur sm:-mx-0 sm:rounded-2xl sm:border sm:px-3 sm:pb-3",
           stickyOffsetClassName,
+          roomy && "static mx-0 rounded-none border-0 border-t bg-card px-5 py-4 backdrop-blur-none sm:rounded-none sm:border-0 sm:border-t sm:px-6",
         )}
       >
         <div className="flex items-end gap-2">
