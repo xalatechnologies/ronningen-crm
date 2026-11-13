@@ -43,9 +43,9 @@ const getTenantAppAccessCached = cache(async function getTenantAppAccessCached(
   _pathname: string,
 ): Promise<TenantAppAccessContext | null> {
   const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Claims are verified locally (ES256); the middleware already gated this request the same way.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims ? { id: claimsData.claims.sub } : null;
 
   if (!user) return null;
 
