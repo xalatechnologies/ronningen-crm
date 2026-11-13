@@ -21,6 +21,7 @@ type Row = {
   responded_at: string | null;
   last_sent_at: string | null;
   opted_out: boolean;
+  delivery_issue: "delayed" | "bounced" | null;
 };
 
 function readDiet(raw: unknown): GuestRow["diet"] {
@@ -36,7 +37,7 @@ function readDiet(raw: unknown): GuestRow["diet"] {
 export async function listGuests(client: Client, bookingId: string): Promise<GuestRow[]> {
   const { data } = await client
     .from("portal_guests" as never)
-    .select("id, name, email, phone, group_label, max_party, status, party_size, diet, responded_at, last_sent_at, opted_out")
+    .select("id, name, email, phone, group_label, max_party, status, party_size, diet, responded_at, last_sent_at, opted_out, delivery_issue")
     .eq("booking_id", bookingId)
     .order("created_at", { ascending: true });
   return ((data as unknown as Row[] | null) ?? []).map((r) => ({
@@ -52,6 +53,7 @@ export async function listGuests(client: Client, bookingId: string): Promise<Gue
     respondedAt: r.responded_at,
     lastSentAt: r.last_sent_at,
     optedOut: r.opted_out,
+    deliveryIssue: r.delivery_issue,
   }));
 }
 
