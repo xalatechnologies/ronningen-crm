@@ -12,6 +12,7 @@ export function StaffMessageThread({ bookingId, messages }: { bookingId: string;
       send={(body) => sendStaffMessage({ bookingId, body })}
       markRead={() => markThreadReadByStaff(bookingId)}
       stickyOffsetClassName="bottom-0 pb-3 sm:bottom-4"
+      roomy
     />
   );
 }
