@@ -5,6 +5,7 @@ const appNavSegments: Record<string, TranslationKey> = {
   dashboard: "navigation.dashboard",
   inquiries: "navigation.inquiries",
   bookings: "navigation.bookings",
+  portal: "navigation.portal",
   overnatting: "navigation.overnatting",
   customers: "navigation.customers",
   partners: "navigation.partners",

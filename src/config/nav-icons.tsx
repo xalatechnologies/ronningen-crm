@@ -7,6 +7,7 @@ import {
   FileText,
   Inbox,
   LayoutDashboard,
+  MessagesSquare,
   Package,
   Users,
   WalletCards,
@@ -16,6 +17,7 @@ import {
 export const SIDEBAR_SEGMENT_ICONS: Record<string, LucideIcon> = {
   dashboard: LayoutDashboard,
   bookings: CalendarDays,
+  portal: MessagesSquare,
   overnatting: BedDouble,
   inquiries: Inbox,
   customers: Users,

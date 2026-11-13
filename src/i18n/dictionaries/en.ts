@@ -161,6 +161,7 @@ export const en = {
     dashboard: "Dashboard",
     inquiries: "Inquiries",
     bookings: "Bookings",
+    portal: "Customer portal",
     overnatting: "Accommodation",
     customers: "Customers",
     partners: "Partners",
