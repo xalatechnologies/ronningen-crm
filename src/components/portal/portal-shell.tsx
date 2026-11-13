@@ -5,13 +5,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { BrandMark } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 
-/** The venue's logo, or its initial when there is no logo or the address is not an image. */
-function VenueMark({ name, logoUrl }: { name: string; logoUrl: string | null }) {
+/** The venue's logo, or the Event Manager mark (as in the venue sidebar) when there is none or it is not an image. */
+function VenueMark({ logoUrl }: { logoUrl: string | null }) {
   const [failed, setFailed] = useState(false);
   const img = useRef<HTMLImageElement>(null);
   // The image may already have failed before hydration attached onError.
@@ -25,8 +26,8 @@ function VenueMark({ name, logoUrl }: { name: string; logoUrl: string | null }) 
     );
   }
   return (
-    <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary font-heading text-base font-bold text-primary-foreground">
-      {name.trim().charAt(0).toUpperCase()}
+    <span className="block size-9 shrink-0 overflow-hidden rounded-xl ring-1 ring-foreground/10 [--brand-tile:#0c1f16] dark:[--brand-tile:#1a4331]">
+      <BrandMark />
     </span>
   );
 }
@@ -67,7 +68,7 @@ export function PortalShell({
       <header className="sticky top-0 z-20 border-b border-foreground/8 bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
-            <VenueMark name={organizationName} logoUrl={logoUrl} />
+            <VenueMark logoUrl={logoUrl} />
             <span className="truncate font-heading text-base font-semibold sm:text-lg">{organizationName}</span>
           </div>
           <Button type="button" variant="ghost" size="sm" className="size-11 shrink-0 rounded-full p-0 sm:w-auto sm:px-3" onClick={() => void logout()} aria-label={t("portal.nav.logout")}>
