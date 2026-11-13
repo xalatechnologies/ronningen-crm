@@ -75,7 +75,7 @@ export default async function BookingPortalPage({
         className="mb-0"
         title={t("portal.staffPage.title")}
         description={t("portal.staffPage.customer", { name: customerName })}
-        backLink={{ href: "/app/bookings", label: t("portal.staffPage.back") }}
+        backLink={{ href: "/app/portal", label: t("portal.staffPage.back") }}
       />
       <nav aria-label={t("portal.staffPage.title")} className="flex gap-2 border-b border-foreground/10">
         {(
