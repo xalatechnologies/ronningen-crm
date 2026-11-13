@@ -1,4 +1,4 @@
-import { CalendarClock, CalendarDays, ChevronRight, ListChecks, MessageCircle, Users } from "lucide-react";
+import { CalendarClock, CalendarDays, Check, ChevronRight, ListChecks, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 
 import { getServerTranslation } from "@/i18n/server";
@@ -43,10 +43,10 @@ export default async function PortalHomePage() {
   });
   const days = ctx.booking.eventDate ? daysUntil(ctx.booking.eventDate) : null;
   const countdown =
-    days == null
+    days == null || days > 1
       ? null
-      : days > 0
-        ? t("portal.home.countdownDays", { count: days })
+      : days === 1
+        ? t("portal.home.countdownTomorrow")
         : days === 0
           ? t("portal.home.countdownToday")
           : t("portal.home.countdownPast");
@@ -58,6 +58,7 @@ export default async function PortalHomePage() {
       title: t("portal.home.guestsCardTitle"),
       body: guestCount > 0 ? t("portal.home.guestsCardCount", { count: guestCount }) : t("portal.home.guestsCardEmpty"),
       attention: false,
+      done: guestCount > 0,
     },
     {
       href: "/portal/wishlist",
@@ -75,6 +76,7 @@ export default async function PortalHomePage() {
             : t("portal.home.wishQuotedBody")
           : wishes.unavailable > 0 ? t("portal.home.wishUnavailableBody") : t("portal.home.wishCardBody"),
       attention: wishes.quoted + wishes.unavailable > 0,
+      done: false,
     },
     {
       href: "/portal/schedule",
@@ -82,6 +84,7 @@ export default async function PortalHomePage() {
       title: plan.kind === "changed" ? t("portal.home.scheduleChangedTitle") : t("portal.home.scheduleCardTitle"),
       body: plan.kind === "changed" ? t("portal.home.scheduleChangedBody") : t("portal.home.scheduleCardBody"),
       attention: plan.kind === "changed",
+      done: plan.kind === "shared",
     },
     {
       href: "/portal/messages",
@@ -89,6 +92,7 @@ export default async function PortalHomePage() {
       title: unread > 0 ? t("portal.home.messageUnreadTitle") : t("portal.home.messageCardTitle"),
       body: unread > 0 ? t("portal.home.messageUnreadBody", { count: unread }) : t("portal.home.messageCardBody"),
       attention: unread > 0,
+      done: false,
     },
   ];
 
@@ -98,7 +102,12 @@ export default async function PortalHomePage() {
         <p className="text-app-sm font-semibold text-primary-foreground/75">
           {t("portal.home.greeting", { name: ctx.fullName.split(" ")[0] ?? ctx.fullName })}
         </p>
-        {countdown ? (
+        {days != null && days > 1 ? (
+          <h1 className="flex items-baseline gap-3 !text-primary-foreground">
+            <span className="font-heading text-6xl font-bold leading-none tracking-tight tabular-nums sm:text-7xl">{days}</span>
+            <span className="text-app-base font-semibold text-primary-foreground/85">{t("portal.home.countdownLabel")}</span>
+          </h1>
+        ) : countdown ? (
           <h1 className="font-heading text-3xl font-bold leading-tight tracking-tight !text-primary-foreground sm:text-4xl">{countdown}</h1>
         ) : null}
         <ul className="flex flex-wrap gap-2 text-app-sm font-medium">
@@ -123,16 +132,21 @@ export default async function PortalHomePage() {
       <section className="flex flex-col gap-3">
         <h2 className="px-1 font-heading text-lg font-semibold">{t("portal.home.nextTitle")}</h2>
         <ul className="divide-y divide-foreground/8 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
-          {steps.map(({ href, icon: Icon, title, body, attention }) => (
+          {steps.map(({ href, icon: Icon, title, body, attention, done }) => (
             <li key={href}>
               <Link
                 href={href}
                 className="flex min-h-[4.5rem] items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/50 active:bg-muted"
               >
                 <span
-                  className={`flex size-11 shrink-0 items-center justify-center rounded-full ${attention ? "bg-success text-white" : "bg-success/12 text-success"}`}
+                  className={`relative flex size-11 shrink-0 items-center justify-center rounded-full ${attention ? "bg-success text-white" : "bg-success/12 text-success"}`}
                 >
                   <Icon className="size-5" aria-hidden />
+                  {done && !attention ? (
+                    <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-success text-white ring-2 ring-card">
+                      <Check className="size-3" strokeWidth={3} aria-hidden />
+                    </span>
+                  ) : null}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="font-semibold">{title}</span>
