@@ -21,6 +21,10 @@ export function StaffWishlist({ bookingId, items }: { bookingId: string; items: 
   const nok = useNok();
   const visible = items.filter((i) => i.status !== "draft");
   const approved = approvedTotalNok(visible);
+  const forYou = visible.filter((i) => i.status === "requested" || i.status === "countered").length;
+  const forCustomer = visible.filter((i) => i.status === "quoted").length;
+  // What needs the venue first.
+  const ordered = [...visible].sort((x, y) => Number(y.status === "requested" || y.status === "countered") - Number(x.status === "requested" || x.status === "countered"));
 
   if (visible.length === 0) {
     return <p className="rounded-2xl bg-card px-6 py-10 text-center text-muted-foreground ring-1 ring-foreground/8">{t("portal.staffWishes.empty")}</p>;
@@ -28,15 +32,26 @@ export function StaffWishlist({ bookingId, items }: { bookingId: string; items: 
 
   return (
     <div className="flex flex-col gap-4">
+      <ul className="grid grid-cols-3 gap-2 sm:gap-3">
+        {[
+          { label: t("portal.staffWishes.statYou"), value: String(forYou), alert: forYou > 0 },
+          { label: t("portal.staffWishes.statCustomer"), value: String(forCustomer), alert: false },
+          { label: t("portal.staffWishes.statApproved"), value: nok(approved), alert: false },
+        ].map((stat) => (
+          <li key={stat.label} className="flex flex-col justify-between gap-1 rounded-2xl bg-card p-3 ring-1 ring-foreground/8 sm:p-4">
+            <span className="text-app-xs leading-tight text-muted-foreground sm:text-app-sm">{stat.label}</span>
+            <span className={`font-heading text-lg font-bold tabular-nums sm:text-2xl ${stat.alert ? "text-success" : ""}`}>{stat.value}</span>
+          </li>
+        ))}
+      </ul>
       {approved > 0 ? (
-        <section className="flex flex-col gap-1 rounded-2xl bg-success/10 p-4 ring-1 ring-success/25">
-          <p className="font-heading text-xl font-bold">{t("portal.staffWishes.approvedTotal", { total: nok(approved) })}</p>
-          <p className="text-app-sm text-muted-foreground">{t("portal.staffWishes.approvedNote")}</p>
-          {approvedMixedVat(visible) ? <p className="text-app-sm text-muted-foreground">{t("portal.wishlist.mixedVat")}</p> : null}
-        </section>
+        <p className="px-1 text-app-sm text-muted-foreground">
+          {t("portal.staffWishes.approvedNote")}
+          {approvedMixedVat(visible) ? ` ${t("portal.wishlist.mixedVat")}` : ""}
+        </p>
       ) : null}
       <ul className="flex flex-col gap-3">
-        {visible.map((item) => (
+        {ordered.map((item) => (
           <li key={`${item.id}:${item.revision}:${item.status}`}>
             <StaffWishCard bookingId={bookingId} item={item} />
           </li>
@@ -117,7 +132,7 @@ function StaffWishCard({ bookingId, item }: { bookingId: string; item: WishItemV
       ) : null}
 
       {open ? (
-        <form onSubmit={submitQuote} className="flex flex-col gap-3 border-t border-foreground/8 pt-3">
+        <form onSubmit={submitQuote} className="flex flex-col gap-3 rounded-xl bg-muted/40 p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor={`q-price-${item.id}`}>{t("portal.staffWishes.priceLabel")}</Label>
