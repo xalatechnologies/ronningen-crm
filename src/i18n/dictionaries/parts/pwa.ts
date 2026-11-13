@@ -11,6 +11,10 @@ export const pwaNb = {
   iosStep2: "Velg «Legg til på Hjem-skjerm».",
   iosStep3: "Trykk «Legg til». Appen ligger nå blant appene dine.",
   iosDone: "Jeg har lagt den til",
+  chromeTitle: "Installer fra Chrome",
+  chromeBody: "Samsung Internet kan gi en sikkerhetsadvarsel ved installasjon. Åpne denne siden i Chrome for å legge appen på hjemskjermen.",
+  copyLink: "Kopier lenke",
+  linkCopied: "Lenken er kopiert. Lim den inn i Chrome.",
 } as const;
 
 export const pwaEn = {
@@ -26,4 +30,8 @@ export const pwaEn = {
   iosStep2: "Choose “Add to Home Screen”.",
   iosStep3: "Tap “Add”. The app now sits among your apps.",
   iosDone: "I have added it",
+  chromeTitle: "Install from Chrome",
+  chromeBody: "Samsung Internet can show a security warning when installing. Open this page in Chrome to add the app to your home screen.",
+  copyLink: "Copy link",
+  linkCopied: "Link copied. Paste it in Chrome.",
 } as const;

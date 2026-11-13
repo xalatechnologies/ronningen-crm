@@ -9,13 +9,13 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useTranslation } from "@/i18n/client";
-import { decideInstall, installMenuAvailable, isIosDevice, readInstallState, writeInstallState, type InstallStored } from "@/lib/pwa/install-state";
+import { decideInstall, installMenuAvailable, isIosDevice, isSamsungBrowser, readInstallState, writeInstallState, type InstallStored } from "@/lib/pwa/install-state";
 import { cn } from "@/lib/utils";
 
 type DeferredPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
 
-type InstallContext = { menuAvailable: boolean; isIos: boolean; install: () => Promise<void>; showIosHelp: () => void };
-const Ctx = createContext<InstallContext>({ menuAvailable: false, isIos: false, install: async () => {}, showIosHelp: () => {} });
+type InstallContext = { menuAvailable: boolean; isIos: boolean; samsung: boolean; install: () => Promise<void>; showIosHelp: () => void; showChromeHint: () => void };
+const Ctx = createContext<InstallContext>({ menuAvailable: false, isIos: false, samsung: false, install: async () => {}, showIosHelp: () => {}, showChromeHint: () => {} });
 export const useInstall = () => useContext(Ctx);
 
 const BANNER_DELAY_MS = 2500;
@@ -31,6 +31,8 @@ export function InstallProvider({ children, placement }: { children: ReactNode; 
   const [standalone, setStandalone] = useState(false);
   const [coarse, setCoarse] = useState(false);
   const [isIos, setIsIos] = useState(false);
+  const [samsung, setSamsung] = useState(false);
+  const [hintOpen, setHintOpen] = useState(false);
   const [stored, setStored] = useState<InstallStored>({});
   /** Set once, after a short delay, so the banner never flashes on load (and render stays free of Date.now()). */
   const [now, setNow] = useState(0);
@@ -52,6 +54,7 @@ export function InstallProvider({ children, placement }: { children: ReactNode; 
     setStandalone(readStandalone());
     setCoarse(window.matchMedia("(pointer: coarse)").matches);
     setIsIos(isIosDevice(navigator));
+    setSamsung(isSamsungBrowser(navigator));
     if (readStandalone()) save({ installed: true });
 
     const onDisplay = () => setStandalone(readStandalone());
@@ -93,7 +96,10 @@ export function InstallProvider({ children, placement }: { children: ReactNode; 
     // eslint-disable-next-line react-hooks/exhaustive-deps -- registers listeners once; `t` only feeds a toast
   }, [save]);
 
-  const dismiss = useCallback(() => save((s) => ({ ...s, dismissals: (s.dismissals ?? 0) + 1, dismissedAt: Date.now() })), [save]);
+  const dismiss = useCallback(() => {
+    setHintOpen(false);
+    save((s) => ({ ...s, dismissals: (s.dismissals ?? 0) + 1, dismissedAt: Date.now() }));
+  }, [save]);
 
   const install = useCallback(async () => {
     const event = deferred.current;
@@ -105,10 +111,19 @@ export function InstallProvider({ children, placement }: { children: ReactNode; 
     if (outcome === "dismissed") dismiss();
   }, [dismiss]);
 
-  const decision = now > 0 ? decideInstall({ standalone, isIos, hasPrompt, coarsePointer: coarse, stored, now }) : "none";
+  const decided = now > 0 ? decideInstall({ standalone, isIos, samsung, hasPrompt, coarsePointer: coarse, stored, now }) : "none";
+  // The menu entry can reopen the Chrome hint even during cooldown.
+  const decision = decided === "none" && hintOpen && samsung ? "chrome-hint" : decided;
   const value = useMemo<InstallContext>(
-    () => ({ menuAvailable: installMenuAvailable({ standalone, isIos, hasPrompt, stored }), isIos, install, showIosHelp: () => setIosOpen(true) }),
-    [standalone, isIos, hasPrompt, stored, install],
+    () => ({
+      menuAvailable: installMenuAvailable({ standalone, isIos, hasPrompt, stored }),
+      isIos,
+      samsung,
+      install,
+      showIosHelp: () => setIosOpen(true),
+      showChromeHint: () => setHintOpen(true),
+    }),
+    [standalone, isIos, samsung, hasPrompt, stored, install],
   );
 
   return (
@@ -129,14 +144,20 @@ export function InstallProvider({ children, placement }: { children: ReactNode; 
             </span>
             <div className="flex min-w-0 flex-col">
               <h2 id="pwa-title" className="font-heading text-base font-semibold">
-                {t("pwa.title")}
+                {decision === "chrome-hint" ? t("pwa.chromeTitle") : t("pwa.title")}
               </h2>
-              <p className="text-app-sm text-muted-foreground">{t("pwa.body")}</p>
+              <p className="text-app-sm text-muted-foreground">{decision === "chrome-hint" ? t("pwa.chromeBody") : t("pwa.body")}</p>
             </div>
           </div>
           <div className="flex gap-2">
-            <Button type="button" variant="success" size="cta" className="flex-1" onClick={() => (decision === "install-button" ? void install() : setIosOpen(true))}>
-              {decision === "install-button" ? t("pwa.install") : t("pwa.iosHow")}
+            <Button
+              type="button"
+              variant="success"
+              size="cta"
+              className="flex-1"
+              onClick={() => (decision === "chrome-hint" ? void copyLink(t("pwa.linkCopied")) : decision === "install-button" ? void install() : setIosOpen(true))}
+            >
+              {decision === "chrome-hint" ? t("pwa.copyLink") : decision === "install-button" ? t("pwa.install") : t("pwa.iosHow")}
             </Button>
             <Button type="button" variant="outline" size="cta" onClick={dismiss}>
               {t("pwa.later")}
@@ -194,10 +215,20 @@ export function InstallProvider({ children, placement }: { children: ReactNode; 
   );
 }
 
-/** Starts the install from a menu or header: the browser's prompt, or the iPhone instructions. */
+/** Copies the site address so it can be pasted into Chrome (Samsung Internet's install wrapper can trigger a Play Protect warning). */
+async function copyLink(message: string) {
+  try {
+    await navigator.clipboard.writeText(window.location.origin);
+    toast.success(message);
+  } catch {
+    toast.error(window.location.origin);
+  }
+}
+
+/** Starts the install from a menu or header: the browser's prompt, the iPhone instructions, or the Chrome hint. */
 export function useStartInstall() {
-  const { install, isIos, showIosHelp } = useInstall();
-  return useCallback(() => (isIos ? showIosHelp() : void install()), [install, isIos, showIosHelp]);
+  const { install, isIos, samsung, showIosHelp, showChromeHint } = useInstall();
+  return useCallback(() => (isIos ? showIosHelp() : samsung ? showChromeHint() : void install()), [install, isIos, samsung, showIosHelp, showChromeHint]);
 }
 
 /** The venue user-menu entry; renders nothing when installing is not possible. */

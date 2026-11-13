@@ -1,6 +1,6 @@
 export type InstallStored = { installed?: boolean; dismissals?: number; dismissedAt?: number };
 
-export type InstallDecision = "none" | "install-button" | "ios-instructions";
+export type InstallDecision = "none" | "install-button" | "ios-instructions" | "chrome-hint";
 
 const DAY = 86_400_000;
 /** Cooldown after "Ikke nå": Chromium gets a reminder sooner than iPhone, where we cannot tell if it is installed. */
@@ -15,6 +15,8 @@ export const MAX_DISMISSALS = 3;
 export function decideInstall(input: {
   standalone: boolean;
   isIos: boolean;
+  /** Samsung Internet: its install wrapper can trigger a Google Play Protect warning, so we point to Chrome. */
+  samsung?: boolean;
   hasPrompt: boolean;
   coarsePointer: boolean;
   stored: InstallStored;
@@ -26,6 +28,7 @@ export function decideInstall(input: {
   const cooldown = (input.isIos && !input.hasPrompt ? COOLDOWN_DAYS.ios : COOLDOWN_DAYS.chromium) * DAY;
   if (stored.dismissedAt !== undefined && input.now - stored.dismissedAt < cooldown) return "none";
   if (!input.coarsePointer) return "none";
+  if (input.hasPrompt && input.samsung) return "chrome-hint";
   if (input.hasPrompt) return "install-button";
   if (input.isIos) return "ios-instructions";
   return "none";
@@ -35,6 +38,10 @@ export function decideInstall(input: {
 export function installMenuAvailable(input: { standalone: boolean; isIos: boolean; hasPrompt: boolean; stored: InstallStored }): boolean {
   if (input.standalone || input.stored.installed) return false;
   return input.hasPrompt || input.isIos;
+}
+
+export function isSamsungBrowser(nav: Pick<Navigator, "userAgent">): boolean {
+  return /SamsungBrowser/i.test(nav.userAgent);
 }
 
 export function isIosDevice(nav: Pick<Navigator, "userAgent" | "maxTouchPoints"> & { platform?: string }): boolean {
