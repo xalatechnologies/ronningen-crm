@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/i18n/client";
 import type { TranslationKey } from "@/i18n/types";
 import { acceptCounter, markWishUnavailable, quoteWish, rejectCounter, type WishResult } from "@/lib/portal/wishlist-actions";
-import { approvedMixedVat, approvedTotalNok, parsePriceInput, type WishItemView } from "@/lib/portal/wishlist-rules";
+import { approvedTotalNok, defaultVatRate, parsePriceInput, VAT_RATES, vatBreakdown, type WishItemView } from "@/lib/portal/wishlist-rules";
 
 /** The venue's view of a booking's wishlist: price each wish, answer counter-offers. Drafts are never shown. */
 export function StaffWishlist({ bookingId, items }: { bookingId: string; items: WishItemView[] }) {
@@ -45,10 +45,7 @@ export function StaffWishlist({ bookingId, items }: { bookingId: string; items: 
         ))}
       </ul>
       {approved > 0 ? (
-        <p className="px-1 text-app-sm text-muted-foreground">
-          {t("portal.staffWishes.approvedNote")}
-          {approvedMixedVat(visible) ? ` ${t("portal.wishlist.mixedVat")}` : ""}
-        </p>
+        <p className="px-1 text-app-sm text-muted-foreground">{t("portal.staffWishes.approvedNote")}</p>
       ) : null}
       <ul className="flex flex-col gap-3">
         {ordered.map((item) => (
@@ -67,6 +64,7 @@ function StaffWishCard({ bookingId, item }: { bookingId: string; item: WishItemV
   const nok = useNok();
   const [price, setPrice] = useState(item.quote ? String(item.quote.unitPriceNok) : "");
   const [vat, setVat] = useState(item.quote?.vatIncluded ?? true);
+  const [vatRate, setVatRate] = useState<number>(item.quote?.vatRate ?? defaultVatRate(item.category));
   const [validUntil, setValidUntil] = useState(item.quote?.validUntil ?? "");
   const [note, setNote] = useState(item.quote?.note ?? "");
   const [busy, setBusy] = useState(false);
@@ -86,7 +84,7 @@ function StaffWishCard({ bookingId, item }: { bookingId: string; item: WishItemV
     const parsed = parsePriceInput(price);
     if (parsed === null) return setPriceError(true);
     setPriceError(false);
-    void run(() => quoteWish({ bookingId, itemId: item.id, unitPriceNok: parsed, vatIncluded: vat, note, validUntil: validUntil || null }));
+    void run(() => quoteWish({ bookingId, itemId: item.id, unitPriceNok: parsed, vatIncluded: vat, vatRate, note, validUntil: validUntil || null }));
   }
 
   const open = item.status === "requested" || item.status === "countered" || item.status === "quoted";
@@ -121,13 +119,13 @@ function StaffWishCard({ bookingId, item }: { bookingId: string; item: WishItemV
       ) : null}
 
       {item.status === "quoted" && item.quote ? (
-        <p className="text-app-sm text-muted-foreground">{t("portal.staffWishes.waitingCustomer", { total: nok(item.quote.totalNok) })}</p>
+        <p className="text-app-sm text-muted-foreground">{t("portal.staffWishes.waitingCustomer", { total: nok(vatBreakdown(item.quote).incVat) })}</p>
       ) : null}
 
       {item.status === "approved" && item.quote ? (
         <p className="font-heading text-lg font-bold">
-          {nok(item.quote.totalNok)}{" "}
-          <span className="text-app-sm font-medium text-muted-foreground">{item.quote.vatIncluded ? t("portal.wishlist.vatIncluded") : t("portal.wishlist.vatExcluded")}</span>
+          {nok(vatBreakdown(item.quote).incVat)}{" "}
+          <span className="text-app-sm font-medium text-muted-foreground">{t("portal.wishlist.vatIncluded")}</span>
         </p>
       ) : null}
 
@@ -144,10 +142,27 @@ function StaffWishCard({ bookingId, item }: { bookingId: string; item: WishItemV
               <Input id={`q-valid-${item.id}`} type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className="h-12 !text-base" />
             </div>
           </div>
-          <label className="flex min-h-11 items-center gap-3 text-app-sm font-medium">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`q-rate-${item.id}`}>{t("portal.staffWishes.vatRate")}</Label>
+              <select
+                id={`q-rate-${item.id}`}
+                value={vatRate}
+                onChange={(e) => setVatRate(Number(e.target.value))}
+                className="h-12 rounded-[length:var(--app-radius)] border border-input bg-card px-3 text-base"
+              >
+                {VAT_RATES.map((rate) => (
+                  <option key={rate} value={rate}>
+                    {t(`portal.staffWishes.vatRate${rate}` as TranslationKey)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          <label className="flex min-h-12 items-center gap-3 self-end text-app-sm font-medium">
             <input type="checkbox" checked={vat} onChange={(e) => setVat(e.target.checked)} className="size-5" />
             {t("portal.staffWishes.vatIncluded")}
           </label>
+          </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor={`q-note-${item.id}`}>{t("portal.staffWishes.note")}</Label>
             <Textarea id={`q-note-${item.id}`} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} className="!min-h-20 !text-base" />

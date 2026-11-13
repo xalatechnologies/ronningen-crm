@@ -23,6 +23,7 @@ type QuoteRow = {
   unit_price_nok: number | string;
   total_nok: number | string;
   vat_included: boolean;
+  vat_rate: number | string;
   note: string | null;
   valid_until: string | null;
   source: "staff" | "counter";
@@ -50,7 +51,7 @@ export async function listWishItems(client: Client, bookingId: string): Promise<
       .order("created_at", { ascending: true }),
     client
       .from("portal_wish_quotes" as never)
-      .select("id, wish_item_id, unit_price_nok, total_nok, vat_included, note, valid_until, source, status")
+      .select("id, wish_item_id, unit_price_nok, total_nok, vat_included, vat_rate, note, valid_until, source, status")
       .eq("booking_id", bookingId)
       .eq("status", "active"),
     client
@@ -82,6 +83,7 @@ export async function listWishItems(client: Client, bookingId: string): Promise<
             unitPriceNok: Number(q.unit_price_nok),
             totalNok: Number(q.total_nok),
             vatIncluded: q.vat_included,
+            vatRate: Number(q.vat_rate),
             note: q.note,
             validUntil: q.valid_until,
             source: q.source,

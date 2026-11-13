@@ -52,6 +52,23 @@ export function canCounter(input: { counterRounds: number; hasOpenCounter: boole
   return !input.hasOpenCounter && input.counterRounds < MAX_COUNTER_ROUNDS;
 }
 
+/** Norwegian MVA rates a quote can use: general 25 %, food 15 %, 12 % (e.g. lodging, culture) and 0 % (exempt). */
+export const VAT_RATES = [25, 15, 12, 0] as const;
+export type VatRate = (typeof VAT_RATES)[number];
+
+/** Food and (non-alcoholic) drinks are 15 %; everything else is the general 25 %. Alcohol is chosen by the venue. */
+export function defaultVatRate(category: WishCategory): VatRate {
+  return category === "food" || category === "drink" ? 15 : 25;
+}
+
+/** Price excluding MVA, the MVA amount and the price including MVA, from the quoted total and how it was entered. */
+export function vatBreakdown(input: { totalNok: number; vatRate: number; vatIncluded: boolean }): { exVat: number; vat: number; incVat: number } {
+  const factor = 1 + input.vatRate / 100;
+  const incVat = input.vatIncluded ? input.totalNok : roundNok(input.totalNok * factor);
+  const exVat = input.vatIncluded ? roundNok(input.totalNok / factor) : input.totalNok;
+  return { exVat, vat: roundNok(incVat - exVat), incVat };
+}
+
 /** Money in NOK with 2 decimals; never floating-point drift in stored totals. */
 export function roundNok(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
@@ -98,6 +115,7 @@ export const quoteInputSchema = z.object({
   itemId: z.string().uuid(),
   unitPriceNok: price,
   vatIncluded: z.boolean(),
+  vatRate: z.union([z.literal(25), z.literal(15), z.literal(12), z.literal(0)]).optional().default(25),
   note: text(1000).optional().default(null),
   validUntil: z
     .string()
@@ -130,6 +148,7 @@ export type WishItemView = {
     unitPriceNok: number;
     totalNok: number;
     vatIncluded: boolean;
+    vatRate: number;
     note: string | null;
     validUntil: string | null;
     source: "staff" | "counter";
@@ -137,17 +156,11 @@ export type WishItemView = {
   openCounter: { id: string; proposedUnitPriceNok: number; note: string | null } | null;
 };
 
-/** Sum of approved items at their active quote: the "tillegg utenfor avtalen" total. */
+/** Sum of approved items at their active quote, including MVA: the "tillegg utenfor avtalen" total. */
 export function approvedTotalNok(items: readonly WishItemView[]): number {
   return roundNok(
-    items.reduce((sum, item) => (item.status === "approved" && item.quote ? sum + item.quote.totalNok : sum), 0),
+    items.reduce((sum, item) => (item.status === "approved" && item.quote ? sum + vatBreakdown(item.quote).incVat : sum), 0),
   );
-}
-
-/** True when the approved items mix prices with and without VAT, so their sum is not one comparable figure. */
-export function approvedMixedVat(items: readonly WishItemView[]): boolean {
-  const flags = new Set(items.filter((i) => i.status === "approved" && i.quote).map((i) => i.quote!.vatIncluded));
-  return flags.size > 1;
 }
 
 /** Items waiting for the customer's answer (a price to approve, decline or counter). */
