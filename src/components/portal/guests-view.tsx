@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardPaste, Plus } from "lucide-react";
+import { ClipboardPaste, MessageSquareText, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -142,6 +142,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
                         {g.maxParty > 1 ? (
                           <span className="text-app-xs text-muted-foreground">{t("portal.guests.partyUpTo", { count: g.maxParty })}</span>
                         ) : null}
+                        {g.status === "accepted" ? <AnswerSummary guest={g} /> : null}
                         {g.deliveryIssue ? (
                           <span className={cn("text-app-xs font-medium", g.deliveryIssue === "bounced" ? "text-destructive" : "text-amber-700 dark:text-amber-300")}>
                             {t(g.deliveryIssue === "bounced" ? "portal.guests.deliveryBounced" : "portal.guests.deliveryDelayed")}
@@ -466,31 +467,70 @@ function ImportForm({
   );
 }
 
+type Translate = ReturnType<typeof useTranslation>["t"];
+
+const partyLabel = (t: Translate, count: number) => (count === 1 ? t("portal.guestSend.answerPartyOne") : t("portal.guestSend.answerParty", { count }));
+const PANEL: Record<GuestStatus, string> = {
+  not_sent: "bg-foreground/5 ring-foreground/10",
+  invited: "bg-amber-500/10 ring-amber-500/30",
+  accepted: "bg-success/10 ring-success/30",
+  declined: "bg-destructive/8 ring-destructive/25",
+  maybe: "bg-sky-500/10 ring-sky-500/30",
+};
+
+/** What the guest said, visible in the list itself: party size, diet tags and whether they left a comment. */
+function AnswerSummary({ guest }: { guest: GuestRow }) {
+  const { t } = useTranslation();
+  const tags = [...new Set(guest.diet.flatMap((p) => p.tags))];
+  const hasNote = guest.diet.some((p) => p.note.trim() !== "");
+  return (
+    <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
+      <span className="rounded-full bg-success px-2.5 py-0.5 text-app-xs font-semibold text-white">{partyLabel(t, guest.partySize)}</span>
+      {tags.slice(0, 3).map((tag) => (
+        <span key={tag} className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-app-xs font-semibold text-amber-800 dark:text-amber-300">
+          {t(`portal.diet.tags.${tag}` as TranslationKey)}
+        </span>
+      ))}
+      {tags.length > 3 ? <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-app-xs font-semibold text-amber-800 dark:text-amber-300">+{tags.length - 3}</span> : null}
+      {hasNote ? <MessageSquareText className="size-4 text-muted-foreground" role="img" aria-label={t("portal.guestSend.hasNote")} /> : null}
+    </span>
+  );
+}
+
 function GuestAnswer({ guest }: { guest: GuestRow | null }) {
   const { t } = useTranslation();
   if (!guest || guest.status === "not_sent") return null;
   const answered = guest.status !== "invited";
+  const people = guest.diet.map((p, i) => ({ p, i })).filter(({ p }) => p.tags.length > 0 || p.note);
   return (
-    <section className="mx-auto mb-4 flex w-full max-w-lg flex-col gap-2 rounded-xl bg-foreground/5 p-4">
-      <h3 className="font-heading text-base font-semibold">{t("portal.guestSend.answerTitle")}</h3>
+    <section className={cn("mx-auto mb-5 flex w-full max-w-lg flex-col gap-4 rounded-2xl p-5 ring-1", PANEL[guest.status])}>
+      <h3 className="text-app-sm font-semibold uppercase tracking-wide text-muted-foreground">{t("portal.guestSend.answerTitle")}</h3>
       {!answered ? (
-        <p className="text-app-sm text-muted-foreground">{t("portal.guestSend.answerNotYet")}</p>
+        <p className="text-app-base text-muted-foreground">{t("portal.guestSend.answerNotYet")}</p>
       ) : (
         <>
-          <p className="font-semibold">
-            {t(`portal.guests.status.${guest.status}` as TranslationKey)}
-            {guest.status === "accepted" ? ` · ${t("portal.guestSend.answerParty", { count: guest.partySize })}` : ""}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className={cn("rounded-full px-4 py-1.5 font-heading text-xl font-bold", guest.status === "accepted" ? "bg-success !text-white" : TONE[guest.status])}>{t(`portal.guests.status.${guest.status}` as TranslationKey)}</span>
+            {guest.status === "accepted" ? <span className="font-heading text-xl font-bold">{partyLabel(t, guest.partySize)}</span> : null}
+          </div>
           {guest.status === "accepted" ? (
-            guest.diet.filter((p) => p.tags.length > 0 || p.note).length === 0 ? (
-              <p className="text-app-sm text-muted-foreground">{t("portal.guestSend.answerNoDiet")}</p>
+            people.length === 0 ? (
+              <p className="text-app-base text-muted-foreground">{t("portal.guestSend.answerNoDiet")}</p>
             ) : (
-              <ul className="flex flex-col gap-2 text-app-sm">
-                {guest.diet.map((p, i) => (p.tags.length > 0 || p.note ? { p, i } : null)).filter((x): x is { p: GuestRow["diet"][number]; i: number } => x !== null).map(({ p, i }) => (
-                  <li key={i} className="flex flex-col gap-0.5">
-                    {guest.diet.length > 1 ? <span className="font-semibold">{t("portal.guestSend.person", { n: i + 1 })}</span> : null}
-                    {p.tags.length > 0 ? <span>{p.tags.map((tag) => t(`portal.diet.tags.${tag}` as TranslationKey)).join(", ")}</span> : null}
-                    {p.note ? <span className="break-words text-muted-foreground">{p.note}</span> : null}
+              <ul className="flex flex-col gap-3">
+                {people.map(({ p, i }) => (
+                  <li key={i} className="flex flex-col gap-2 rounded-xl bg-card p-4 ring-1 ring-foreground/8">
+                    {guest.diet.length > 1 ? <span className="text-app-sm font-semibold text-muted-foreground">{t("portal.guestSend.person", { n: i + 1 })}</span> : null}
+                    {p.tags.length > 0 ? (
+                      <span className="flex flex-wrap gap-2">
+                        {p.tags.map((tag) => (
+                          <span key={tag} className="rounded-full bg-amber-500/15 px-3 py-1 text-app-sm font-semibold text-amber-800 dark:text-amber-300">
+                            {t(`portal.diet.tags.${tag}` as TranslationKey)}
+                          </span>
+                        ))}
+                      </span>
+                    ) : null}
+                    {p.note ? <span className="break-words border-l-4 border-foreground/15 pl-3 text-app-base italic">{p.note}</span> : null}
                   </li>
                 ))}
               </ul>

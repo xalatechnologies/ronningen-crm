@@ -14,6 +14,7 @@ import { useTranslation } from "@/i18n/client";
 import { deleteActivity, saveActivity, type ActivityResult } from "@/lib/portal/activity-actions";
 import { canAnswer, formatOslo, isoToOsloLocal, type ActivityAudience } from "@/lib/portal/activity-rules";
 import type { CustomerActivity } from "@/lib/portal/activities";
+import { containsLink } from "@/lib/portal/invite-rules";
 import { cn } from "@/lib/utils";
 
 type Guest = { id: string; name: string };
@@ -192,8 +193,13 @@ function ActivityForm({ initial, guests, onCancel, onDone }: { initial: Draft; g
     else toast.error(r.error === "invalid" ? t("portal.activities.errGeneric") : t("portal.activities.errGeneric"));
   }
 
+  // "YYYY-MM-DDTHH:mm" strings compare in time order.
+  const endError = Boolean(f.endsAtLocal && f.startsAtLocal && f.endsAtLocal <= f.startsAtLocal);
+
   function submit(event: FormEvent) {
     event.preventDefault();
+    if (endError) return void toast.error(t("portal.activities.errTime"));
+    if (containsLink(`${f.title} ${f.description} ${f.location}`)) return void toast.error(t("portal.activities.errLinks"));
     const capacity = f.capacity.trim() === "" ? null : Number(f.capacity);
     if (capacity !== null && (!Number.isInteger(capacity) || capacity < 1)) return void toast.error(t("portal.activities.errGeneric"));
     void settle(() =>
@@ -226,7 +232,8 @@ function ActivityForm({ initial, guests, onCancel, onDone }: { initial: Draft; g
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="a-end">{t("portal.activities.fieldEnd")}</Label>
-          <Input id="a-end" type="datetime-local" value={f.endsAtLocal} onChange={(e) => set("endsAtLocal", e.target.value)} className="h-12 !text-base" />
+          <Input id="a-end" type="datetime-local" value={f.endsAtLocal} onChange={(e) => set("endsAtLocal", e.target.value)} aria-invalid={endError} className="h-12 !text-base" />
+          {endError ? <p className="text-app-sm font-medium text-destructive">{t("portal.activities.errTime")}</p> : null}
         </div>
       </div>
       <div className="flex flex-col gap-2">
