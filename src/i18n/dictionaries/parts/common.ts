@@ -139,6 +139,7 @@ export const navigationNb = {
   dashboard: "Oversikt",
   inquiries: "Forespørsler",
   bookings: "Reservasjoner",
+  portal: "Kundeportal",
   overnatting: "Overnatting",
   customers: "Kunder",
   partners: "Partnere",

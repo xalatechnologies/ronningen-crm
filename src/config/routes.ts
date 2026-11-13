@@ -58,6 +58,7 @@ export const SIDEBAR_ROUTES: readonly SidebarNavItem[] = [
   { title: "Oversikt", href: "/app/dashboard", segment: "dashboard" },
   { title: "Forespørsler", href: "/app/inquiries", segment: "inquiries" },
   { title: "Reservasjoner", href: "/app/bookings", segment: "bookings" },
+  { title: "Kundeportal", href: "/app/portal", segment: "portal" },
   { title: "Overnatting", href: "/app/overnatting", segment: "overnatting" },
   { title: "Kunder", href: "/app/customers", segment: "customers" },
   { title: "Priser", href: "/app/pricing", segment: "pricing" },

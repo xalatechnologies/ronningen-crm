@@ -34,6 +34,32 @@ export function AppSidebar({ className }: { className?: string }) {
     setOrgLogoFailed(false);
   }, [logoUrl]);
 
+  // Customer portal items waiting for the venue (RLS returns 0 for roles that cannot see the portal).
+  const [portalWaiting, setPortalWaiting] = useState(0);
+  useEffect(() => {
+    if (!currentOrganizationId) return;
+    let live = true;
+    void (async () => {
+      const [messages, wishes] = await Promise.all([
+        supabase
+          .from("portal_messages" as never)
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", currentOrganizationId)
+          .eq("sender_kind", "customer")
+          .is("read_by_staff_at", null),
+        supabase
+          .from("portal_wish_items" as never)
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", currentOrganizationId)
+          .in("status", ["requested", "countered"]),
+      ]);
+      if (live) setPortalWaiting((messages.count ?? 0) + (wishes.count ?? 0));
+    })();
+    return () => {
+      live = false;
+    };
+  }, [supabase, currentOrganizationId, pathname]);
+
   useEffect(() => {
     if (!isPending) {
       setPendingHref(null);
@@ -156,6 +182,11 @@ export function AppSidebar({ className }: { className?: string }) {
                 aria-hidden
               />
               {appNavLabel(item.segment, t)}
+              {item.segment === "portal" && portalWaiting > 0 ? (
+                <span className="ml-auto min-w-6 rounded-full bg-white px-2 py-0.5 text-center text-app-xs font-bold text-sidebar">
+                  {portalWaiting}
+                </span>
+              ) : null}
             </Link>
           );
         })}
