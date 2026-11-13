@@ -8,6 +8,7 @@ import { prefetchTenantRoute } from "@/lib/queries/prefetch-route";
 import { getQueryClient } from "@/lib/queries/get-query-client";
 import { RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { appNavLabel } from "@/lib/navigation/nav-labels";
+import { isNavActive } from "@/lib/navigation/nav-active";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -131,8 +132,7 @@ export function AppSidebar({ className }: { className?: string }) {
         aria-label={t("navigation.mainMenuAria")}
       >
         {mainNavigation.map((item) => {
-          const active =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active = isNavActive(item.segment, item.href, pathname);
           const pending =
             pendingHref === item.href ||
             (isPending && pendingHref === item.href);
