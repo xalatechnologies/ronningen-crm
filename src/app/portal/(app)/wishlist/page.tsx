@@ -15,7 +15,7 @@ export default async function PortalWishlistPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-3xl font-bold tracking-tight">{t("portal.wishlist.title")}</h1>
+        <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">{t("portal.wishlist.title")}</h1>
         <p className="text-muted-foreground">{t("portal.wishlist.lead", { org: ctx.organization.name })}</p>
       </header>
       <WishlistView items={items} />

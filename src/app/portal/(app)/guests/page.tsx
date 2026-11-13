@@ -34,11 +34,13 @@ export default async function PortalGuestsPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-3xl font-bold tracking-tight">{t("portal.guests.title")}</h1>
+        <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">{t("portal.guests.title")}</h1>
         <p className="text-muted-foreground">{t("portal.guests.lead")}</p>
       </header>
-      <InviteLinkCard status={design ? design.status : "none"} />
-      <ActivitiesLinkCard count={activityCount} />
+      <div className="divide-y divide-foreground/8 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
+        <InviteLinkCard status={design ? design.status : "none"} />
+        <ActivitiesLinkCard count={activityCount} />
+      </div>
       <GuestsView guests={guests} sendState={sendState} />
     </div>
   );

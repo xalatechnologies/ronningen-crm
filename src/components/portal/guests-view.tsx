@@ -119,7 +119,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
           {groups.map((section) => (
             <section key={section.label || "_"} className="flex flex-col gap-3">
               {section.label ? <h2 className="font-heading text-lg font-semibold">{section.label}</h2> : groups.length > 1 ? <h2 className="font-heading text-lg font-semibold">—</h2> : null}
-              <ul className="flex flex-col gap-2">
+              <ul className="divide-y divide-foreground/8 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
                 {section.rows.map((g) => (
                   <li key={g.id}>
                     <button
@@ -134,14 +134,14 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
                           maxParty: String(g.maxParty),
                         })
                       }
-                      className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3 text-left ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
+                      className="flex min-h-16 w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 active:bg-muted"
                     >
                       <span className="flex min-w-0 flex-col">
                         <span className="break-words font-semibold">{g.name}</span>
-                        <span className="break-all text-app-sm text-muted-foreground">
-                          {g.email ?? t("portal.guests.noEmail")}
-                          {g.maxParty > 1 ? ` · ${t("portal.guests.partyUpTo", { count: g.maxParty })}` : ""}
-                        </span>
+                        <span className="truncate text-app-sm text-muted-foreground">{g.email ?? t("portal.guests.noEmail")}</span>
+                        {g.maxParty > 1 ? (
+                          <span className="text-app-xs text-muted-foreground">{t("portal.guests.partyUpTo", { count: g.maxParty })}</span>
+                        ) : null}
                       </span>
                       <span className={cn("shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-app-xs font-semibold", TONE[g.status])}>
                         {t(`portal.guests.status.${g.status}` as TranslationKey)}

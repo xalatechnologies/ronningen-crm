@@ -9,7 +9,7 @@ export async function ActivitiesLinkCard({ count }: { count: number }) {
   return (
     <Link
       href="/portal/guests/activities"
-      className="flex min-h-16 items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
+      className="flex min-h-[4.5rem] items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/50 active:bg-muted"
     >
       <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-success/12 text-success">
         <CalendarHeart className="size-5" aria-hidden />
