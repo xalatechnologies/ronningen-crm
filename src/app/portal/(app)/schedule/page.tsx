@@ -1,7 +1,7 @@
 import { ScheduleView } from "@/components/portal/schedule-view";
 import { getServerTranslation } from "@/i18n/server";
 import { getPortalContext } from "@/lib/portal/context";
-import { listScheduleItems, listScheduleVersions, scheduleContentHash } from "@/lib/portal/schedule";
+import { getGuestSharing, listScheduleItems, listScheduleVersions, scheduleContentHash } from "@/lib/portal/schedule";
 import { shareState } from "@/lib/portal/schedule-rules";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -12,9 +12,10 @@ export default async function PortalSchedulePage() {
   if (!ctx) return null;
   const { t } = await getServerTranslation();
   const supabase = await createServerSupabaseClient();
-  const [entries, versions] = await Promise.all([
+  const [entries, versions, guestSharing] = await Promise.all([
     listScheduleItems(supabase, ctx.booking.id),
     listScheduleVersions(supabase, ctx.booking.id),
+    getGuestSharing(supabase, ctx.booking.id),
   ]);
   const latest = versions[0] ?? null;
   const state = shareState({
@@ -33,6 +34,7 @@ export default async function PortalSchedulePage() {
         entries={entries}
         state={state}
         orgName={ctx.organization.name}
+        guestSharing={guestSharing}
         latest={
           latest
             ? { version: latest.version, sharedAt: latest.sharedAt, acknowledgedAt: latest.acknowledgedAt, staffNote: latest.staffNote }

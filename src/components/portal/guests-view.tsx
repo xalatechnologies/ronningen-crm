@@ -35,6 +35,14 @@ const TONE: Record<GuestStatus, string> = {
   maybe: "bg-sky-500/15 text-sky-800 dark:text-sky-300",
 };
 
+const initials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join("");
+
 function errorText(t: ReturnType<typeof useTranslation>["t"], error: GuestError): string {
   return error === "duplicate" ? t("portal.guests.errDuplicate") : error === "limit" ? t("portal.guests.errLimit") : t("portal.guests.errGeneric");
 }
@@ -107,11 +115,11 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
             {summary.invited === 0 ? (
               <p className="text-app-sm text-muted-foreground">{t("portal.guests.comingSoon")}</p>
             ) : (
-              <ul className="flex flex-wrap gap-2 text-app-sm font-semibold">
-                <li className="rounded-full bg-success/15 px-3 py-1">{t("portal.guests.summaryComing", { count: summary.acceptedPeople })}</li>
-                <li className="rounded-full bg-destructive/12 px-3 py-1">{t("portal.guests.summaryDeclined", { count: summary.declined })}</li>
-                <li className="rounded-full bg-sky-500/15 px-3 py-1">{t("portal.guests.summaryMaybe", { count: summary.maybe })}</li>
-                <li className="rounded-full bg-amber-500/15 px-3 py-1">{t("portal.guests.summaryNoAnswer", { count: summary.noAnswer })}</li>
+              <ul className="grid grid-cols-2 gap-2 text-app-sm font-semibold sm:grid-cols-4">
+                <li className="rounded-xl bg-success/15 px-3 py-2.5">{t("portal.guests.summaryComing", { count: summary.acceptedPeople })}</li>
+                <li className="rounded-xl bg-destructive/12 px-3 py-2.5">{t("portal.guests.summaryDeclined", { count: summary.declined })}</li>
+                <li className="rounded-xl bg-sky-500/15 px-3 py-2.5">{t("portal.guests.summaryMaybe", { count: summary.maybe })}</li>
+                <li className="rounded-xl bg-amber-500/15 px-3 py-2.5">{t("portal.guests.summaryNoAnswer", { count: summary.noAnswer })}</li>
               </ul>
             )}
           </section>
@@ -136,6 +144,10 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
                       }
                       className="flex min-h-16 w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 active:bg-muted"
                     >
+                      <span className="flex min-w-0 items-center gap-3">
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-app-sm font-semibold text-muted-foreground" aria-hidden>
+                        {initials(g.name)}
+                      </span>
                       <span className="flex min-w-0 flex-col">
                         <span className="break-words font-semibold">{g.name}</span>
                         <span className="truncate text-app-sm text-muted-foreground">{g.email ?? t("portal.guests.noEmail")}</span>
@@ -149,6 +161,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
                           </span>
                         ) : null}
                       </span>
+                      </span>
                       <span className={cn("shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-app-xs font-semibold", TONE[g.status])}>
                         {t(`portal.guests.status.${g.status}` as TranslationKey)}
                       </span>
@@ -159,16 +172,18 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
             </section>
           ))}
 
-          <div className="flex flex-col gap-2">
-            <Button type="button" variant="outline" size="cta" className="w-full" onClick={() => setSheet({ ...emptyDraft })}>
-              <Plus className="size-5" aria-hidden />
-              {t("portal.guests.add")}
-            </Button>
-            <Button type="button" variant="outline" size="cta" className="w-full" onClick={() => setImporting(true)}>
-              <ClipboardPaste className="size-5" aria-hidden />
-              {t("portal.guests.importList")}
-            </Button>
-            <Button type="button" variant="ghost" className="text-destructive" onClick={() => setConfirmAll(true)}>
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <Button type="button" variant="outline" size="cta" className="w-full" onClick={() => setSheet({ ...emptyDraft })}>
+                <Plus className="size-5" aria-hidden />
+                {t("portal.guests.add")}
+              </Button>
+              <Button type="button" variant="outline" size="cta" className="w-full" onClick={() => setImporting(true)}>
+                <ClipboardPaste className="size-5" aria-hidden />
+                {t("portal.guests.importList")}
+              </Button>
+            </div>
+            <Button type="button" variant="ghost" className="self-center text-app-sm text-destructive" onClick={() => setConfirmAll(true)}>
               {t("portal.guests.deleteAll")}
             </Button>
           </div>

@@ -47,6 +47,19 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
           />
         </div>
         <GuestRsvpForm token={token} guest={guest} closed={invite.closed} hostName={invite.hostName || invite.venueName} />
+        {invite.schedule.length > 0 && guest.status !== "declined" ? (
+          <section className="flex flex-col gap-4 rounded-2xl bg-card p-5 ring-1 ring-foreground/8">
+            <h2 className="font-heading text-lg font-semibold">{t("portal.guestPage.scheduleTitle")}</h2>
+            <ol className="flex flex-col gap-3">
+              {invite.schedule.map((e, i) => (
+                <li key={`${e.startTime}-${i}`} className="grid grid-cols-[3.5rem_1fr] items-baseline gap-3">
+                  <span className="font-heading text-lg font-bold tabular-nums">{e.startTime}</span>
+                  <span className="break-words font-medium">{e.title}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
         <GuestActivities token={token} activities={activities} />
       </div>
     </main>

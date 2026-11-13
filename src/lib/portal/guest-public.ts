@@ -6,6 +6,7 @@ import { guestIdForToken } from "./guest-tokens";
 import type { DietTag, GuestStatus } from "./guest-rules";
 import { deadlinePassed } from "./rsvp-rules";
 import type { InviteDesign } from "./invite-rules";
+import { endTime, sortEntries } from "./schedule-rules";
 
 export type PublicInvite = {
   guest: {
@@ -22,6 +23,8 @@ export type PublicInvite = {
   hostName: string;
   bookingId: string;
   closed: boolean;
+  /** Time and title only (never notes or the responsible person); empty unless the customer turned it on. */
+  schedule: { startTime: string; endTime: string | null; title: string }[];
 };
 
 type GuestRow = {
@@ -57,14 +60,14 @@ export async function loadPublicInvite(token: string): Promise<PublicInvite | nu
   const [{ data: d }, { data: org }, { data: booking }] = await Promise.all([
     admin
       .from("portal_invite_designs" as never)
-      .select("template_key, palette_key, font_key, headline, message, event_date_text, event_time_text, place_text, dress_code, rsvp_deadline, status")
+      .select("template_key, palette_key, font_key, headline, message, event_date_text, event_time_text, place_text, dress_code, rsvp_deadline, status, show_schedule")
       .eq("booking_id", guest.booking_id)
       .maybeSingle(),
     admin.from("organizations").select("name, portal_enabled" as "name").eq("id", guest.organization_id).maybeSingle(),
     admin.from("bookings").select("customer_id").eq("id", guest.booking_id).maybeSingle(),
   ]);
   const design = d as unknown as
-    | { template_key: InviteDesign["templateKey"]; palette_key: InviteDesign["paletteKey"]; font_key: InviteDesign["fontKey"]; headline: string; message: string; event_date_text: string; event_time_text: string; place_text: string; dress_code: string; rsvp_deadline: string | null; status: string }
+    | { template_key: InviteDesign["templateKey"]; palette_key: InviteDesign["paletteKey"]; font_key: InviteDesign["fontKey"]; headline: string; message: string; event_date_text: string; event_time_text: string; place_text: string; dress_code: string; rsvp_deadline: string | null; status: string; show_schedule: boolean }
     | null;
   if (!design || design.status !== "published") return null;
   // The venue switched the portal off: guest links stop working too (abuse kill switch).
@@ -73,6 +76,20 @@ export async function loadPublicInvite(token: string): Promise<PublicInvite | nu
   const { data: customer } = booking?.customer_id
     ? await admin.from("customers").select("name").eq("id", booking.customer_id).maybeSingle()
     : { data: null };
+
+  const { data: items } = design.show_schedule
+    ? await admin
+        .from("portal_schedule_items" as never)
+        .select("start_time, duration_min, title")
+        .eq("booking_id", guest.booking_id)
+    : { data: null };
+  const schedule = sortEntries(
+    ((items as unknown as { start_time: string; duration_min: number | null; title: string }[] | null) ?? []).map((r) => ({
+      startTime: r.start_time.slice(0, 5),
+      endTime: endTime(r.start_time.slice(0, 5), r.duration_min),
+      title: r.title,
+    })),
+  );
 
   const diet = Array.isArray(guest.diet) ? (guest.diet as PublicInvite["guest"]["diet"]) : [];
   return {
@@ -93,6 +110,7 @@ export async function loadPublicInvite(token: string): Promise<PublicInvite | nu
     hostName: sanitizeHostName(customer?.name ?? "", org?.name ?? ""),
     bookingId: guest.booking_id,
     closed: deadlinePassed(design.rsvp_deadline),
+    schedule,
   };
 }
 

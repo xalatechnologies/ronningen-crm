@@ -297,6 +297,12 @@ export const portalNb = {
     shared: "Delt med utleier",
     failed: "Noe gikk galt. Prøv igjen.",
     tooMany: "Dagsplanen kan ha opptil 100 punkter.",
+    summary: "Programmet går fra {from} til {to}",
+    guestsTitle: "Vis for gjestene",
+    guestsOn: "Gjestene ser tid og tittel på invitasjonssiden sin. Notater og ansvarlig vises ikke.",
+    guestsOff: "Slå på for å la gjestene se programmet på invitasjonssiden sin.",
+    guestsNoInvite: "Lag og publiser invitasjonen under Gjester først.",
+    guestsFailed: "Kunne ikke endre. Prøv igjen.",
   },
   mailSchedule: {
     subject: "{org} har bekreftet dagsplanen din",
@@ -498,6 +504,7 @@ export const portalNb = {
     person: "Person {n}",
   },
   guestPage: {
+    scheduleTitle: "Program",
     hello: "Hei {name}",
     question: "Kommer du?",
     yes: "Ja, jeg kommer",
@@ -896,6 +903,12 @@ export const portalEn = {
     shared: "Shared with the venue",
     failed: "Something went wrong. Please try again.",
     tooMany: "The day plan can have up to 100 items.",
+    summary: "The programme runs from {from} to {to}",
+    guestsTitle: "Show to guests",
+    guestsOn: "Guests see time and title on their invitation page. Notes and responsible person are not shown.",
+    guestsOff: "Turn on to let guests see the programme on their invitation page.",
+    guestsNoInvite: "Create and publish the invitation under Guests first.",
+    guestsFailed: "Could not change this. Please try again.",
   },
   mailSchedule: {
     subject: "{org} confirmed your day plan",
@@ -1097,6 +1110,7 @@ export const portalEn = {
     person: "Person {n}",
   },
   guestPage: {
+    scheduleTitle: "Programme",
     hello: "Hi {name}",
     question: "Will you come?",
     yes: "Yes, I will come",
