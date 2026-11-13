@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { decideInstall, installMenuAvailable, isIosDevice, MAX_DISMISSALS } from "./install-state";
+import { decideInstall, installMenuAvailable, isIosDevice, isSamsungBrowser, MAX_DISMISSALS } from "./install-state";
 
 const DAY = 86_400_000;
 const base = { standalone: false, isIos: false, hasPrompt: true, coarsePointer: true, stored: {}, now: 1_000 * DAY };
@@ -29,6 +29,19 @@ describe("decideInstall", () => {
   it("does not prompt on desktop pointers or when nothing can be installed", () => {
     expect(decideInstall({ ...base, coarsePointer: false })).toBe("none");
     expect(decideInstall({ ...base, hasPrompt: false })).toBe("none");
+  });
+});
+
+describe("Samsung Internet", () => {
+  it("points to Chrome instead of installing, and still respects cooldown and installed state", () => {
+    expect(decideInstall({ ...base, samsung: true })).toBe("chrome-hint");
+    expect(decideInstall({ ...base, samsung: true, stored: { installed: true } })).toBe("none");
+    expect(decideInstall({ ...base, samsung: true, stored: { dismissals: 1, dismissedAt: base.now - DAY } })).toBe("none");
+    expect(decideInstall({ ...base, samsung: false })).toBe("install-button");
+  });
+  it("is recognised from the user agent", () => {
+    expect(isSamsungBrowser({ userAgent: "Mozilla/5.0 (Linux; Android 14; SM-S911B) AppleWebKit/537.36 SamsungBrowser/25.0 Chrome/121.0 Mobile Safari/537.36" })).toBe(true);
+    expect(isSamsungBrowser({ userAgent: "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/121.0 Mobile Safari/537.36" })).toBe(false);
   });
 });
 
