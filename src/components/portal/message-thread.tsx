@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
-import { SendHorizontal } from "lucide-react";
+import { MessageCircle, SendHorizontal } from "lucide-react";
 
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/i18n/client";
@@ -102,13 +102,23 @@ export function MessageThread({
     <div
       className={cn(
         "flex min-h-[calc(100svh-20rem)] flex-col gap-4 sm:min-h-0",
-        roomy && "min-h-[32rem] gap-0 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8 sm:min-h-[32rem]",
+        roomy && "min-h-[calc(100svh-17rem)] gap-0 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8 sm:min-h-[32rem]",
       )}
     >
       <ol className={cn("flex min-h-40 flex-1 flex-col gap-3", roomy && "max-h-[60vh] gap-5 overflow-y-auto p-5 sm:p-6")} aria-live="polite">
         {messages.length === 0 ? (
-          <li className="rounded-2xl bg-card px-6 py-10 text-center text-app-base text-muted-foreground ring-1 ring-foreground/8">
-            {t("portal.messages.empty")}
+          <li
+            className={cn(
+              "rounded-2xl bg-card px-6 py-10 text-center text-app-base text-muted-foreground ring-1 ring-foreground/8",
+              roomy && "flex flex-1 flex-col items-center justify-center gap-4 bg-transparent py-16 ring-0",
+            )}
+          >
+            {roomy ? (
+              <span className="flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <MessageCircle className="size-6" aria-hidden />
+              </span>
+            ) : null}
+            <span className="max-w-xs text-balance">{t("portal.messages.empty")}</span>
           </li>
         ) : null}
         {messages.map((m) => {
@@ -150,7 +160,7 @@ export function MessageThread({
         className={cn(
           "sticky z-10 -mx-4 flex flex-col gap-2 border-t border-foreground/8 bg-background/95 px-4 pt-3 backdrop-blur sm:-mx-0 sm:rounded-2xl sm:border sm:px-3 sm:pb-3",
           stickyOffsetClassName,
-          roomy && "static mx-0 rounded-none border-0 border-t bg-card px-5 py-4 backdrop-blur-none sm:rounded-none sm:border-0 sm:border-t sm:px-6",
+          roomy && "static mx-0 mt-auto rounded-none border-0 border-t bg-card px-5 py-4 backdrop-blur-none sm:rounded-none sm:border-0 sm:border-t sm:px-6",
         )}
       >
         <div className="flex items-end gap-2">
