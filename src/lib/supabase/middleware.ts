@@ -79,9 +79,10 @@ export async function updateSession(request: NextRequest) {
     return response;
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Verified locally against the project's JWKS (ES256), so no Auth round trip per request.
+  // shortcut: a revoked session stays valid until its token expires; server actions still call getUser().
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims ? { id: claimsData.claims.sub } : null;
 
   if ((isProtectedPath(pathname) || isAdminPath(pathname) || isPortalPath(pathname)) && !user) {
     const redirectUrl = request.nextUrl.clone();

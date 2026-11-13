@@ -12,7 +12,13 @@ const getUserMock = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: vi.fn(async () => ({
-    auth: { getUser: getUserMock },
+    auth: {
+      getUser: getUserMock,
+      getClaims: async () => {
+        const user = (await getUserMock())?.data?.user;
+        return { data: user ? { claims: { sub: user.id } } : null };
+      },
+    },
   })),
 }));
 

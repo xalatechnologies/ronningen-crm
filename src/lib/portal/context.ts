@@ -32,10 +32,10 @@ export type PortalAccess =
  */
 export const getPortalAccess = cache(async function getPortalAccess(): Promise<PortalAccess> {
   const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { state: "none" };
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  if (!claims) return { state: "none" };
+  const user = { id: claims.sub, email: claims.email };
 
   const { data: account } = await supabase
     .from("portal_accounts" as never)
