@@ -707,7 +707,7 @@ export function BookingDetailSheet({
               />
             ) : null}
 
-            <section aria-labelledby="booking-edit-ref">
+            <section aria-labelledby="booking-edit-ref" className="md:max-w-[calc(50%-0.5rem)]">
               <h3 id="booking-edit-ref" className={cn(labelClass, "mb-2")}>
                 {t("common.fields.reference")}
               </h3>
@@ -728,7 +728,7 @@ export function BookingDetailSheet({
               <h3 id="booking-edit-customer" className={cn(labelClass, "mb-3")}>
                 {t("bookings.detail.customer")}
               </h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-2">
                 <div>
                   <Label htmlFor="bde-name" className={labelClass}>
                     {t("common.fields.name")}
@@ -806,7 +806,7 @@ export function BookingDetailSheet({
               <h3 id="booking-edit-event" className={cn(labelClass, "mb-3")}>
                 {t("bookings.detail.event")}
               </h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-2">
                 <div>
                   <Label htmlFor="bde-fest" className={labelClass}>
                     {t("common.fields.type")}
@@ -856,7 +856,25 @@ export function BookingDetailSheet({
                     </p>
                   ) : null}
                 </div>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="bde-guests" className={labelClass}>
+                    {t("common.guests")}
+                  </Label>
+                  <Input
+                    id="bde-guests"
+                    type="number"
+                    min={1}
+                    {...register("guestCount")}
+                    className={cn(fieldClass, "mt-1.5")}
+                    aria-invalid={!!errors.guestCount}
+                  />
+                  {errors.guestCount ? (
+                    <p className="mt-1 text-app-xs text-destructive">
+                      {errors.guestCount.message}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="grid grid-cols-1 gap-3 md:col-span-2 md:grid-cols-2">
                 <div className="md:col-span-2">
                   <p className="text-app-xs leading-relaxed text-muted-foreground">
                     {t("bookings.detail.dateRangeHint")}
@@ -969,24 +987,6 @@ export function BookingDetailSheet({
                   {errors.eventEndTime ? (
                     <p className="mt-1 text-app-xs text-destructive">
                       {errors.eventEndTime.message}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="bde-guests" className={labelClass}>
-                    {t("common.guests")}
-                  </Label>
-                  <Input
-                    id="bde-guests"
-                    type="number"
-                    min={1}
-                    {...register("guestCount")}
-                    className={cn(fieldClass, "mt-1.5")}
-                    aria-invalid={!!errors.guestCount}
-                  />
-                  {errors.guestCount ? (
-                    <p className="mt-1 text-app-xs text-destructive">
-                      {errors.guestCount.message}
                     </p>
                   ) : null}
                 </div>
