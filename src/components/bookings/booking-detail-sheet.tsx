@@ -702,6 +702,7 @@ export function BookingDetailSheet({
               <BookingPortalPanel
                 organizationId={currentOrganizationId}
                 bookingId={bookingRow.id}
+                cancelled={bookingRow.status === "cancelled"}
               />
             ) : null}
 
