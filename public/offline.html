@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f9faf6">
+  <title>Event Manager</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100svh; display: grid; place-items: center; padding: 24px; background: #f9faf6; color: #1a1c1a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; }
+    main { width: 100%; max-width: 380px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    svg { width: 64px; height: 64px; margin-bottom: 8px; }
+    h1 { margin: 0; font-size: 1.5rem; line-height: 1.2; }
+    p { margin: 0; color: #5b605b; font-size: 1.0625rem; line-height: 1.5; }
+    button { margin-top: 16px; min-height: 48px; padding: 0 28px; border: 0; border-radius: 12px; background: #002d1c; color: #fff;
+      font: inherit; font-weight: 600; cursor: pointer; }
+    button:focus-visible { outline: 3px solid #85b098; outline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <main>
+    <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Event Manager">
+      <rect width="48" height="48" rx="12" fill="#1a4331"/>
+      <rect x="13" y="12" width="6" height="24" rx="3" fill="#fff"/>
+      <rect x="13" y="12" width="22" height="6" rx="3" fill="#fff"/>
+      <rect x="19" y="21" width="10" height="6" rx="3" fill="#85b098"/>
+      <rect x="13" y="30" width="22" height="6" rx="3" fill="#fff"/>
+    </svg>
+    <h1 id="title">Du er frakoblet</h1>
+    <p id="body">Sjekk nettforbindelsen din og prøv igjen.</p>
+    <button id="retry" type="button">Prøv igjen</button>
+  </main>
+  <script>
+    // Static on purpose: this page is cached by the service worker and must work with no network and no app code.
+    var no = /^(nb|nn|no)/i.test(navigator.language || "nb");
+    if (!no) {
+      document.documentElement.lang = "en";
+      document.getElementById("title").textContent = "You are offline";
+      document.getElementById("body").textContent = "Check your connection and try again.";
+      document.getElementById("retry").textContent = "Try again";
+    }
+    document.getElementById("retry").addEventListener("click", function () { location.reload(); });
+  </script>
+</body>
+</html>
