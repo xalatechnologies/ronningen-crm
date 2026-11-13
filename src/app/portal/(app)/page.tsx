@@ -51,18 +51,49 @@ export default async function PortalHomePage() {
           ? t("portal.home.countdownToday")
           : t("portal.home.countdownPast");
 
+  const steps = [
+    {
+      href: "/portal/guests",
+      icon: Users,
+      title: t("portal.home.guestsCardTitle"),
+      body: guestCount > 0 ? t("portal.home.guestsCardCount", { count: guestCount }) : t("portal.home.guestsCardEmpty"),
+      attention: false,
+    },
+    {
+      href: "/portal/wishlist",
+      icon: ListChecks,
+      title: quoted > 0 ? t("portal.home.wishQuotedTitle", { count: quoted }) : t("portal.home.wishCardTitle"),
+      body: quoted > 0 ? t("portal.home.wishQuotedBody") : t("portal.home.wishCardBody"),
+      attention: quoted > 0,
+    },
+    {
+      href: "/portal/schedule",
+      icon: CalendarClock,
+      title: plan.kind === "changed" ? t("portal.home.scheduleChangedTitle") : t("portal.home.scheduleCardTitle"),
+      body: plan.kind === "changed" ? t("portal.home.scheduleChangedBody") : t("portal.home.scheduleCardBody"),
+      attention: plan.kind === "changed",
+    },
+    {
+      href: "/portal/messages",
+      icon: MessageCircle,
+      title: unread > 0 ? t("portal.home.messageUnreadTitle") : t("portal.home.messageCardTitle"),
+      body: unread > 0 ? t("portal.home.messageUnreadBody", { count: unread }) : t("portal.home.messageCardBody"),
+      attention: unread > 0,
+    },
+  ];
+
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-3">
-        <p className="text-app-sm font-semibold text-muted-foreground">
+    <div className="flex flex-col gap-6">
+      <header className="flex flex-col gap-4 rounded-3xl bg-primary p-5 text-primary-foreground sm:p-7">
+        <p className="text-app-sm font-semibold text-primary-foreground/75">
           {t("portal.home.greeting", { name: ctx.fullName.split(" ")[0] ?? ctx.fullName })}
         </p>
         {countdown ? (
-          <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">{countdown}</h1>
+          <h1 className="font-heading text-3xl font-bold leading-tight tracking-tight !text-primary-foreground sm:text-4xl">{countdown}</h1>
         ) : null}
-        <ul className="flex flex-wrap gap-x-6 gap-y-2 text-app-base text-muted-foreground">
+        <ul className="flex flex-wrap gap-2 text-app-sm font-medium">
           {ctx.booking.eventDate ? (
-            <li className="flex items-center gap-2">
+            <li className="flex items-center gap-2 rounded-full bg-primary-foreground/12 px-3 py-1.5">
               <CalendarDays className="size-4" aria-hidden />
               {t("portal.home.eventOn", {
                 type: ctx.booking.eventType ?? "",
@@ -71,7 +102,7 @@ export default async function PortalHomePage() {
             </li>
           ) : null}
           {ctx.booking.guestCount ? (
-            <li className="flex items-center gap-2">
+            <li className="flex items-center gap-2 rounded-full bg-primary-foreground/12 px-3 py-1.5">
               <Users className="size-4" aria-hidden />
               {t("portal.home.guests", { count: ctx.booking.guestCount })}
             </li>
@@ -80,75 +111,28 @@ export default async function PortalHomePage() {
       </header>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-lg font-semibold">{t("portal.home.nextTitle")}</h2>
-        <Link
-          href="/portal/guests"
-          className="flex min-h-16 items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
-        >
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-success/12 text-success">
-            <Users className="size-5" aria-hidden />
-          </span>
-          <span className="flex flex-1 flex-col">
-            <span className="font-semibold">{t("portal.home.guestsCardTitle")}</span>
-            <span className="text-app-sm text-muted-foreground">
-              {guestCount > 0 ? t("portal.home.guestsCardCount", { count: guestCount }) : t("portal.home.guestsCardEmpty")}
-            </span>
-          </span>
-          <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-        </Link>
-        <Link
-          href="/portal/wishlist"
-          className="flex min-h-16 items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
-        >
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-success/12 text-success">
-            <ListChecks className="size-5" aria-hidden />
-          </span>
-          <span className="flex flex-1 flex-col">
-            <span className="font-semibold">
-              {quoted > 0 ? t("portal.home.wishQuotedTitle", { count: quoted }) : t("portal.home.wishCardTitle")}
-            </span>
-            <span className="text-app-sm text-muted-foreground">
-              {quoted > 0 ? t("portal.home.wishQuotedBody") : t("portal.home.wishCardBody")}
-            </span>
-          </span>
-          <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-        </Link>
-        <Link
-          href="/portal/schedule"
-          className="flex min-h-16 items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
-        >
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-success/12 text-success">
-            <CalendarClock className="size-5" aria-hidden />
-          </span>
-          <span className="flex flex-1 flex-col">
-            <span className="font-semibold">
-              {plan.kind === "changed" ? t("portal.home.scheduleChangedTitle") : t("portal.home.scheduleCardTitle")}
-            </span>
-            <span className="text-app-sm text-muted-foreground">
-              {plan.kind === "changed" ? t("portal.home.scheduleChangedBody") : t("portal.home.scheduleCardBody")}
-            </span>
-          </span>
-          <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-        </Link>
-        <Link
-          href="/portal/messages"
-          className="flex min-h-16 items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
-        >
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-success/12 text-success">
-            <MessageCircle className="size-5" aria-hidden />
-          </span>
-          <span className="flex flex-1 flex-col">
-            <span className="font-semibold">
-              {unread > 0 ? t("portal.home.messageUnreadTitle") : t("portal.home.messageCardTitle")}
-            </span>
-            <span className="text-app-sm text-muted-foreground">
-              {unread > 0
-                ? t("portal.home.messageUnreadBody", { count: unread })
-                : t("portal.home.messageCardBody")}
-            </span>
-          </span>
-          <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-        </Link>
+        <h2 className="px-1 font-heading text-lg font-semibold">{t("portal.home.nextTitle")}</h2>
+        <ul className="divide-y divide-foreground/8 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
+          {steps.map(({ href, icon: Icon, title, body, attention }) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="flex min-h-[4.5rem] items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/50 active:bg-muted"
+              >
+                <span
+                  className={`flex size-11 shrink-0 items-center justify-center rounded-full ${attention ? "bg-success text-white" : "bg-success/12 text-success"}`}
+                >
+                  <Icon className="size-5" aria-hidden />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="font-semibold">{title}</span>
+                  <span className="text-app-sm text-muted-foreground">{body}</span>
+                </span>
+                <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );

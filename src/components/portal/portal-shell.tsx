@@ -3,11 +3,33 @@
 import { CalendarClock, House, ListChecks, LogOut, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
+
+/** The venue's logo, or its initial when there is no logo or the address is not an image. */
+function VenueMark({ name, logoUrl }: { name: string; logoUrl: string | null }) {
+  const [failed, setFailed] = useState(false);
+  const img = useRef<HTMLImageElement>(null);
+  // The image may already have failed before hydration attached onError.
+  useEffect(() => {
+    if (img.current?.complete && img.current.naturalWidth === 0) setFailed(true);
+  }, [logoUrl]);
+  if (logoUrl && !failed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- venue logo, arbitrary host
+      <img ref={img} src={logoUrl} alt="" onError={() => setFailed(true)} className="size-9 shrink-0 rounded-xl bg-card object-contain ring-1 ring-foreground/10" />
+    );
+  }
+  return (
+    <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary font-heading text-base font-bold text-primary-foreground">
+      {name.trim().charAt(0).toUpperCase()}
+    </span>
+  );
+}
 
 export function PortalShell({
   organizationName,
@@ -42,26 +64,23 @@ export function PortalShell({
 
   return (
     <div className="flex min-h-svh flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-20 border-b border-foreground/8 bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-16 w-full max-w-3xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- venue logo, arbitrary host
-              <img src={logoUrl} alt="" className="size-8 rounded-md object-contain" />
-            ) : null}
-            <span className="font-heading text-lg font-semibold">{organizationName}</span>
+      <header className="sticky top-0 z-20 border-b border-foreground/8 bg-background/90 backdrop-blur">
+        <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <VenueMark name={organizationName} logoUrl={logoUrl} />
+            <span className="truncate font-heading text-base font-semibold sm:text-lg">{organizationName}</span>
           </div>
-          <Button type="button" variant="ghost" size="sm" className="min-h-11" onClick={() => void logout()}>
-            <LogOut className="size-4" aria-hidden />
-            {t("portal.nav.logout")}
+          <Button type="button" variant="ghost" size="sm" className="size-11 shrink-0 rounded-full p-0 sm:w-auto sm:px-3" onClick={() => void logout()} aria-label={t("portal.nav.logout")}>
+            <LogOut className="size-5 sm:size-4" aria-hidden />
+            <span className="hidden sm:inline">{t("portal.nav.logout")}</span>
           </Button>
         </div>
       </header>
       <nav
         aria-label={organizationName}
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-foreground/10 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static sm:border-b sm:border-t-0 sm:pb-0"
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-foreground/10 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static sm:border-b sm:border-t-0 sm:bg-background sm:pb-0"
       >
-        <ul className="mx-auto flex w-full max-w-3xl sm:gap-1 sm:px-6">
+        <ul className="mx-auto flex w-full max-w-3xl sm:gap-1 sm:px-6 sm:py-2">
           {items.map((item) => {
             const active = item.href === "/portal" ? pathname === "/portal" : pathname.startsWith(item.href);
             const Icon = item.icon;
@@ -71,16 +90,23 @@ export function PortalShell({
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex min-h-14 flex-col items-center justify-center gap-0.5 px-0.5 text-[11px] font-semibold leading-tight transition-colors sm:min-h-11 sm:flex-row sm:gap-2 sm:border-b-2 sm:px-3 sm:text-app-sm",
+                    "flex min-h-16 flex-col items-center justify-center gap-1 px-0.5 text-[11px] font-semibold leading-tight transition-colors sm:min-h-10 sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:text-[15px]",
                     active
-                      ? "text-success sm:border-success sm:text-foreground"
-                      : "text-muted-foreground hover:text-foreground sm:border-transparent",
+                      ? "text-foreground sm:bg-success/12 sm:text-success"
+                      : "text-muted-foreground hover:text-foreground sm:hover:bg-muted/60",
                   )}
                 >
                   <span className="relative">
-                    <Icon className="size-6 sm:hidden" aria-hidden />
+                    <span
+                      className={cn(
+                        "flex h-8 w-14 items-center justify-center rounded-full transition-colors sm:hidden",
+                        active ? "bg-success/15 text-success" : "",
+                      )}
+                    >
+                      <Icon className="size-6" aria-hidden />
+                    </span>
                     {item.badge > 0 ? (
-                      <span className="absolute -right-2 -top-1 min-w-4 rounded-full bg-success px-1 text-center text-[10px] leading-4 text-white sm:hidden">
+                      <span className="absolute right-1 top-0 min-w-4 rounded-full bg-success px-1 text-center text-[10px] leading-4 text-white sm:hidden">
                         {item.badge}
                       </span>
                     ) : null}
@@ -97,7 +123,7 @@ export function PortalShell({
           })}
         </ul>
       </nav>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-6 sm:px-6 sm:py-12">{children}</main>
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-5 sm:px-6 sm:py-10">{children}</main>
     </div>
   );
 }
