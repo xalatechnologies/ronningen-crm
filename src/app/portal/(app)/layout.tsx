@@ -4,7 +4,7 @@ import { PortalShell } from "@/components/portal/portal-shell";
 import { getServerTranslation } from "@/i18n/server";
 import { getPortalAccess } from "@/lib/portal/context";
 import { countUnread } from "@/lib/portal/messages";
-import { countQuoted } from "@/lib/portal/wishlist";
+import { countWishAttention } from "@/lib/portal/wishlist";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -26,16 +26,16 @@ export default async function PortalLayout({ children }: { children: React.React
   if (access.state !== "ok") redirect("/app/dashboard");
   const ctx = access.ctx;
   const supabase = await createServerSupabaseClient();
-  const [unreadMessages, quotedWishes] = await Promise.all([
+  const [unreadMessages, wishes] = await Promise.all([
     countUnread(supabase, ctx.booking.id, "customer"),
-    countQuoted(supabase, ctx.booking.id),
+    countWishAttention(supabase, ctx.booking.id),
   ]);
   return (
     <PortalShell
       organizationName={ctx.organization.name}
       logoUrl={ctx.organization.logoUrl}
       unreadMessages={unreadMessages}
-      quotedWishes={quotedWishes}
+      quotedWishes={wishes.quoted + wishes.unavailable}
     >
       {children}
     </PortalShell>

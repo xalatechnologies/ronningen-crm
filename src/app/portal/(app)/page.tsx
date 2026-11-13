@@ -4,7 +4,7 @@ import Link from "next/link";
 import { getServerTranslation } from "@/i18n/server";
 import { getPortalContext } from "@/lib/portal/context";
 import { countUnread } from "@/lib/portal/messages";
-import { countQuoted } from "@/lib/portal/wishlist";
+import { countWishAttention } from "@/lib/portal/wishlist";
 import { countGuests } from "@/lib/portal/guests";
 import { listScheduleItems, listScheduleVersions, scheduleContentHash } from "@/lib/portal/schedule";
 import { todayInOslo } from "@/lib/portal/rsvp-rules";
@@ -26,9 +26,9 @@ export default async function PortalHomePage() {
   const { t, formatDate } = await getServerTranslation();
 
   const supabase = await createServerSupabaseClient();
-  const [unread, quoted, entries, versions, guestCount] = await Promise.all([
+  const [unread, wishes, entries, versions, guestCount] = await Promise.all([
     countUnread(supabase, ctx.booking.id, "customer"),
-    countQuoted(supabase, ctx.booking.id),
+    countWishAttention(supabase, ctx.booking.id),
     listScheduleItems(supabase, ctx.booking.id),
     listScheduleVersions(supabase, ctx.booking.id),
     countGuests(supabase, ctx.booking.id),
@@ -62,9 +62,19 @@ export default async function PortalHomePage() {
     {
       href: "/portal/wishlist",
       icon: ListChecks,
-      title: quoted > 0 ? t("portal.home.wishQuotedTitle", { count: quoted }) : t("portal.home.wishCardTitle"),
-      body: quoted > 0 ? t("portal.home.wishQuotedBody") : t("portal.home.wishCardBody"),
-      attention: quoted > 0,
+      title:
+        wishes.quoted > 0
+          ? t("portal.home.wishQuotedTitle", { count: wishes.quoted })
+          : wishes.unavailable > 0
+            ? t("portal.home.wishUnavailableTitle", { count: wishes.unavailable })
+            : t("portal.home.wishCardTitle"),
+      body:
+        wishes.quoted > 0
+          ? wishes.unavailable > 0
+            ? `${t("portal.home.wishQuotedBody")} ${t("portal.home.wishUnavailableTitle", { count: wishes.unavailable })}.`
+            : t("portal.home.wishQuotedBody")
+          : wishes.unavailable > 0 ? t("portal.home.wishUnavailableBody") : t("portal.home.wishCardBody"),
+      attention: wishes.quoted + wishes.unavailable > 0,
     },
     {
       href: "/portal/schedule",

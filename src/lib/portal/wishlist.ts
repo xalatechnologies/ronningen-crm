@@ -104,6 +104,14 @@ export async function countQuoted(client: Client, bookingId: string): Promise<nu
   return count ?? 0;
 }
 
+/** What needs the customer's eyes: wishes with a price to answer, and wishes the venue cannot provide. */
+export async function countWishAttention(client: Client, bookingId: string): Promise<{ quoted: number; unavailable: number }> {
+  const head = (status: string) =>
+    client.from("portal_wish_items" as never).select("id", { count: "exact", head: true }).eq("booking_id", bookingId).eq("status", status);
+  const [quoted, unavailable] = await Promise.all([head("quoted"), head("unavailable")]);
+  return { quoted: quoted.count ?? 0, unavailable: unavailable.count ?? 0 };
+}
+
 /** Wishes waiting for the venue: new requests and counter-offers (staff badge). */
 export async function countAwaitingVenue(client: Client, bookingId: string): Promise<number> {
   const { count } = await client

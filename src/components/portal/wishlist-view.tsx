@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, TriangleAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -49,6 +49,8 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
 
   const drafts = items.filter((i) => i.status === "draft");
   const approved = approvedTotalNok(items);
+  const quotedCount = items.filter((i) => i.status === "quoted").length;
+  const unavailableCount = items.filter((i) => i.status === "unavailable").length;
 
   /** Runs one action, maps its result to a toast, and refreshes the page data. */
   async function run(key: string, action: () => Promise<WishResult>, success?: string) {
@@ -86,6 +88,18 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
         </div>
       ) : (
         <>
+          {quotedCount > 0 ? (
+            <section role="status" className="flex flex-col gap-1 rounded-2xl bg-success p-4 !text-white">
+              <h2 className="font-heading text-lg font-bold !text-white">{t("portal.home.wishQuotedTitle", { count: quotedCount })}</h2>
+              <p className="text-app-base !text-white/90">{t("portal.home.wishQuotedBody")}</p>
+            </section>
+          ) : null}
+          {unavailableCount > 0 ? (
+            <section role="alert" className="flex items-start gap-3 rounded-2xl bg-destructive/10 p-4 ring-1 ring-destructive/30">
+              <TriangleAlert className="mt-0.5 size-5 shrink-0 text-destructive" aria-hidden />
+              <p className="text-app-base font-medium text-destructive">{t("portal.wishlist.unavailableBanner", { count: unavailableCount })}</p>
+            </section>
+          ) : null}
           {approved > 0 ? (
             <section className="flex flex-col gap-1 rounded-2xl bg-success/10 p-4 ring-1 ring-success/25">
               <h2 className="text-app-sm font-semibold">{t("portal.wishlist.approvedTitle")}</h2>
@@ -195,7 +209,12 @@ function WishCard({
   }
 
   return (
-    <article className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/8">
+    <article
+      className={cn(
+        "flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1",
+        item.status === "unavailable" ? "ring-destructive/40" : item.status === "quoted" ? "ring-success/50" : "ring-foreground/8",
+      )}
+    >
       <header className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
           <h3 className="break-words font-semibold">{item.title}</h3>
@@ -209,6 +228,7 @@ function WishCard({
       {item.description ? <p className="whitespace-pre-wrap break-words text-app-sm text-muted-foreground">{item.description}</p> : null}
 
       {item.status === "requested" ? <p className="text-app-sm text-muted-foreground">{t("portal.wishlist.hintRequested")}</p> : null}
+      {item.status === "unavailable" ? <p className="text-app-sm font-medium text-destructive">{t("portal.wishlist.hintUnavailable")}</p> : null}
 
       {q && (item.status === "quoted" || item.status === "approved" || item.status === "countered") ? (
         <div className="flex flex-col gap-1 rounded-xl bg-foreground/5 p-3">
