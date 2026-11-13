@@ -142,6 +142,11 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
                         {g.maxParty > 1 ? (
                           <span className="text-app-xs text-muted-foreground">{t("portal.guests.partyUpTo", { count: g.maxParty })}</span>
                         ) : null}
+                        {g.deliveryIssue ? (
+                          <span className={cn("text-app-xs font-medium", g.deliveryIssue === "bounced" ? "text-destructive" : "text-amber-700 dark:text-amber-300")}>
+                            {t(g.deliveryIssue === "bounced" ? "portal.guests.deliveryBounced" : "portal.guests.deliveryDelayed")}
+                          </span>
+                        ) : null}
                       </span>
                       <span className={cn("shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-app-xs font-semibold", TONE[g.status])}>
                         {t(`portal.guests.status.${g.status}` as TranslationKey)}

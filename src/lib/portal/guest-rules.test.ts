@@ -22,6 +22,7 @@ const g = (over: Partial<GuestRow>): GuestRow => ({
   respondedAt: null,
   lastSentAt: null,
   optedOut: false,
+  deliveryIssue: null,
   ...over,
 });
 

@@ -106,7 +106,7 @@ export async function sendGuestEmails(mode: "invite" | "reminder"): Promise<Send
       await finish(claim.claim_email_id, { status: result.testSkipped ? "skipped" : "sent", provider_message_id: result.id ?? null });
       await admin
         .from("portal_guests" as never)
-        .update({ ...(mode === "invite" ? { status: "invited" } : {}), last_sent_at: new Date().toISOString(), send_count: g.send_count + 1 } as never)
+        .update({ ...(mode === "invite" ? { status: "invited" } : {}), last_sent_at: new Date().toISOString(), send_count: g.send_count + 1, delivery_issue: null } as never)
         .eq("id", g.id);
       sent++;
     } catch (error) {

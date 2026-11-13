@@ -34,6 +34,8 @@ export type GuestRow = {
   respondedAt: string | null;
   lastSentAt: string | null;
   optedOut: boolean;
+  /** From the e-mail provider: the invitation is late or did not arrive. */
+  deliveryIssue: "delayed" | "bounced" | null;
 };
 
 /** What the venue gets from portal_guest_summary(): numbers only. */
