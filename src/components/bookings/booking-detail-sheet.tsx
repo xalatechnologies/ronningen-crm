@@ -660,9 +660,14 @@ export function BookingDetailSheet({
         )}
       >
         <SheetHeader className="flex shrink-0 flex-row items-center justify-between gap-4 border-b border-foreground/10 bg-card px-6 py-5 sm:px-8 sm:py-6">
-          <SheetTitle className="app-section-title min-w-0 flex-1 text-left tracking-tight">
-            {t("bookings.detail.title")}
-          </SheetTitle>
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2">
+            <SheetTitle className="app-section-title min-w-0 text-left tracking-tight">
+              {t("bookings.detail.title")}
+            </SheetTitle>
+            <div aria-label={t("common.fields.status")}>
+              <BookingStatusBadge status={bookingRow.status} />
+            </div>
+          </div>
           <SheetDescription className="sr-only">
             {t("bookings.detail.description", { customer: bookingRow.customer })}
           </SheetDescription>
@@ -687,10 +692,6 @@ export function BookingDetailSheet({
             disabled={!canDeleteBooking}
             className={cn(RN_MODAL_SCROLL_BODY, "flex min-w-0 flex-col gap-6 border-0 p-6 sm:p-8")}
           >
-            <div aria-label={t("common.fields.status")}>
-              <BookingStatusBadge status={bookingRow.status} />
-            </div>
-
             {currentOrganizationId ? (
               <BookingContractPanel
                 organizationId={currentOrganizationId}
