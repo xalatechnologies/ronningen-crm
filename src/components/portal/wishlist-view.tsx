@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, TriangleAlert } from "lucide-react";
+import { Armchair, Flower2, Package, Plus, SprayCan, Speaker, TriangleAlert, UtensilsCrossed, Wine, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -38,6 +38,25 @@ import {
 import { cn } from "@/lib/utils";
 
 type Draft = { id?: string; status?: WishItemView["status"]; category: WishCategory; title: string; description: string; quantity: string; unit: string };
+const CATEGORY_ICON: Record<WishCategory, LucideIcon> = {
+  food: UtensilsCrossed,
+  drink: Wine,
+  decoration: Flower2,
+  furniture: Armchair,
+  av: Speaker,
+  cleaning: SprayCan,
+  other: Package,
+};
+
+/** Wishes grouped by what the customer should do with them, most urgent first. */
+const SECTIONS: { id: string; label: TranslationKey; statuses: readonly WishItemView["status"][] }[] = [
+  { id: "action", label: "portal.wishlist.sectionAction", statuses: ["quoted", "unavailable"] },
+  { id: "draft", label: "portal.wishlist.sectionDraft", statuses: ["draft"] },
+  { id: "sent", label: "portal.wishlist.sectionSent", statuses: ["requested", "countered"] },
+  { id: "approved", label: "portal.wishlist.sectionApproved", statuses: ["approved"] },
+  { id: "closed", label: "portal.wishlist.sectionClosed", statuses: ["declined", "withdrawn"] },
+];
+
 const emptyDraft: Draft = { category: "food", title: "", description: "", quantity: "1", unit: "" };
 
 export function WishlistView({ items }: { items: WishItemView[] }) {
@@ -72,9 +91,7 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
     return result.ok;
   }
 
-  const grouped = WISH_CATEGORIES.map((category) => ({ category, rows: items.filter((i) => i.category === category) })).filter(
-    (g) => g.rows.length > 0,
-  );
+  const sections = SECTIONS.map((sec) => ({ ...sec, rows: items.filter((i) => sec.statuses.includes(i.status)) })).filter((sec) => sec.rows.length > 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -88,34 +105,46 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
         </div>
       ) : (
         <>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-app-base text-muted-foreground">{t("portal.wishlist.countLine", { count: items.length })}</p>
+            <Button type="button" variant="success" size="cta" onClick={() => setSheet({ ...emptyDraft })}>
+              <Plus className="size-5" aria-hidden />
+              {t("portal.wishlist.add")}
+            </Button>
+          </div>
           {quotedCount > 0 ? (
-            <section role="status" className="flex flex-col gap-1 rounded-2xl bg-success p-4 !text-white">
-              <h2 className="font-heading text-lg font-bold !text-white">{t("portal.home.wishQuotedTitle", { count: quotedCount })}</h2>
-              <p className="text-app-base !text-white/90">{t("portal.home.wishQuotedBody")}</p>
+            <section role="status" className="flex flex-col gap-0.5 rounded-2xl bg-success px-4 py-3 !text-white">
+              <h2 className="font-heading text-base font-bold !text-white">{t("portal.home.wishQuotedTitle", { count: quotedCount })}</h2>
+              <p className="text-app-sm !text-white/90">{t("portal.home.wishQuotedBody")}</p>
             </section>
           ) : null}
           {unavailableCount > 0 ? (
-            <section role="alert" className="flex items-start gap-3 rounded-2xl bg-destructive/10 p-4 ring-1 ring-destructive/30">
+            <section role="alert" className="flex items-start gap-3 rounded-2xl bg-destructive/10 px-4 py-3 ring-1 ring-destructive/30">
               <TriangleAlert className="mt-0.5 size-5 shrink-0 text-destructive" aria-hidden />
-              <p className="text-app-base font-medium text-destructive">{t("portal.wishlist.unavailableBanner", { count: unavailableCount })}</p>
+              <p className="text-app-sm font-medium text-destructive">{t("portal.wishlist.unavailableBanner", { count: unavailableCount })}</p>
             </section>
           ) : null}
           {approved > 0 ? (
-            <section className="flex flex-col gap-1 rounded-2xl bg-success/10 p-4 ring-1 ring-success/25">
-              <h2 className="text-app-sm font-semibold">{t("portal.wishlist.approvedTitle")}</h2>
-              <p className="font-heading text-2xl font-bold">{nok(approved)}</p>
-              <p className="text-app-sm text-muted-foreground">{t("portal.wishlist.approvedNote")}</p>
-              {approvedMixedVat(items) ? <p className="text-app-sm text-muted-foreground">{t("portal.wishlist.mixedVat")}</p> : null}
+            <section className="flex flex-col gap-1 rounded-2xl bg-success/10 px-4 py-3 ring-1 ring-success/25">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-app-sm font-semibold">{t("portal.wishlist.approvedTitle")}</h2>
+                <p className="font-heading text-xl font-bold tabular-nums">{nok(approved)}</p>
+              </div>
+              <p className="text-app-xs text-muted-foreground">
+                {t("portal.wishlist.approvedNote")}
+                {approvedMixedVat(items) ? ` ${t("portal.wishlist.mixedVat")}` : ""}
+              </p>
             </section>
           ) : null}
 
-          {grouped.map(({ category, rows }) => (
-            <section key={category} className="flex flex-col gap-3">
-              <h2 className="font-heading text-lg font-semibold">
-                {t(`portal.wishlist.categories.${category}` as TranslationKey)}
+          {sections.map((sec) => (
+            <section key={sec.id} className="flex flex-col gap-3">
+              <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
+                {t(sec.label)}
+                <span className="rounded-full bg-muted px-2.5 py-0.5 font-sans text-app-xs font-semibold tabular-nums text-muted-foreground">{sec.rows.length}</span>
               </h2>
               <ul className="flex flex-col gap-3">
-                {rows.map((item) => (
+                {sec.rows.map((item) => (
                   <li key={item.id}>
                     <WishCard item={item} busy={busy} run={run} onEdit={() => setSheet(toDraft(item))} />
                   </li>
@@ -123,11 +152,6 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
               </ul>
             </section>
           ))}
-
-          <Button type="button" variant="outline" size="cta" className="w-full" onClick={() => setSheet({ ...emptyDraft })}>
-            <Plus className="size-5" aria-hidden />
-            {t("portal.wishlist.add")}
-          </Button>
         </>
       )}
 
@@ -194,6 +218,7 @@ function WishCard({
   const working = busy?.startsWith(item.id) ?? false;
   const q = item.quote;
   const expired = q ? quoteExpired(q.validUntil) : false;
+  const CategoryIcon = CATEGORY_ICON[item.category];
 
   async function submitCounter(event: FormEvent) {
     event.preventDefault();
@@ -215,11 +240,14 @@ function WishCard({
         item.status === "unavailable" ? "ring-destructive/40" : item.status === "quoted" ? "ring-success/50" : "ring-foreground/8",
       )}
     >
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-0.5">
+      <header className="flex items-start gap-3">
+        <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+          <CategoryIcon className="size-5" />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <h3 className="break-words font-semibold">{item.title}</h3>
           <p className="text-app-sm text-muted-foreground">
-            {item.quantity.toLocaleString(locale)} {item.unit ?? ""}
+            {t(`portal.wishlist.categories.${item.category}` as TranslationKey)} · {item.unit ? `${item.quantity.toLocaleString(locale)} ${item.unit}` : t("portal.wishlist.pieces", { count: item.quantity.toLocaleString(locale) })}
           </p>
         </div>
         <WishStatusChip status={item.status} />
@@ -320,7 +348,7 @@ function WishCard({
         )
       ) : null}
 
-      <footer className="flex flex-wrap gap-2">
+      <footer className="flex flex-wrap gap-2 empty:hidden [&:not(:empty)]:border-t [&:not(:empty)]:border-foreground/8 [&:not(:empty)]:pt-3">
         {item.status === "draft" ? (
           <>
             <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={onEdit}>
