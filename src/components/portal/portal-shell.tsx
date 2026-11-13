@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { BrandMark } from "@/components/brand/brand-logo";
+import { InstallHeaderButton, InstallProvider } from "@/components/pwa/install-provider";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
@@ -64,6 +65,7 @@ export function PortalShell({
   }
 
   return (
+    <InstallProvider placement="portal">
     <div className="flex min-h-svh flex-col bg-background text-foreground">
       <header className="sticky top-0 z-20 border-b border-foreground/8 bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
@@ -71,10 +73,13 @@ export function PortalShell({
             <VenueMark logoUrl={logoUrl} />
             <span className="truncate font-heading text-base font-semibold sm:text-lg">{organizationName}</span>
           </div>
+          <div className="flex shrink-0 items-center gap-1">
+          <InstallHeaderButton />
           <Button type="button" variant="ghost" size="sm" className="size-11 shrink-0 rounded-full p-0 sm:w-auto sm:px-3" onClick={() => void logout()} aria-label={t("portal.nav.logout")}>
             <LogOut className="size-5 sm:size-4" aria-hidden />
             <span className="hidden sm:inline">{t("portal.nav.logout")}</span>
           </Button>
+          </div>
         </div>
       </header>
       <nav
@@ -126,5 +131,6 @@ export function PortalShell({
       </nav>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-5 sm:px-6 sm:py-10">{children}</main>
     </div>
+    </InstallProvider>
   );
 }
