@@ -74,6 +74,15 @@ export function InstallProvider({ children, placement }: { children: ReactNode; 
     const related = (navigator as Navigator & { getInstalledRelatedApps?: () => Promise<unknown[]> }).getInstalledRelatedApps;
     void related?.call(navigator)?.then((apps) => (apps.length > 0 ? save({ installed: true }) : undefined)).catch(() => undefined);
 
+    // Offline page worker (public/sw.js). NEXT_PUBLIC_DISABLE_SW=1 removes it again without a code change.
+    if ("serviceWorker" in navigator) {
+      if (process.env.NEXT_PUBLIC_DISABLE_SW === "1") {
+        void navigator.serviceWorker.getRegistrations().then((all) => all.forEach((r) => void r.unregister()));
+      } else {
+        void navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).catch(() => undefined);
+      }
+    }
+
     const timer = window.setTimeout(() => setNow(Date.now()), BANNER_DELAY_MS);
     return () => {
       window.clearTimeout(timer);
