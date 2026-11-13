@@ -131,7 +131,7 @@ export const portalNb = {
   },
   staffPage: {
     title: "Kundeportal",
-    back: "Tilbake til reservasjoner",
+    back: "Tilbake til kundeportal",
     tabMessages: "Meldinger",
     customer: "Kunde: {name}",
     notActive: "Kunden har ikke opprettet konto ennå. Meldinger vises når kunden har logget inn.",
@@ -694,7 +694,7 @@ export const portalEn = {
   },
   staffPage: {
     title: "Customer portal",
-    back: "Back to bookings",
+    back: "Back to customer portal",
     tabMessages: "Messages",
     customer: "Customer: {name}",
     notActive: "The customer has not created an account yet. Messages appear once they have logged in.",

@@ -5,6 +5,7 @@ import { mainNavigation } from "@/config/navigation";
 import { SIDEBAR_SEGMENT_ICONS } from "@/config/nav-icons";
 import { RN_TEXT_NAV_LINK } from "@/lib/rn-ui";
 import { appNavLabel } from "@/lib/navigation/nav-labels";
+import { isNavActive } from "@/lib/navigation/nav-active";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -21,8 +22,7 @@ export function MobileNavLinks({ onNavigate }: { onNavigate?: () => void }) {
         aria-label={t("navigation.mainMenuAria")}
       >
         {mainNavigation.map((item) => {
-          const active =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active = isNavActive(item.segment, item.href, pathname);
           const Icon =
             SIDEBAR_SEGMENT_ICONS[item.segment] ?? SIDEBAR_SEGMENT_ICONS.dashboard;
           return (
