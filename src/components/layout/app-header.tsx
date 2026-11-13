@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { ChevronDown, LogOut, MenuIcon, Settings, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { InstallMenuItem } from "@/components/pwa/install-provider";
 import { signOutToLogin } from "@/lib/auth/sign-out";
 import { useTranslation } from "@/i18n/client";
 import { useMemo, useState, type ReactNode } from "react";
@@ -226,6 +227,7 @@ export function AppHeader({ children }: { children?: ReactNode }) {
                   {t("common.account.platformAdmin")}
                 </DropdownMenuItem>
               ) : null}
+              <InstallMenuItem />
               <div className="md:hidden [&_.grid]:rounded-xl [&_.grid]:border-0 [&_.grid]:bg-muted [&_[role=radio]]:rounded-lg">
                 <DropdownMenuSeparator className="my-1.5 bg-border" />
                 <ThemeToggle variant="menu" />

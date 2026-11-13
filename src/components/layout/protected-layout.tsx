@@ -6,6 +6,7 @@ import { NotificationAckDialog } from "@/components/notifications/notification-a
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { UserNotificationListener } from "@/components/notifications/user-notification-listener";
 import { OrganizationGate } from "@/components/organizations/organization-gate";
+import { InstallProvider } from "@/components/pwa/install-provider";
 import { NotificationProvider } from "@/providers/notification-provider";
 import { OrganizationProvider } from "@/providers/organization-provider";
 import { PageSearchProvider } from "@/providers/page-search-provider";
@@ -22,6 +23,7 @@ export function ProtectedLayout({
     <OrganizationProvider impersonationOrgId={impersonationOrgId}>
       <OrganizationGate>
         <NotificationProvider>
+          <InstallProvider placement="app">
           <PageSearchProvider>
           <UserNotificationListener />
           <NotificationAckDialog />
@@ -37,6 +39,7 @@ export function ProtectedLayout({
           </div>
         </div>
           </PageSearchProvider>
+          </InstallProvider>
         </NotificationProvider>
       </OrganizationGate>
     </OrganizationProvider>

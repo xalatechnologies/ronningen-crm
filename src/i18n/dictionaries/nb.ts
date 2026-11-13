@@ -33,6 +33,7 @@ import { integrationsNb } from "@/i18n/dictionaries/parts/integrations";
 import { serverErrorsNb } from "@/i18n/dictionaries/parts/serverErrors";
 import { contractsNb } from "@/i18n/dictionaries/parts/contracts";
 import { portalNb } from "@/i18n/dictionaries/parts/portal";
+import { pwaNb } from "@/i18n/dictionaries/parts/pwa";
 
 export const nb = {
   admin: adminNb,
@@ -70,4 +71,5 @@ export const nb = {
   serverErrors: serverErrorsNb,
   contracts: contractsNb,
   portal: portalNb,
+  pwa: pwaNb,
 } as const;
