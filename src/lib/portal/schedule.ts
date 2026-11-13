@@ -85,3 +85,14 @@ export async function countUnacknowledged(client: Client, bookingId: string): Pr
   const latest = (data as unknown as { acknowledged_at: string | null }[] | null)?.[0];
   return latest && !latest.acknowledged_at ? 1 : 0;
 }
+
+/** Whether the booking has an invitation to show the plan on, and whether the customer turned it on. */
+export async function getGuestSharing(client: Client, bookingId: string): Promise<{ hasInvite: boolean; enabled: boolean }> {
+  const { data } = await client
+    .from("portal_invite_designs" as never)
+    .select("show_schedule")
+    .eq("booking_id", bookingId)
+    .maybeSingle();
+  const row = data as unknown as { show_schedule: boolean } | null;
+  return { hasInvite: Boolean(row), enabled: row?.show_schedule ?? false };
+}

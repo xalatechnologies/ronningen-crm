@@ -180,3 +180,19 @@ export async function acknowledgeSchedule(input: { bookingId: string; versionId:
   revalidatePath(`/app/bookings/${parsed.data.bookingId}/portal`);
   return { ok: true };
 }
+
+/** Shows or hides the day plan (time and title) on the guests' invitation page. Needs an invitation to attach to. */
+export async function setScheduleVisibleToGuests(visible: boolean): Promise<ScheduleResult> {
+  const ctx = await getPortalContext();
+  if (!ctx) return { ok: false, error: "forbidden" };
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("portal_invite_designs" as never)
+    .update({ show_schedule: Boolean(visible), updated_by: ctx.userId } as never)
+    .eq("booking_id", ctx.booking.id)
+    .select("id");
+  if (error) return { ok: false, error: "failed" };
+  if (((data as unknown[] | null)?.length ?? 0) === 0) return { ok: false, error: "not_found" };
+  revalidatePath("/portal", "layout");
+  return { ok: true };
+}

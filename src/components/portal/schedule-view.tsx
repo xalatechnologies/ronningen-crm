@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { CalendarClock, CheckCheck, Clock3, PencilLine, Plus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -12,8 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/i18n/client";
-import { deleteScheduleItem, saveScheduleItem, shareSchedule, type ScheduleResult } from "@/lib/portal/schedule-actions";
-import { canShare, DURATION_PRESETS, type ScheduleEntry, type ShareState } from "@/lib/portal/schedule-rules";
+import { deleteScheduleItem, saveScheduleItem, setScheduleVisibleToGuests, shareSchedule, type ScheduleResult } from "@/lib/portal/schedule-actions";
+import { canShare, DURATION_PRESETS, endTime, type ScheduleEntry, type ShareState } from "@/lib/portal/schedule-rules";
 
 type Draft = { id?: string; startTime: string; durationMin: string; title: string; responsible: string; note: string };
 const emptyDraft: Draft = { startTime: "14:00", durationMin: "", title: "", responsible: "", note: "" };
@@ -25,17 +25,20 @@ export function ScheduleView({
   state,
   latest,
   orgName,
+  guestSharing,
 }: {
   entries: ScheduleEntry[];
   state: ShareState;
   latest: LatestShare;
   orgName: string;
+  guestSharing: { hasInvite: boolean; enabled: boolean };
 }) {
   const { t, locale } = useTranslation();
   const router = useRouter();
   const [sheet, setSheet] = useState<Draft | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [guestsBusy, setGuestsBusy] = useState(false);
 
   const fmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
 
@@ -48,6 +51,23 @@ export function ScheduleView({
     else toast.error(t("portal.schedule.failed"));
     router.refresh();
   }
+
+  async function toggleGuests() {
+    setGuestsBusy(true);
+    const result = await setScheduleVisibleToGuests(!guestSharing.enabled);
+    setGuestsBusy(false);
+    if (!result.ok) toast.error(t("portal.schedule.guestsFailed"));
+    router.refresh();
+  }
+
+  const last = entries[entries.length - 1];
+  const summary = last
+    ? t("portal.schedule.summary", {
+        from: entries[0].startTime,
+        to: endTime(last.startTime, last.durationMin) ?? last.startTime,
+      })
+    : "";
+  const StatusIcon = state.kind === "changed" ? PencilLine : state.kind === "shared" && state.acknowledged ? CheckCheck : Clock3;
 
   const statusText =
     state.kind === "never"
@@ -72,15 +92,21 @@ export function ScheduleView({
                 : "flex flex-col gap-1 rounded-2xl bg-card p-4 ring-1 ring-foreground/8"
           }
         >
-          <p className="font-semibold">{statusText}</p>
-          {latest ? <p className="text-app-xs text-muted-foreground">{fmt.format(new Date(latest.sharedAt))}</p> : null}
-          {latest?.staffNote && state.kind === "shared" ? <p className="text-app-sm">{t("portal.schedule.ackNote", { note: latest.staffNote })}</p> : null}
+          <p className="flex items-start gap-2.5 font-semibold">
+            <StatusIcon className="mt-0.5 size-5 shrink-0" aria-hidden />
+            {statusText}
+          </p>
+          {latest ? <p className="pl-[1.875rem] text-app-xs text-muted-foreground">{fmt.format(new Date(latest.sharedAt))}</p> : null}
+          {latest?.staffNote && state.kind === "shared" ? <p className="pl-[1.875rem] text-app-sm">{t("portal.schedule.ackNote", { note: latest.staffNote })}</p> : null}
         </section>
       ) : null}
 
       {entries.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-2xl bg-card px-6 py-10 text-center ring-1 ring-foreground/8">
-          <p className="text-app-base text-muted-foreground">{t("portal.schedule.empty")}</p>
+        <div className="flex flex-col items-center gap-4 rounded-2xl bg-card px-6 py-12 text-center ring-1 ring-foreground/8">
+          <span className="flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <CalendarClock className="size-6" aria-hidden />
+          </span>
+          <p className="max-w-xs text-balance text-app-base text-muted-foreground">{t("portal.schedule.empty")}</p>
           <Button type="button" variant="success" size="cta" onClick={() => setSheet({ ...emptyDraft })}>
             <Plus className="size-5" aria-hidden />
             {t("portal.schedule.emptyCta")}
@@ -88,6 +114,7 @@ export function ScheduleView({
         </div>
       ) : (
         <>
+          <p className="-mb-2 px-1 text-app-sm font-medium text-muted-foreground">{summary}</p>
           <ScheduleTimeline
             entries={entries}
             onSelect={(index) => {
@@ -108,6 +135,33 @@ export function ScheduleView({
           </Button>
         </>
       )}
+
+      <section className="flex items-start gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <Users className="size-5" aria-hidden />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <p className="font-semibold">{t("portal.schedule.guestsTitle")}</p>
+          <p className="text-app-sm text-muted-foreground">
+            {!guestSharing.hasInvite
+              ? t("portal.schedule.guestsNoInvite")
+              : guestSharing.enabled
+                ? t("portal.schedule.guestsOn")
+                : t("portal.schedule.guestsOff")}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={guestSharing.enabled}
+          aria-label={t("portal.schedule.guestsTitle")}
+          disabled={!guestSharing.hasInvite || guestsBusy}
+          onClick={() => void toggleGuests()}
+          className="relative mt-1 h-7 w-12 shrink-0 rounded-full bg-foreground/20 transition-colors disabled:opacity-40 aria-checked:bg-success"
+        >
+          <span className="absolute left-0.5 top-0.5 size-6 rounded-full bg-white shadow transition-transform" style={{ transform: guestSharing.enabled ? "translateX(1.25rem)" : undefined }} />
+        </button>
+      </section>
 
       {canShare(state) ? (
         <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-foreground/8 bg-background/95 px-4 py-3 backdrop-blur sm:bottom-4 sm:mx-0 sm:rounded-2xl sm:border">
