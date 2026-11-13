@@ -11,7 +11,7 @@ export function CustomerMessageThread({ messages }: { messages: PortalMessage[] 
       messages={messages}
       send={(body) => sendCustomerMessage({ body })}
       markRead={markThreadReadByCustomer}
-      stickyOffsetClassName="bottom-[calc(3.5rem+env(safe-area-inset-bottom))] pb-3 sm:bottom-4"
+      roomy
     />
   );
 }
