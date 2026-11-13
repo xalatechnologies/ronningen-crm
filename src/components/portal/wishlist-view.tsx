@@ -26,11 +26,11 @@ import {
   type WishResult,
 } from "@/lib/portal/wishlist-actions";
 import {
-  approvedMixedVat,
   approvedTotalNok,
   canCounter,
   parsePriceInput,
   quoteExpired,
+  vatBreakdown,
   WISH_CATEGORIES,
   type WishCategory,
   type WishItemView,
@@ -130,10 +130,7 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
                 <h2 className="text-app-sm font-semibold">{t("portal.wishlist.approvedTitle")}</h2>
                 <p className="font-heading text-xl font-bold tabular-nums">{nok(approved)}</p>
               </div>
-              <p className="text-app-xs text-muted-foreground">
-                {t("portal.wishlist.approvedNote")}
-                {approvedMixedVat(items) ? ` ${t("portal.wishlist.mixedVat")}` : ""}
-              </p>
+              <p className="text-app-xs text-muted-foreground">{t("portal.wishlist.approvedNote")}</p>
             </section>
           ) : null}
 
@@ -219,6 +216,7 @@ function WishCard({
   const q = item.quote;
   const expired = q ? quoteExpired(q.validUntil) : false;
   const CategoryIcon = CATEGORY_ICON[item.category];
+  const vat = q ? vatBreakdown(q) : null;
 
   async function submitCounter(event: FormEvent) {
     event.preventDefault();
@@ -258,7 +256,7 @@ function WishCard({
       {item.status === "requested" ? <p className="text-app-sm text-muted-foreground">{t("portal.wishlist.hintRequested")}</p> : null}
       {item.status === "unavailable" ? <p className="text-app-sm font-medium text-destructive">{t("portal.wishlist.hintUnavailable")}</p> : null}
 
-      {q && (item.status === "quoted" || item.status === "approved" || item.status === "countered") ? (
+      {q && vat && (item.status === "quoted" || item.status === "approved" || item.status === "countered") ? (
         <div className="flex flex-col gap-1 rounded-xl bg-foreground/5 p-3">
           <p className="text-app-sm text-muted-foreground">
             {t("portal.wishlist.quoteLine", {
@@ -268,8 +266,9 @@ function WishCard({
             })}
           </p>
           <p className="font-heading text-xl font-bold">
-            {nok(q.totalNok)} <span className="text-app-sm font-medium text-muted-foreground">{q.vatIncluded ? t("portal.wishlist.vatIncluded") : t("portal.wishlist.vatExcluded")}</span>
+            {nok(vat.incVat)} <span className="text-app-sm font-medium text-muted-foreground">{t("portal.wishlist.vatIncluded")}</span>
           </p>
+          <p className="text-app-xs text-muted-foreground">{t("portal.wishlist.vatBreakdown", { ex: nok(vat.exVat), rate: q.vatRate, vat: nok(vat.vat) })}</p>
           {expired ? <p className="text-app-sm font-semibold text-destructive">{t("portal.wishlist.expiredBadge")} · {t("portal.wishlist.expired")}</p> : null}
           {q.validUntil ? (
             <p className="text-app-xs text-muted-foreground">

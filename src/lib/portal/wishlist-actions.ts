@@ -265,6 +265,7 @@ export async function quoteWish(input: {
   itemId: string;
   unitPriceNok: number;
   vatIncluded: boolean;
+  vatRate?: number;
   note?: string | null;
   validUntil?: string | null;
 }): Promise<WishResult> {
@@ -275,7 +276,7 @@ export async function quoteWish(input: {
   const { admin, item, staff } = c;
   const result = await act(admin, {
     org: staff.organizationId, bookingId: item.booking_id, itemId: item.id, actor: "staff", action: "quote", userId: staff.userId,
-    args: { unit_price: parsed.data.unitPriceNok, vat_included: parsed.data.vatIncluded, note: parsed.data.note, valid_until: parsed.data.validUntil ?? null },
+    args: { unit_price: parsed.data.unitPriceNok, vat_included: parsed.data.vatIncluded, vat_rate: parsed.data.vatRate, note: parsed.data.note, valid_until: parsed.data.validUntil ?? null },
   });
   if (!result.ok) return result;
   await afterStaffChange(staff.organizationId, item.booking_id);

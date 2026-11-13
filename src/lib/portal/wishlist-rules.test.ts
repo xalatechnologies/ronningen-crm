@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  approvedMixedVat,
   approvedTotalNok,
+  defaultVatRate,
+  vatBreakdown,
   awaitingCustomer,
   awaitingVenue,
   canCounter,
@@ -108,13 +109,15 @@ describe("schemas", () => {
     const id = "6f1c7e0a-5b1e-4d9c-9a57-1f1d2a3b4c5d";
     expect(quoteInputSchema.safeParse({ bookingId: id, itemId: id, unitPriceNok: -1, vatIncluded: true }).success).toBe(false);
     expect(quoteInputSchema.safeParse({ bookingId: id, itemId: id, unitPriceNok: 1e9, vatIncluded: true }).success).toBe(false);
+    expect(quoteInputSchema.safeParse({ bookingId: id, itemId: id, unitPriceNok: 10, vatIncluded: true, vatRate: 15 }).success).toBe(true);
+    expect(quoteInputSchema.safeParse({ bookingId: id, itemId: id, unitPriceNok: 10, vatIncluded: true, vatRate: 20 }).success).toBe(false);
     expect(counterInputSchema.safeParse({ itemId: id, quoteId: id, unitPriceNok: 99.999 }).success).toBe(true);
     expect(counterInputSchema.safeParse({ itemId: id, unitPriceNok: 5 }).success).toBe(false); // must name the quote it answers
   });
 });
 
 describe("summaries", () => {
-  const q = (total: number) => ({ id: "q", unitPriceNok: total, totalNok: total, vatIncluded: true, note: null, validUntil: null, source: "staff" as const });
+  const q = (total: number) => ({ id: "q", unitPriceNok: total, totalNok: total, vatIncluded: true, vatRate: 25, note: null, validUntil: null, source: "staff" as const });
   it("sums only approved items at their active quote", () => {
     const items = [
       view({ status: "approved", quote: q(500) }),
@@ -124,10 +127,22 @@ describe("summaries", () => {
     ];
     expect(approvedTotalNok(items)).toBe(750.5);
   });
-  it("flags a total that mixes prices with and without VAT", () => {
-    const ex = { ...q(100), vatIncluded: false };
-    expect(approvedMixedVat([view({ status: "approved", quote: q(500) }), view({ status: "approved", quote: ex })])).toBe(true);
-    expect(approvedMixedVat([view({ status: "approved", quote: q(500) }), view({ status: "quoted", quote: ex })])).toBe(false);
+  it("adds MVA to prices entered without it, so every total is comparable", () => {
+    const ex15 = { ...q(100), vatIncluded: false, vatRate: 15 };
+    const inc25 = q(500);
+    expect(approvedTotalNok([view({ status: "approved", quote: ex15 }), view({ status: "approved", quote: inc25 })])).toBe(615);
+  });
+  it("uses Norwegian MVA: 15 % food and drink, 25 % the rest", () => {
+    expect(defaultVatRate("food")).toBe(15);
+    expect(defaultVatRate("drink")).toBe(15);
+    for (const c of ["decoration", "furniture", "av", "cleaning", "other"] as const) expect(defaultVatRate(c)).toBe(25);
+  });
+  it("splits a total into price excluding MVA, MVA and price including MVA", () => {
+    expect(vatBreakdown({ totalNok: 1000, vatRate: 25, vatIncluded: false })).toEqual({ exVat: 1000, vat: 250, incVat: 1250 });
+    expect(vatBreakdown({ totalNok: 1150, vatRate: 15, vatIncluded: true })).toEqual({ exVat: 1000, vat: 150, incVat: 1150 });
+    expect(vatBreakdown({ totalNok: 900, vatRate: 0, vatIncluded: false })).toEqual({ exVat: 900, vat: 0, incVat: 900 });
+    const odd = vatBreakdown({ totalNok: 99.99, vatRate: 25, vatIncluded: true });
+    expect(odd.exVat + odd.vat).toBeCloseTo(99.99, 2);
   });
   it("counts who is waiting on whom", () => {
     const items = [view({ status: "quoted" }), view({ status: "requested" }), view({ status: "countered" }), view({ status: "draft" })];
