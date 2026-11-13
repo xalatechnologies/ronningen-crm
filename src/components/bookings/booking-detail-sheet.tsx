@@ -707,7 +707,7 @@ export function BookingDetailSheet({
               />
             ) : null}
 
-            <section aria-labelledby="booking-edit-ref" className="md:max-w-[calc(50%-0.5rem)]">
+            <section aria-labelledby="booking-edit-ref">
               <h3 id="booking-edit-ref" className={cn(labelClass, "mb-2")}>
                 {t("common.fields.reference")}
               </h3>
