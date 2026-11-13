@@ -136,6 +136,7 @@ export const portalNb = {
     customer: "Kunde: {name}",
     notActive: "Kunden har ikke opprettet konto ennå. Meldinger vises når kunden har logget inn.",
     unread: "{count} uleste",
+    openBooking: "Åpne reservasjon",
     open: "Åpne kundeportal",
     venueName: "Utleier",
   },
@@ -215,6 +216,9 @@ export const portalNb = {
   },
   staffWishes: {
     tab: "Ønsker",
+    statYou: "Venter på deg",
+    statCustomer: "Venter på kunden",
+    statApproved: "Godkjent",
     empty: "Kunden har ikke sendt ønsker ennå.",
     priceLabel: "Pris per enhet (kr)",
     vatIncluded: "Prisen inkluderer MVA",
@@ -286,6 +290,8 @@ export const portalNb = {
     failed: "Kunne ikke lagre",
     count: "{count} punkter",
     pendingBadge: "Ny dagsplan delt",
+    chipAcked: "Bekreftet",
+    chipWaiting: "Venter på bekreftelse",
   },
   guests: {
     title: "Gjester",
@@ -699,6 +705,7 @@ export const portalEn = {
     customer: "Customer: {name}",
     notActive: "The customer has not created an account yet. Messages appear once they have logged in.",
     unread: "{count} unread",
+    openBooking: "Open booking",
     open: "Open customer portal",
     venueName: "Venue",
   },
@@ -778,6 +785,9 @@ export const portalEn = {
   },
   staffWishes: {
     tab: "Wishes",
+    statYou: "Waiting for you",
+    statCustomer: "Waiting for the customer",
+    statApproved: "Approved",
     empty: "The customer has not sent any wishes yet.",
     priceLabel: "Price per unit (NOK)",
     vatIncluded: "Price includes VAT",
@@ -849,6 +859,8 @@ export const portalEn = {
     failed: "Could not save",
     count: "{count} items",
     pendingBadge: "New day plan shared",
+    chipAcked: "Confirmed",
+    chipWaiting: "Awaiting confirmation",
   },
   guests: {
     title: "Guests",

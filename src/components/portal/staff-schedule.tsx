@@ -42,7 +42,14 @@ export function StaffSchedule({ bookingId, versions }: { bookingId: string; vers
       <section className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-col gap-0.5">
-            <p className="font-heading text-lg font-bold">{t("portal.staffSchedule.version", { version: version.version })}</p>
+            <p className="flex flex-wrap items-center gap-2 font-heading text-lg font-bold">
+              {t("portal.staffSchedule.version", { version: version.version })}
+              <span
+                className={`rounded-full px-2.5 py-0.5 font-sans text-app-xs font-semibold ${version.acknowledgedAt ? "bg-success/15 text-success" : "bg-amber-500/15 text-amber-800 dark:text-amber-300"}`}
+              >
+                {version.acknowledgedAt ? t("portal.staffSchedule.chipAcked") : t("portal.staffSchedule.chipWaiting")}
+              </span>
+            </p>
             <p className="text-app-sm text-muted-foreground">
               {t("portal.staffSchedule.sharedAt", { date: fmt.format(new Date(version.sharedAt)) })} · {t("portal.staffSchedule.count", { count: version.items.length })}
             </p>
