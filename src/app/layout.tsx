@@ -11,7 +11,7 @@ import { AuthProvider } from "@/providers/auth-provider";
 import { QueryProvider } from "@/providers/query-provider";
 import { SupabaseProvider } from "@/providers/supabase-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 
 import "./globals.css";
@@ -22,6 +22,10 @@ const inter = Inter({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#f9faf6",
+};
+
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslation();
   return {
@@ -31,6 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
       icon: [{ url: "/favicon.ico", sizes: "any" }],
       apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
     },
+    appleWebApp: { capable: true, title: APP_NAME, statusBarStyle: "default" },
   };
 }
 
