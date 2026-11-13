@@ -129,10 +129,17 @@ function InboxItem({
         <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent font-heading font-semibold text-primary">
           {initials(row.customerName)}
         </span>
-        <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <span className="truncate font-semibold">{row.customerName}</span>
-          <span className="truncate text-app-sm text-muted-foreground">{meta}</span>
-          <span className="flex flex-wrap gap-1.5">
+        <span className="grid min-w-0 flex-1 gap-1.5 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.4fr)] sm:items-center sm:gap-6">
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate font-semibold">{row.customerName}</span>
+            <span className="truncate text-app-sm text-muted-foreground sm:hidden">{meta}</span>
+            <span className="hidden truncate text-app-sm text-muted-foreground sm:block">{row.reference}</span>
+          </span>
+          <span className="hidden min-w-0 flex-col sm:flex">
+            <span className="truncate text-app-sm font-medium">{row.eventDate ? formatDate(row.eventDate) : t("portal.inbox.noDate")}</span>
+            <span className="truncate text-app-sm text-muted-foreground">{row.eventType}</span>
+          </span>
+          <span className="flex flex-wrap gap-1.5 sm:justify-end">
             {chips.map((chip) => (
               <span
                 key={chip.label}
