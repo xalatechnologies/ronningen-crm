@@ -18,7 +18,7 @@ type AccountRow = {
 };
 
 /** Venue side of the customer portal for one booking: invitation status and (re)send. */
-export function BookingPortalPanel(props: { organizationId: string; bookingId: string }) {
+export function BookingPortalPanel(props: { organizationId: string; bookingId: string; cancelled?: boolean }) {
   const { t } = useTranslation();
   const supabase = useSupabase();
   const [enabled, setEnabled] = useState<boolean | null>(null);
@@ -98,7 +98,7 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
     try {
       const result = await sendPortalInvite(props.bookingId);
       if (!result.ok) {
-        toast.error(result.error === "no_email" ? t("portal.staff.noEmail") : t("portal.staff.failed"));
+        toast.error(result.error === "no_email" ? t("portal.staff.noEmail") : result.error === "booking_cancelled" ? t("portal.staff.cancelled") : t("portal.staff.failed"));
         return;
       }
       toast.success(t("portal.staff.sent"));
@@ -142,7 +142,8 @@ export function BookingPortalPanel(props: { organizationId: string; bookingId: s
           </Button>
         )
       ) : null}
-      {state !== "accepted" ? (
+      {state !== "accepted" && props.cancelled ? <p className="text-app-sm font-medium text-destructive">{t("portal.staff.cancelled")}</p> : null}
+      {state !== "accepted" && !props.cancelled ? (
         <Button type="button" variant="outline" size="sm" className="w-fit" disabled={busy} onClick={() => void send()}>
           {account ? t("portal.staff.resend") : t("portal.staff.invite")}
         </Button>

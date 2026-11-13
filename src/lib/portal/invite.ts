@@ -16,7 +16,7 @@ import {
 
 export type IssueInviteResult =
   | { ok: true; emailed: boolean }
-  | { ok: false; error: "not_found" | "no_email" | "already_active" | "db_error" };
+  | { ok: false; error: "not_found" | "no_email" | "already_active" | "booking_cancelled" | "db_error" };
 
 /**
  * Creates (or re-issues) the portal invitation for a booking's customer and e-mails it.
@@ -32,11 +32,13 @@ export async function issuePortalInvite(input: {
 
   const { data: booking } = await admin
     .from("bookings")
-    .select("id, customer_id, organization_id")
+    .select("id, customer_id, organization_id, status")
     .eq("id", input.bookingId)
     .eq("organization_id", input.organizationId)
     .maybeSingle();
   if (!booking?.customer_id) return { ok: false, error: "not_found" };
+  // A cancelled booking gets no invitation, manual or automatic.
+  if (booking.status === "cancelled") return { ok: false, error: "booking_cancelled" };
 
   const [{ data: customer }, { data: org }] = await Promise.all([
     admin
