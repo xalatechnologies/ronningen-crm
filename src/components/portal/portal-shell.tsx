@@ -84,7 +84,7 @@ export function PortalShell({
       </header>
       <nav
         aria-label={organizationName}
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-foreground/10 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static sm:border-b sm:border-t-0 sm:bg-background sm:pb-0"
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-foreground/10 bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_-8px_rgb(0_0_0/0.12)] backdrop-blur sm:static sm:border-b sm:border-t-0 sm:bg-background sm:pb-0 sm:shadow-none"
       >
         <ul className="mx-auto flex w-full max-w-3xl sm:gap-1 sm:px-6 sm:py-2">
           {items.map((item) => {
@@ -105,14 +105,14 @@ export function PortalShell({
                   <span className="relative">
                     <span
                       className={cn(
-                        "flex h-8 w-14 items-center justify-center rounded-full transition-colors sm:hidden",
-                        active ? "bg-success/15 text-success" : "",
+                        "flex h-8 w-16 items-center justify-center rounded-full transition-colors sm:h-auto sm:w-auto sm:rounded-none",
+                        active ? "bg-success/20 text-success sm:bg-transparent" : "",
                       )}
                     >
-                      <Icon className="size-6" aria-hidden />
+                      <Icon className="size-6 sm:size-[1.125rem]" strokeWidth={active ? 2.4 : 1.9} aria-hidden />
                     </span>
                     {item.badge > 0 ? (
-                      <span className="absolute right-1 top-0 min-w-4 rounded-full bg-success px-1 text-center text-[10px] leading-4 text-white sm:hidden">
+                      <span className="absolute -right-0.5 -top-1 min-w-[1.125rem] rounded-full bg-success px-1 text-center text-[10px] font-bold leading-[1.125rem] text-white ring-2 ring-background sm:hidden">
                         {item.badge}
                       </span>
                     ) : null}
