@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { computeRevenueMetrics } from "@/lib/admin/revenue-metrics";
+import { SAAS_MONTHLY_PRICE_NOK } from "@/lib/billing/constants";
 import { formatMonthOverMonth } from "@/lib/admin/queries/revenue";
 
 const org = (
@@ -21,8 +22,8 @@ describe("computeRevenueMetrics", () => {
       2,
     );
 
-    expect(metrics.mrrNok).toBe(500);
-    expect(metrics.potentialMrrNok).toBe(1000);
+    expect(metrics.mrrNok).toBe(SAAS_MONTHLY_PRICE_NOK);
+    expect(metrics.potentialMrrNok).toBe(SAAS_MONTHLY_PRICE_NOK * 2);
     expect(metrics.trialingSubscriptions).toBe(1);
     expect(metrics.activeSubscriptions).toBe(1);
   });
@@ -35,7 +36,7 @@ describe("computeRevenueMetrics", () => {
       0,
     );
 
-    expect(metrics.mrrNok).toBe(500);
+    expect(metrics.mrrNok).toBe(SAAS_MONTHLY_PRICE_NOK);
     expect(metrics.activeSubscriptions).toBe(1);
   });
 });
