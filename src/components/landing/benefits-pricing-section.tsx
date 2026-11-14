@@ -30,12 +30,12 @@ const BENEFIT_ICONS: LucideIcon[] = [
   Layers,
 ];
 
-const PRICE_EX_VAT = 500;
+const PRICE_EX_VAT = 750;
 const VAT_RATE = 0.25;
 const VAT_AMOUNT = PRICE_EX_VAT * VAT_RATE;
 
 function kr(amount: number) {
-  return `kr ${amount.toLocaleString("nb-NO")}`;
+  return `kr ${amount.toLocaleString("nb-NO", { minimumFractionDigits: Number.isInteger(amount) ? 0 : 2 })}`;
 }
 
 export function BenefitsPricingSection() {

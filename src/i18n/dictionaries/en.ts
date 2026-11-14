@@ -550,7 +550,7 @@ export const en = {
         },
         {
           question: "How does the trial work?",
-          answer: "You get 30 days free. A card is registered at signup, and you are charged NOK 500/month only after the trial ends. Cancel anytime.",
+          answer: "You get 30 days free. A card is registered at signup, and you are charged NOK 750/month only after the trial ends. Cancel anytime.",
         },
         {
           question: "Can I manage multiple venues?",

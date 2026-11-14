@@ -44,7 +44,7 @@ export const BILLING_PLANS = {
   standard: {
     id: "standard",
     name: "Standard",
-    displayPriceNok: 500,
+    displayPriceNok: 750,
     trialDays: 30,
     priceEnvKey: "STRIPE_PRICE_STANDARD",
     productEnvKey: "STRIPE_PRODUCT_STANDARD",

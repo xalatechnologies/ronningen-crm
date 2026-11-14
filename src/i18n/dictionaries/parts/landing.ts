@@ -215,7 +215,7 @@ export const landingNb = {
       {
         question: "Hvordan fungerer prøveperioden?",
         answer:
-          "Du får 30 dager gratis. Kort registreres ved oppstart, og du belastes 500 kr/mnd først når prøveperioden er over. Du kan si opp når som helst.",
+          "Du får 30 dager gratis. Kort registreres ved oppstart, og du belastes 750 kr/mnd først når prøveperioden er over. Du kan si opp når som helst.",
       },
       {
         question: "Kan jeg administrere flere lokaler?",
