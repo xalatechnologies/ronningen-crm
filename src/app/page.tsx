@@ -7,6 +7,7 @@ import { HeroSection } from "@/components/landing/hero-section";
 import { HowItWorksSection } from "@/components/landing/how-it-works-section";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeader } from "@/components/landing/landing-header";
+import { PortalSection } from "@/components/landing/portal-section";
 import { ProblemSection } from "@/components/landing/problem-section";
 import { ProductPreviewSection } from "@/components/landing/product-preview-section";
 import type { Metadata } from "next";
@@ -25,6 +26,7 @@ export default function HomePage() {
         <HeroSection />
         <ProblemSection />
         <FeaturesSection />
+        <PortalSection />
         <HowItWorksSection />
         <ProductPreviewSection />
         <AudienceSection />

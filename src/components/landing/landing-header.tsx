@@ -51,6 +51,7 @@ function getDisplayName(
 
 const NAV_KEYS = [
   { key: "features" as const, hrefKey: "features" as const },
+  { key: "portal" as const, hrefKey: "portal" as const },
   { key: "howItWorks" as const, hrefKey: "howItWorks" as const },
   { key: "pricing" as const, hrefKey: "pricing" as const },
   { key: "faq" as const, hrefKey: "faq" as const },
