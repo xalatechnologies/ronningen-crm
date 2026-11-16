@@ -2,11 +2,12 @@
 
 import { Check, Minus, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RsvpReaction, type RsvpReactionState } from "@/components/portal/guest-rsvp-reaction";
 import { useTranslation } from "@/i18n/client";
 import type { TranslationKey } from "@/i18n/types";
 import { setReminders, submitRsvp } from "@/lib/portal/guest-public-actions";
@@ -32,6 +33,9 @@ export function GuestRsvpForm({ token, guest, closed, hostName }: { token: strin
   const [error, setError] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   const [stopped, setStopped] = useState(guest.optedOut);
+  const [reaction, setReaction] = useState<RsvpReactionState>(null);
+  const reactionSeq = useRef(0);
+  const clearReaction = useCallback(() => setReaction(null), []);
 
   const hasDiet = people.slice(0, party).some((p) => p.tags.length > 0 || p.note.trim() !== "");
 
@@ -86,6 +90,7 @@ export function GuestRsvpForm({ token, guest, closed, hostName }: { token: strin
 
   return (
     <section className="flex flex-col gap-5">
+      <RsvpReaction reaction={reaction} onDone={clearReaction} />
       {closed ? (
         <p className="rounded-3xl bg-amber-500/10 p-4 text-app-base ring-1 ring-gold/60">{t("portal.guestPage.closed", { host: hostName })}</p>
       ) : null}
@@ -116,7 +121,11 @@ export function GuestRsvpForm({ token, guest, closed, hostName }: { token: strin
                 key={o.value}
                 type="button"
                 aria-pressed={answer === o.value}
-                onClick={() => setAnswer(o.value)}
+                onClick={() => {
+                  setAnswer(o.value);
+                  reactionSeq.current += 1;
+                  setReaction({ answer: o.value, id: reactionSeq.current });
+                }}
                 className={cn(
                   "min-h-14 rounded-full px-6 text-left text-app-base font-semibold ring-1 transition-colors",
                   answer === o.value ? "bg-gradient-to-br from-primary to-[#5e1f3d] text-white ring-gold/70 shadow-rn-card" : "bg-background ring-gold/40 hover:bg-primary-soft",
