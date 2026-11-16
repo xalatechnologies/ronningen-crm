@@ -5,6 +5,7 @@ import { GuestActivities } from "@/components/portal/guest-activities";
 import { listGuestActivities } from "@/lib/portal/activities";
 import { loadPublicInvite } from "@/lib/portal/guest-public";
 import { GuestGifts } from "@/components/portal/guest-gifts";
+import { GuestSummary } from "@/components/portal/guest-summary";
 import { loadGuestGifts } from "@/lib/portal/gifts";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +50,10 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
             }}
           />
         </div>
-        <GuestRsvpForm token={token} guest={guest} closed={invite.closed} hostName={invite.hostName || invite.venueName} />
+        <GuestSummary status={guest.status} partySize={guest.partySize} activities={activities} gifts={gifts} />
+        <div id="rsvp" className="scroll-mt-4">
+          <GuestRsvpForm token={token} guest={guest} closed={invite.closed} hostName={invite.hostName || invite.venueName} />
+        </div>
         {invite.schedule.length > 0 && guest.status !== "declined" ? (
           <section className="flex flex-col gap-4 rounded-2xl bg-card p-5 ring-1 ring-foreground/8">
             <h2 className="font-heading text-lg font-semibold">{t("portal.guestPage.scheduleTitle")}</h2>
@@ -63,8 +67,12 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
             </ol>
           </section>
         ) : null}
-        <GuestActivities token={token} activities={activities} />
-        <GuestGifts token={token} wishes={gifts} />
+        <div id="activities" className="scroll-mt-4 empty:hidden">
+          <GuestActivities token={token} activities={activities} />
+        </div>
+        <div id="gifts" className="scroll-mt-4 empty:hidden">
+          <GuestGifts token={token} wishes={gifts} />
+        </div>
       </div>
     </main>
   );
