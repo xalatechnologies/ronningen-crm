@@ -171,3 +171,10 @@
   border: 0;
   background: linear-gradient(90deg, transparent, var(--rn-gold-line), transparent);
 }
+
+/* Phone keyboard: hide floating controls and lift bottom sheets above it (vars set by MobileFeel). */
+html[data-kb] .kb-hide { display: none; }
+.wedding-portal[data-slot="sheet-content"][data-side="bottom"] {
+  bottom: var(--kb, 0px);
+  max-height: calc(var(--vvh, 100dvh) - 0.75rem);
+}

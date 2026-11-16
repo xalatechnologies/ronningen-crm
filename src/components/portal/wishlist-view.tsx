@@ -219,7 +219,7 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
           onClick={() => setSheet({ ...emptyDraft })}
           aria-label={t("portal.wishlist.add")}
           className={cn(
-            "fixed right-4 z-20 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#5e1f3d] text-primary-foreground shadow-rn-hero-success ring-2 ring-gold/70 transition-transform active:scale-95 sm:hidden",
+            "kb-hide fixed right-4 z-20 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#5e1f3d] text-primary-foreground shadow-rn-hero-success ring-2 ring-gold/70 transition-transform active:scale-95 sm:hidden",
             drafts.length > 0 ? "bottom-[calc(8.25rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5rem+env(safe-area-inset-bottom))]",
           )}
         >
