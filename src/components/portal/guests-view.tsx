@@ -259,54 +259,67 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
             </div>
           ) : null}
 
-          {groups.map((section) => (
-            <section key={section.label || "_"} className="flex flex-col gap-3">
-              {groupFilter !== null ? null : section.label ? <h2 className="font-serif text-xl font-semibold">{section.label}</h2> : groups.length > 1 ? <h2 className="font-serif text-xl font-semibold">—</h2> : null}
-              <ul className="flex flex-col gap-2.5">
-                {section.rows.map((g) => (
-                  <li key={g.id} className="overflow-hidden rounded-2xl bg-card shadow-rn-card ring-1 ring-gold/30">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSheet({
-                          id: g.id,
-                          name: g.name,
-                          email: g.email ?? "",
-                          phone: g.phone ?? "",
-                          groupLabel: g.groupLabel ?? "",
-                          maxParty: String(g.maxParty),
-                        })
-                      }
-                      className="flex min-h-16 w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 active:bg-muted"
-                    >
-                      <span className="flex min-w-0 items-center gap-3">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-soft to-secondary font-serif text-base font-semibold text-success ring-1 ring-gold/50 dark:!text-white" aria-hidden>
-                        {initials(g.name)}
-                      </span>
-                      <span className="flex min-w-0 flex-col">
-                        <span className="break-words font-semibold">{g.name}</span>
-                        <span className="truncate text-app-sm text-muted-foreground">{g.email ?? t("portal.guests.noEmail")}</span>
-                        {g.maxParty > 1 ? (
-                          <span className="text-app-xs text-muted-foreground">{t("portal.guests.partyUpTo", { count: g.maxParty })}</span>
-                        ) : null}
-                        {g.status === "accepted" ? <AnswerSummary guest={g} /> : null}
-                        {g.deliveryIssue ? (
-                          <span className={cn("text-app-xs font-medium", g.deliveryIssue === "bounced" ? "text-destructive" : "text-amber-700 dark:text-amber-300")}>
-                            {t(g.deliveryIssue === "bounced" ? "portal.guests.deliveryBounced" : "portal.guests.deliveryDelayed")}
-                          </span>
-                        ) : null}
-                      </span>
-                      </span>
-                      <span className={cn("shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-app-xs font-semibold", TONE[g.status])}>
-                        <span aria-hidden className="mr-1">{STATUS_EMOJI[g.status]}</span>
-                        {t(`portal.guests.status.${g.status}` as TranslationKey)}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+          {groups.map((section) => {
+            const title = section.label || (groups.length > 1 ? t("portal.guests.groupNone") : "");
+            const list = (
+                <ul className="flex flex-col gap-2.5">
+                  {section.rows.map((g) => (
+                    <li key={g.id} className="overflow-hidden rounded-2xl bg-card shadow-rn-card ring-1 ring-gold/30">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSheet({
+                            id: g.id,
+                            name: g.name,
+                            email: g.email ?? "",
+                            phone: g.phone ?? "",
+                            groupLabel: g.groupLabel ?? "",
+                            maxParty: String(g.maxParty),
+                          })
+                        }
+                        className="flex min-h-16 w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 active:bg-muted"
+                      >
+                        <span className="flex min-w-0 items-center gap-3">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-soft to-secondary font-serif text-base font-semibold text-success ring-1 ring-gold/50 dark:!text-white" aria-hidden>
+                          {initials(g.name)}
+                        </span>
+                        <span className="flex min-w-0 flex-col">
+                          <span className="break-words font-semibold">{g.name}</span>
+                          <span className="truncate text-app-sm text-muted-foreground">{g.email ?? t("portal.guests.noEmail")}</span>
+                          {g.maxParty > 1 ? (
+                            <span className="text-app-xs text-muted-foreground">{t("portal.guests.partyUpTo", { count: g.maxParty })}</span>
+                          ) : null}
+                          {g.status === "accepted" ? <AnswerSummary guest={g} /> : null}
+                          {g.deliveryIssue ? (
+                            <span className={cn("text-app-xs font-medium", g.deliveryIssue === "bounced" ? "text-destructive" : "text-amber-700 dark:text-amber-300")}>
+                              {t(g.deliveryIssue === "bounced" ? "portal.guests.deliveryBounced" : "portal.guests.deliveryDelayed")}
+                            </span>
+                          ) : null}
+                        </span>
+                        </span>
+                        <span className={cn("shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-app-xs font-semibold", TONE[g.status])}>
+                          <span aria-hidden className="mr-1">{STATUS_EMOJI[g.status]}</span>
+                          {t(`portal.guests.status.${g.status}` as TranslationKey)}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+            );
+            // Under a single group tab, or with only one unnamed group, there is nothing to fold.
+            if (groupFilter !== null || !title) {
+              return (
+                <section key={section.label || "_"} className="flex flex-col gap-3">
+                  {list}
+                </section>
+              );
+            }
+            return (
+              <CollapsibleCard key={section.label || "_"} plain title={title} badge={section.rows.length}>
+                {list}
+              </CollapsibleCard>
+            );
+          })}
 
           {visible.length > limit ? (
             <Button type="button" variant="outline" className="self-center rounded-full border-gold/60" onClick={() => setLimit((n) => n + PAGE_SIZE)}>
