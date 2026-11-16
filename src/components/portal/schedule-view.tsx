@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { BotanicalSprig } from "@/components/brand/botanical";
 import { ScheduleTimeline } from "@/components/portal/schedule-timeline";
+import { AddFab } from "@/components/portal/add-fab";
 import { PORTAL_SHEET } from "@/components/portal/sheet-style";
 import { Button } from "@/components/ui/button";
 import { SCHEDULE_EMOJIS, splitEmoji, withEmoji } from "@/lib/portal/schedule-emoji";
@@ -169,26 +170,14 @@ export function ScheduleView({
       </section>
 
       {canShare(state) ? (
-        <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-gold/40 bg-background/95 px-4 py-3 backdrop-blur sm:bottom-4 sm:mx-0 sm:rounded-3xl sm:border">
+        <div className="flex flex-col pb-12 pt-1 sm:pb-0">
           <Button type="button" variant="success" size="cta" className="w-full rounded-full bg-gradient-to-r from-primary to-[#5e1f3d]" onClick={() => setConfirming(true)}>
             {t("portal.schedule.share")}
           </Button>
         </div>
       ) : null}
 
-      {entries.length > 0 ? (
-        <button
-          type="button"
-          onClick={() => setSheet({ ...emptyDraft })}
-          aria-label={t("portal.schedule.add")}
-          className={cn(
-            "kb-hide fixed right-4 z-20 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#5e1f3d] text-primary-foreground shadow-rn-hero-success ring-2 ring-gold/70 transition-transform active:scale-95 sm:hidden",
-            canShare(state) ? "bottom-[calc(8.25rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5rem+env(safe-area-inset-bottom))]",
-          )}
-        >
-          <Plus className="size-7" aria-hidden />
-        </button>
-      ) : null}
+      {entries.length > 0 ? <AddFab label={t("portal.schedule.add")} onClick={() => setSheet({ ...emptyDraft })} /> : null}
 
       <Sheet open={sheet !== null} onOpenChange={(open) => (open ? undefined : setSheet(null))}>
         <SheetContent side="bottom" className={cn(PORTAL_SHEET, "max-h-[92dvh] overflow-y-auto")}>
