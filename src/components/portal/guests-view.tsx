@@ -2,8 +2,10 @@
 
 import { ChevronDown, ClipboardPaste, MessageSquareText, Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type FormEvent } from "react";
+import { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
+
+import { CelebrationPopup, type CelebrationState } from "@/components/portal/celebration-popup";
 
 import { Blossom, BotanicalSprig } from "@/components/brand/botanical";
 import { PORTAL_SHEET } from "@/components/portal/sheet-style";
@@ -78,6 +80,13 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
   const [confirmAll, setConfirmAll] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sendMode, setSendMode] = useState<"invite" | "reminder" | null>(null);
+  const [celebration, setCelebration] = useState<CelebrationState>(null);
+  const celebrationSeq = useRef(0);
+  const clearCelebration = useCallback(() => setCelebration(null), []);
+  const celebrate = (c: Omit<NonNullable<CelebrationState>, "id">) => {
+    celebrationSeq.current += 1;
+    setCelebration({ id: celebrationSeq.current, ...c });
+  };
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKey | null>(null);
@@ -120,6 +129,14 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
       if (r.sent > 0 || r.failed > 0) {
         toast.success(r.failed > 0 ? t("portal.guestSend.sentPartial", { sent: r.sent, failed: r.failed }) : t("portal.guestSend.sent", { count: r.sent }));
       }
+      // A party only when everything went out; a partly failed send gets the plain message.
+      if (r.sent > 0 && r.failed === 0) {
+        celebrate(
+          mode === "invite"
+            ? { emoji: "💌", title: t("portal.guestSend.celebrateInviteTitle"), body: t("portal.guestSend.celebrateInviteBody", { count: r.sent }), confetti: true }
+            : { emoji: "📨", title: t("portal.guestSend.celebrateReminderTitle"), body: t("portal.guestSend.celebrateReminderBody", { count: r.sent }) },
+        );
+      }
       if (r.capped > 0) toast.message(t("portal.guestSend.capped", { count: r.capped }));
     }
     router.refresh();
@@ -138,6 +155,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
 
   return (
     <div className="flex flex-col gap-6">
+      <CelebrationPopup celebration={celebration} onDone={clearCelebration} />
       {guests.length === 0 ? (
         <div className="relative flex flex-col items-center gap-4 overflow-hidden rounded-3xl bg-card px-6 py-10 text-center shadow-rn-card ring-1 ring-gold/40">
           <Blossom className="size-10 text-gold" filled />
@@ -383,6 +401,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
               onDone={(added) => {
                 setImporting(false);
                 toast.success(t("portal.guests.importDone", { count: added }));
+                if (added > 0) celebrate({ emoji: "🥳", title: t("portal.guests.celebrateImportTitle"), body: t("portal.guests.celebrateImportBody", { count: added }), confetti: true });
                 router.refresh();
               }}
             />
