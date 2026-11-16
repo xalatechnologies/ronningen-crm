@@ -1,6 +1,3 @@
-import { ChevronLeft } from "lucide-react";
-import Link from "next/link";
-
 import { InviteDesigner } from "@/components/portal/invite-designer";
 import { getServerTranslation } from "@/i18n/server";
 import { getPortalContext } from "@/lib/portal/context";
@@ -20,10 +17,6 @@ export default async function PortalInvitationPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <Link href="/portal/guests" className="inline-flex min-h-11 w-fit items-center gap-1 text-app-sm font-semibold text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="size-4" aria-hidden />
-          {t("portal.invitation.back")}
-        </Link>
         <h1 className="font-serif text-2xl font-semibold tracking-tight sm:text-3xl">{t("portal.invitation.title")}</h1>
         <p className="text-muted-foreground">{t("portal.invitation.lead")}</p>
       </header>

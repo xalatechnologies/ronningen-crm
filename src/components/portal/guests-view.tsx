@@ -57,6 +57,7 @@ const FILTER_STATUSES: Record<FilterKey, GuestStatus[]> = {
 };
 /** Long lists get search, filter-by-tile and paging; short lists look as before. */
 const SEARCH_THRESHOLD = 8;
+const NO_GROUP = "\u0000none";
 const PAGE_SIZE = 25;
 
 const initials = (name: string) =>
@@ -91,8 +92,15 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKey | null>(null);
+  // Which group tab is chosen: null = all, NO_GROUP = guests without a group, otherwise the group name.
+  const [groupFilter, setGroupFilter] = useState<string | null>(null);
   const [limit, setLimit] = useState(PAGE_SIZE);
   const manyGuests = guests.length > SEARCH_THRESHOLD;
+  const allGroupLabels = useMemo(
+    () => [...new Set(guests.map((g) => g.groupLabel).filter((l): l is string => Boolean(l)))].sort((a, b) => a.localeCompare(b)),
+    [guests],
+  );
+  const hasUngrouped = guests.some((g) => !g.groupLabel);
 
   const summary = useMemo(() => summarizeGuests(guests), [guests]);
   const dietRows = useMemo(
@@ -105,9 +113,10 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
     return guests.filter(
       (g) =>
         (!filter || FILTER_STATUSES[filter].includes(g.status)) &&
+        (groupFilter === null || (groupFilter === NO_GROUP ? !g.groupLabel : g.groupLabel === groupFilter)) &&
         (!q || g.name.toLowerCase().includes(q) || (g.email ?? "").toLowerCase().includes(q)),
     );
-  }, [guests, query, filter]);
+  }, [guests, query, filter, groupFilter]);
   const shown = useMemo(() => visible.slice(0, limit), [visible, limit]);
   const groups = useMemo(() => {
     const labels = [...new Set(shown.map((g) => g.groupLabel).filter((l): l is string => Boolean(l)))].sort((a, b) => a.localeCompare(b));
@@ -207,6 +216,33 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
             </CollapsibleCard>
           ) : null}
 
+          {allGroupLabels.length > 0 ? (
+            <div role="group" aria-label={t("portal.guests.groupsLabel")} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+              {[
+                { key: null as string | null, label: t("portal.guests.groupAll"), count: guests.length },
+                ...allGroupLabels.map((l) => ({ key: l as string | null, label: l, count: guests.filter((g) => g.groupLabel === l).length })),
+                ...(hasUngrouped ? [{ key: NO_GROUP as string | null, label: t("portal.guests.groupNone"), count: guests.filter((g) => !g.groupLabel).length }] : []),
+              ].map((tab) => (
+                <button
+                  key={tab.key ?? "_all"}
+                  type="button"
+                  aria-pressed={groupFilter === tab.key}
+                  onClick={() => {
+                    setGroupFilter(tab.key);
+                    setLimit(PAGE_SIZE);
+                  }}
+                  className={cn(
+                    "flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-app-sm font-semibold ring-1 transition-colors",
+                    groupFilter === tab.key ? "bg-primary text-primary-foreground ring-gold/60" : "bg-card ring-gold/40 hover:ring-gold",
+                  )}
+                >
+                  {tab.label}
+                  <span className={cn("rounded-full px-2 py-0.5 text-app-xs tabular-nums", groupFilter === tab.key ? "bg-white/20" : "bg-gold/20 text-primary")}>{tab.count}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+
           {manyGuests ? (
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
@@ -225,7 +261,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
 
           {groups.map((section) => (
             <section key={section.label || "_"} className="flex flex-col gap-3">
-              {section.label ? <h2 className="font-serif text-xl font-semibold">{section.label}</h2> : groups.length > 1 ? <h2 className="font-serif text-xl font-semibold">—</h2> : null}
+              {groupFilter !== null ? null : section.label ? <h2 className="font-serif text-xl font-semibold">{section.label}</h2> : groups.length > 1 ? <h2 className="font-serif text-xl font-semibold">—</h2> : null}
               <ul className="flex flex-col gap-2.5">
                 {section.rows.map((g) => (
                   <li key={g.id} className="overflow-hidden rounded-2xl bg-card shadow-rn-card ring-1 ring-gold/30">
@@ -376,7 +412,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
               <GuestForm
                 key={sheet.id ?? "new"}
                 initial={sheet}
-                existingGroups={groups.map((g) => g.label).filter(Boolean)}
+                existingGroups={allGroupLabels}
                 onCancel={() => setSheet(null)}
                 onDone={() => {
                   setSheet(null);
