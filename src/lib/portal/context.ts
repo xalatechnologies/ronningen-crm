@@ -37,6 +37,8 @@ export const getPortalAccess = cache(async function getPortalAccess(): Promise<P
   if (!claims) return { state: "none" };
   const user = { id: claims.sub, email: claims.email };
 
+  // The profile only needs the user id, so it runs alongside the account lookup instead of after it.
+  const profilePromise = createSupabaseAdminClient().from("profiles").select("full_name").eq("id", user.id).maybeSingle();
   const { data: account } = await supabase
     .from("portal_accounts" as never)
     .select("id, organization_id, booking_id")
@@ -47,7 +49,10 @@ export const getPortalAccess = cache(async function getPortalAccess(): Promise<P
     .limit(1)
     .maybeSingle();
   const row = account as unknown as { id: string; organization_id: string; booking_id: string } | null;
-  if (!row) return { state: "none" };
+  if (!row) {
+    void profilePromise.then(() => undefined, () => undefined);
+    return { state: "none" };
+  }
 
   const admin = createSupabaseAdminClient();
   const [{ data: booking }, { data: org }, { data: profile }] = await Promise.all([
@@ -58,7 +63,7 @@ export const getPortalAccess = cache(async function getPortalAccess(): Promise<P
       .eq("organization_id", row.organization_id)
       .maybeSingle(),
     admin.from("organizations").select("id, name, logo_url, portal_enabled" as "id, name, logo_url").eq("id", row.organization_id).maybeSingle(),
-    admin.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+    profilePromise,
   ]);
   if (!booking || !org) return { state: "none" };
   if (!(org as unknown as { portal_enabled?: boolean }).portal_enabled) return { state: "closed", organizationName: org.name };

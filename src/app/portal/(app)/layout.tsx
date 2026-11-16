@@ -3,9 +3,7 @@ import { redirect } from "next/navigation";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { getServerTranslation } from "@/i18n/server";
 import { getPortalAccess } from "@/lib/portal/context";
-import { countUnread } from "@/lib/portal/messages";
-import { countWishAttention } from "@/lib/portal/wishlist";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getPortalBadges } from "@/lib/portal/badges";
 
 export const dynamic = "force-dynamic";
 
@@ -25,11 +23,7 @@ export default async function PortalLayout({ children }: { children: React.React
   // Signed in (middleware guarantees it) but not a customer: staff belong in the venue app.
   if (access.state !== "ok") redirect("/app/dashboard");
   const ctx = access.ctx;
-  const supabase = await createServerSupabaseClient();
-  const [unreadMessages, wishes] = await Promise.all([
-    countUnread(supabase, ctx.booking.id, "customer"),
-    countWishAttention(supabase, ctx.booking.id),
-  ]);
+  const { unread: unreadMessages, wishes } = await getPortalBadges(ctx.booking.id);
   return (
     <PortalShell
       organizationName={ctx.organization.name}
