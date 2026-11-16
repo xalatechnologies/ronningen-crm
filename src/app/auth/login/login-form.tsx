@@ -16,15 +16,47 @@ import {
   validationMessagesForLocale,
 } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { safeInternalRedirect } from "@/lib/security/safe-redirect";
 import { shouldResolveAuthDestination } from "@/lib/organizations/tenant-setup";
 import { CodeLogin } from "./code-login";
+
+const SAVED_EMAILS_KEY = "em.savedLoginEmails";
+const SAVED_EMAILS_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const SAVED_EMAILS_MAX = 3;
+
+type SavedEmail = { email: string; savedAt: number };
+
+/** Emails remembered on this device for 30 days (no passwords). Safe against blocked storage. */
+function readSavedEmails(): SavedEmail[] {
+  try {
+    const raw = JSON.parse(window.localStorage.getItem(SAVED_EMAILS_KEY) ?? "[]") as SavedEmail[];
+    const now = Date.now();
+    return raw.filter((x) => typeof x?.email === "string" && now - x.savedAt < SAVED_EMAILS_TTL_MS);
+  } catch {
+    return [];
+  }
+}
+
+function writeSavedEmails(list: SavedEmail[]) {
+  try {
+    window.localStorage.setItem(SAVED_EMAILS_KEY, JSON.stringify(list));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+function rememberEmail(raw: string) {
+  const email = raw.trim().toLowerCase();
+  writeSavedEmails(
+    [{ email, savedAt: Date.now() }, ...readSavedEmails().filter((x) => x.email !== email)].slice(0, SAVED_EMAILS_MAX),
+  );
+}
 
 export function LoginForm() {
   const { t, locale } = useTranslation();
@@ -40,6 +72,23 @@ export function LoginForm() {
   const [remember, setRemember] = useState(true);
   const [redirecting, setRedirecting] = useState(false);
   const [mode, setMode] = useState<"password" | "code">("password");
+
+  const [savedEmails, setSavedEmails] = useState<SavedEmail[]>([]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable on the client
+    setSavedEmails(readSavedEmails());
+  }, []);
+
+  function pickSavedEmail(email: string) {
+    form.setValue("email", email, { shouldValidate: true });
+    document.getElementById("password")?.focus();
+  }
+
+  function forgetSavedEmail(email: string) {
+    const next = savedEmails.filter((x) => x.email !== email);
+    writeSavedEmails(next);
+    setSavedEmails(next);
+  }
 
   const loginDefaults = useMemo(() => getDevLoginDefaultValues(), []);
   const showDevLogin = Boolean(loginDefaults.email);
@@ -92,6 +141,9 @@ export function LoginForm() {
       return;
     }
 
+    if (remember) {
+      rememberEmail(values.email);
+    }
     goTo(payload?.redirectTo);
   }
 
@@ -233,6 +285,32 @@ export function LoginForm() {
               onSubmit={form.handleSubmit(onSubmit)}
               noValidate
             >
+              {savedEmails.length > 0 ? (
+                <ul className="flex flex-col gap-2">
+                  {savedEmails.map(({ email }) => (
+                    <li key={email} className="flex items-center gap-1 rounded-xl bg-[#e8f5ee] pr-1 ring-1 ring-[#1a4331]/15">
+                      <button
+                        type="button"
+                        onClick={() => pickSavedEmail(email)}
+                        className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl px-3 text-left text-app-base font-medium text-[#0c1f16] transition-colors hover:bg-[#1a4331]/8"
+                      >
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#1a4331] text-app-sm font-semibold uppercase text-white">
+                          {email.charAt(0)}
+                        </span>
+                        <span className="truncate">{email}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => forgetSavedEmail(email)}
+                        aria-label={`× ${email}`}
+                        className="flex size-9 shrink-0 items-center justify-center rounded-full text-[#55605a] hover:bg-[#1a4331]/10"
+                      >
+                        <X className="size-4" aria-hidden />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
