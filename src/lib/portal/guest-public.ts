@@ -18,7 +18,7 @@ export type PublicInvite = {
     diet: { label: string; tags: DietTag[]; note: string }[];
     optedOut: boolean;
   };
-  design: Pick<InviteDesign, "templateKey" | "paletteKey" | "fontKey" | "headline" | "message" | "eventDateText" | "eventTimeText" | "placeText" | "dressCode" | "rsvpDeadline">;
+  design: Pick<InviteDesign, "templateKey" | "paletteKey" | "fontKey" | "flowerStyle" | "flowerType" | "flowerTone" | "headline" | "message" | "eventDateText" | "eventTimeText" | "placeText" | "dressCode" | "rsvpDeadline">;
   venueName: string;
   hostName: string;
   bookingId: string;
@@ -57,17 +57,20 @@ export async function loadPublicInvite(token: string): Promise<PublicInvite | nu
   const guest = g as unknown as GuestRow | null;
   if (!guest) return null;
 
+  const DESIGN_COLUMNS = "template_key, palette_key, font_key, headline, message, event_date_text, event_time_text, place_text, dress_code, rsvp_deadline, status, show_schedule";
+  const loadDesign = async () => {
+    const q = (cols: string) => admin.from("portal_invite_designs" as never).select(cols).eq("booking_id", guest.booking_id).maybeSingle();
+    const withFlowers = await q(`${DESIGN_COLUMNS}, flower_style, flower_type, flower_tone`);
+    // A database that has not got the flower columns yet must not break every guest link.
+    return withFlowers.error ? q(DESIGN_COLUMNS) : withFlowers;
+  };
   const [{ data: d }, { data: org }, { data: booking }] = await Promise.all([
-    admin
-      .from("portal_invite_designs" as never)
-      .select("template_key, palette_key, font_key, headline, message, event_date_text, event_time_text, place_text, dress_code, rsvp_deadline, status, show_schedule")
-      .eq("booking_id", guest.booking_id)
-      .maybeSingle(),
+    loadDesign(),
     admin.from("organizations").select("name, portal_enabled" as "name").eq("id", guest.organization_id).maybeSingle(),
     admin.from("bookings").select("customer_id").eq("id", guest.booking_id).maybeSingle(),
   ]);
   const design = d as unknown as
-    | { template_key: InviteDesign["templateKey"]; palette_key: InviteDesign["paletteKey"]; font_key: InviteDesign["fontKey"]; headline: string; message: string; event_date_text: string; event_time_text: string; place_text: string; dress_code: string; rsvp_deadline: string | null; status: string; show_schedule: boolean }
+    | { template_key: InviteDesign["templateKey"]; palette_key: InviteDesign["paletteKey"]; font_key: InviteDesign["fontKey"]; flower_style: InviteDesign["flowerStyle"] | null; flower_type: InviteDesign["flowerType"] | null; flower_tone: InviteDesign["flowerTone"] | null; headline: string; message: string; event_date_text: string; event_time_text: string; place_text: string; dress_code: string; rsvp_deadline: string | null; status: string; show_schedule: boolean }
     | null;
   if (!design || design.status !== "published") return null;
   // The venue switched the portal off: guest links stop working too (abuse kill switch).
@@ -98,6 +101,9 @@ export async function loadPublicInvite(token: string): Promise<PublicInvite | nu
       templateKey: design.template_key,
       paletteKey: design.palette_key,
       fontKey: design.font_key,
+      flowerStyle: design.flower_style ?? "none",
+      flowerType: design.flower_type ?? "blomst",
+      flowerTone: design.flower_tone ?? "accent",
       headline: design.headline,
       message: design.message,
       eventDateText: design.event_date_text,

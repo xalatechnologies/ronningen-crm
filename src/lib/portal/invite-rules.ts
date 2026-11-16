@@ -3,6 +3,12 @@ import { z } from "zod";
 export const TEMPLATES = ["klassisk", "moderne", "ramme", "stripe"] as const;
 export const PALETTE_KEYS = ["skog", "sand", "natt", "rose", "salvie", "kull"] as const;
 export const FONT_KEYS = ["serif", "sans", "elegant"] as const;
+export const FLOWER_STYLES = ["none", "hjorner", "krans", "bukett", "bord", "spredt"] as const;
+export const FLOWER_TYPES = ["blomst", "tusenfryd", "ros", "kvist"] as const;
+export const FLOWER_TONES = ["accent", "rosa", "gull", "hvit"] as const;
+export type FlowerStyle = (typeof FLOWER_STYLES)[number];
+export type FlowerType = (typeof FLOWER_TYPES)[number];
+export type FlowerTone = (typeof FLOWER_TONES)[number];
 export type TemplateKey = (typeof TEMPLATES)[number];
 export type PaletteKey = (typeof PALETTE_KEYS)[number];
 export type FontKey = (typeof FONT_KEYS)[number];
@@ -61,6 +67,10 @@ export const inviteDesignSchema = z.object({
   templateKey: z.enum(TEMPLATES),
   paletteKey: z.enum(PALETTE_KEYS),
   fontKey: z.enum(FONT_KEYS),
+  // Flowers are decoration only (no text), so they default to "none" and old cards stay exactly as they were.
+  flowerStyle: z.enum(FLOWER_STYLES).default("none"),
+  flowerType: z.enum(FLOWER_TYPES).default("blomst"),
+  flowerTone: z.enum(FLOWER_TONES).default("accent"),
   headline: text(80),
   message: text(600),
   eventDateText: text(60),
@@ -98,6 +108,9 @@ export function defaultDesign(input: { eventDate: string | null; venueName: stri
     templateKey: "klassisk",
     paletteKey: "skog",
     fontKey: "serif",
+    flowerStyle: "none",
+    flowerType: "blomst",
+    flowerTone: "accent",
     headline: "",
     message: "",
     eventDateText,

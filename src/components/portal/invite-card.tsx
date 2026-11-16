@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 
+import { flowerDecor } from "@/components/portal/invite-flowers";
 import { FONTS, PALETTES, type InviteDesign } from "@/lib/portal/invite-rules";
 
 export type InviteCardLabels = {
@@ -14,7 +15,8 @@ export type InviteCardLabels = {
 type CardDesign = Pick<
   InviteDesign,
   "templateKey" | "paletteKey" | "fontKey" | "headline" | "message" | "eventDateText" | "eventTimeText" | "placeText" | "dressCode"
->;
+> &
+  Partial<Pick<InviteDesign, "flowerStyle" | "flowerType" | "flowerTone">>;
 
 /**
  * The invitation as a guest (and the designer's preview) sees it. Pure markup: no hooks, no data, so it
@@ -26,7 +28,9 @@ export function InviteCard({ design, labels }: { design: CardDesign; labels: Inv
   const p = PALETTES[design.paletteKey];
   const f = FONTS[design.fontKey];
 
-  const root: CSSProperties = { containerType: "inline-size", width: "100%" };
+  const decor = flowerDecor(design.flowerStyle ?? "none", design.flowerType ?? "blomst", design.flowerTone ?? "accent", design.paletteKey);
+  // Flowers are positioned against the card, so it clips them like a real card edge.
+  const root: CSSProperties = { containerType: "inline-size", width: "100%", position: "relative", overflow: "hidden" };
   const heading: CSSProperties = {
     fontFamily: f.heading,
     fontStyle: f.headingStyle,
@@ -88,6 +92,7 @@ export function InviteCard({ design, labels }: { design: CardDesign; labels: Inv
   if (design.templateKey === "moderne") {
     return (
       <div style={{ ...root, background: p.bg, padding: "9cqw", display: "grid", gap: "7cqw", borderRadius: "3cqw" }}>
+        {decor.top}
         <span aria-hidden style={{ display: "block", width: "14cqw", height: "1.4cqw", background: p.accent }} />
         <div style={{ display: "grid", gap: "3cqw" }}>
           <span style={kicker}>{labels.invited}</span>
@@ -96,6 +101,8 @@ export function InviteCard({ design, labels }: { design: CardDesign; labels: Inv
         {details("left")}
         {messageBlock}
         {foot("left")}
+        {decor.bottom}
+        {decor.overlay}
       </div>
     );
   }
@@ -104,12 +111,15 @@ export function InviteCard({ design, labels }: { design: CardDesign; labels: Inv
     return (
       <div style={{ ...root, background: p.accent, padding: "4.5cqw", borderRadius: "3.5cqw" }}>
         <div style={{ background: p.bg, borderRadius: "2.2cqw", padding: "9cqw 7cqw", display: "grid", gap: "6cqw", textAlign: "center" }}>
+          {decor.top}
           <span style={kicker}>{labels.invited}</span>
           {h1("9.5cqw", { textTransform: "uppercase", letterSpacing: "0.06em", textAlign: "center" })}
           {details("center")}
           {messageBlock}
           {foot("center")}
+          {decor.bottom}
         </div>
+        {decor.overlay}
       </div>
     );
   }
@@ -124,11 +134,14 @@ export function InviteCard({ design, labels }: { design: CardDesign; labels: Inv
           </p>
         </div>
         <div style={{ padding: "9cqw", display: "grid", gap: "7cqw" }}>
+          {decor.top}
           {h1("9cqw", { textAlign: "left" })}
           {details("left")}
           {messageBlock}
           {foot("left")}
+          {decor.bottom}
         </div>
+        {decor.overlay}
       </div>
     );
   }
@@ -137,13 +150,16 @@ export function InviteCard({ design, labels }: { design: CardDesign; labels: Inv
   return (
     <div style={{ ...root, background: p.bg, padding: "5cqw", borderRadius: "3cqw" }}>
       <div style={{ border: `1px solid ${p.accent}`, padding: "10cqw 8cqw", display: "grid", gap: "6cqw", textAlign: "center", borderRadius: "1.5cqw" }}>
+        {decor.top}
         <span style={kicker}>{labels.invited}</span>
         {h1("10cqw", { textAlign: "center" })}
         <span aria-hidden style={{ display: "block", width: "16cqw", height: "1px", background: p.accent, margin: "0 auto" }} />
         {details("center")}
         {messageBlock}
         {foot("center")}
+        {decor.bottom}
       </div>
+      {decor.overlay}
     </div>
   );
 }
