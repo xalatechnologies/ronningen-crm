@@ -194,7 +194,7 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
       )}
 
       {drafts.length > 0 ? (
-        <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-gold/40 bg-background/95 py-3 pl-4 pr-[5.25rem] backdrop-blur sm:bottom-4 sm:mx-0 sm:rounded-3xl sm:border sm:px-4">
+        <div className="flex flex-col pb-12 pt-1 sm:pb-0">
           <Button
             type="button"
             variant="success"

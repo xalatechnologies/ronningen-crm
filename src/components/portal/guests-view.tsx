@@ -161,7 +161,6 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
     router.refresh();
   }
 
-  const sendBarShown = sendState.enabled && sendState.published && (sendState.inviteCount > 0 || sendState.reminderCount > 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -344,11 +343,10 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
             </Button>
           </div>
 
-          {/* Mobile only: floating actions in the bottom-right corner, above the tab bar (and the send bar when shown). */}
+          {/* Mobile only: floating actions in the bottom-right corner, just above the tab bar.  */}
           <div
             className={cn(
-              "kb-hide fixed right-4 z-20 flex flex-col items-end gap-3 sm:hidden",
-              sendBarShown ? "bottom-[calc(8.25rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5rem+env(safe-area-inset-bottom))]",
+              "kb-hide fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-20 flex flex-col items-end gap-3 sm:hidden",
             )}
           >
             <button
@@ -382,7 +380,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
       ) : null}
 
       {sendState.enabled && sendState.published && (sendState.inviteCount > 0 || sendState.reminderCount > 0) ? (
-        <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-foreground/8 bg-background/95 px-4 py-3 backdrop-blur sm:bottom-4 sm:mx-0 sm:rounded-2xl sm:border">
+        <div className="flex flex-col pb-12 pt-1 sm:pb-0">
           <Button type="button" variant="success" size="cta" className="w-full" onClick={() => setSendMode(sendState.inviteCount > 0 ? "invite" : "reminder")}>
             {sendState.inviteCount > 0
               ? t("portal.guestSend.sendInvite", { count: sendState.inviteCount })
