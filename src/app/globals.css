@@ -3,6 +3,7 @@
 @import "shadcn/tailwind.css";
 @import "../styles/tokens.css";
 @import "../styles/display-density.css";
+@import "../styles/wedding-portal.css";
 
 @custom-variant dark (&:is([data-theme="dark"] *, .dark *));
 
@@ -16,6 +17,8 @@
   --color-primary-soft: var(--rn-primary-soft);
   --color-success: var(--rn-success);
   --color-danger: var(--rn-danger);
+  --color-gold: var(--rn-gold);
+  --font-serif: var(--font-serif);
   --color-accent-blue: var(--rn-accent-blue);
   --color-text-secondary: var(--rn-text-secondary);
   --color-text-muted: var(--rn-text-muted);

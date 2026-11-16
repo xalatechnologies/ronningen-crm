@@ -12,13 +12,19 @@ import { QueryProvider } from "@/providers/query-provider";
 import { SupabaseProvider } from "@/providers/supabase-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -54,7 +60,7 @@ export default async function RootLayout({
       data-scroll-behavior="smooth"
       data-display-storage-key={displayStorageKey}
       data-theme-storage-key={themeStorageKey}
-      className={cn(inter.variable, "h-full scroll-smooth antialiased")}
+      className={cn(inter.variable, playfair.variable, "h-full scroll-smooth antialiased")}
       suppressHydrationWarning
     >
       <body

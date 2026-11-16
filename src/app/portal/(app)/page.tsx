@@ -1,4 +1,4 @@
-import { CalendarClock, CalendarDays, Check, ChevronRight, ListChecks, MessageCircle, Users } from "lucide-react";
+import { CalendarClock, CalendarDays, ChevronRight, ListChecks, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 
 import { getServerTranslation } from "@/i18n/server";
@@ -10,6 +10,7 @@ import { listScheduleItems, listScheduleVersions, scheduleContentHash } from "@/
 import { todayInOslo } from "@/lib/portal/rsvp-rules";
 import { shareState } from "@/lib/portal/schedule-rules";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { Blossom, BotanicalSprig } from "@/components/brand/botanical";
 
 export const dynamic = "force-dynamic";
 
@@ -96,21 +97,32 @@ export default async function PortalHomePage() {
     },
   ];
 
+  // Progress counts only the tasks that have a measurable done state (guest list, day plan).
+  const trackable = [steps[0], steps[2]];
+  const doneCount = trackable.filter((x) => x.done).length;
+  const percent = Math.round((doneCount / trackable.length) * 100);
+  // Open tasks first (needs-attention before the rest), finished ones last.
+  const ordered = [...steps].sort(
+    (x, y) => Number(x.done && !x.attention) - Number(y.done && !y.attention) || Number(y.attention) - Number(x.attention),
+  );
+
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-4 rounded-3xl bg-primary p-5 text-primary-foreground sm:p-7">
-        <p className="text-app-sm font-semibold text-primary-foreground/75">
+      <header className="relative flex flex-col gap-4 overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-[#5e1f3d] p-5 text-primary-foreground shadow-rn-hero-success ring-1 ring-gold/50 sm:p-7">
+        <BotanicalSprig className="absolute -right-3 -top-2 h-40 w-32 text-primary-foreground/25 sm:h-52 sm:w-40" />
+        <BotanicalSprig className="absolute -bottom-6 right-16 h-28 w-20 -rotate-12 text-gold/50" />
+        <p className="relative text-app-sm font-semibold text-primary-foreground/85">
           {t("portal.home.greeting", { name: ctx.fullName.split(" ")[0] ?? ctx.fullName })}
         </p>
         {days != null && days > 1 ? (
-          <h1 className="flex items-baseline gap-3 !text-primary-foreground">
-            <span className="font-heading text-6xl font-bold leading-none tracking-tight tabular-nums sm:text-7xl">{days}</span>
+          <h1 className="relative flex items-baseline gap-3 !text-primary-foreground">
+            <span className="font-serif text-6xl font-semibold leading-none tracking-tight tabular-nums sm:text-7xl">{days}</span>
             <span className="text-app-base font-semibold text-primary-foreground/85">{t("portal.home.countdownLabel")}</span>
           </h1>
         ) : countdown ? (
-          <h1 className="font-heading text-3xl font-bold leading-tight tracking-tight !text-primary-foreground sm:text-4xl">{countdown}</h1>
+          <h1 className="relative font-serif text-3xl font-semibold leading-tight tracking-tight !text-primary-foreground sm:text-4xl">{countdown}</h1>
         ) : null}
-        <ul className="flex flex-wrap gap-2 text-app-sm font-medium">
+        <ul className="relative flex flex-wrap gap-2 text-app-sm font-medium">
           {ctx.booking.eventDate ? (
             <li className="flex items-center gap-2 rounded-full bg-primary-foreground/12 px-3 py-1.5">
               <CalendarDays className="size-4" aria-hidden />
@@ -129,30 +141,64 @@ export default async function PortalHomePage() {
         </ul>
       </header>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="px-1 font-heading text-lg font-semibold">{t("portal.home.nextTitle")}</h2>
-        <ul className="divide-y divide-foreground/8 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
-          {steps.map(({ href, icon: Icon, title, body, attention, done }) => (
+      <section className="flex flex-col gap-4">
+        <div className="relative flex items-center gap-5 overflow-hidden rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
+          <BotanicalSprig className="absolute -right-4 -top-3 h-32 w-24 text-primary/15" />
+          <div className="relative size-24 shrink-0" role="img" aria-label={`${percent} %`}>
+            <svg viewBox="0 0 100 100" className="size-full -rotate-90" aria-hidden>
+              <circle cx="50" cy="50" r="42" fill="none" strokeWidth="7" className="stroke-primary/12" />
+              <circle
+                cx="50"
+                cy="50"
+                r="42"
+                fill="none"
+                strokeWidth="7"
+                strokeLinecap="round"
+                className="stroke-primary"
+                strokeDasharray={`${(percent / 100) * 263.9} 263.9`}
+              />
+            </svg>
+            <span className="absolute inset-0 flex flex-col items-center justify-center">
+              <Blossom className="size-5 text-gold" filled />
+              <span className="font-serif text-2xl font-semibold leading-none tabular-nums text-foreground">{percent}%</span>
+            </span>
+          </div>
+          <div className="relative flex min-w-0 flex-col gap-1">
+            <h2 className="font-serif text-xl font-semibold leading-tight">{t("portal.home.nextTitle")}</h2>
+            <p className="text-app-sm text-muted-foreground tabular-nums">
+              {doneCount} / {trackable.length}
+            </p>
+          </div>
+        </div>
+        <ul className="flex flex-col gap-3">
+          {ordered.map(({ href, icon: Icon, title, body, attention, done }) => (
             <li key={href}>
               <Link
                 href={href}
-                className="flex min-h-[4.5rem] items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/50 active:bg-muted"
+                className={`flex min-h-[4.5rem] items-center gap-4 rounded-2xl px-4 py-3 shadow-rn-card ring-1 transition-colors active:bg-muted ${
+                  done && !attention ? "bg-card/70 ring-gold/25" : "bg-card ring-gold/50 hover:bg-primary-soft/60"
+                }`}
               >
                 <span
-                  className={`relative flex size-11 shrink-0 items-center justify-center rounded-full ${attention ? "bg-success text-white" : "bg-success/12 text-success"}`}
+                  className={`relative flex size-12 shrink-0 items-center justify-center rounded-full ${attention ? "bg-success text-white" : "bg-primary-soft text-success"}`}
                 >
                   <Icon className="size-5" aria-hidden />
                   {done && !attention ? (
-                    <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-success text-white ring-2 ring-card">
-                      <Check className="size-3" strokeWidth={3} aria-hidden />
+                    <span className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full bg-card text-gold ring-1 ring-gold/60">
+                      <Blossom className="size-5" filled />
                     </span>
-                  ) : null}
+                  ) : (
+                    <span
+                      className="absolute -bottom-1 -right-1 size-6 rounded-full border-2 border-dashed border-gold bg-card"
+                      aria-hidden
+                    />
+                  )}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="font-semibold">{title}</span>
+                  <span className="font-serif text-base font-semibold">{title}</span>
                   <span className="text-app-sm text-muted-foreground">{body}</span>
                 </span>
-                <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+                <ChevronRight className="size-5 shrink-0 text-gold" aria-hidden />
               </Link>
             </li>
           ))}

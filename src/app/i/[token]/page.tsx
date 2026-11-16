@@ -4,6 +4,8 @@ import { getServerTranslation } from "@/i18n/server";
 import { GuestActivities } from "@/components/portal/guest-activities";
 import { listGuestActivities } from "@/lib/portal/activities";
 import { loadPublicInvite } from "@/lib/portal/guest-public";
+import { GuestGifts } from "@/components/portal/guest-gifts";
+import { loadGuestGifts } from "@/lib/portal/gifts";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,7 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
 
   const { design, guest } = invite;
   const activities = guest.status === "declined" ? [] : await listGuestActivities(guest.id, invite.bookingId);
+  const gifts = await loadGuestGifts(guest.id, invite.bookingId);
   const deadline = design.rsvpDeadline
     ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${design.rsvpDeadline}T00:00:00Z`))
     : "";
@@ -61,6 +64,7 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
           </section>
         ) : null}
         <GuestActivities token={token} activities={activities} />
+        <GuestGifts token={token} wishes={gifts} />
       </div>
     </main>
   );

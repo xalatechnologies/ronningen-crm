@@ -88,7 +88,7 @@ export function PortalInviteAccept({
   return (
     <main className="flex min-h-svh flex-col items-center justify-center bg-background px-5 py-12 text-foreground">
       <div className="flex w-full max-w-md flex-col gap-6 rounded-2xl bg-card p-6 ring-1 ring-foreground/8 sm:p-8">
-        <h1 className="font-heading text-2xl font-bold tracking-tight">{t("portal.invite.title")}</h1>
+        <h1 className="font-serif text-2xl font-semibold tracking-tight">{t("portal.invite.title")}</h1>
 
         {stateMessage || !invitation ? (
           <>
