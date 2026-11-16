@@ -1,5 +1,6 @@
 "use client";
 
+import { MobileFeel } from "@/components/portal/mobile-feel";
 import { CalendarClock, House, ListChecks, LogOut, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -78,6 +79,7 @@ export function PortalShell({
   return (
     <InstallProvider placement="portal">
     <div className="wedding-portal flex min-h-svh flex-col bg-background text-foreground">
+      <MobileFeel />
       <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <BigBloom className="absolute -right-24 top-40 size-80 text-primary/10 sm:-right-16 sm:size-[26rem]" />
         <BigBloom className="absolute -left-28 bottom-24 size-72 rotate-12 text-gold/20 sm:-left-20 sm:size-96" />
@@ -105,7 +107,7 @@ export function PortalShell({
       </header>
       <nav
         aria-label={organizationName}
-        className="fixed inset-x-0 bottom-0 z-20 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:static sm:border-b sm:border-gold/40 sm:bg-background sm:p-0"
+        className="kb-hide fixed inset-x-0 bottom-0 z-20 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:static sm:border-b sm:border-gold/40 sm:bg-background sm:p-0"
       >
         <ul className="relative mx-auto flex w-full max-w-md rounded-full bg-card/90 p-1.5 shadow-[0_10px_30px_-8px_rgba(138,44,82,0.35)] ring-1 ring-gold/50 backdrop-blur-xl sm:max-w-3xl sm:gap-1 sm:rounded-none sm:bg-transparent sm:px-6 sm:py-2 sm:shadow-none sm:ring-0 sm:backdrop-blur-none">
           {/* Mobile: one berry pill that glides to the active tab. */}

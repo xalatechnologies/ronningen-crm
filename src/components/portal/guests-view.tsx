@@ -280,7 +280,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
           {/* Mobile only: floating actions in the bottom-right corner, above the tab bar (and the send bar when shown). */}
           <div
             className={cn(
-              "fixed right-4 z-20 flex flex-col items-end gap-3 sm:hidden",
+              "kb-hide fixed right-4 z-20 flex flex-col items-end gap-3 sm:hidden",
               sendBarShown ? "bottom-[calc(8.25rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5rem+env(safe-area-inset-bottom))]",
             )}
           >

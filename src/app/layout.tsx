@@ -30,6 +30,7 @@ const playfair = Playfair_Display({
 
 export const viewport: Viewport = {
   themeColor: "#f9faf6",
+  interactiveWidget: "resizes-content",
 };
 
 export async function generateMetadata(): Promise<Metadata> {
