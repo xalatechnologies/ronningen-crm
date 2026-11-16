@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { AddFab } from "@/components/portal/add-fab";
 import { PORTAL_SHEET } from "@/components/portal/sheet-style";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -150,10 +151,11 @@ export function ActivitiesView({ items, guests }: { items: CustomerActivity[]; g
               );
             })}
           </ul>
-          <Button type="button" variant="outline" size="cta" className="w-full" onClick={() => setSheet({ ...emptyDraft })}>
+          <Button type="button" variant="outline" size="cta" className="hidden w-full sm:inline-flex" onClick={() => setSheet({ ...emptyDraft })}>
             <Plus className="size-5" aria-hidden />
             {t("portal.activities.add")}
           </Button>
+          <AddFab label={t("portal.activities.add")} onClick={() => setSheet({ ...emptyDraft })} />
         </>
       )}
 

@@ -29,7 +29,7 @@ export function ScheduleTimeline({ entries, onSelect }: { entries: readonly Row[
           </span>
         );
         return (
-          <li key={entry.id ?? `${entry.startTime}-${index}`} className="grid grid-cols-[3.25rem_2.25rem_1fr] gap-x-2">
+          <li key={entry.id ?? `${entry.startTime}-${index}`} className="grid grid-cols-[3.25rem_3.25rem_1fr] gap-x-2">
             <div className="flex flex-col pt-3.5 leading-tight">
               <span className="font-heading text-lg font-bold tabular-nums in-[.wedding-portal]:font-serif in-[.wedding-portal]:font-semibold">{entry.startTime}</span>
               {end ? <span className="text-app-xs tabular-nums text-muted-foreground">– {end}</span> : null}
@@ -43,14 +43,14 @@ export function ScheduleTimeline({ entries, onSelect }: { entries: readonly Row[
                 )}
               />
               {index < entries.length - 1 ? (
-                <span className="absolute bottom-0 top-[2.9rem] hidden flex-col items-center justify-evenly overflow-hidden in-[.wedding-portal]:flex">
+                <span className="absolute bottom-0 top-[4rem] hidden flex-col items-center justify-evenly overflow-hidden in-[.wedding-portal]:flex">
                   {[0, 1, 2, 3].map((n) => (
                     <Blossom key={n} filled className="size-2.5 shrink-0 text-gold/70" />
                   ))}
                 </span>
               ) : null}
               <span className="relative mt-[1.1rem] size-2.5 rounded-full bg-success ring-4 ring-background in-[.wedding-portal]:hidden" />
-              <span className="relative mt-[0.7rem] hidden size-9 items-center justify-center rounded-full border-2 border-gold bg-card text-lg leading-none ring-4 ring-background in-[.wedding-portal]:flex">
+              <span className="relative mt-[0.7rem] hidden size-[3.25rem] items-center justify-center rounded-full border-2 border-gold bg-card text-[1.75rem] leading-none ring-4 ring-background in-[.wedding-portal]:flex">
                 {emoji || <Blossom filled className="size-5 text-primary" />}
               </span>
             </div>
