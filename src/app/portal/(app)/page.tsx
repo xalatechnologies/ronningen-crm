@@ -3,8 +3,7 @@ import Link from "next/link";
 
 import { getServerTranslation } from "@/i18n/server";
 import { getPortalContext } from "@/lib/portal/context";
-import { countUnread } from "@/lib/portal/messages";
-import { countWishAttention } from "@/lib/portal/wishlist";
+import { getPortalBadges } from "@/lib/portal/badges";
 import { countGuests } from "@/lib/portal/guests";
 import { listScheduleItems, listScheduleVersions, scheduleContentHash } from "@/lib/portal/schedule";
 import { todayInOslo } from "@/lib/portal/rsvp-rules";
@@ -27,9 +26,8 @@ export default async function PortalHomePage() {
   const { t, formatDate } = await getServerTranslation();
 
   const supabase = await createServerSupabaseClient();
-  const [unread, wishes, entries, versions, guestCount] = await Promise.all([
-    countUnread(supabase, ctx.booking.id, "customer"),
-    countWishAttention(supabase, ctx.booking.id),
+  const [{ unread, wishes }, entries, versions, guestCount] = await Promise.all([
+    getPortalBadges(ctx.booking.id),
     listScheduleItems(supabase, ctx.booking.id),
     listScheduleVersions(supabase, ctx.booking.id),
     countGuests(supabase, ctx.booking.id),

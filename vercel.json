@@ -12,5 +12,8 @@
       "path": "/api/cron/contract-jobs",
       "schedule": "0 4 * * *"
     }
+  ],
+  "regions": [
+    "arn1"
   ]
 }
