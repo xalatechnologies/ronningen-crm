@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { Blossom, BotanicalSprig } from "@/components/brand/botanical";
+import { AddFab } from "@/components/portal/add-fab";
 import { CollapsibleCard } from "@/components/portal/collapsible-card";
 import { PORTAL_SHEET } from "@/components/portal/sheet-style";
 import { useNok } from "@/components/portal/use-nok";
@@ -138,10 +139,11 @@ export function GiftWishesView({ wishes, settings, giversShown }: { wishes: Coup
               </li>
             ))}
           </ul>
-          <Button type="button" variant="outline" size="cta" className="w-full" onClick={() => setSheet({ ...emptyDraft })}>
+          <Button type="button" variant="outline" size="cta" className="hidden w-full sm:inline-flex" onClick={() => setSheet({ ...emptyDraft })}>
             <Plus className="size-5" aria-hidden />
             {t("portal.gifts.add")}
           </Button>
+          <AddFab label={t("portal.gifts.add")} onClick={() => setSheet({ ...emptyDraft })} />
         </>
       )}
 

@@ -10,16 +10,12 @@ export const dynamic = "force-dynamic";
 export default async function PortalInvitationPage() {
   const ctx = await getPortalContext();
   if (!ctx) return null;
-  const { t, locale } = await getServerTranslation();
+  const { locale } = await getServerTranslation();
   const saved = await getInviteDesign(await createServerSupabaseClient(), ctx.booking.id);
   const initial = saved ?? defaultDesign({ eventDate: ctx.booking.eventDate, venueName: ctx.organization.name, locale });
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-serif text-2xl font-semibold tracking-tight sm:text-3xl">{t("portal.invitation.title")}</h1>
-        <p className="text-muted-foreground">{t("portal.invitation.lead")}</p>
-      </header>
       <InviteDesigner initial={initial} venueName={ctx.organization.name} />
     </div>
   );
