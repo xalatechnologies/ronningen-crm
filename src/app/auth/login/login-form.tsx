@@ -81,6 +81,11 @@ export function LoginForm() {
 
   function pickSavedEmail(email: string) {
     form.setValue("email", email, { shouldValidate: true });
+    // The dev admin password prefill belongs to the dev admin only: another account must not inherit it.
+    if (email !== form.formState.defaultValues?.email) {
+      form.setValue("password", "");
+      setDevHintDismissed(true);
+    }
     document.getElementById("password")?.focus();
   }
 
@@ -91,7 +96,8 @@ export function LoginForm() {
   }
 
   const loginDefaults = useMemo(() => getDevLoginDefaultValues(), []);
-  const showDevLogin = Boolean(loginDefaults.email);
+  const [devHintDismissed, setDevHintDismissed] = useState(false);
+  const showDevLogin = Boolean(loginDefaults.email) && !devHintDismissed;
   const loginSchema = useMemo(
     () => createLoginSchema(validationMessagesForLocale(locale)),
     [locale],
