@@ -23,7 +23,7 @@ import {
   type GuestResult,
 } from "@/lib/portal/guest-actions";
 import { sendGuestEmails } from "@/lib/portal/guest-send-actions";
-import { MAX_PARTY, parseGuestPaste, summarizeGuests, type GuestRow, type GuestStatus } from "@/lib/portal/guest-rules";
+import { DIET_TAGS, MAX_PARTY, parseGuestPaste, summarizeGuests, type GuestRow, type GuestStatus } from "@/lib/portal/guest-rules";
 import { cn } from "@/lib/utils";
 
 type Draft = { id?: string; name: string; email: string; phone: string; groupLabel: string; maxParty: string };
@@ -85,6 +85,11 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
   const manyGuests = guests.length > SEARCH_THRESHOLD;
 
   const summary = useMemo(() => summarizeGuests(guests), [guests]);
+  const dietRows = useMemo(
+    () => DIET_TAGS.map((tag) => ({ tag, count: summary.diet[tag] ?? 0 })).filter((row) => row.count > 0).sort((a, b) => b.count - a.count),
+    [summary],
+  );
+  const dietMax = dietRows[0]?.count ?? 1;
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return guests.filter(
@@ -162,6 +167,27 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
               </ul>
             )}
           </section>
+
+          {summary.invited > 0 ? (
+            <section className="flex flex-col gap-3 rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
+              <h2 className="font-serif text-xl font-semibold">{t("portal.staffGuests.dietTitle")}</h2>
+              {dietRows.length === 0 ? (
+                <p className="text-app-sm text-muted-foreground">{t("portal.staffGuests.dietNone")}</p>
+              ) : (
+                <ul className="flex flex-col gap-2.5">
+                  {dietRows.map(({ tag, count }) => (
+                    <li key={tag} className="grid grid-cols-[6.5rem_1fr_2rem] items-center gap-3 text-app-sm">
+                      <span className="truncate font-semibold">{t(`portal.diet.tags.${tag}` as TranslationKey)}</span>
+                      <span className="h-2.5 overflow-hidden rounded-full bg-primary-soft" aria-hidden>
+                        <span className="block h-full rounded-full bg-gradient-to-r from-primary to-[#5e1f3d]" style={{ width: `${Math.max(8, (count / dietMax) * 100)}%` }} />
+                      </span>
+                      <span className="text-right font-serif text-lg font-semibold tabular-nums">{count}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          ) : null}
 
           {manyGuests ? (
             <div className="relative">
@@ -457,14 +483,14 @@ function GuestForm({
           </div>
         ) : null}
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 items-end gap-3">
         <div className="flex flex-col gap-2">
           <Label htmlFor="g-party">{t("portal.guests.fieldMaxParty")}</Label>
           <select
             id="g-party"
             value={form.maxParty}
             onChange={(e) => set("maxParty", e.target.value)}
-            className="h-12 rounded-[length:var(--app-radius)] border border-input bg-transparent px-3 text-base"
+            className="h-12 w-full rounded-2xl border border-gold/40 bg-card px-3 text-base"
           >
             {Array.from({ length: MAX_PARTY }, (_, i) => i + 1).map((n) => (
               <option key={n} value={n}>
@@ -475,7 +501,7 @@ function GuestForm({
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="g-phone">{t("portal.guests.fieldPhone")}</Label>
-          <Input id="g-phone" type="tel" inputMode="tel" value={form.phone} maxLength={30} onChange={(e) => set("phone", e.target.value)} className="h-12 !text-base" autoComplete="off" />
+          <Input id="g-phone" type="tel" inputMode="tel" value={form.phone} maxLength={30} onChange={(e) => set("phone", e.target.value)} className="h-12 !text-base rounded-2xl border-gold/40 bg-card" autoComplete="off" />
         </div>
       </div>
       <div className="flex gap-2">
@@ -606,15 +632,15 @@ function GuestAnswer({ guest }: { guest: GuestRow | null }) {
   const answered = guest.status !== "invited";
   const people = guest.diet.map((p, i) => ({ p, i })).filter(({ p }) => p.tags.length > 0 || p.note);
   return (
-    <section className={cn("mx-auto mb-5 flex w-full max-w-lg flex-col gap-4 rounded-2xl p-5 ring-1", PANEL[guest.status])}>
-      <h3 className="text-app-sm font-semibold uppercase tracking-wide text-muted-foreground">{t("portal.guestSend.answerTitle")}</h3>
+    <section className={cn("mx-auto mb-5 flex w-full max-w-lg flex-col gap-4 rounded-3xl p-5 ring-1 ring-gold/50", PANEL[guest.status])}>
+      <h3 className="font-sans text-app-sm font-semibold uppercase tracking-widest text-muted-foreground">{t("portal.guestSend.answerTitle")}</h3>
       {!answered ? (
         <p className="text-app-base text-muted-foreground">{t("portal.guestSend.answerNotYet")}</p>
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-3">
-            <span className={cn("rounded-full px-4 py-1.5 font-heading text-xl font-bold", guest.status === "accepted" ? "bg-success !text-white" : TONE[guest.status])}>{t(`portal.guests.status.${guest.status}` as TranslationKey)}</span>
-            {guest.status === "accepted" ? <span className="font-heading text-xl font-bold">{partyLabel(t, guest.partySize)}</span> : null}
+            <span className={cn("rounded-full px-4 py-1.5 font-serif text-xl font-semibold", guest.status === "accepted" ? "bg-success !text-white" : TONE[guest.status])}>{t(`portal.guests.status.${guest.status}` as TranslationKey)}</span>
+            {guest.status === "accepted" ? <span className="font-serif text-xl font-semibold">{partyLabel(t, guest.partySize)}</span> : null}
           </div>
           {guest.status === "accepted" ? (
             people.length === 0 ? (
@@ -622,7 +648,7 @@ function GuestAnswer({ guest }: { guest: GuestRow | null }) {
             ) : (
               <ul className="flex flex-col gap-3">
                 {people.map(({ p, i }) => (
-                  <li key={i} className="flex flex-col gap-2 rounded-xl bg-card p-4 ring-1 ring-foreground/8">
+                  <li key={i} className="flex flex-col gap-2 rounded-2xl bg-card p-4 ring-1 ring-gold/40">
                     {guest.diet.length > 1 ? <span className="text-app-sm font-semibold text-muted-foreground">{t("portal.guestSend.person", { n: i + 1 })}</span> : null}
                     {p.tags.length > 0 ? (
                       <span className="flex flex-wrap gap-2">
@@ -633,7 +659,7 @@ function GuestAnswer({ guest }: { guest: GuestRow | null }) {
                         ))}
                       </span>
                     ) : null}
-                    {p.note ? <span className="break-words border-l-4 border-foreground/15 pl-3 text-app-base italic">{p.note}</span> : null}
+                    {p.note ? <span className="break-words border-l-4 border-gold/60 pl-3 text-app-base italic">{p.note}</span> : null}
                   </li>
                 ))}
               </ul>

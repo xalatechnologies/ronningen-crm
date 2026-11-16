@@ -1,3 +1,4 @@
+import { BigBloom } from "@/components/brand/botanical";
 import { InviteCard } from "@/components/portal/invite-card";
 import { GuestRsvpForm } from "@/components/portal/guest-rsvp-form";
 import { getServerTranslation } from "@/i18n/server";
@@ -17,7 +18,7 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
 
   if (!invite) {
     return (
-      <main className="flex min-h-svh flex-col items-center justify-center bg-background px-5 py-12 text-center text-foreground">
+      <main className="wedding-portal flex min-h-svh flex-col items-center justify-center bg-background px-5 py-12 text-center text-foreground">
         <div className="flex max-w-sm flex-col gap-2 rounded-2xl bg-card p-6 ring-1 ring-foreground/8">
           <h1 className="font-heading text-xl font-bold">{t("portal.guestPage.invalid")}</h1>
           <p className="text-muted-foreground">{t("portal.guestPage.invalidHint")}</p>
@@ -34,9 +35,11 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
     : "";
 
   return (
-    <main className="min-h-svh bg-background px-4 py-6 text-foreground">
-      <div className="mx-auto flex w-full max-w-md flex-col gap-6">
-        <p className="px-1 font-heading text-lg font-semibold">{t("portal.guestPage.hello", { name: guest.name })}</p>
+    <main className="wedding-portal relative min-h-svh overflow-hidden bg-background px-4 py-6 text-foreground">
+      <BigBloom className="absolute -right-24 top-40 size-80 text-primary/10" />
+      <BigBloom className="absolute -left-28 bottom-24 size-72 rotate-12 text-gold/20" />
+      <div className="relative mx-auto flex w-full max-w-md flex-col gap-6">
+        <p className="px-1 font-serif text-xl font-semibold">{t("portal.guestPage.hello", { name: guest.name })}</p>
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <InviteCard
             design={design}
@@ -55,12 +58,12 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
           <GuestRsvpForm token={token} guest={guest} closed={invite.closed} hostName={invite.hostName || invite.venueName} />
         </div>
         {invite.schedule.length > 0 && guest.status !== "declined" ? (
-          <section className="flex flex-col gap-4 rounded-2xl bg-card p-5 ring-1 ring-foreground/8">
-            <h2 className="font-heading text-lg font-semibold">{t("portal.guestPage.scheduleTitle")}</h2>
+          <section className="flex flex-col gap-4 rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
+            <h2 className="font-serif text-xl font-semibold">{t("portal.guestPage.scheduleTitle")}</h2>
             <ol className="flex flex-col gap-3">
               {invite.schedule.map((e, i) => (
                 <li key={`${e.startTime}-${i}`} className="grid grid-cols-[3.5rem_1fr] items-baseline gap-3">
-                  <span className="font-heading text-lg font-bold tabular-nums">{e.startTime}</span>
+                  <span className="font-serif text-lg font-semibold tabular-nums">{e.startTime}</span>
                   <span className="break-words font-medium">{e.title}</span>
                 </li>
               ))}
