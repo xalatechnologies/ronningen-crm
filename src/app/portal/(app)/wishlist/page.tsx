@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { WishlistView } from "@/components/portal/wishlist-view";
 import { getServerTranslation } from "@/i18n/server";
 import { getPortalContext } from "@/lib/portal/context";
@@ -19,6 +21,12 @@ export default async function PortalWishlistPage() {
         <p className="text-muted-foreground">{t("portal.wishlist.lead", { org: ctx.organization.name })}</p>
       </header>
       <WishlistView items={items} />
+      <p className="px-1 text-center text-app-sm text-muted-foreground">
+        {t("portal.wishlist.giftsHint")}{" "}
+        <Link href="/portal/guests/gifts" className="font-semibold text-primary underline">
+          {t("portal.wishlist.giftsLink")}
+        </Link>
+      </p>
     </div>
   );
 }

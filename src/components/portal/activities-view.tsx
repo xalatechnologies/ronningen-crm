@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePickerField } from "@/components/ui/date-picker-field";
+import { TimePickerField } from "@/components/ui/time-picker-field";
 import { useTranslation } from "@/i18n/client";
 import { deleteActivity, saveActivity, type ActivityResult } from "@/lib/portal/activity-actions";
 import { canAnswer, formatOslo, isoToOsloLocal, type ActivityAudience } from "@/lib/portal/activity-rules";
@@ -186,19 +188,31 @@ function ActivityForm({ initial, guests, onCancel, onDone }: { initial: Draft; g
   const [busy, setBusy] = useState(false);
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setF((s) => ({ ...s, [key]: value }));
 
+  // Date and time are edited separately (friendlier than one datetime field) and joined as "YYYY-MM-DDTHH:mm".
+  const [startDate, setStartDate] = useState(initial.startsAtLocal.slice(0, 10));
+  const [startTime, setStartTime] = useState(initial.startsAtLocal.slice(11, 16));
+  const [endDate, setEndDate] = useState(initial.endsAtLocal.slice(0, 10));
+  const [endTime, setEndTime] = useState(initial.endsAtLocal.slice(11, 16));
+  // The end is normally the same day; a different day is only asked for when needed.
+  const [otherDay, setOtherDay] = useState(Boolean(initial.endsAtLocal && initial.endsAtLocal.slice(0, 10) !== initial.startsAtLocal.slice(0, 10)));
+
+  const startsAtLocal = startDate && startTime ? `${startDate}T${startTime}` : "";
+  const endsAtLocal = endTime ? `${otherDay && endDate ? endDate : startDate}T${endTime}` : "";
+
   async function settle(action: () => Promise<ActivityResult>) {
     setBusy(true);
     const r = await action();
     setBusy(false);
     if (r.ok) onDone();
-    else toast.error(r.error === "invalid" ? t("portal.activities.errGeneric") : t("portal.activities.errGeneric"));
+    else toast.error(t("portal.activities.errGeneric"));
   }
 
   // "YYYY-MM-DDTHH:mm" strings compare in time order.
-  const endError = Boolean(f.endsAtLocal && f.startsAtLocal && f.endsAtLocal <= f.startsAtLocal);
+  const endError = Boolean(endsAtLocal && startsAtLocal && endsAtLocal <= startsAtLocal);
 
   function submit(event: FormEvent) {
     event.preventDefault();
+    if (!startsAtLocal) return void toast.error(t("portal.activities.errStartRequired"));
     if (endError) return void toast.error(t("portal.activities.errTime"));
     if (containsLink(`${f.title} ${f.description} ${f.location}`)) return void toast.error(t("portal.activities.errLinks"));
     const capacity = f.capacity.trim() === "" ? null : Number(f.capacity);
@@ -209,8 +223,8 @@ function ActivityForm({ initial, guests, onCancel, onDone }: { initial: Draft; g
         title: f.title,
         description: f.description,
         location: f.location,
-        startsAtLocal: f.startsAtLocal,
-        endsAtLocal: f.endsAtLocal || null,
+        startsAtLocal,
+        endsAtLocal: endsAtLocal || null,
         audience: f.audience,
         capacity,
         guestIds: f.audience === "selected" ? f.guestIds : [],
@@ -219,35 +233,61 @@ function ActivityForm({ initial, guests, onCancel, onDone }: { initial: Draft; g
   }
 
   const toggle = (id: string) => set("guestIds", f.guestIds.includes(id) ? f.guestIds.filter((x) => x !== id) : [...f.guestIds, id]);
+  const field = "flex flex-col gap-2";
+  const section = "flex flex-col gap-3 rounded-2xl bg-background p-4 ring-1 ring-gold/30";
 
   return (
     <form onSubmit={submit} className="mx-auto flex w-full max-w-lg flex-col gap-4 pb-2">
-      <div className="flex flex-col gap-2">
+      <div className={field}>
         <Label htmlFor="a-title">{t("portal.activities.fieldTitle")}</Label>
-        <Input id="a-title" required value={f.title} maxLength={80} placeholder={t("portal.activities.fieldTitleHint")} onChange={(e) => set("title", e.target.value)} className="h-12 !text-base" />
+        <Input id="a-title" required autoFocus={!f.id} value={f.title} maxLength={80} placeholder={t("portal.activities.fieldTitleHint")} onChange={(e) => set("title", e.target.value)} className="h-12 !text-base" />
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="a-start">{t("portal.activities.fieldStart")}</Label>
-          <Input id="a-start" type="datetime-local" required value={f.startsAtLocal} onChange={(e) => set("startsAtLocal", e.target.value)} className="h-12 !text-base" />
+
+      <div role="group" aria-labelledby="a-when" className={section}>
+        <p id="a-when" className="text-app-sm font-semibold">
+          {t("portal.activities.sectionWhen")}
+        </p>
+        <div className="grid grid-cols-[1fr_8.5rem] gap-3">
+          <div className={field}>
+            <Label htmlFor="a-start-date">{t("portal.activities.fieldDate")}</Label>
+            <DatePickerField id="a-start-date" variant="default" value={startDate} onChange={setStartDate} className="h-12 !rounded-2xl !border-gold/40 !text-base" />
+          </div>
+          <div className={field}>
+            <Label htmlFor="a-start-time">{t("portal.activities.fieldStartTime")}</Label>
+            <TimePickerField id="a-start-time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} className="h-12 !text-base" />
+          </div>
         </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="a-end">{t("portal.activities.fieldEnd")}</Label>
-          <Input id="a-end" type="datetime-local" value={f.endsAtLocal} onChange={(e) => set("endsAtLocal", e.target.value)} aria-invalid={endError} className="h-12 !text-base" />
-          {endError ? <p className="text-app-sm font-medium text-destructive">{t("portal.activities.errTime")}</p> : null}
+        <div className="grid grid-cols-[1fr_8.5rem] gap-3">
+          {otherDay ? (
+            <div className={field}>
+              <Label htmlFor="a-end-date">{t("portal.activities.fieldEndDate")}</Label>
+              <DatePickerField id="a-end-date" variant="default" value={endDate || startDate} minYmd={startDate || undefined} onChange={setEndDate} aria-invalid={endError} className="h-12 !rounded-2xl !border-gold/40 !text-base" />
+            </div>
+          ) : (
+            <button type="button" onClick={() => { setOtherDay(true); setEndDate(startDate); }} className="min-h-11 self-end text-left text-app-sm font-semibold text-primary underline">
+              {t("portal.activities.endOtherDay")}
+            </button>
+          )}
+          <div className={field}>
+            <Label htmlFor="a-end-time">{t("portal.activities.fieldEndTime")}</Label>
+            <TimePickerField id="a-end-time" value={endTime} onChange={(e) => setEndTime(e.target.value)} aria-invalid={endError} className="h-12 !text-base" />
+          </div>
         </div>
+        {endError ? <p className="text-app-sm font-medium text-destructive">{t("portal.activities.errTime")}</p> : null}
       </div>
-      <div className="flex flex-col gap-2">
+
+      <div className={field}>
         <Label htmlFor="a-loc">{t("portal.activities.fieldLocation")}</Label>
         <Input id="a-loc" value={f.location} maxLength={100} onChange={(e) => set("location", e.target.value)} className="h-12 !text-base" />
       </div>
-      <div className="flex flex-col gap-2">
+      <div className={field}>
         <Label htmlFor="a-desc">{t("portal.activities.fieldDescription")}</Label>
-        <Textarea id="a-desc" value={f.description} maxLength={500} onChange={(e) => set("description", e.target.value)} className="!min-h-20 !text-base" />
+        <Textarea id="a-desc" value={f.description} maxLength={500} onChange={(e) => set("description", e.target.value)} className="!min-h-24 !text-base" />
+        <p className="text-right text-app-xs text-muted-foreground">{f.description.length}/500</p>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className={field}>
         <Label htmlFor="a-cap">{t("portal.activities.fieldCapacity")}</Label>
-        <Input id="a-cap" inputMode="numeric" value={f.capacity} placeholder={t("portal.activities.fieldCapacityHint")} onChange={(e) => set("capacity", e.target.value.replace(/\D/g, ""))} className="h-12 !text-base" />
+        <Input id="a-cap" inputMode="numeric" value={f.capacity} placeholder={t("portal.activities.fieldCapacityHint")} onChange={(e) => set("capacity", e.target.value.replace(/\D/g, "").slice(0, 3))} className="h-12 !text-base" />
       </div>
 
       <fieldset className="flex flex-col gap-2">
@@ -259,16 +299,16 @@ function ActivityForm({ initial, guests, onCancel, onDone }: { initial: Draft; g
               type="button"
               aria-pressed={f.audience === k}
               onClick={() => set("audience", k)}
-              className={cn("min-h-11 rounded-full px-4 text-app-sm font-semibold ring-1 transition-colors", f.audience === k ? "bg-success text-white ring-success" : "bg-card ring-foreground/15")}
+              className={cn("min-h-11 rounded-full px-4 text-app-sm font-semibold ring-1 transition-colors", f.audience === k ? "bg-primary text-primary-foreground ring-gold/60" : "bg-card ring-gold/40")}
             >
               {k === "all" ? t("portal.activities.audienceAll") : t("portal.activities.audienceSelected")}
             </button>
           ))}
         </div>
         {f.audience === "selected" ? (
-          <div className="flex flex-col gap-2 rounded-xl bg-foreground/5 p-3">
+          <div className="flex flex-col gap-2 rounded-2xl bg-background p-3 ring-1 ring-gold/30">
             <div className="flex gap-3 text-app-sm font-semibold">
-              <button type="button" className="min-h-11 text-success underline dark:!text-white" onClick={() => set("guestIds", guests.map((g) => g.id))}>
+              <button type="button" className="min-h-11 text-primary underline" onClick={() => set("guestIds", guests.map((g) => g.id))}>
                 {t("portal.activities.selectAll")}
               </button>
               <button type="button" className="min-h-11 text-muted-foreground underline" onClick={() => set("guestIds", [])}>
@@ -279,7 +319,7 @@ function ActivityForm({ initial, guests, onCancel, onDone }: { initial: Draft; g
               {guests.map((g) => (
                 <li key={g.id}>
                   <label className="flex min-h-11 items-center gap-3 text-app-base">
-                    <input type="checkbox" checked={f.guestIds.includes(g.id)} onChange={() => toggle(g.id)} className="size-5" />
+                    <input type="checkbox" checked={f.guestIds.includes(g.id)} onChange={() => toggle(g.id)} className="size-5 accent-primary" />
                     <span className="break-words">{g.name}</span>
                   </label>
                 </li>
@@ -289,19 +329,28 @@ function ActivityForm({ initial, guests, onCancel, onDone }: { initial: Draft; g
         ) : null}
       </fieldset>
 
-      <div className="flex gap-2">
-        <Button type="submit" variant="success" size="cta" className="flex-1" disabled={busy}>
-          {t("portal.activities.save")}
-        </Button>
-        <Button type="button" variant="outline" size="cta" onClick={onCancel}>
-          {t("portal.activities.cancel")}
-        </Button>
-      </div>
       {f.id ? (
-        <Button type="button" variant="ghost" className="text-destructive" disabled={busy} onClick={() => void settle(() => deleteActivity(f.id!))}>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-fit text-destructive"
+          disabled={busy}
+          onClick={() => {
+            if (window.confirm(t("portal.activities.confirmDelete"))) void settle(() => deleteActivity(f.id!));
+          }}
+        >
           {t("portal.activities.delete")}
         </Button>
       ) : null}
+
+      <div className="sticky bottom-0 -mx-1 flex gap-2 border-t border-gold/30 bg-card/95 px-1 pb-1 pt-3 backdrop-blur">
+        <Button type="button" variant="outline" size="cta" disabled={busy} onClick={onCancel}>
+          {t("portal.activities.cancel")}
+        </Button>
+        <Button type="submit" variant="success" size="cta" className="flex-1" disabled={busy}>
+          {t("portal.activities.save")}
+        </Button>
+      </div>
     </form>
   );
 }

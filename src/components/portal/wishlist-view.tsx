@@ -1,6 +1,6 @@
 "use client";
 
-import { Armchair, Flower2, MailCheck, MessageCircleHeart, PencilLine, PartyPopper, Package, Plus, SprayCan, Speaker, TriangleAlert, UtensilsCrossed, Wine, type LucideIcon } from "lucide-react";
+import { Armchair, Flower2, MailCheck, MessageCircleHeart, PencilLine, PartyPopper, Package, Plus, SprayCan, Speaker, Store, TriangleAlert, UtensilsCrossed, Wine, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -479,6 +479,12 @@ function WishForm({ initial, onCancel, onSaved }: { initial: Draft; onCancel: ()
 
   return (
     <form onSubmit={(e) => void submit(e)} className="mx-auto flex w-full max-w-lg flex-col gap-4 pb-2">
+      <div className="flex items-start gap-3 rounded-2xl bg-gold/15 p-3 ring-1 ring-gold/40">
+        <Store className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+        <p className="text-app-sm">
+          <span className="font-semibold">{t("portal.wishlist.sheetNoticeTitle")}</span> {t("portal.wishlist.sheetNoticeBody")}
+        </p>
+      </div>
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-app-sm font-semibold">{t("portal.wishlist.fieldCategory")}</legend>
         <div className="flex flex-wrap gap-2">
@@ -536,7 +542,7 @@ function WishForm({ initial, onCancel, onSaved }: { initial: Draft; onCancel: ()
 
       <div className="flex gap-2">
         <Button type="submit" variant="success" size="cta" className="flex-1" disabled={saving}>
-          {t("portal.wishlist.save")}
+          {t("portal.wishlist.saveToList")}
         </Button>
         <Button type="button" variant="outline" size="cta" onClick={onCancel}>
           {t("portal.wishlist.cancel")}
