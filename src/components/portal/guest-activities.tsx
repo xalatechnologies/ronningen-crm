@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { CollapsibleCard } from "@/components/portal/collapsible-card";
 import { useTranslation } from "@/i18n/client";
 import { answerActivity } from "@/lib/portal/guest-public-actions";
 import { canAnswer, formatOslo, type ActivityResponse } from "@/lib/portal/activity-rules";
@@ -34,11 +35,7 @@ export function GuestActivities({ token, activities }: { token: string; activiti
   ];
 
   return (
-    <section className="flex flex-col gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/8">
-      <div>
-        <h2 className="font-heading text-lg font-semibold">{t("portal.guestPage.activitiesTitle")}</h2>
-        <p className="text-app-sm text-muted-foreground">{t("portal.guestPage.activitiesHelp")}</p>
-      </div>
+    <CollapsibleCard title={t("portal.guestPage.activitiesTitle")} help={t("portal.guestPage.activitiesHelp")} summary={t("portal.guestPage.sumActivities", { yes: activities.filter((a) => a.myResponse === "yes").length, total: activities.length })}>
       <ul className="flex flex-col gap-4">
         {activities.map(({ activity: a, myResponse, yesPeople, spotsLeft }) => {
           const open = canAnswer(a);
@@ -84,6 +81,6 @@ export function GuestActivities({ token, activities }: { token: string; activiti
         })}
       </ul>
       {error ? <p className="text-app-sm font-medium text-destructive">{error}</p> : null}
-    </section>
+    </CollapsibleCard>
   );
 }

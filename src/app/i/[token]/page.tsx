@@ -6,6 +6,7 @@ import { GuestActivities } from "@/components/portal/guest-activities";
 import { listGuestActivities } from "@/lib/portal/activities";
 import { loadPublicInvite } from "@/lib/portal/guest-public";
 import { GuestGifts } from "@/components/portal/guest-gifts";
+import { CollapsibleCard } from "@/components/portal/collapsible-card";
 import { GuestSummary } from "@/components/portal/guest-summary";
 import { loadGuestGifts } from "@/lib/portal/gifts";
 
@@ -58,8 +59,7 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
           <GuestRsvpForm token={token} guest={guest} closed={invite.closed} hostName={invite.hostName || invite.venueName} />
         </div>
         {invite.schedule.length > 0 && guest.status !== "declined" ? (
-          <section className="flex flex-col gap-4 rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
-            <h2 className="font-serif text-xl font-semibold">{t("portal.guestPage.scheduleTitle")}</h2>
+          <CollapsibleCard title={t("portal.guestPage.scheduleTitle")} summary={`${invite.schedule[0].startTime} ${invite.schedule[0].title}`}>
             <ol className="flex flex-col gap-3">
               {invite.schedule.map((e, i) => (
                 <li key={`${e.startTime}-${i}`} className="grid grid-cols-[3.5rem_1fr] items-baseline gap-3">
@@ -68,7 +68,7 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
                 </li>
               ))}
             </ol>
-          </section>
+          </CollapsibleCard>
         ) : null}
         <div id="activities" className="scroll-mt-4 empty:hidden">
           <GuestActivities token={token} activities={activities} />

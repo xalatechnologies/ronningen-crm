@@ -4,6 +4,7 @@ import { ExternalLink, Gift } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { CollapsibleCard } from "@/components/portal/collapsible-card";
 import { useTranslation } from "@/i18n/client";
 import { claimGift, releaseGift } from "@/lib/portal/gift-public-actions";
 import type { GuestGiftWish } from "@/lib/portal/gift-rules";
@@ -18,6 +19,7 @@ export function GuestGifts({ token, wishes }: { token: string; wishes: GuestGift
   const [broken, setBroken] = useState<Set<string>>(new Set());
 
   if (wishes.length === 0) return null;
+  const mine = wishes.filter((w) => w.state === "mine");
   const nok = new Intl.NumberFormat(locale, { style: "currency", currency: "NOK", maximumFractionDigits: 0 });
 
   async function act(wish: GuestGiftWish) {
@@ -30,11 +32,7 @@ export function GuestGifts({ token, wishes }: { token: string; wishes: GuestGift
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
-      <div>
-        <h2 className="font-serif text-xl font-semibold">{t("portal.guestPage.giftsTitle")}</h2>
-        <p className="text-app-sm text-muted-foreground">{t("portal.guestPage.giftsHelp")}</p>
-      </div>
+    <CollapsibleCard title={t("portal.guestPage.giftsTitle")} help={t("portal.guestPage.giftsHelp")} summary={mine.length > 0 ? mine.map((w) => w.title).join(", ") : t("portal.guestPage.sumNoGifts")}>
       <ul className="flex flex-col gap-4">
         {wishes.map((w) => (
           <li key={w.id} className="flex flex-col gap-3 rounded-2xl bg-background p-4 ring-1 ring-gold/30">
@@ -83,6 +81,6 @@ export function GuestGifts({ token, wishes }: { token: string; wishes: GuestGift
         ))}
       </ul>
       {error ? <p className="text-app-sm font-medium text-destructive">{error}</p> : null}
-    </section>
+    </CollapsibleCard>
   );
 }

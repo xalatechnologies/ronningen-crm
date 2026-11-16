@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { CollapsibleCard } from "@/components/portal/collapsible-card";
 import { InviteCard, type InviteCardLabels } from "@/components/portal/invite-card";
 import { Bloom, flowerColors } from "@/components/portal/invite-flowers";
 import { Button } from "@/components/ui/button";
@@ -115,20 +116,10 @@ export function InviteDesigner({ initial, venueName }: { initial: InviteDesign; 
     );
   };
 
-  const group = (step: number, title: string, help: string, children: ReactNode) => (
-    <fieldset className="flex flex-col gap-4 rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
-      <legend className="sr-only">{title}</legend>
-      <div className="flex items-start gap-3">
-        <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gold/25 font-serif text-base font-semibold text-primary ring-1 ring-gold/50">
-          {step}
-        </span>
-        <div>
-          <h2 className="font-serif text-xl font-semibold leading-tight">{title}</h2>
-          <p className="text-app-sm text-muted-foreground">{help}</p>
-        </div>
-      </div>
+  const group = (step: number, title: string, help: string, summary: string, children: ReactNode) => (
+    <CollapsibleCard step={step} title={title} help={help} summary={summary} defaultOpen={step === 1}>
       {children}
-    </fieldset>
+    </CollapsibleCard>
   );
 
   // A tiny live card: what this choice would look like with the rest of the design as it is now.
@@ -184,6 +175,7 @@ export function InviteDesigner({ initial, venueName }: { initial: InviteDesign; 
         1,
         t("portal.invitation.sectionTemplate"),
         t("portal.invitation.sectionTemplateHelp"),
+        t(`portal.invitation.templates.${d.templateKey}` as TranslationKey),
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {TEMPLATES.map((k) => tile(d.templateKey === k, () => set("templateKey", k), t(`portal.invitation.templates.${k}` as TranslationKey), { templateKey: k }))}
         </div>,
@@ -192,6 +184,9 @@ export function InviteDesigner({ initial, venueName }: { initial: InviteDesign; 
         2,
         t("portal.invitation.sectionFlowers"),
         t("portal.invitation.sectionFlowersHelp"),
+        d.flowerStyle === "none"
+          ? t("portal.invitation.flowerStyles.none")
+          : `${t(`portal.invitation.flowerStyles.${d.flowerStyle}` as TranslationKey)} · ${t(`portal.invitation.flowerTypes.${d.flowerType}` as TranslationKey)}`,
         <>
           <div className="flex flex-col gap-2">
             <span className="text-app-sm font-semibold">{t("portal.invitation.flowerStyle")}</span>
@@ -242,6 +237,7 @@ export function InviteDesigner({ initial, venueName }: { initial: InviteDesign; 
         3,
         t("portal.invitation.sectionColors"),
         t("portal.invitation.sectionColorsHelp"),
+        `${t(`portal.invitation.palettes.${d.paletteKey}` as TranslationKey)} · ${t(`portal.invitation.fonts.${d.fontKey}` as TranslationKey)}`,
         <>
           <div className="flex flex-col gap-2">
             <span className="text-app-sm font-semibold">{t("portal.invitation.palette")}</span>
@@ -275,6 +271,7 @@ export function InviteDesigner({ initial, venueName }: { initial: InviteDesign; 
         4,
         t("portal.invitation.sectionText"),
         t("portal.invitation.sectionTextHelp"),
+        d.headline.trim() || t("portal.invitation.fieldHeadlineHint"),
         <>
           {textField("headline", t("portal.invitation.fieldHeadline"), { max: 80, hint: t("portal.invitation.fieldHeadlineHint") })}
           {textField("eventDateText", t("portal.invitation.fieldDate"), { max: 60 })}

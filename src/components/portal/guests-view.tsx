@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { CollapsibleCard } from "@/components/portal/collapsible-card";
 import { CelebrationPopup, type CelebrationState } from "@/components/portal/celebration-popup";
 
 import { Blossom, BotanicalSprig } from "@/components/brand/botanical";
@@ -187,8 +188,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
           </section>
 
           {summary.invited > 0 ? (
-            <section className="flex flex-col gap-3 rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
-              <h2 className="font-serif text-xl font-semibold">{t("portal.staffGuests.dietTitle")}</h2>
+            <CollapsibleCard title={t("portal.staffGuests.dietTitle")} summary={dietRows.length === 0 ? t("portal.staffGuests.dietNone") : dietRows.map((r) => `${t(`portal.diet.tags.${r.tag}` as TranslationKey)} ${r.count}`).join(" · ")}>
               {dietRows.length === 0 ? (
                 <p className="text-app-sm text-muted-foreground">{t("portal.staffGuests.dietNone")}</p>
               ) : (
@@ -204,7 +204,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
                   ))}
                 </ul>
               )}
-            </section>
+            </CollapsibleCard>
           ) : null}
 
           {manyGuests ? (

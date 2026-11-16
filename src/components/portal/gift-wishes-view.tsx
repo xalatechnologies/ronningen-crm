@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { Blossom, BotanicalSprig } from "@/components/brand/botanical";
+import { CollapsibleCard } from "@/components/portal/collapsible-card";
 import { PORTAL_SHEET } from "@/components/portal/sheet-style";
 import { useNok } from "@/components/portal/use-nok";
 import { Button } from "@/components/ui/button";
@@ -48,12 +49,12 @@ export function GiftWishesView({ wishes, settings, giversShown }: { wishes: Coup
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="relative flex flex-col gap-4 overflow-hidden rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
-        <BotanicalSprig className="pointer-events-none absolute -right-3 -top-3 h-28 w-20 text-primary/15" />
-        <div className="relative flex flex-col gap-1">
-          <h2 className="font-serif text-xl font-semibold">{t("portal.gifts.shareTitle")}</h2>
-          <p className="text-app-sm text-muted-foreground">{t("portal.gifts.shareHelp")}</p>
-        </div>
+      <CollapsibleCard
+        title={t("portal.gifts.shareTitle")}
+        help={t("portal.gifts.shareHelp")}
+        summary={settings.shared ? t("portal.gifts.shareOn") : t("portal.gifts.shareOff")}
+        decor={<BotanicalSprig className="pointer-events-none absolute -right-3 -top-3 h-28 w-20 text-primary/15" />}
+      >
         <button
           type="button"
           role="switch"
@@ -90,7 +91,7 @@ export function GiftWishesView({ wishes, settings, giversShown }: { wishes: Coup
           </div>
           <p className="text-app-xs font-medium text-muted-foreground">{giversShown ? t("portal.gifts.giversShown") : t("portal.gifts.giversHidden")}</p>
         </fieldset>
-      </section>
+      </CollapsibleCard>
 
       {wishes.length === 0 ? (
         <div className="flex flex-col items-center gap-4 rounded-3xl bg-card px-6 py-10 text-center shadow-rn-card ring-1 ring-gold/40">
