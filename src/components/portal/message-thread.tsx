@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 
 import { MessageCircle, SendHorizontal, Smile } from "lucide-react";
 
-import { Blossom } from "@/components/brand/botanical";
+import { BigBloom, Blossom, BotanicalSprig } from "@/components/brand/botanical";
 
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/i18n/client";
@@ -107,10 +107,19 @@ export function MessageThread({
     <div
       className={cn(
         "flex min-h-[calc(100svh-20rem)] flex-col gap-4 sm:min-h-0",
-        roomy && "min-h-[calc(100svh-17rem)] gap-0 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8 sm:min-h-[32rem] in-[.wedding-portal]:rounded-3xl in-[.wedding-portal]:shadow-rn-card in-[.wedding-portal]:ring-gold/40",
+        roomy && "relative min-h-[calc(100svh-17rem)] gap-0 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8 sm:min-h-[32rem] in-[.wedding-portal]:rounded-3xl in-[.wedding-portal]:shadow-rn-card in-[.wedding-portal]:ring-gold/40",
       )}
     >
-      <ol className={cn("flex min-h-40 flex-1 flex-col gap-3", roomy && "max-h-[60vh] gap-5 overflow-y-auto p-5 sm:p-6")} aria-live="polite">
+      {roomy ? (
+        // Soft flowers behind the conversation, only in the customer's wedding look (the venue's view stays plain).
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 bottom-24 hidden overflow-hidden in-[.wedding-portal]:block">
+          <BigBloom className="absolute -right-16 -top-12 size-60 text-primary/10" />
+          <BigBloom className="absolute -left-20 top-1/2 size-64 rotate-12 text-gold/20" />
+          <BotanicalSprig className="absolute -left-2 -top-2 h-36 w-24 -scale-x-100 text-primary/15" />
+          <BotanicalSprig className="absolute -bottom-4 -right-3 h-40 w-28 text-primary/15" />
+        </div>
+      ) : null}
+      <ol className={cn("flex min-h-40 flex-1 flex-col gap-3", roomy && "relative max-h-[60vh] gap-5 overflow-y-auto p-5 sm:p-6")} aria-live="polite">
         {messages.length === 0 ? (
           <li
             className={cn(
