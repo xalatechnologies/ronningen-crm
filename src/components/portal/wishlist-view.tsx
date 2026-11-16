@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { Blossom, BotanicalSprig } from "@/components/brand/botanical";
+import { AddFab } from "@/components/portal/add-fab";
 import { useNok } from "@/components/portal/use-nok";
 import { WishStatusChip } from "@/components/portal/wish-status-chip";
 import { PORTAL_SHEET } from "@/components/portal/sheet-style";
@@ -193,7 +194,7 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
       )}
 
       {drafts.length > 0 ? (
-        <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-gold/40 bg-background/95 px-4 py-3 backdrop-blur sm:bottom-4 sm:mx-0 sm:rounded-3xl sm:border">
+        <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-gold/40 bg-background/95 py-3 pl-4 pr-[5.25rem] backdrop-blur sm:bottom-4 sm:mx-0 sm:rounded-3xl sm:border sm:px-4">
           <Button
             type="button"
             variant="success"
@@ -211,19 +212,7 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
         </div>
       ) : null}
 
-      {items.length > 0 ? (
-        <button
-          type="button"
-          onClick={() => setSheet({ ...emptyDraft })}
-          aria-label={t("portal.wishlist.add")}
-          className={cn(
-            "kb-hide fixed right-4 z-20 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#5e1f3d] text-primary-foreground shadow-rn-hero-success ring-2 ring-gold/70 transition-transform active:scale-95 sm:hidden",
-            drafts.length > 0 ? "bottom-[calc(8.25rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5rem+env(safe-area-inset-bottom))]",
-          )}
-        >
-          <Plus className="size-7" aria-hidden />
-        </button>
-      ) : null}
+      {items.length > 0 ? <AddFab label={t("portal.wishlist.add")} onClick={() => setSheet({ ...emptyDraft })} /> : null}
 
       <WishSheet
         draft={sheet}
