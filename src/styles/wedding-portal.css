@@ -1,0 +1,173 @@
+/* Customer portal only: romantic wedding palette (blush, ivory, berry, champagne gold).
+   Scoped to .wedding-portal so staff app, auth and landing keep the base tokens. */
+
+.wedding-portal {
+  --rn-primary: #8a2c52;
+  --rn-primary-light: #d9889f;
+  --rn-primary-soft: #fbe9ee;
+  --rn-success: #8a2c52;
+  --rn-danger: #b3261e;
+  --rn-background-main: #fdf6f3;
+  --rn-card: #ffffff;
+  --rn-sidebar-bg: #ffffff;
+  --rn-text-primary: #2e2227;
+  --rn-text-secondary: #4a3a42;
+  --rn-text-muted: #6b5760;
+  --rn-border: #f1e2e6;
+  --rn-divider: #ecd9de;
+  --rn-accent-blue: #7a6670;
+  --rn-border-strong: #a98794;
+  --rn-border-strong-hover: #8a6a78;
+  --rn-text-heading: #3a1f2b;
+  --rn-text-body: #4a3a42;
+  --rn-text-ink: #2e2227;
+  --rn-text-slate: #5e4a54;
+  --rn-text-column: #3a2a32;
+  --rn-surface-segment: #f8ecee;
+  --rn-surface-table-head: #f6e7ea;
+  --rn-surface-row-hover: #fbeff1;
+  --rn-surface-footer: #fbf1f2;
+  --rn-surface-wash: #fdf8f6;
+  --rn-surface-gradient-from: #f9e6ea;
+  --rn-accent-border: #6e2342;
+  --rn-accent-fill-hover: #732545;
+  --rn-badge-border: #e3cbd2;
+  --rn-badge-surface: #f8ecee;
+  --rn-footer-text: #3a2a32;
+  --rn-danger-soft: #ffdad8;
+  --rn-danger-surface: #ffdad6;
+  --rn-danger-ink: #401a1a;
+  --rn-shadow-card: 0px 8px 32px rgba(138, 44, 82, 0.09);
+  --rn-shadow-segment-inset: inset 0 1px 2px rgba(138, 44, 82, 0.06);
+  --rn-shadow-hero-success: 0px 10px 40px rgba(138, 44, 82, 0.28);
+  --background: #fdf6f3;
+  --foreground: #2e2227;
+  --card: #ffffff;
+  --card-foreground: #2e2227;
+  --popover: #ffffff;
+  --popover-foreground: #2e2227;
+  --primary: #8a2c52;
+  --primary-foreground: #ffffff;
+  --secondary: #f3dfe4;
+  --secondary-foreground: #3a1f2b;
+  --muted: #f8eeee;
+  --muted-foreground: #5e4a54;
+  --accent: #fbe9ee;
+  --accent-foreground: #6e1f40;
+  --destructive: #b3261e;
+  --border: #f1e2e6;
+  --input: #e6d0d7;
+  --ring: #8a2c52;
+  --radius: 0.75rem;
+  --rn-gold: #b8924f;
+  --rn-gold-soft: #ead9b8;
+  --rn-gold-line: rgba(184, 146, 79, 0.45);
+  --chart-1: #8a2c52;
+  --chart-2: #f0cfd8;
+  --chart-3: #c9697f;
+  --chart-4: #b8924f;
+  --chart-5: #7a6670;
+  --sidebar: #6b2342;
+  --sidebar-foreground: #fdf1f4;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #6b2342;
+  --sidebar-accent: rgba(255, 255, 255, 0.12);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-ring: #e8b4c4;
+  --app-radius: 16px;
+  background-color: var(--background);
+  background-image: radial-gradient(
+    ellipse 80% 40% at 50% 0%,
+    color-mix(in srgb, var(--rn-primary-soft) 70%, transparent),
+    transparent 70%
+  );
+  background-repeat: no-repeat;
+  color: var(--foreground);
+}
+
+[data-theme="dark"] .wedding-portal {
+  --rn-primary: #a23a62;
+  --rn-primary-light: #f0a9c0;
+  --rn-primary-soft: #3a1f2d;
+  --rn-success: #a23a62;
+  --rn-danger: #f87171;
+  --rn-background-main: #1a1116;
+  --rn-card: #251a21;
+  --rn-sidebar-bg: #1a1116;
+  --rn-text-primary: #fbeff3;
+  --rn-text-secondary: #e3cbd4;
+  --rn-text-muted: #bfa3af;
+  --rn-border: #4a3340;
+  --rn-divider: #3a2830;
+  --rn-accent-blue: #c3a9b4;
+  --rn-border-strong: #6e5460;
+  --rn-border-strong-hover: #8c7080;
+  --rn-text-heading: #fbeff3;
+  --rn-text-body: #e3cbd4;
+  --rn-text-ink: #fbeff3;
+  --rn-text-slate: #bfa3af;
+  --rn-text-column: #f0dde4;
+  --rn-surface-segment: #32232b;
+  --rn-surface-table-head: #32232b;
+  --rn-surface-row-hover: #2e2028;
+  --rn-surface-footer: #211720;
+  --rn-surface-wash: #211720;
+  --rn-surface-gradient-from: #32232b;
+  --rn-accent-border: #a23a62;
+  --rn-accent-fill-hover: #b8456f;
+  --rn-badge-border: #4a3340;
+  --rn-badge-surface: #32232b;
+  --rn-footer-text: #e3cbd4;
+  --rn-danger-soft: #450a0a;
+  --rn-danger-surface: #7f1d1d;
+  --rn-danger-ink: #fecaca;
+  --rn-shadow-card: 0px 8px 32px rgba(0, 0, 0, 0.4);
+  --rn-shadow-segment-inset: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+  --rn-shadow-hero-success: 0px 10px 40px rgba(0, 0, 0, 0.45);
+  --background: #1a1116;
+  --foreground: #fbeff3;
+  --card: #251a21;
+  --card-foreground: #fbeff3;
+  --popover: #2e2028;
+  --popover-foreground: #fbeff3;
+  --primary: #a23a62;
+  --primary-foreground: #ffffff;
+  --secondary: #32232b;
+  --secondary-foreground: #fbeff3;
+  --muted: #32232b;
+  --muted-foreground: #bfa3af;
+  --accent: #3a1f2d;
+  --accent-foreground: #f4bfd0;
+  --destructive: #f87171;
+  --border: #4a3340;
+  --input: #4a3340;
+  --ring: #f0a9c0;
+  --radius: 0.75rem;
+  --rn-gold: #d9b878;
+  --rn-gold-soft: #5a4a2c;
+  --rn-gold-line: rgba(217, 184, 120, 0.4);
+  --chart-1: #f0a9c0;
+  --chart-2: #c9697f;
+  --chart-3: #d9b878;
+  --chart-4: #e8c98f;
+  --chart-5: #c3a9b4;
+  --sidebar: #2a1620;
+  --sidebar-foreground: #fdf1f4;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #2a1620;
+  --sidebar-accent: rgba(255, 255, 255, 0.1);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #f0a9c0;
+}
+
+.wedding-portal :where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+}
+
+.gold-rule {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--rn-gold-line), transparent);
+}

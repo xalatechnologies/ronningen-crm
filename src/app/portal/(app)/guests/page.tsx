@@ -5,6 +5,7 @@ import { guestInvitesEnabled, listGuests } from "@/lib/portal/guests";
 import { selectRecipients } from "@/lib/portal/rsvp-rules";
 import { getInviteDesign } from "@/lib/portal/invite-design";
 import { ActivitiesLinkCard } from "@/components/portal/activities-link-card";
+import { GoldDivider } from "@/components/brand/botanical";
 import { InviteLinkCard } from "@/components/portal/invite-link-card";
 import { countActivities } from "@/lib/portal/activities";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -34,11 +35,12 @@ export default async function PortalGuestsPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">{t("portal.guests.title")}</h1>
+        <h1 className="font-serif text-2xl font-semibold tracking-tight sm:text-3xl">{t("portal.guests.title")}</h1>
         <p className="text-muted-foreground">{t("portal.guests.lead")}</p>
+        <GoldDivider className="mt-2" />
       </header>
-      <div className="divide-y divide-foreground/8 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
-        <InviteLinkCard status={design ? design.status : "none"} />
+      <InviteLinkCard status={design ? design.status : "none"} />
+      <div className="overflow-hidden rounded-3xl bg-card shadow-rn-card ring-1 ring-gold/40">
         <ActivitiesLinkCard count={activityCount} />
       </div>
       <GuestsView guests={guests} sendState={sendState} />

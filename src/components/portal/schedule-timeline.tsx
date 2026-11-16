@@ -15,7 +15,7 @@ export function ScheduleTimeline({ entries, onSelect }: { entries: readonly Row[
         const end = endTime(entry.startTime, entry.durationMin);
         const body = (
           <span className="flex flex-col gap-1">
-            <span className="break-words text-app-base font-semibold">{entry.title}</span>
+            <span className="break-words text-app-base font-semibold in-[.wedding-portal]:font-serif in-[.wedding-portal]:text-lg">{entry.title}</span>
             {entry.responsible ? (
               <span className="flex items-center gap-1.5 text-app-sm text-muted-foreground">
                 <UserRound className="size-3.5 shrink-0" aria-hidden />
@@ -28,25 +28,25 @@ export function ScheduleTimeline({ entries, onSelect }: { entries: readonly Row[
         return (
           <li key={entry.id ?? `${entry.startTime}-${index}`} className="grid grid-cols-[3.25rem_1rem_1fr] gap-x-3">
             <div className="flex flex-col pt-3.5 leading-tight">
-              <span className="font-heading text-lg font-bold tabular-nums">{entry.startTime}</span>
+              <span className="font-heading text-lg font-bold tabular-nums in-[.wedding-portal]:font-serif in-[.wedding-portal]:font-semibold">{entry.startTime}</span>
               {end ? <span className="text-app-xs tabular-nums text-muted-foreground">– {end}</span> : null}
             </div>
             <div className="relative flex justify-center" aria-hidden>
               <span
                 className={cn(
-                  "absolute w-px bg-foreground/15",
+                  "absolute w-px bg-foreground/15 in-[.wedding-portal]:bg-gold/50",
                   index === 0 ? "top-[1.4rem]" : "top-0",
                   index === entries.length - 1 ? "h-[1.4rem] bg-transparent" : "bottom-0",
                 )}
               />
-              <span className="relative mt-[1.1rem] size-2.5 rounded-full bg-success ring-4 ring-background" />
+              <span className="relative mt-[1.1rem] size-2.5 rounded-full bg-success ring-4 ring-background in-[.wedding-portal]:mt-[0.95rem] in-[.wedding-portal]:size-3.5 in-[.wedding-portal]:border-2 in-[.wedding-portal]:border-gold in-[.wedding-portal]:bg-primary" />
             </div>
             <div className="pb-3">
               {onSelect ? (
                 <button
                   type="button"
                   onClick={() => onSelect(index)}
-                  className="flex min-h-14 w-full flex-col rounded-2xl bg-card px-4 py-3.5 text-left ring-1 ring-foreground/8 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
+                  className="flex min-h-14 w-full flex-col rounded-2xl bg-card px-4 py-3.5 text-left ring-1 ring-foreground/8 transition-transform in-[.wedding-portal]:rounded-3xl in-[.wedding-portal]:shadow-rn-card in-[.wedding-portal]:ring-gold/40 hover:-translate-y-0.5 active:scale-[0.99]"
                 >
                   {body}
                 </button>

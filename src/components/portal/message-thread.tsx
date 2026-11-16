@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
-import { MessageCircle, SendHorizontal } from "lucide-react";
+import { MessageCircle, SendHorizontal, Smile } from "lucide-react";
+
+import { Blossom } from "@/components/brand/botanical";
 
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/i18n/client";
@@ -12,6 +14,8 @@ import { MESSAGE_MAX_LENGTH, type PortalMessage } from "@/lib/portal/messages-ru
 import { cn } from "@/lib/utils";
 
 type Viewer = "customer" | "staff";
+
+const EMOJIS = ["😊", "🥰", "😍", "❤️", "🎉", "🥂", "💐", "🌸", "💍", "🙏", "👍", "😂", "🤍", "✨", "😢", "🤔"];
 
 /** The booking's one conversation. Used by the customer portal and the venue page; text only, never HTML. */
 export function MessageThread({
@@ -36,6 +40,7 @@ export function MessageThread({
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   const otherKind = viewer === "customer" ? "staff" : "customer";
@@ -102,7 +107,7 @@ export function MessageThread({
     <div
       className={cn(
         "flex min-h-[calc(100svh-20rem)] flex-col gap-4 sm:min-h-0",
-        roomy && "min-h-[calc(100svh-17rem)] gap-0 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8 sm:min-h-[32rem]",
+        roomy && "min-h-[calc(100svh-17rem)] gap-0 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8 sm:min-h-[32rem] in-[.wedding-portal]:rounded-3xl in-[.wedding-portal]:shadow-rn-card in-[.wedding-portal]:ring-gold/40",
       )}
     >
       <ol className={cn("flex min-h-40 flex-1 flex-col gap-3", roomy && "max-h-[60vh] gap-5 overflow-y-auto p-5 sm:p-6")} aria-live="polite">
@@ -114,8 +119,9 @@ export function MessageThread({
             )}
           >
             {roomy ? (
-              <span className="flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <span className="relative flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground in-[.wedding-portal]:bg-primary-soft in-[.wedding-portal]:text-success in-[.wedding-portal]:ring-1 in-[.wedding-portal]:ring-gold/50">
                 <MessageCircle className="size-6" aria-hidden />
+                <Blossom className="absolute -right-3 -top-3 hidden size-6 text-gold in-[.wedding-portal]:block" filled />
               </span>
             ) : null}
             <span className="max-w-xs text-balance">{t("portal.messages.empty")}</span>
@@ -138,11 +144,11 @@ export function MessageThread({
                 <p
                   className={cn(
                     "max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-app-base",
-                    roomy && "max-w-[75%] px-5 py-3.5 text-[1.0625rem] leading-relaxed",
+                    roomy && "max-w-[75%] px-5 py-3.5 text-[1.0625rem] leading-relaxed in-[.wedding-portal]:rounded-3xl in-[.wedding-portal]:rounded-bl-lg",
                     mine
-                      ? "rounded-br-md bg-success !text-white"
+                      ? "rounded-br-md bg-success !text-white in-[.wedding-portal]:bg-gradient-to-br in-[.wedding-portal]:from-primary in-[.wedding-portal]:to-[#5e1f3d] in-[.wedding-portal]:shadow-rn-card"
                       : roomy
-                        ? "rounded-bl-md bg-muted/70"
+                        ? "rounded-bl-md bg-muted/70 in-[.wedding-portal]:bg-primary-soft in-[.wedding-portal]:ring-1 in-[.wedding-portal]:ring-gold/40"
                         : "rounded-bl-md bg-card ring-1 ring-foreground/8",
                   )}
                 >
@@ -163,7 +169,30 @@ export function MessageThread({
           roomy && "static mx-0 mt-auto rounded-none border-0 border-t bg-card px-5 py-4 backdrop-blur-none sm:rounded-none sm:border-0 sm:border-t sm:px-6",
         )}
       >
-        <div className="flex items-end gap-2">
+        {emojiOpen ? (
+          <div className="flex flex-wrap gap-1 rounded-2xl bg-muted/60 p-2 in-[.wedding-portal]:bg-primary-soft in-[.wedding-portal]:ring-1 in-[.wedding-portal]:ring-gold/40" role="group" aria-label="Emoji">
+            {EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => setBody((b) => (b + emoji).slice(0, MESSAGE_MAX_LENGTH))}
+                className="flex size-10 items-center justify-center rounded-full text-2xl leading-none transition-transform hover:bg-card active:scale-90"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <div className="flex items-end gap-1 rounded-[1.75rem] border border-input bg-card p-1 transition-shadow focus-within:ring-2 focus-within:ring-ring/40 in-[.wedding-portal]:border-gold/60 in-[.wedding-portal]:shadow-rn-card in-[.wedding-portal]:focus-within:ring-primary/40">
+          <button
+            type="button"
+            onClick={() => setEmojiOpen((o) => !o)}
+            aria-pressed={emojiOpen}
+            aria-label="Emoji"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted aria-pressed:bg-primary-soft aria-pressed:text-success in-[.wedding-portal]:text-gold"
+          >
+            <Smile className="size-6" aria-hidden />
+          </button>
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
@@ -172,13 +201,13 @@ export function MessageThread({
             rows={1}
             placeholder={t("portal.messages.placeholder")}
             aria-label={t("portal.messages.placeholder")}
-            className="max-h-40 min-h-12 flex-1 resize-none rounded-2xl px-4 py-3 !text-base"
+            className="max-h-40 min-h-11 flex-1 resize-none rounded-2xl border-0 bg-transparent px-2 py-2.5 !text-base shadow-none focus-visible:border-0 focus-visible:ring-0 dark:bg-transparent"
           />
           <button
             type="submit"
             disabled={busy || !body.trim()}
             aria-label={busy ? t("portal.messages.sending") : t("portal.messages.send")}
-            className="flex size-12 shrink-0 items-center justify-center rounded-full bg-success text-white transition-opacity disabled:opacity-40"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-success text-white transition-opacity disabled:opacity-40 in-[.wedding-portal]:bg-gradient-to-br in-[.wedding-portal]:from-primary in-[.wedding-portal]:to-[#5e1f3d]"
           >
             <SendHorizontal className="size-5" aria-hidden />
           </button>

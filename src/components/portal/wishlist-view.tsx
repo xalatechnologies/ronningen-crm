@@ -1,12 +1,14 @@
 "use client";
 
-import { Armchair, Flower2, Package, Plus, SprayCan, Speaker, TriangleAlert, UtensilsCrossed, Wine, type LucideIcon } from "lucide-react";
+import { Armchair, Flower2, MailCheck, MessageCircleHeart, PencilLine, PartyPopper, Package, Plus, SprayCan, Speaker, TriangleAlert, UtensilsCrossed, Wine, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { Blossom, BotanicalSprig } from "@/components/brand/botanical";
 import { useNok } from "@/components/portal/use-nok";
 import { WishStatusChip } from "@/components/portal/wish-status-chip";
+import { PORTAL_SHEET } from "@/components/portal/sheet-style";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,6 +59,14 @@ const SECTIONS: { id: string; label: TranslationKey; statuses: readonly WishItem
   { id: "closed", label: "portal.wishlist.sectionClosed", statuses: ["declined", "withdrawn"] },
 ];
 
+/** Journey of a wish, shown as four steps at the top of the page. */
+const PIPELINE: { id: string; icon: LucideIcon; label: TranslationKey; statuses: readonly WishItemView["status"][] }[] = [
+  { id: "draft", icon: PencilLine, label: "portal.wishlist.sectionDraft", statuses: ["draft"] },
+  { id: "sent", icon: MailCheck, label: "portal.wishlist.sectionSent", statuses: ["requested", "countered"] },
+  { id: "action", icon: MessageCircleHeart, label: "portal.wishlist.sectionAction", statuses: ["quoted", "unavailable"] },
+  { id: "approved", icon: PartyPopper, label: "portal.wishlist.sectionApproved", statuses: ["approved"] },
+];
+
 const emptyDraft: Draft = { category: "food", title: "", description: "", quantity: "1", unit: "" };
 
 export function WishlistView({ items }: { items: WishItemView[] }) {
@@ -96,7 +106,8 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
   return (
     <div className="flex flex-col gap-6">
       {items.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-2xl bg-card px-6 py-10 text-center ring-1 ring-foreground/8">
+        <div className="flex flex-col items-center gap-4 rounded-3xl bg-card px-6 py-10 text-center shadow-rn-card ring-1 ring-gold/40">
+          <Blossom className="size-10 text-gold" filled />
           <p className="text-app-base text-muted-foreground">{t("portal.wishlist.empty")}</p>
           <Button type="button" variant="success" size="cta" onClick={() => setSheet({ ...emptyDraft })}>
             <Plus className="size-5" aria-hidden />
@@ -105,15 +116,46 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-app-base text-muted-foreground">{t("portal.wishlist.countLine", { count: items.length })}</p>
-            <Button type="button" variant="success" size="cta" onClick={() => setSheet({ ...emptyDraft })}>
-              <Plus className="size-5" aria-hidden />
-              {t("portal.wishlist.add")}
-            </Button>
-          </div>
+          <section className="relative flex flex-col gap-4 overflow-hidden rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
+            <BotanicalSprig className="absolute -right-3 -top-3 h-28 w-20 text-primary/15" />
+            <div className="relative hidden justify-end sm:flex">
+              <Button type="button" variant="success" size="cta" className="rounded-full" onClick={() => setSheet({ ...emptyDraft })}>
+                <Plus className="size-5" aria-hidden />
+                {t("portal.wishlist.add")}
+              </Button>
+            </div>
+            <ol className="relative grid grid-cols-4 gap-1.5">
+              {PIPELINE.map((step, i) => {
+                const n = items.filter((x) => step.statuses.includes(x.status)).length;
+                return (
+                  <li
+                    key={step.id}
+                    className={cn(
+                      "flex flex-col items-center gap-1 rounded-2xl px-1 py-2 text-center ring-1",
+                      n > 0
+                        ? "bg-gradient-to-br from-primary to-[#5e1f3d] text-primary-foreground shadow-rn-hero-success ring-gold/70"
+                        : "bg-primary-soft/60 text-foreground ring-gold/40",
+                    )}
+                  >
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "flex size-8 items-center justify-center rounded-full ring-1",
+                        n > 0 ? "bg-primary-foreground/15 text-primary-foreground ring-primary-foreground/40" : "bg-card text-success ring-gold/60 dark:!text-white",
+                      )}
+                    >
+                      <step.icon className="size-[18px]" strokeWidth={1.8} />
+                    </span>
+                    <span className="font-serif text-xl font-semibold leading-none tabular-nums">{n}</span>
+                    <span className={cn("text-[11px] font-semibold leading-tight", n > 0 ? "text-primary-foreground/90" : "text-rn-text-body")}>{t(step.label)}</span>
+                    <span className="sr-only">{i + 1}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
           {quotedCount > 0 ? (
-            <section role="status" className="flex flex-col gap-0.5 rounded-2xl bg-success px-4 py-3 !text-white">
+            <section role="status" className="flex flex-col gap-0.5 rounded-3xl bg-gradient-to-br from-primary to-[#5e1f3d] px-5 py-4 !text-white shadow-rn-hero-success ring-1 ring-gold/60">
               <h2 className="font-heading text-base font-bold !text-white">{t("portal.home.wishQuotedTitle", { count: quotedCount })}</h2>
               <p className="text-app-sm !text-white/90">{t("portal.home.wishQuotedBody")}</p>
             </section>
@@ -125,10 +167,10 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
             </section>
           ) : null}
           {approved > 0 ? (
-            <section className="flex flex-col gap-1 rounded-2xl bg-success/10 px-4 py-3 ring-1 ring-success/25">
+            <section className="flex flex-col gap-1 rounded-3xl bg-primary-soft px-5 py-4 ring-1 ring-gold/50">
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="text-app-sm font-semibold">{t("portal.wishlist.approvedTitle")}</h2>
-                <p className="font-heading text-xl font-bold tabular-nums">{nok(approved)}</p>
+                <p className="font-serif text-2xl font-semibold tabular-nums">{nok(approved)}</p>
               </div>
               <p className="text-app-xs text-muted-foreground">{t("portal.wishlist.approvedNote")}</p>
             </section>
@@ -136,9 +178,9 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
 
           {sections.map((sec) => (
             <section key={sec.id} className="flex flex-col gap-3">
-              <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
+              <h2 className="flex items-center gap-2 font-serif text-xl font-semibold">
                 {t(sec.label)}
-                <span className="rounded-full bg-muted px-2.5 py-0.5 font-sans text-app-xs font-semibold tabular-nums text-muted-foreground">{sec.rows.length}</span>
+                <span className="rounded-full bg-primary-soft px-2.5 py-0.5 font-sans text-app-xs font-semibold tabular-nums text-muted-foreground">{sec.rows.length}</span>
               </h2>
               <ul className="flex flex-col gap-3">
                 {sec.rows.map((item) => (
@@ -153,12 +195,12 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
       )}
 
       {drafts.length > 0 ? (
-        <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-foreground/8 bg-background/95 px-4 py-3 backdrop-blur sm:bottom-4 sm:mx-0 sm:rounded-2xl sm:border">
+        <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-gold/40 bg-background/95 px-4 py-3 backdrop-blur sm:bottom-4 sm:mx-0 sm:rounded-3xl sm:border">
           <Button
             type="button"
             variant="success"
             size="cta"
-            className="w-full"
+            className="w-full rounded-full bg-gradient-to-r from-primary to-[#5e1f3d]"
             disabled={busy === "send"}
             onClick={() => void run("send", sendWishes, t("portal.wishlist.sent"))}
           >
@@ -169,6 +211,20 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
                 : t("portal.wishlist.sendMany", { count: drafts.length })}
           </Button>
         </div>
+      ) : null}
+
+      {items.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => setSheet({ ...emptyDraft })}
+          aria-label={t("portal.wishlist.add")}
+          className={cn(
+            "fixed right-4 z-20 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#5e1f3d] text-primary-foreground shadow-rn-hero-success ring-2 ring-gold/70 transition-transform active:scale-95 sm:hidden",
+            drafts.length > 0 ? "bottom-[calc(8.25rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5rem+env(safe-area-inset-bottom))]",
+          )}
+        >
+          <Plus className="size-7" aria-hidden />
+        </button>
       ) : null}
 
       <WishSheet
@@ -234,16 +290,16 @@ function WishCard({
   return (
     <article
       className={cn(
-        "flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1",
-        item.status === "unavailable" ? "ring-destructive/40" : item.status === "quoted" ? "ring-success/50" : "ring-foreground/8",
+        "flex flex-col gap-3 rounded-3xl bg-card p-4 shadow-rn-card ring-1",
+        item.status === "unavailable" ? "ring-destructive/40" : item.status === "quoted" ? "ring-2 ring-primary/60" : "ring-gold/40",
       )}
     >
       <header className="flex items-start gap-3">
-        <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+        <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-soft to-secondary text-success ring-1 ring-gold/50 dark:!text-white">
           <CategoryIcon className="size-5" />
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <h3 className="break-words font-semibold">{item.title}</h3>
+          <h3 className="break-words font-serif text-lg font-semibold leading-snug">{item.title}</h3>
           <p className="text-app-sm text-muted-foreground">
             {t(`portal.wishlist.categories.${item.category}` as TranslationKey)} · {item.unit ? `${item.quantity.toLocaleString(locale)} ${item.unit}` : t("portal.wishlist.pieces", { count: item.quantity.toLocaleString(locale) })}
           </p>
@@ -257,7 +313,7 @@ function WishCard({
       {item.status === "unavailable" ? <p className="text-app-sm font-medium text-destructive">{t("portal.wishlist.hintUnavailable")}</p> : null}
 
       {q && vat && (item.status === "quoted" || item.status === "approved" || item.status === "countered") ? (
-        <div className="flex flex-col gap-1 rounded-xl bg-foreground/5 p-3">
+        <div className="flex flex-col gap-1 rounded-2xl bg-primary-soft p-3.5 ring-1 ring-gold/30">
           <p className="text-app-sm text-muted-foreground">
             {t("portal.wishlist.quoteLine", {
               price: nok(q.unitPriceNok),
@@ -265,7 +321,7 @@ function WishCard({
               total: nok(q.totalNok),
             })}
           </p>
-          <p className="font-heading text-xl font-bold">
+          <p className="font-serif text-2xl font-semibold">
             {nok(vat.incVat)} <span className="text-app-sm font-medium text-muted-foreground">{t("portal.wishlist.vatIncluded")}</span>
           </p>
           <p className="text-app-xs text-muted-foreground">{t("portal.wishlist.vatBreakdown", { ex: nok(vat.exVat), rate: q.vatRate, vat: nok(vat.vat) })}</p>
@@ -347,29 +403,29 @@ function WishCard({
         )
       ) : null}
 
-      <footer className="flex flex-wrap gap-2 empty:hidden [&:not(:empty)]:border-t [&:not(:empty)]:border-foreground/8 [&:not(:empty)]:pt-3">
+      <footer className="flex flex-wrap gap-2 empty:hidden [&:not(:empty)]:border-t [&:not(:empty)]:border-gold/30 [&:not(:empty)]:pt-3">
         {item.status === "draft" ? (
           <>
-            <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={onEdit}>
+            <Button type="button" variant="outline" size="sm" className="min-h-11 rounded-full border-gold/60 px-4" onClick={onEdit}>
               {t("portal.wishlist.edit")}
             </Button>
-            <Button type="button" variant="ghost" size="sm" className="min-h-11" disabled={working} onClick={() => void run(`${item.id}:delete`, () => deleteWishItem(item.id))}>
+            <Button type="button" variant="ghost" size="sm" className="min-h-11 rounded-full px-4" disabled={working} onClick={() => void run(`${item.id}:delete`, () => deleteWishItem(item.id))}>
               {t("portal.wishlist.delete")}
             </Button>
           </>
         ) : null}
         {item.status === "requested" || item.status === "quoted" || item.status === "countered" ? (
           <>
-            <Button type="button" variant="ghost" size="sm" className="min-h-11" onClick={onEdit}>
+            <Button type="button" variant="ghost" size="sm" className="min-h-11 rounded-full px-4" onClick={onEdit}>
               {t("portal.wishlist.revise")}
             </Button>
-            <Button type="button" variant="ghost" size="sm" className="min-h-11" disabled={working} onClick={() => void run(`${item.id}:withdraw`, () => withdrawWish(item.id))}>
+            <Button type="button" variant="ghost" size="sm" className="min-h-11 rounded-full px-4" disabled={working} onClick={() => void run(`${item.id}:withdraw`, () => withdrawWish(item.id))}>
               {t("portal.wishlist.withdraw")}
             </Button>
           </>
         ) : null}
         {item.status === "declined" || item.status === "withdrawn" || item.status === "unavailable" ? (
-          <Button type="button" variant="outline" size="sm" className="min-h-11" disabled={working} onClick={() => void run(`${item.id}:reopen`, () => reopenWish(item.id))}>
+          <Button type="button" variant="outline" size="sm" className="min-h-11 rounded-full border-gold/60 px-4" disabled={working} onClick={() => void run(`${item.id}:reopen`, () => reopenWish(item.id))}>
             {t("portal.wishlist.reopen")}
           </Button>
         ) : null}
@@ -383,7 +439,7 @@ function WishSheet({ draft, onClose, onSaved }: { draft: Draft | null; onClose: 
   // Remount the form per opened draft so fields start from that draft without effects.
   return (
     <Sheet open={draft !== null} onOpenChange={(open) => (open ? undefined : onClose())}>
-      <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto">
+      <SheetContent side="bottom" className={cn(PORTAL_SHEET, "max-h-[92dvh] overflow-y-auto")}>
         {draft ? (
           <>
             <SheetHeader>

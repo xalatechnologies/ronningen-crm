@@ -1,10 +1,12 @@
 "use client";
 
-import { ClipboardPaste, MessageSquareText, Plus } from "lucide-react";
+import { ChevronDown, ClipboardPaste, MessageSquareText, Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { Blossom, BotanicalSprig } from "@/components/brand/botanical";
+import { PORTAL_SHEET } from "@/components/portal/sheet-style";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +37,25 @@ const TONE: Record<GuestStatus, string> = {
   maybe: "bg-sky-500/15 text-sky-800 dark:text-sky-300",
 };
 
+const STATUS_EMOJI: Record<GuestStatus, string> = {
+  not_sent: "✉️",
+  invited: "💌",
+  accepted: "🥳",
+  declined: "😢",
+  maybe: "🤔",
+};
+
+type FilterKey = "coming" | "declined" | "maybe" | "noAnswer";
+const FILTER_STATUSES: Record<FilterKey, GuestStatus[]> = {
+  coming: ["accepted"],
+  declined: ["declined"],
+  maybe: ["maybe"],
+  noAnswer: ["invited", "not_sent"],
+};
+/** Long lists get search, filter-by-tile and paging; short lists look as before. */
+const SEARCH_THRESHOLD = 8;
+const PAGE_SIZE = 25;
+
 const initials = (name: string) =>
   name
     .trim()
@@ -58,14 +79,28 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
   const [busy, setBusy] = useState(false);
   const [sendMode, setSendMode] = useState<"invite" | "reminder" | null>(null);
 
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<FilterKey | null>(null);
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const manyGuests = guests.length > SEARCH_THRESHOLD;
+
   const summary = useMemo(() => summarizeGuests(guests), [guests]);
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return guests.filter(
+      (g) =>
+        (!filter || FILTER_STATUSES[filter].includes(g.status)) &&
+        (!q || g.name.toLowerCase().includes(q) || (g.email ?? "").toLowerCase().includes(q)),
+    );
+  }, [guests, query, filter]);
+  const shown = useMemo(() => visible.slice(0, limit), [visible, limit]);
   const groups = useMemo(() => {
-    const labels = [...new Set(guests.map((g) => g.groupLabel).filter((l): l is string => Boolean(l)))].sort((a, b) => a.localeCompare(b));
-    const sections = labels.map((label) => ({ label, rows: guests.filter((g) => g.groupLabel === label) }));
-    const rest = guests.filter((g) => !g.groupLabel);
+    const labels = [...new Set(shown.map((g) => g.groupLabel).filter((l): l is string => Boolean(l)))].sort((a, b) => a.localeCompare(b));
+    const sections = labels.map((label) => ({ label, rows: shown.filter((g) => g.groupLabel === label) }));
+    const rest = shown.filter((g) => !g.groupLabel);
     if (rest.length > 0) sections.push({ label: "", rows: rest });
     return sections;
-  }, [guests]);
+  }, [shown]);
 
   async function send(mode: "invite" | "reminder") {
     setBusy(true);
@@ -94,10 +129,13 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
     router.refresh();
   }
 
+  const sendBarShown = sendState.enabled && sendState.published && (sendState.inviteCount > 0 || sendState.reminderCount > 0);
+
   return (
     <div className="flex flex-col gap-6">
       {guests.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-2xl bg-card px-6 py-10 text-center ring-1 ring-foreground/8">
+        <div className="relative flex flex-col items-center gap-4 overflow-hidden rounded-3xl bg-card px-6 py-10 text-center shadow-rn-card ring-1 ring-gold/40">
+          <Blossom className="size-10 text-gold" filled />
           <p className="text-app-base text-muted-foreground">{t("portal.guests.empty")}</p>
           <Button type="button" variant="success" size="cta" onClick={() => setSheet({ ...emptyDraft })}>
             <Plus className="size-5" aria-hidden />
@@ -110,26 +148,43 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
         </div>
       ) : (
         <>
-          <section className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/8">
-            <p className="font-heading text-2xl font-bold">{t("portal.guests.countLine", { count: summary.total })}</p>
+          <section className="relative flex flex-col gap-4 overflow-hidden rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
+            <BotanicalSprig className="absolute -right-3 -top-3 h-28 w-20 text-primary/15" />
+            <p className="relative font-serif text-3xl font-semibold leading-none">{t("portal.guests.countLine", { count: summary.total })}</p>
             {summary.invited === 0 ? (
               <p className="text-app-sm text-muted-foreground">{t("portal.guests.comingSoon")}</p>
             ) : (
-              <ul className="grid grid-cols-2 gap-2 text-app-sm font-semibold sm:grid-cols-4">
-                <li className="rounded-xl bg-success/15 px-3 py-2.5">{t("portal.guests.summaryComing", { count: summary.acceptedPeople })}</li>
-                <li className="rounded-xl bg-destructive/12 px-3 py-2.5">{t("portal.guests.summaryDeclined", { count: summary.declined })}</li>
-                <li className="rounded-xl bg-sky-500/15 px-3 py-2.5">{t("portal.guests.summaryMaybe", { count: summary.maybe })}</li>
-                <li className="rounded-xl bg-amber-500/15 px-3 py-2.5">{t("portal.guests.summaryNoAnswer", { count: summary.noAnswer })}</li>
+              <ul className="relative grid grid-cols-2 gap-2.5 text-app-sm font-semibold sm:grid-cols-4">
+                <li><button type="button" aria-pressed={filter === "coming"} onClick={() => { setFilter(filter === "coming" ? null : "coming"); setLimit(PAGE_SIZE); }} className={cn("flex w-full items-center gap-2 rounded-2xl bg-success/15 px-3.5 py-3 text-left ring-1 transition-shadow", filter === "coming" ? "ring-2 ring-primary" : "ring-foreground/5", filter && filter !== "coming" && "opacity-55")}><span aria-hidden className="text-xl leading-none">🥳</span><span>{t("portal.guests.summaryComing", { count: summary.acceptedPeople })}</span></button></li>
+                <li><button type="button" aria-pressed={filter === "declined"} onClick={() => { setFilter(filter === "declined" ? null : "declined"); setLimit(PAGE_SIZE); }} className={cn("flex w-full items-center gap-2 rounded-2xl bg-destructive/12 px-3.5 py-3 text-left ring-1 transition-shadow", filter === "declined" ? "ring-2 ring-primary" : "ring-foreground/5", filter && filter !== "declined" && "opacity-55")}><span aria-hidden className="text-xl leading-none">😢</span><span>{t("portal.guests.summaryDeclined", { count: summary.declined })}</span></button></li>
+                <li><button type="button" aria-pressed={filter === "maybe"} onClick={() => { setFilter(filter === "maybe" ? null : "maybe"); setLimit(PAGE_SIZE); }} className={cn("flex w-full items-center gap-2 rounded-2xl bg-sky-500/15 px-3.5 py-3 text-left ring-1 transition-shadow", filter === "maybe" ? "ring-2 ring-primary" : "ring-foreground/5", filter && filter !== "maybe" && "opacity-55")}><span aria-hidden className="text-xl leading-none">🤔</span><span>{t("portal.guests.summaryMaybe", { count: summary.maybe })}</span></button></li>
+                <li><button type="button" aria-pressed={filter === "noAnswer"} onClick={() => { setFilter(filter === "noAnswer" ? null : "noAnswer"); setLimit(PAGE_SIZE); }} className={cn("flex w-full items-center gap-2 rounded-2xl bg-amber-500/15 px-3.5 py-3 text-left ring-1 transition-shadow", filter === "noAnswer" ? "ring-2 ring-primary" : "ring-foreground/5", filter && filter !== "noAnswer" && "opacity-55")}><span aria-hidden className="text-xl leading-none">🙈</span><span>{t("portal.guests.summaryNoAnswer", { count: summary.noAnswer })}</span></button></li>
               </ul>
             )}
           </section>
 
+          {manyGuests ? (
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Input
+                type="search"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setLimit(PAGE_SIZE);
+                }}
+                aria-label={t("portal.guests.title")}
+                className="h-12 rounded-full bg-card pl-10 ring-1 ring-gold/40"
+              />
+            </div>
+          ) : null}
+
           {groups.map((section) => (
             <section key={section.label || "_"} className="flex flex-col gap-3">
-              {section.label ? <h2 className="font-heading text-lg font-semibold">{section.label}</h2> : groups.length > 1 ? <h2 className="font-heading text-lg font-semibold">—</h2> : null}
-              <ul className="divide-y divide-foreground/8 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
+              {section.label ? <h2 className="font-serif text-xl font-semibold">{section.label}</h2> : groups.length > 1 ? <h2 className="font-serif text-xl font-semibold">—</h2> : null}
+              <ul className="flex flex-col gap-2.5">
                 {section.rows.map((g) => (
-                  <li key={g.id}>
+                  <li key={g.id} className="overflow-hidden rounded-2xl bg-card shadow-rn-card ring-1 ring-gold/30">
                     <button
                       type="button"
                       onClick={() =>
@@ -145,7 +200,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
                       className="flex min-h-16 w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 active:bg-muted"
                     >
                       <span className="flex min-w-0 items-center gap-3">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-app-sm font-semibold text-muted-foreground" aria-hidden>
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-soft to-secondary font-serif text-base font-semibold text-success ring-1 ring-gold/50 dark:!text-white" aria-hidden>
                         {initials(g.name)}
                       </span>
                       <span className="flex min-w-0 flex-col">
@@ -163,6 +218,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
                       </span>
                       </span>
                       <span className={cn("shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-app-xs font-semibold", TONE[g.status])}>
+                        <span aria-hidden className="mr-1">{STATUS_EMOJI[g.status]}</span>
                         {t(`portal.guests.status.${g.status}` as TranslationKey)}
                       </span>
                     </button>
@@ -172,13 +228,20 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
             </section>
           ))}
 
+          {visible.length > limit ? (
+            <Button type="button" variant="outline" className="self-center rounded-full border-gold/60" onClick={() => setLimit((n) => n + PAGE_SIZE)}>
+              <ChevronDown className="size-4" aria-hidden />
+              {visible.length - limit}
+            </Button>
+          ) : null}
+
           <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <Button type="button" variant="outline" size="cta" className="w-full" onClick={() => setSheet({ ...emptyDraft })}>
+            <div className="hidden grid-cols-1 gap-2 sm:grid sm:grid-cols-2">
+              <Button type="button" variant="outline" size="cta" className="w-full rounded-full border-gold/60" onClick={() => setSheet({ ...emptyDraft })}>
                 <Plus className="size-5" aria-hidden />
                 {t("portal.guests.add")}
               </Button>
-              <Button type="button" variant="outline" size="cta" className="w-full" onClick={() => setImporting(true)}>
+              <Button type="button" variant="outline" size="cta" className="w-full rounded-full border-gold/60" onClick={() => setImporting(true)}>
                 <ClipboardPaste className="size-5" aria-hidden />
                 {t("portal.guests.importList")}
               </Button>
@@ -186,6 +249,31 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
             <Button type="button" variant="ghost" className="self-center text-app-sm text-destructive" onClick={() => setConfirmAll(true)}>
               {t("portal.guests.deleteAll")}
             </Button>
+          </div>
+
+          {/* Mobile only: floating actions in the bottom-right corner, above the tab bar (and the send bar when shown). */}
+          <div
+            className={cn(
+              "fixed right-4 z-20 flex flex-col items-end gap-3 sm:hidden",
+              sendBarShown ? "bottom-[calc(8.25rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5rem+env(safe-area-inset-bottom))]",
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setImporting(true)}
+              aria-label={t("portal.guests.importList")}
+              className="flex size-12 items-center justify-center rounded-full bg-card text-success shadow-rn-card ring-1 ring-gold/60 transition-transform active:scale-95 dark:!text-white"
+            >
+              <ClipboardPaste className="size-5" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => setSheet({ ...emptyDraft })}
+              aria-label={t("portal.guests.add")}
+              className="flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#5e1f3d] text-primary-foreground shadow-rn-hero-success ring-2 ring-gold/70 transition-transform active:scale-95"
+            >
+              <Plus className="size-7" aria-hidden />
+            </button>
           </div>
         </>
       )}
@@ -211,7 +299,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
       ) : null}
 
       <Sheet open={sendMode !== null} onOpenChange={(open) => (open ? undefined : setSendMode(null))}>
-        <SheetContent side="bottom">
+        <SheetContent side="bottom" className={PORTAL_SHEET}>
           <SheetHeader>
             <SheetTitle>{sendMode === "reminder" ? t("portal.guestSend.reminderTitle") : t("portal.guestSend.inviteTitle")}</SheetTitle>
           </SheetHeader>
@@ -234,7 +322,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
       </Sheet>
 
       <Sheet open={sheet !== null} onOpenChange={(open) => (open ? undefined : setSheet(null))}>
-        <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto">
+        <SheetContent side="bottom" className={cn(PORTAL_SHEET, "max-h-[92dvh] overflow-y-auto")}>
           {sheet ? (
             <>
               <SheetHeader>
@@ -257,7 +345,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
       </Sheet>
 
       <Sheet open={importing} onOpenChange={setImporting}>
-        <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto">
+        <SheetContent side="bottom" className={cn(PORTAL_SHEET, "max-h-[92dvh] overflow-y-auto")}>
           <SheetHeader>
             <SheetTitle>{t("portal.guests.importTitle")}</SheetTitle>
           </SheetHeader>
@@ -277,7 +365,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
       </Sheet>
 
       <Sheet open={confirmAll} onOpenChange={setConfirmAll}>
-        <SheetContent side="bottom">
+        <SheetContent side="bottom" className={PORTAL_SHEET}>
           <SheetHeader>
             <SheetTitle>{t("portal.guests.deleteAllTitle")}</SheetTitle>
           </SheetHeader>

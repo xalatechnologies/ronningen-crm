@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { PORTAL_SHEET } from "@/components/portal/sheet-style";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -155,7 +156,7 @@ export function ActivitiesView({ items, guests }: { items: CustomerActivity[]; g
       )}
 
       <Sheet open={sheet !== null} onOpenChange={(o) => (o ? undefined : setSheet(null))}>
-        <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto">
+        <SheetContent side="bottom" className={cn(PORTAL_SHEET, "max-h-[92dvh] overflow-y-auto")}>
           {sheet ? (
             <>
               <SheetHeader>

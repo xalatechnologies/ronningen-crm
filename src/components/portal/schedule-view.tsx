@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { BotanicalSprig } from "@/components/brand/botanical";
 import { ScheduleTimeline } from "@/components/portal/schedule-timeline";
+import { PORTAL_SHEET } from "@/components/portal/sheet-style";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/i18n/client";
 import { deleteScheduleItem, saveScheduleItem, setScheduleVisibleToGuests, shareSchedule, type ScheduleResult } from "@/lib/portal/schedule-actions";
 import { canShare, DURATION_PRESETS, endTime, type ScheduleEntry, type ShareState } from "@/lib/portal/schedule-rules";
+import { cn } from "@/lib/utils";
 
 type Draft = { id?: string; startTime: string; durationMin: string; title: string; responsible: string; note: string };
 const emptyDraft: Draft = { startTime: "14:00", durationMin: "", title: "", responsible: "", note: "" };
@@ -86,13 +89,14 @@ export function ScheduleView({
         <section
           className={
             state.kind === "changed"
-              ? "flex flex-col gap-1 rounded-2xl bg-amber-500/10 p-4 ring-1 ring-amber-500/30"
+              ? "relative flex flex-col gap-1 overflow-hidden rounded-3xl bg-amber-500/10 p-5 ring-1 ring-gold/60"
               : state.kind === "shared" && state.acknowledged
-                ? "flex flex-col gap-1 rounded-2xl bg-success/10 p-4 ring-1 ring-success/25"
-                : "flex flex-col gap-1 rounded-2xl bg-card p-4 ring-1 ring-foreground/8"
+                ? "relative flex flex-col gap-1 overflow-hidden rounded-3xl bg-primary-soft p-5 ring-1 ring-gold/50"
+                : "relative flex flex-col gap-1 overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-[#5e1f3d] p-5 text-primary-foreground shadow-rn-hero-success ring-1 ring-gold/60"
           }
         >
-          <p className="flex items-start gap-2.5 font-semibold">
+          {state.kind === "never" || (state.kind === "shared" && !state.acknowledged) ? <BotanicalSprig className="absolute -right-2 -top-2 h-28 w-20 text-primary-foreground/20" /> : null}
+          <p className="relative flex items-start gap-2.5 font-serif text-lg font-semibold">
             <StatusIcon className="mt-0.5 size-5 shrink-0" aria-hidden />
             {statusText}
           </p>
@@ -102,8 +106,8 @@ export function ScheduleView({
       ) : null}
 
       {entries.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-2xl bg-card px-6 py-12 text-center ring-1 ring-foreground/8">
-          <span className="flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <div className="flex flex-col items-center gap-4 rounded-3xl bg-card px-6 py-12 text-center shadow-rn-card ring-1 ring-gold/40">
+          <span className="flex size-14 items-center justify-center rounded-full bg-primary-soft text-success ring-1 ring-gold/50">
             <CalendarClock className="size-6" aria-hidden />
           </span>
           <p className="max-w-xs text-balance text-app-base text-muted-foreground">{t("portal.schedule.empty")}</p>
@@ -129,15 +133,15 @@ export function ScheduleView({
               });
             }}
           />
-          <Button type="button" variant="outline" size="cta" className="w-full" onClick={() => setSheet({ ...emptyDraft })}>
+          <Button type="button" variant="outline" size="cta" className="hidden w-full rounded-full border-gold/60 sm:inline-flex" onClick={() => setSheet({ ...emptyDraft })}>
             <Plus className="size-5" aria-hidden />
             {t("portal.schedule.add")}
           </Button>
         </>
       )}
 
-      <section className="flex items-start gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/8">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <section className="flex items-start gap-4 rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-success ring-1 ring-gold/50">
           <Users className="size-5" aria-hidden />
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -164,15 +168,29 @@ export function ScheduleView({
       </section>
 
       {canShare(state) ? (
-        <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-foreground/8 bg-background/95 px-4 py-3 backdrop-blur sm:bottom-4 sm:mx-0 sm:rounded-2xl sm:border">
-          <Button type="button" variant="success" size="cta" className="w-full" onClick={() => setConfirming(true)}>
+        <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-gold/40 bg-background/95 px-4 py-3 backdrop-blur sm:bottom-4 sm:mx-0 sm:rounded-3xl sm:border">
+          <Button type="button" variant="success" size="cta" className="w-full rounded-full bg-gradient-to-r from-primary to-[#5e1f3d]" onClick={() => setConfirming(true)}>
             {t("portal.schedule.share")}
           </Button>
         </div>
       ) : null}
 
+      {entries.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => setSheet({ ...emptyDraft })}
+          aria-label={t("portal.schedule.add")}
+          className={cn(
+            "fixed right-4 z-20 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#5e1f3d] text-primary-foreground shadow-rn-hero-success ring-2 ring-gold/70 transition-transform active:scale-95 sm:hidden",
+            canShare(state) ? "bottom-[calc(8.25rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5rem+env(safe-area-inset-bottom))]",
+          )}
+        >
+          <Plus className="size-7" aria-hidden />
+        </button>
+      ) : null}
+
       <Sheet open={sheet !== null} onOpenChange={(open) => (open ? undefined : setSheet(null))}>
-        <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto">
+        <SheetContent side="bottom" className={cn(PORTAL_SHEET, "max-h-[92dvh] overflow-y-auto")}>
           {sheet ? (
             <>
               <SheetHeader>
@@ -193,7 +211,7 @@ export function ScheduleView({
       </Sheet>
 
       <Sheet open={confirming} onOpenChange={setConfirming}>
-        <SheetContent side="bottom">
+        <SheetContent side="bottom" className={PORTAL_SHEET}>
           <SheetHeader>
             <SheetTitle>{t("portal.schedule.shareTitle")}</SheetTitle>
           </SheetHeader>

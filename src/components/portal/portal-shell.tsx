@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { BigBloom } from "@/components/brand/botanical";
 import { BrandMark } from "@/components/brand/brand-logo";
 import { InstallHeaderButton, InstallProvider } from "@/components/pwa/install-provider";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ function VenueMark({ logoUrl }: { logoUrl: string | null }) {
     );
   }
   return (
-    <span className="block size-9 shrink-0 overflow-hidden rounded-xl ring-1 ring-foreground/10 [--brand-tile:#0c1f16] dark:[--brand-tile:#1a4331]">
+    <span className="block size-9 shrink-0 overflow-hidden rounded-xl ring-1 ring-foreground/10 [--brand-tile:#3f1830] dark:[--brand-tile:#8a2c52]">
       <BrandMark />
     </span>
   );
@@ -58,6 +59,15 @@ export function PortalShell({
     { href: "/portal/messages", label: t("portal.nav.messages"), badge: unreadMessages, icon: MessageCircle },
   ];
 
+  // Highlight the tapped tab at once instead of waiting for the route to load.
+  const [pending, setPending] = useState<{ from: string; to: string } | null>(null);
+  // Once the route has changed the pending tab is stale (e.g. after browser Back): drop it.
+  if (pending && pending.from !== pathname) setPending(null);
+  const currentHref =
+    items.find((i) => (i.href === "/portal" ? pathname === "/portal" : pathname.startsWith(i.href)))?.href ?? null;
+  const activeHref = pending && pending.from === pathname ? pending.to : currentHref;
+  const activeIndex = items.findIndex((i) => i.href === activeHref);
+
   async function logout() {
     await supabase.auth.signOut();
     router.replace("/auth/login");
@@ -66,12 +76,16 @@ export function PortalShell({
 
   return (
     <InstallProvider placement="portal">
-    <div className="flex min-h-svh flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-20 border-b border-foreground/8 bg-background/90 backdrop-blur">
+    <div className="wedding-portal flex min-h-svh flex-col bg-background text-foreground">
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <BigBloom className="absolute -right-24 top-40 size-80 text-primary/10 sm:-right-16 sm:size-[26rem]" />
+        <BigBloom className="absolute -left-28 bottom-24 size-72 rotate-12 text-gold/20 sm:-left-20 sm:size-96" />
+      </div>
+      <header className="sticky top-0 z-20 border-b border-gold/40 bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <VenueMark logoUrl={logoUrl} />
-            <span className="truncate font-heading text-base font-semibold sm:text-lg">{organizationName}</span>
+            <span className="truncate font-serif text-base font-semibold sm:text-lg">{organizationName}</span>
           </div>
           <div className="flex shrink-0 items-center gap-1">
           <InstallHeaderButton />
@@ -84,35 +98,41 @@ export function PortalShell({
       </header>
       <nav
         aria-label={organizationName}
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-foreground/10 bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_-8px_rgb(0_0_0/0.12)] backdrop-blur sm:static sm:border-b sm:border-t-0 sm:bg-background sm:pb-0 sm:shadow-none"
+        className="fixed inset-x-0 bottom-0 z-20 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:static sm:border-b sm:border-gold/40 sm:bg-background sm:p-0"
       >
-        <ul className="mx-auto flex w-full max-w-3xl sm:gap-1 sm:px-6 sm:py-2">
+        <ul className="relative mx-auto flex w-full max-w-md rounded-full bg-card/90 p-1.5 shadow-[0_10px_30px_-8px_rgba(138,44,82,0.35)] ring-1 ring-gold/50 backdrop-blur-xl sm:max-w-3xl sm:gap-1 sm:rounded-none sm:bg-transparent sm:px-6 sm:py-2 sm:shadow-none sm:ring-0 sm:backdrop-blur-none">
+          {/* Mobile: one berry pill that glides to the active tab. */}
+          <span
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute inset-y-1.5 left-1.5 w-[calc((100%-0.75rem)/5)] rounded-full bg-gradient-to-br from-primary to-[#5e1f3d] shadow-md ring-1 ring-gold/60 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.34,1.3,0.5,1)] sm:hidden",
+              activeIndex < 0 && "opacity-0",
+            )}
+            style={{ transform: `translateX(${Math.max(activeIndex, 0) * 100}%)` }}
+          />
           {items.map((item) => {
-            const active = item.href === "/portal" ? pathname === "/portal" : pathname.startsWith(item.href);
+            const active = item.href === activeHref;
             const Icon = item.icon;
             return (
-              <li key={item.href} className="min-w-0 flex-1 sm:flex-none">
+              <li key={item.href} className="relative min-w-0 flex-1 sm:flex-none">
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
+                  onPointerDown={() => {
+                    router.prefetch(item.href);
+                    setPending({ from: pathname, to: item.href });
+                  }}
                   className={cn(
-                    "flex min-h-16 flex-col items-center justify-center gap-1 px-0.5 text-[11px] font-semibold leading-tight transition-colors sm:min-h-10 sm:flex-row sm:gap-2 sm:rounded-full sm:px-4 sm:text-[15px]",
+                    "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-full px-0.5 text-[11px] font-semibold leading-tight transition-colors duration-200 active:scale-95 sm:min-h-10 sm:flex-row sm:gap-2 sm:px-4 sm:text-[15px]",
                     active
-                      ? "text-foreground sm:bg-success/12 sm:text-success"
+                      ? "text-primary-foreground sm:bg-success/12 sm:text-success"
                       : "text-muted-foreground hover:text-foreground sm:hover:bg-muted/60",
                   )}
                 >
                   <span className="relative">
-                    <span
-                      className={cn(
-                        "flex h-8 w-16 items-center justify-center rounded-full transition-colors sm:h-auto sm:w-auto sm:rounded-none",
-                        active ? "bg-success/20 text-success sm:bg-transparent" : "",
-                      )}
-                    >
-                      <Icon className="size-6 sm:size-[1.125rem]" strokeWidth={active ? 2.4 : 1.9} aria-hidden />
-                    </span>
+                    <Icon className="size-[1.375rem] sm:size-[1.125rem]" strokeWidth={active ? 2.2 : 1.8} aria-hidden />
                     {item.badge > 0 ? (
-                      <span className="absolute -right-0.5 -top-1 min-w-[1.125rem] rounded-full bg-success px-1 text-center text-[10px] font-bold leading-[1.125rem] text-white ring-2 ring-background sm:hidden">
+                      <span className="absolute -right-2 -top-1.5 min-w-[1.125rem] rounded-full bg-gold px-1 text-center text-[10px] font-bold leading-[1.125rem] text-[#3f1830] ring-2 ring-card sm:hidden">
                         {item.badge}
                       </span>
                     ) : null}
@@ -129,7 +149,7 @@ export function PortalShell({
           })}
         </ul>
       </nav>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-5 sm:px-6 sm:py-10">{children}</main>
+      <main className="relative z-10 mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-5 sm:px-6 sm:py-10">{children}</main>
     </div>
     </InstallProvider>
   );
