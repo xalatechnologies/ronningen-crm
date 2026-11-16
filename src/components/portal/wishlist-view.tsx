@@ -116,39 +116,37 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
         </div>
       ) : (
         <>
-          <section className="relative flex flex-col gap-4 overflow-hidden rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
-            <BotanicalSprig className="absolute -right-3 -top-3 h-28 w-20 text-primary/15" />
+          <section className="relative flex flex-col gap-3 overflow-hidden rounded-3xl bg-card p-3 shadow-rn-card ring-1 ring-gold/40">
+            <BotanicalSprig className="absolute -right-3 -top-3 h-20 w-14 text-primary/15" />
             <div className="relative hidden justify-end sm:flex">
               <Button type="button" variant="success" size="cta" className="rounded-full" onClick={() => setSheet({ ...emptyDraft })}>
                 <Plus className="size-5" aria-hidden />
                 {t("portal.wishlist.add")}
               </Button>
             </div>
-            <ol className="relative grid grid-cols-4 gap-1.5">
-              {PIPELINE.map((step, i) => {
+            <ol className="relative grid grid-cols-4 gap-1.5 [&>li]:min-w-0">
+              {PIPELINE.map((step) => {
                 const n = items.filter((x) => step.statuses.includes(x.status)).length;
                 return (
-                  <li
-                    key={step.id}
-                    className={cn(
-                      "flex flex-col items-center gap-1 rounded-2xl px-1 py-2 text-center ring-1",
-                      n > 0
-                        ? "bg-gradient-to-br from-primary to-[#5e1f3d] text-primary-foreground shadow-rn-hero-success ring-gold/70"
-                        : "bg-primary-soft/60 text-foreground ring-gold/40",
-                    )}
-                  >
-                    <span
-                      aria-hidden
+                  <li key={step.id} className="min-w-0">
+                    {/* A tile with something in it jumps to that group in the list below. */}
+                    <button
+                      type="button"
+                      disabled={n === 0}
+                      onClick={() => document.getElementById(`wish-${step.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}
                       className={cn(
-                        "flex size-8 items-center justify-center rounded-full ring-1",
-                        n > 0 ? "bg-primary-foreground/15 text-primary-foreground ring-primary-foreground/40" : "bg-card text-success ring-gold/60 dark:!text-white",
+                        "flex h-[4.25rem] w-full flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 text-center ring-1 transition-transform enabled:active:scale-95 disabled:cursor-default",
+                        n > 0
+                          ? "bg-gradient-to-br from-primary to-[#5e1f3d] text-primary-foreground shadow-sm ring-gold/70"
+                          : "bg-primary-soft/60 text-foreground ring-gold/50",
                       )}
                     >
-                      <step.icon className="size-[18px]" strokeWidth={1.8} />
-                    </span>
-                    <span className="font-serif text-xl font-semibold leading-none tabular-nums">{n}</span>
-                    <span className={cn("text-[11px] font-semibold leading-tight", n > 0 ? "text-primary-foreground/90" : "text-rn-text-body")}>{t(step.label)}</span>
-                    <span className="sr-only">{i + 1}</span>
+                      <span className="flex items-center gap-1">
+                        <step.icon aria-hidden className={cn("size-3.5", n > 0 ? "text-primary-foreground/90" : "text-gold")} strokeWidth={1.9} />
+                        <span className="font-serif text-lg font-semibold leading-none tabular-nums">{n}</span>
+                      </span>
+                      <span className="flex min-h-[2.3em] items-center justify-center text-[11px] font-semibold leading-[1.15]">{t(step.label)}</span>
+                    </button>
                   </li>
                 );
               })}
@@ -177,7 +175,7 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
           ) : null}
 
           {sections.map((sec) => (
-            <section key={sec.id} className="flex flex-col gap-3">
+            <section key={sec.id} id={`wish-${sec.id}`} className="flex scroll-mt-20 flex-col gap-3">
               <h2 className="flex items-center gap-2 font-serif text-xl font-semibold">
                 {t(sec.label)}
                 <span className="rounded-full bg-primary-soft px-2.5 py-0.5 font-sans text-app-xs font-semibold tabular-nums text-muted-foreground">{sec.rows.length}</span>
