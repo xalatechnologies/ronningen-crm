@@ -9,6 +9,7 @@ import { BotanicalSprig } from "@/components/brand/botanical";
 import { ScheduleTimeline } from "@/components/portal/schedule-timeline";
 import { PORTAL_SHEET } from "@/components/portal/sheet-style";
 import { Button } from "@/components/ui/button";
+import { SCHEDULE_EMOJIS, splitEmoji, withEmoji } from "@/lib/portal/schedule-emoji";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -237,6 +238,8 @@ function ScheduleForm({ initial, onCancel, onDone }: { initial: Draft; onCancel:
   const [form, setForm] = useState(initial);
   const [busy, setBusy] = useState(false);
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setForm((f) => ({ ...f, [key]: value }));
+  const picked = splitEmoji(form.title);
+  const pickEmoji = (emoji: string) => set("title", withEmoji(emoji === picked.emoji ? "" : emoji, picked.text));
 
   async function settle(action: () => Promise<ScheduleResult>) {
     setBusy(true);
@@ -295,6 +298,19 @@ function ScheduleForm({ initial, onCancel, onDone }: { initial: Draft; onCancel:
           onChange={(e) => set("title", e.target.value)}
           className="h-12 !text-base"
         />
+      </div>
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Emoji">
+        {SCHEDULE_EMOJIS.map((emoji) => (
+          <button
+            key={emoji}
+            type="button"
+            aria-pressed={emoji === picked.emoji}
+            onClick={() => pickEmoji(emoji)}
+            className="flex size-10 items-center justify-center rounded-full text-xl leading-none ring-1 ring-gold/30 transition-transform active:scale-90 aria-pressed:bg-primary-soft aria-pressed:ring-2 aria-pressed:ring-primary"
+          >
+            {emoji}
+          </button>
+        ))}
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="sch-resp">{t("portal.schedule.fieldResponsible")}</Label>

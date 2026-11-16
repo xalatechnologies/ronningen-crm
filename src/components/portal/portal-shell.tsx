@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { BigBloom } from "@/components/brand/botanical";
+import { BigBloom, Blossom } from "@/components/brand/botanical";
+import { APP_NAME } from "@/config/app";
 import { BrandMark } from "@/components/brand/brand-logo";
 import { InstallHeaderButton, InstallProvider } from "@/components/pwa/install-provider";
 import { Button } from "@/components/ui/button";
@@ -24,11 +25,11 @@ function VenueMark({ logoUrl }: { logoUrl: string | null }) {
   if (logoUrl && !failed) {
     return (
       // eslint-disable-next-line @next/next/no-img-element -- venue logo, arbitrary host
-      <img ref={img} src={logoUrl} alt="" onError={() => setFailed(true)} className="size-9 shrink-0 rounded-xl bg-card object-contain ring-1 ring-foreground/10" />
+      <img ref={img} src={logoUrl} alt="" onError={() => setFailed(true)} className="size-9 shrink-0 rounded-xl bg-card object-contain ring-1 ring-gold/50" />
     );
   }
   return (
-    <span className="block size-9 shrink-0 overflow-hidden rounded-xl ring-1 ring-foreground/10 [--brand-tile:#3f1830] dark:[--brand-tile:#8a2c52]">
+    <span className="block size-9 shrink-0 overflow-hidden rounded-xl ring-1 ring-gold/50 [--brand-tile:#3f1830] dark:[--brand-tile:#8a2c52]">
       <BrandMark />
     </span>
   );
@@ -81,15 +82,21 @@ export function PortalShell({
         <BigBloom className="absolute -right-24 top-40 size-80 text-primary/10 sm:-right-16 sm:size-[26rem]" />
         <BigBloom className="absolute -left-28 bottom-24 size-72 rotate-12 text-gold/20 sm:-left-20 sm:size-96" />
       </div>
-      <header className="sticky top-0 z-20 border-b border-gold/40 bg-background/90 backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
+      <header className="sticky top-0 z-20 border-b border-gold/40 bg-gradient-to-b from-card/95 to-background/85 shadow-[0_6px_20px_-12px_rgba(138,44,82,0.35)] backdrop-blur-xl">
+        <div className="mx-auto flex h-16 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:h-[4.5rem] sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <VenueMark logoUrl={logoUrl} />
-            <span className="truncate font-serif text-base font-semibold sm:text-lg">{organizationName}</span>
+            <div className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate font-serif text-base font-semibold sm:text-lg">{organizationName}</span>
+              <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                <Blossom className="size-3 text-gold" filled />
+                {APP_NAME}
+              </span>
+            </div>
           </div>
           <div className="flex shrink-0 items-center gap-1">
           <InstallHeaderButton />
-          <Button type="button" variant="ghost" size="sm" className="size-11 shrink-0 rounded-full p-0 sm:w-auto sm:px-3" onClick={() => void logout()} aria-label={t("portal.nav.logout")}>
+          <Button type="button" variant="ghost" size="sm" className="size-11 shrink-0 rounded-full bg-card p-0 ring-1 ring-gold/50 sm:w-auto sm:px-3" onClick={() => void logout()} aria-label={t("portal.nav.logout")}>
             <LogOut className="size-5 sm:size-4" aria-hidden />
             <span className="hidden sm:inline">{t("portal.nav.logout")}</span>
           </Button>
