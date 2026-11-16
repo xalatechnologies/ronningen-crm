@@ -33,6 +33,9 @@ export async function saveInviteDesign(input: InviteDesignInput, mode: "draft" |
     template_key: d.templateKey,
     palette_key: d.paletteKey,
     font_key: d.fontKey,
+    flower_style: d.flowerStyle,
+    flower_type: d.flowerType,
+    flower_tone: d.flowerTone,
     headline: d.headline,
     message: d.message,
     event_date_text: d.eventDateText,
@@ -52,14 +55,22 @@ export async function saveInviteDesign(input: InviteDesignInput, mode: "draft" |
     .eq("booking_id", ctx.booking.id)
     .maybeSingle();
 
-  const { error } = existing
-    ? await supabase
-        .from("portal_invite_designs" as never)
-        .update({ ...fields, updated_at: now } as never)
-        .eq("booking_id", ctx.booking.id)
-    : await supabase
-        .from("portal_invite_designs" as never)
-        .insert({ ...fields, organization_id: ctx.organization.id, booking_id: ctx.booking.id } as never);
+  const write = (f: Record<string, unknown>) =>
+    existing
+      ? supabase
+          .from("portal_invite_designs" as never)
+          .update({ ...f, updated_at: now } as never)
+          .eq("booking_id", ctx.booking.id)
+      : supabase
+          .from("portal_invite_designs" as never)
+          .insert({ ...f, organization_id: ctx.organization.id, booking_id: ctx.booking.id } as never);
+  let { error } = await write(fields);
+  if (error && ["42703", "PGRST204"].includes(error.code ?? "")) {
+    // The flower columns do not exist yet (migration pending): save everything else.
+    const { flower_style: _s, flower_type: _t, flower_tone: _c, ...withoutFlowers } = fields;
+    void _s; void _t; void _c;
+    ({ error } = await write(withoutFlowers));
+  }
   if (error) return { ok: false, error: error.code === "23514" ? "invalid" : "failed" };
 
   revalidatePath("/portal", "layout");

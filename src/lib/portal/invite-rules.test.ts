@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { containsLink, contrastRatio, defaultDesign, inviteDesignSchema, missingForPublish, PALETTES, PALETTE_KEYS, type InviteDesign } from "./invite-rules";
+import { containsLink, contrastRatio, defaultDesign, FLOWER_STYLES, FLOWER_TONES, FLOWER_TYPES, inviteDesignSchema, missingForPublish, PALETTES, PALETTE_KEYS, type InviteDesign } from "./invite-rules";
 
 const base = { templateKey: "klassisk", paletteKey: "skog", fontKey: "serif", headline: "Kari & Ola gifter seg", message: "", eventDateText: "lørdag 12. juni", eventTimeText: "", placeText: "", dressCode: "" } as const;
 
@@ -62,5 +62,30 @@ describe("palettes", () => {
       expect(contrastRatio(p.muted, p.bg), `${key} muted`).toBeGreaterThanOrEqual(4.5);
       expect(contrastRatio(p.accent, p.bg), `${key} accent`).toBeGreaterThanOrEqual(3);
     }
+  });
+});
+
+describe("flowers on the card", () => {
+  const card = { templateKey: "klassisk", paletteKey: "skog", fontKey: "serif", headline: "Anna og Per", message: "", eventDateText: "12. juni", eventTimeText: "", placeText: "", dressCode: "" } as const;
+
+  it("old cards without flower fields stay unchanged (defaults)", () => {
+    const r = inviteDesignSchema.parse(card);
+    expect(r).toMatchObject({ flowerStyle: "none", flowerType: "blomst", flowerTone: "accent" });
+  });
+
+  it("accepts every style, type and tone", () => {
+    for (const flowerStyle of FLOWER_STYLES) for (const flowerType of FLOWER_TYPES) for (const flowerTone of FLOWER_TONES) {
+      expect(inviteDesignSchema.safeParse({ ...card, flowerStyle, flowerType, flowerTone }).success).toBe(true);
+    }
+  });
+
+  it("rejects unknown keys (flowers are fixed choices, never free text)", () => {
+    expect(inviteDesignSchema.safeParse({ ...card, flowerStyle: "https://evil.example" }).success).toBe(false);
+    expect(inviteDesignSchema.safeParse({ ...card, flowerType: "orkide" }).success).toBe(false);
+    expect(inviteDesignSchema.safeParse({ ...card, flowerTone: "#ff0000" }).success).toBe(false);
+  });
+
+  it("a new default design has no flowers", () => {
+    expect(defaultDesign({ eventDate: null, venueName: "Lokalet", locale: "nb" })).toMatchObject({ flowerStyle: "none" });
   });
 });
