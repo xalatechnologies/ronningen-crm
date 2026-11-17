@@ -74,6 +74,8 @@ export function LoginForm() {
   const [mode, setMode] = useState<"password" | "code">("password");
 
   const [savedEmails, setSavedEmails] = useState<SavedEmail[]>([]);
+  /** A saved account the user tapped: its email is known, so only the password is asked for. */
+  const [pickedEmail, setPickedEmail] = useState<string | null>(null);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable on the client
     setSavedEmails(readSavedEmails());
@@ -86,13 +88,16 @@ export function LoginForm() {
       form.setValue("password", "");
       setDevHintDismissed(true);
     }
-    document.getElementById("password")?.focus();
+    setPickedEmail(email);
+    // The password field mounts on the next render; focus it then.
+    setTimeout(() => document.getElementById("password")?.focus(), 0);
   }
 
   function forgetSavedEmail(email: string) {
     const next = savedEmails.filter((x) => x.email !== email);
     writeSavedEmails(next);
     setSavedEmails(next);
+    if (pickedEmail === email) setPickedEmail(null);
   }
 
   const loginDefaults = useMemo(() => getDevLoginDefaultValues(), []);
@@ -293,7 +298,7 @@ export function LoginForm() {
             >
               {savedEmails.length > 0 ? (
                 <ul className="flex flex-col gap-2">
-                  {savedEmails.map(({ email }) => (
+                  {savedEmails.filter(({ email }) => pickedEmail === null || email === pickedEmail).map(({ email }) => (
                     <li key={email} className="flex items-center gap-1 rounded-xl bg-[#e8f5ee] pr-1 ring-1 ring-[#1a4331]/15">
                       <button
                         type="button"
@@ -305,6 +310,15 @@ export function LoginForm() {
                         </span>
                         <span className="truncate">{email}</span>
                       </button>
+                      {pickedEmail === email ? (
+                        <button
+                          type="button"
+                          onClick={() => setPickedEmail(null)}
+                          className="mr-1 shrink-0 rounded-full px-3 py-2 text-app-sm font-semibold text-[#1a4331] hover:bg-[#1a4331]/10"
+                        >
+                          {t("auth.switchAccount")}
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => forgetSavedEmail(email)}
@@ -317,6 +331,7 @@ export function LoginForm() {
                   ))}
                 </ul>
               ) : null}
+              {pickedEmail === null ? (
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
@@ -345,6 +360,7 @@ export function LoginForm() {
                   </p>
                 ) : null}
               </div>
+              ) : null}
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-4">
                   <Label
