@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, Gift, Plus } from "lucide-react";
+import { ExternalLink, Gift, Minus, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -18,11 +18,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/i18n/client";
 import type { TranslationKey } from "@/i18n/types";
 import { deleteGiftWish, saveGiftSettings, saveGiftWish, type GiftResult } from "@/lib/portal/gift-actions";
-import { parseGiftPrice, REVEAL_MODES, type CoupleGiftWish, type GiftKind, type GiftSettings, type RevealMode } from "@/lib/portal/gift-rules";
+import { MAX_GIFT_QUANTITY, parseGiftPrice, parseGiftQuantity, REVEAL_MODES, type CoupleGiftWish, type GiftKind, type GiftSettings, type RevealMode } from "@/lib/portal/gift-rules";
 import { cn } from "@/lib/utils";
 
-type Draft = { id?: string; kind: GiftKind; title: string; url: string; imageUrl: string; price: string; note: string };
-const emptyDraft: Draft = { kind: "gift", title: "", url: "", imageUrl: "", price: "", note: "" };
+type Draft = { id?: string; kind: GiftKind; title: string; url: string; imageUrl: string; price: string; quantity: string; note: string };
+const emptyDraft: Draft = { kind: "gift", title: "", url: "", imageUrl: "", price: "", quantity: "1", note: "" };
 
 const REVEAL_LABEL: Record<RevealMode, TranslationKey> = {
   event_date: "portal.gifts.revealEventDate",
@@ -46,7 +46,8 @@ export function GiftWishesView({ wishes, settings, giversShown }: { wishes: Coup
     router.refresh();
   }
 
-  const takenCount = wishes.filter((w) => w.taken).length;
+  const takenPlaces = wishes.reduce((n, w) => n + w.takenCount, 0);
+  const totalPlaces = wishes.reduce((n, w) => n + w.quantity, 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -116,15 +117,15 @@ export function GiftWishesView({ wishes, settings, giversShown }: { wishes: Coup
         </div>
       ) : (
         <>
-          <p className="px-1 text-app-sm font-semibold text-muted-foreground">{t("portal.gifts.summary", { taken: takenCount, total: wishes.length })}</p>
+          <p className="px-1 text-app-sm font-semibold text-muted-foreground">{t("portal.gifts.summary", { taken: takenPlaces, total: totalPlaces })}</p>
           <ul className="flex flex-col gap-3">
             {wishes.map((w) => (
-              <li key={w.id} className={cn("relative flex overflow-hidden rounded-3xl bg-card shadow-rn-card ring-1", w.taken ? "ring-success/40" : "ring-gold/40")}>
-                <span aria-hidden className={cn("absolute inset-y-0 left-0 w-1.5", w.taken ? "bg-success" : "bg-gold")} />
+              <li key={w.id} className={cn("relative flex overflow-hidden rounded-3xl bg-card shadow-rn-card ring-1", w.takenCount >= w.quantity ? "ring-success/40" : "ring-gold/40")}>
+                <span aria-hidden className={cn("absolute inset-y-0 left-0 w-1.5", w.takenCount >= w.quantity ? "bg-success" : w.takenCount > 0 ? "bg-gradient-to-b from-success to-gold" : "bg-gold")} />
                 <button
                   type="button"
                   className="flex min-w-0 flex-1 items-start gap-3 p-4 pl-5 text-left"
-                  onClick={() => setSheet({ id: w.id, kind: w.kind, title: w.title, url: w.url ?? "", imageUrl: w.imageUrl ?? "", price: w.priceNok === null ? "" : String(w.priceNok), note: w.note })}
+                  onClick={() => setSheet({ id: w.id, kind: w.kind, title: w.title, url: w.url ?? "", imageUrl: w.imageUrl ?? "", price: w.priceNok === null ? "" : String(w.priceNok), quantity: String(w.quantity), note: w.note })}
                 >
                   <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary-soft text-gold ring-1 ring-gold/30">
                     {w.imageUrl ? (
@@ -139,10 +140,24 @@ export function GiftWishesView({ wishes, settings, giversShown }: { wishes: Coup
                       {w.kind === "gift" ? t("portal.gifts.kindGift") : t("portal.gifts.kindOther")}
                     </span>
                     <span className="break-words font-serif text-lg font-semibold leading-snug">{w.title}</span>
-                    {w.priceNok !== null ? <span className="text-app-sm font-semibold text-primary">{nok(w.priceNok)}</span> : null}
+                    {w.priceNok !== null || w.quantity > 1 ? (
+                      <span className="text-app-sm font-semibold text-primary">
+                        {[w.priceNok !== null ? nok(w.priceNok) : null, w.quantity > 1 ? t("portal.gifts.quantityUnit", { count: w.quantity }) : null].filter(Boolean).join(" · ")}
+                      </span>
+                    ) : null}
                     {w.note ? <span className="whitespace-pre-wrap break-words text-app-sm text-muted-foreground">{w.note}</span> : null}
-                    <span className={cn("mt-1 w-fit rounded-full px-3 py-1 text-app-xs font-semibold", w.taken ? "bg-success/15 text-success" : "bg-gold/20 text-primary")}>
-                      {w.taken ? (w.giverName ? t("portal.gifts.givenBy", { name: w.giverName }) : t("portal.gifts.taken")) : t("portal.gifts.free")}
+                    <span className={cn("mt-1 w-fit rounded-full px-3 py-1 text-app-xs font-semibold", w.takenCount >= w.quantity ? "bg-success/15 text-success" : w.takenCount > 0 ? "bg-success/10 text-success" : "bg-gold/20 text-primary")}>
+                      {w.quantity === 1
+                        ? w.takenCount === 0
+                          ? t("portal.gifts.free")
+                          : w.giverNames.length > 0
+                            ? t("portal.gifts.givenBy", { name: w.giverNames[0] })
+                            : t("portal.gifts.taken")
+                        : w.takenCount === 0
+                          ? t("portal.gifts.freeMany", { total: w.quantity })
+                          : w.giverNames.length > 0
+                            ? t("portal.gifts.takenOfNames", { taken: w.takenCount, total: w.quantity, names: w.giverNames.join(", ") })
+                            : t("portal.gifts.takenOf", { taken: w.takenCount, total: w.quantity })}
                     </span>
                   </span>
                 </button>
@@ -205,15 +220,17 @@ function GiftForm({ initial, onCancel, onDone }: { initial: Draft; onCancel: () 
     if (r.ok) {
       toast.success(success);
       onDone();
-    } else toast.error(r.error === "invalid" ? t("portal.gifts.errInvalid") : r.error === "limit" ? t("portal.gifts.errLimit") : t("portal.gifts.errGeneric"));
+    } else toast.error(r.error === "invalid" ? t("portal.gifts.errInvalid") : r.error === "limit" ? t("portal.gifts.errLimit") : r.error === "below_taken" ? t("portal.gifts.errBelowTaken") : t("portal.gifts.errGeneric"));
   }
 
   function submit(event: FormEvent) {
     event.preventDefault();
     const priceNok = parseGiftPrice(f.price);
     if (priceNok === undefined) return void toast.error(t("portal.gifts.errInvalid"));
+    const quantity = parseGiftQuantity(f.quantity);
+    if (quantity === undefined) return void toast.error(t("portal.gifts.errInvalid"));
     void settle(
-      () => saveGiftWish({ id: f.id, kind: f.kind, title: f.title, url: f.url || null, imageUrl: f.imageUrl || null, priceNok, note: f.note }),
+      () => saveGiftWish({ id: f.id, kind: f.kind, title: f.title, url: f.url || null, imageUrl: f.imageUrl || null, priceNok, quantity, note: f.note }),
       t("portal.gifts.saved"),
     );
   }
@@ -239,6 +256,31 @@ function GiftForm({ initial, onCancel, onDone }: { initial: Draft; onCancel: () 
       <div className="flex flex-col gap-2">
         <Label htmlFor="g-title">{t("portal.gifts.fieldTitle")}</Label>
         <Input id="g-title" required value={f.title} maxLength={80} placeholder={t("portal.gifts.fieldTitleHint")} onChange={(e) => set("title", e.target.value)} className="h-12 !text-base" />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="g-qty">{t("portal.gifts.fieldQuantity")}</Label>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            aria-label="−"
+            disabled={(parseGiftQuantity(f.quantity) ?? 1) <= 1}
+            onClick={() => set("quantity", String(Math.max(1, (parseGiftQuantity(f.quantity) ?? 1) - 1)))}
+            className="flex size-11 items-center justify-center rounded-full bg-card ring-1 ring-gold/50 transition-transform enabled:active:scale-95 disabled:opacity-40"
+          >
+            <Minus className="size-4" aria-hidden />
+          </button>
+          <Input id="g-qty" inputMode="numeric" value={f.quantity} maxLength={2} onChange={(e) => set("quantity", e.target.value.replace(/\D/g, "").slice(0, 2))} className="h-12 w-20 text-center !text-lg font-semibold" />
+          <button
+            type="button"
+            aria-label="+"
+            disabled={(parseGiftQuantity(f.quantity) ?? 1) >= MAX_GIFT_QUANTITY}
+            onClick={() => set("quantity", String(Math.min(MAX_GIFT_QUANTITY, (parseGiftQuantity(f.quantity) ?? 0) + 1)))}
+            className="flex size-11 items-center justify-center rounded-full bg-card ring-1 ring-gold/50 transition-transform enabled:active:scale-95 disabled:opacity-40"
+          >
+            <Plus className="size-4" aria-hidden />
+          </button>
+        </div>
+        <p className="text-app-xs text-muted-foreground">{t("portal.gifts.fieldQuantityHelp")}</p>
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="g-url">{t("portal.gifts.fieldUrl")}</Label>

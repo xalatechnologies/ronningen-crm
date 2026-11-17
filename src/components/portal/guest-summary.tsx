@@ -1,4 +1,4 @@
-import { CalendarHeart, CircleCheck, Gift } from "lucide-react";
+import { Armchair, CalendarHeart, CircleCheck, Gift } from "lucide-react";
 
 import { getServerTranslation } from "@/i18n/server";
 import type { GuestActivity } from "@/lib/portal/activities";
@@ -11,11 +11,14 @@ export async function GuestSummary({
   partySize,
   activities,
   gifts,
+  table,
 }: {
   status: GuestStatus;
   partySize: number;
   activities: GuestActivity[];
   gifts: GuestGiftWish[];
+  /** The name of this guest's table; null until the couple has shared the seating and given the guest a table. */
+  table: string | null;
 }) {
   const { t } = await getServerTranslation();
   const rsvp =
@@ -29,7 +32,7 @@ export async function GuestSummary({
   const going = activities.filter((a) => a.myResponse === "yes").length;
   const mine = gifts.filter((g) => g.state === "mine");
 
-  const rows = [
+  const rows: { href?: string; icon: typeof CircleCheck; label: string; value: string; show: boolean }[] = [
     { href: "#rsvp", icon: CircleCheck, label: t("portal.guestPage.sumRsvp"), value: rsvp, show: true },
     {
       href: "#activities",
@@ -45,6 +48,7 @@ export async function GuestSummary({
       value: mine.length > 0 ? mine.map((g) => g.title).join(", ") : t("portal.guestPage.sumNoGifts"),
       show: gifts.length > 0,
     },
+    { icon: Armchair, label: t("portal.guestPage.sumTable"), value: table ?? "", show: table !== null && status !== "declined" },
   ].filter((r) => r.show);
 
   return (
@@ -54,9 +58,9 @@ export async function GuestSummary({
         <p className="text-app-sm text-muted-foreground">{t("portal.guestPage.sumHelp")}</p>
       </div>
       <ul className="flex flex-col divide-y divide-gold/30">
-        {rows.map((r) => (
-          <li key={r.href}>
-            <a href={r.href} className="flex min-h-14 items-center gap-3 py-2">
+        {rows.map((r) => {
+          const inner = (
+            <>
               <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gold/20 text-primary">
                 <r.icon className="size-5" aria-hidden />
               </span>
@@ -64,10 +68,21 @@ export async function GuestSummary({
                 <span className="text-app-xs font-semibold uppercase tracking-wide text-muted-foreground">{r.label}</span>
                 <span className="break-words font-semibold">{r.value}</span>
               </span>
-              <span className="shrink-0 text-app-sm font-semibold text-primary underline">{t("portal.guestPage.sumChange")}</span>
-            </a>
-          </li>
-        ))}
+              {r.href ? <span className="shrink-0 text-app-sm font-semibold text-primary underline">{t("portal.guestPage.sumChange")}</span> : null}
+            </>
+          );
+          return (
+            <li key={r.label}>
+              {r.href ? (
+                <a href={r.href} className="flex min-h-14 items-center gap-3 py-2">
+                  {inner}
+                </a>
+              ) : (
+                <div className="flex min-h-14 items-center gap-3 py-2">{inner}</div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

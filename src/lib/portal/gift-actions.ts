@@ -7,7 +7,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getPortalContext } from "./context";
 import { giftSettingsSchema, giftWishInputSchema, type GiftSettings, type GiftWishInput } from "./gift-rules";
 
-export type GiftResult = { ok: true } | { ok: false; error: "invalid" | "forbidden" | "not_found" | "limit" | "failed" };
+export type GiftResult = { ok: true } | { ok: false; error: "invalid" | "forbidden" | "not_found" | "limit" | "below_taken" | "failed" };
 
 type Client = Awaited<ReturnType<typeof createServerSupabaseClient>>;
 const wishes = (c: Client) => c.from("gift_wishes" as never);
@@ -19,30 +19,37 @@ export async function saveGiftWish(input: GiftWishInput): Promise<GiftResult> {
   if (!ctx) return { ok: false, error: "forbidden" };
   const parsed = giftWishInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
-  const { id, kind, title, url, imageUrl, priceNok, note } = parsed.data;
-  const fields = { kind, title, url, image_url: imageUrl, price_nok: priceNok, note };
+  const { id, kind, title, url, imageUrl, priceNok, note, quantity } = parsed.data;
+  const fields = { kind, title, url, image_url: imageUrl, price_nok: priceNok, note, quantity };
 
   const supabase = await createServerSupabaseClient();
-  if (id) {
-    const { data, error } = await wishes(supabase)
-      .update({ ...fields, updated_at: new Date().toISOString() } as never)
-      .eq("id", id)
-      .eq("booking_id", ctx.booking.id)
-      .select("id");
-    if (error) return { ok: false, error: error.code === "23514" ? "invalid" : "failed" };
-    if (((data as unknown[] | null)?.length ?? 0) === 0) return { ok: false, error: "not_found" };
-  } else {
-    const { error } = await wishes(supabase).insert({
-      ...fields,
-      organization_id: ctx.organization.id,
-      booking_id: ctx.booking.id,
-      created_by: ctx.userId,
-    } as never);
-    if (error) {
-      if (error.code === "23514" && error.message?.includes("100")) return { ok: false, error: "limit" };
-      return { ok: false, error: error.code === "23514" ? "invalid" : "failed" };
+  const write = async (f: Record<string, unknown>) => {
+    if (id) {
+      const { data, error } = await wishes(supabase)
+        .update({ ...f, updated_at: new Date().toISOString() } as never)
+        .eq("id", id)
+        .eq("booking_id", ctx.booking.id)
+        .select("id");
+      return { error, missing: !error && ((data as unknown[] | null)?.length ?? 0) === 0 };
     }
+    const { error } = await wishes(supabase).insert({ ...f, organization_id: ctx.organization.id, booking_id: ctx.booking.id, created_by: ctx.userId } as never);
+    return { error, missing: false };
+  };
+
+  let result = await write(fields);
+  if (result.error && ["42703", "PGRST204"].includes(result.error.code ?? "")) {
+    // The quantity column does not exist yet (migration pending): save everything else, as one wish.
+    const { quantity: _q, ...withoutQuantity } = fields;
+    void _q;
+    result = await write(withoutQuantity);
   }
+  const { error, missing } = result;
+  if (error) {
+    if (error.code === "23514" && error.message?.includes("lower than")) return { ok: false, error: "below_taken" };
+    if (error.code === "23514" && error.message?.includes("100")) return { ok: false, error: "limit" };
+    return { ok: false, error: error.code === "23514" ? "invalid" : "failed" };
+  }
+  if (missing) return { ok: false, error: "not_found" };
   refresh();
   return { ok: true };
 }

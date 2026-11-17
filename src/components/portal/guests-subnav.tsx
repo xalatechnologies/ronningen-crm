@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarHeart, Gift, Mail, Users, type LucideIcon } from "lucide-react";
+import { Armchair, CalendarHeart, Gift, Mail, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,7 +14,7 @@ type Item = { href: string; label: string; icon: LucideIcon; badge?: string; exa
  * It replaces the stack of link cards, so the page is shorter and every part is one tap away from every other.
  * Scrolls sideways on a narrow phone.
  */
-export function GuestsSubNav({ inviteStatus, activities, gifts }: { inviteStatus: "none" | "draft" | "published"; activities: number; gifts: number }) {
+export function GuestsSubNav({ inviteStatus, activities, gifts, tables }: { inviteStatus: "none" | "draft" | "published"; activities: number; gifts: number; tables: number }) {
   const { t } = useTranslation();
   const pathname = usePathname();
 
@@ -28,11 +28,12 @@ export function GuestsSubNav({ inviteStatus, activities, gifts }: { inviteStatus
     },
     { href: "/portal/guests/activities", label: t("portal.guestsNav.activities"), icon: CalendarHeart, badge: activities > 0 ? String(activities) : undefined },
     { href: "/portal/guests/gifts", label: t("portal.guestsNav.gifts"), icon: Gift, badge: gifts > 0 ? String(gifts) : undefined },
+    { href: "/portal/guests/tables", label: t("portal.guestsNav.tables"), icon: Armchair, badge: tables > 0 ? String(tables) : undefined },
   ];
 
   return (
     <nav aria-label={t("portal.guestsNav.label")} className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
-      <ul className="flex w-max min-w-full gap-2 sm:w-auto">
+      <ul className="flex w-max min-w-full gap-2 sm:w-full sm:flex-wrap">
         {items.map((item) => {
           const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           const Icon = item.icon;

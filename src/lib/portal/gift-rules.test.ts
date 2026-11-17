@@ -6,6 +6,7 @@ import {
   giftWishInputSchema,
   giversVisible,
   parseGiftPrice,
+  parseGiftQuantity,
   safeHttpsUrl,
   toCoupleView,
   toGuestView,
@@ -94,17 +95,48 @@ describe("giftRateLimited", () => {
 });
 
 describe("views", () => {
-  const w = (id: string): GiftWish => ({ id, kind: "gift", title: id, url: null, imageUrl: null, priceNok: null, note: "" });
-  const wishes = [w("a"), w("b"), w("c")];
-  const claims = new Map([["a", "g1"], ["b", "g2"]]);
-  it("couple sees taken always, names only when allowed", () => {
-    const names = new Map([["g1", "Kari"], ["g2", "Ola"]]);
-    expect(toCoupleView(wishes, claims, names, false).map((x) => [x.taken, x.giverName])).toEqual([[true, null], [true, null], [false, null]]);
-    expect(toCoupleView(wishes, claims, names, true).map((x) => x.giverName)).toEqual(["Kari", "Ola", null]);
+  const w = (id: string, quantity = 1): GiftWish => ({ id, kind: "gift", title: id, url: null, imageUrl: null, priceNok: null, note: "", quantity });
+  const names = new Map([["g1", "Kari"], ["g2", "Ola"], ["g3", "Per"]]);
+
+  it("couple sees how many are taken, names only when allowed", () => {
+    const wishes = [w("a"), w("b", 3), w("c")];
+    const claims = new Map([["a", ["g1"]], ["b", ["g2", "g3"]]]);
+    expect(toCoupleView(wishes, claims, names, false).map((x) => [x.takenCount, x.giverNames])).toEqual([[1, []], [2, []], [0, []]]);
+    expect(toCoupleView(wishes, claims, names, true).map((x) => x.giverNames)).toEqual([["Kari"], ["Ola", "Per"], []]);
   });
-  it("guest sees mine / taken (anonymous) / free", () => {
+
+  it("guest sees mine / taken (all places gone) / free with places left", () => {
+    const wishes = [w("a"), w("b", 3), w("c", 2), w("d", 2)];
+    const claims = new Map([["a", ["g2"]], ["b", ["g2", "g3"]], ["c", ["g2", "g3"]], ["d", ["g1", "g2"]]]);
     const v = toGuestView(wishes, claims, "g1");
-    expect(v.map((x) => x.state)).toEqual(["mine", "taken", "free"]);
-    expect(JSON.stringify(v)).not.toContain("g2");
+    expect(v.map((x) => [x.state, x.left])).toEqual([["taken", 0], ["free", 1], ["taken", 0], ["mine", 0]]);
+    expect(JSON.stringify(v)).not.toContain("Ola");
+  });
+
+  it("a wish with several places stays free until the last one is taken", () => {
+    const wishes = [w("wine", 6)];
+    for (let n = 0; n < 6; n++) {
+      const claims = new Map([["wine", Array.from({ length: n }, (_, i) => `g${i + 10}`)]]);
+      const [view] = toGuestView(wishes, claims, "me");
+      expect(view.state).toBe(n < 6 ? "free" : "taken");
+      expect(view.left).toBe(6 - n);
+    }
+    expect(toGuestView(wishes, new Map([["wine", ["a", "b", "c", "d", "e", "f"]]]), "me")[0]).toMatchObject({ state: "taken", left: 0 });
+  });
+});
+
+describe("quantity", () => {
+  it("defaults to 1 and accepts 1..99", () => {
+    expect(giftWishInputSchema.parse(base).quantity).toBe(1);
+    expect(giftWishInputSchema.safeParse({ ...base, quantity: 6 }).success).toBe(true);
+    expect(giftWishInputSchema.safeParse({ ...base, quantity: 99 }).success).toBe(true);
+  });
+  it("rejects 0, 100, fractions", () => {
+    for (const quantity of [0, 100, -2, 1.5]) expect(giftWishInputSchema.safeParse({ ...base, quantity }).success).toBe(false);
+  });
+  it("parseGiftQuantity reads whole numbers only", () => {
+    expect(parseGiftQuantity("6")).toBe(6);
+    expect(parseGiftQuantity(" 12 ")).toBe(12);
+    for (const bad of ["", "0", "100", "abc", "1,5", "-3"]) expect(parseGiftQuantity(bad)).toBeUndefined();
   });
 });
