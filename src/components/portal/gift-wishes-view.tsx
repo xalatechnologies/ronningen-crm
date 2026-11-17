@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
-import { Blossom, BotanicalSprig } from "@/components/brand/botanical";
+import { BotanicalSprig } from "@/components/brand/botanical";
 import { AddFab } from "@/components/portal/add-fab";
 import { CollapsibleCard } from "@/components/portal/collapsible-card";
 import { PORTAL_SHEET } from "@/components/portal/sheet-style";
@@ -63,40 +63,51 @@ export function GiftWishesView({ wishes, settings, giversShown }: { wishes: Coup
           disabled={busy}
           onClick={() => void saveSettings({ ...settings, shared: !settings.shared })}
           className={cn(
-            "relative flex min-h-12 items-center justify-between gap-3 rounded-full px-5 text-app-base font-semibold ring-1 transition-colors disabled:opacity-60",
-            settings.shared ? "bg-primary text-primary-foreground ring-gold/60" : "bg-background ring-gold/40",
+            "flex min-h-14 w-full items-center justify-between gap-4 rounded-2xl px-4 py-3 text-left ring-1 transition-colors disabled:opacity-60",
+            settings.shared ? "bg-primary-soft ring-primary/40" : "bg-background ring-gold/40",
           )}
         >
-          {settings.shared ? t("portal.gifts.shareOn") : t("portal.gifts.shareOff")}
-          <Blossom className={cn("size-5", settings.shared ? "text-gold" : "text-muted-foreground")} filled={settings.shared} />
+          <span className="text-app-base font-semibold">{settings.shared ? t("portal.gifts.shareOn") : t("portal.gifts.shareOff")}</span>
+          <span aria-hidden className={cn("relative h-8 w-14 shrink-0 rounded-full transition-colors", settings.shared ? "bg-primary" : "bg-foreground/20")}>
+            <span className={cn("absolute top-1 size-6 rounded-full bg-white shadow transition-all", settings.shared ? "left-7" : "left-1")} />
+          </span>
         </button>
         <fieldset className="flex flex-col gap-2">
           <legend className="text-app-sm font-semibold">{t("portal.gifts.revealTitle")}</legend>
           <p className="text-app-xs text-muted-foreground">{t("portal.gifts.revealHelp")}</p>
-          <div className="flex flex-wrap gap-2">
-            {REVEAL_MODES.map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                aria-pressed={settings.revealMode === mode}
-                disabled={busy}
-                onClick={() => void saveSettings({ ...settings, revealMode: mode })}
-                className={cn(
-                  "min-h-11 rounded-full px-4 text-app-sm font-semibold ring-1 transition-colors disabled:opacity-60",
-                  settings.revealMode === mode ? "bg-primary text-primary-foreground ring-gold/60" : "bg-card ring-gold/40",
-                )}
-              >
-                {t(REVEAL_LABEL[mode])}
-              </button>
-            ))}
+          <div role="radiogroup" aria-label={t("portal.gifts.revealTitle")} className="flex flex-col gap-2">
+            {REVEAL_MODES.map((mode) => {
+              const on = settings.revealMode === mode;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  disabled={busy}
+                  onClick={() => void saveSettings({ ...settings, revealMode: mode })}
+                  className={cn(
+                    "flex min-h-12 items-center gap-3 rounded-2xl px-4 text-left text-app-base font-semibold ring-1 transition-colors disabled:opacity-60",
+                    on ? "bg-primary-soft ring-2 ring-primary" : "bg-card ring-gold/40",
+                  )}
+                >
+                  <span aria-hidden className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border-2", on ? "border-primary" : "border-gold/60")}>
+                    {on ? <span className="size-2.5 rounded-full bg-primary" /> : null}
+                  </span>
+                  {t(REVEAL_LABEL[mode])}
+                </button>
+              );
+            })}
           </div>
           <p className="text-app-xs font-medium text-muted-foreground">{giversShown ? t("portal.gifts.giversShown") : t("portal.gifts.giversHidden")}</p>
         </fieldset>
       </CollapsibleCard>
 
       {wishes.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-3xl bg-card px-6 py-10 text-center shadow-rn-card ring-1 ring-gold/40">
-          <Blossom className="size-10 text-gold" filled />
+        <div className="relative flex flex-col items-center gap-4 overflow-hidden rounded-3xl border-2 border-dashed border-gold/60 bg-card px-6 py-12 text-center">
+          <span className="flex size-16 items-center justify-center rounded-full bg-primary-soft text-primary ring-1 ring-gold/50">
+            <Gift className="size-8" aria-hidden />
+          </span>
           <p className="text-app-base text-muted-foreground">{t("portal.gifts.empty")}</p>
           <Button type="button" variant="success" size="cta" onClick={() => setSheet({ ...emptyDraft })}>
             <Plus className="size-5" aria-hidden />
@@ -108,21 +119,31 @@ export function GiftWishesView({ wishes, settings, giversShown }: { wishes: Coup
           <p className="px-1 text-app-sm font-semibold text-muted-foreground">{t("portal.gifts.summary", { taken: takenCount, total: wishes.length })}</p>
           <ul className="flex flex-col gap-3">
             {wishes.map((w) => (
-              <li key={w.id} className="flex gap-3 rounded-3xl bg-card p-4 shadow-rn-card ring-1 ring-gold/40">
+              <li key={w.id} className={cn("relative flex overflow-hidden rounded-3xl bg-card shadow-rn-card ring-1", w.taken ? "ring-success/40" : "ring-gold/40")}>
+                <span aria-hidden className={cn("absolute inset-y-0 left-0 w-1.5", w.taken ? "bg-success" : "bg-gold")} />
                 <button
                   type="button"
-                  className="flex min-w-0 flex-1 flex-col gap-1 text-left"
+                  className="flex min-w-0 flex-1 items-start gap-3 p-4 pl-5 text-left"
                   onClick={() => setSheet({ id: w.id, kind: w.kind, title: w.title, url: w.url ?? "", imageUrl: w.imageUrl ?? "", price: w.priceNok === null ? "" : String(w.priceNok), note: w.note })}
                 >
-                  <span className="flex items-center gap-2 text-app-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    <Gift className="size-3.5 text-gold" aria-hidden />
-                    {w.kind === "gift" ? t("portal.gifts.kindGift") : t("portal.gifts.kindOther")}
+                  <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary-soft text-gold ring-1 ring-gold/30">
+                    {w.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- couple-supplied https URL, shown only to the couple
+                      <img src={w.imageUrl} alt="" loading="lazy" referrerPolicy="no-referrer" className="size-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+                    ) : (
+                      <Gift className="size-7" aria-hidden />
+                    )}
                   </span>
-                  <span className="break-words font-serif text-lg font-semibold">{w.title}</span>
-                  {w.priceNok !== null ? <span className="text-app-sm text-muted-foreground">{nok(w.priceNok)}</span> : null}
-                  {w.note ? <span className="whitespace-pre-wrap break-words text-app-sm text-muted-foreground">{w.note}</span> : null}
-                  <span className={cn("mt-1 w-fit rounded-full px-3 py-1 text-app-xs font-semibold", w.taken ? "bg-success/15 text-success" : "bg-gold/20 text-primary")}>
-                    {w.taken ? (w.giverName ? t("portal.gifts.givenBy", { name: w.giverName }) : t("portal.gifts.taken")) : t("portal.gifts.free")}
+                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="text-app-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {w.kind === "gift" ? t("portal.gifts.kindGift") : t("portal.gifts.kindOther")}
+                    </span>
+                    <span className="break-words font-serif text-lg font-semibold leading-snug">{w.title}</span>
+                    {w.priceNok !== null ? <span className="text-app-sm font-semibold text-primary">{nok(w.priceNok)}</span> : null}
+                    {w.note ? <span className="whitespace-pre-wrap break-words text-app-sm text-muted-foreground">{w.note}</span> : null}
+                    <span className={cn("mt-1 w-fit rounded-full px-3 py-1 text-app-xs font-semibold", w.taken ? "bg-success/15 text-success" : "bg-gold/20 text-primary")}>
+                      {w.taken ? (w.giverName ? t("portal.gifts.givenBy", { name: w.giverName }) : t("portal.gifts.taken")) : t("portal.gifts.free")}
+                    </span>
                   </span>
                 </button>
                 {w.url ? (
@@ -131,7 +152,7 @@ export function GiftWishesView({ wishes, settings, giversShown }: { wishes: Coup
                     target="_blank"
                     rel="noopener noreferrer nofollow"
                     aria-label={t("portal.gifts.openLink")}
-                    className="flex size-11 shrink-0 items-center justify-center self-start rounded-full bg-background ring-1 ring-gold/50"
+                    className="mr-3 mt-4 flex size-11 shrink-0 items-center justify-center self-start rounded-full bg-background ring-1 ring-gold/50"
                   >
                     <ExternalLink className="size-4" aria-hidden />
                   </a>

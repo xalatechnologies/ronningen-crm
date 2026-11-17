@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ClipboardPaste, MessageSquareText, Plus, Search } from "lucide-react";
+import { ChevronDown, ClipboardPaste, Mail, MessageSquareText, Minus, Phone, Plus, Search, Tag, UserRound, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -478,6 +478,8 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
   );
 }
 
+const DEFAULT_GROUPS = ["Familie", "Venner", "Kolleger"];
+
 function GuestForm({
   initial,
   existingGroups,
@@ -509,38 +511,45 @@ function GuestForm({
     );
   }
 
+  // Ready-made groups first, then any the couple already uses (matched ignoring case so "familie" is not repeated).
+  const groups = [...existingGroups, ...DEFAULT_GROUPS.filter((d) => !existingGroups.some((g) => g.toLowerCase() === d.toLowerCase()))];
+  const party = Number(form.maxParty) || 1;
+  const setParty = (n: number) => set("maxParty", String(Math.min(MAX_PARTY, Math.max(1, n))));
+
   return (
-    <form onSubmit={submit} className="mx-auto flex w-full max-w-lg flex-col gap-4 pb-2">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="g-name">{t("portal.guests.fieldName")}</Label>
-        <Input id="g-name" required value={form.name} maxLength={80} onChange={(e) => set("name", e.target.value)} className="h-12 !text-base" autoComplete="off" />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="g-email">{t("portal.guests.fieldEmail")}</Label>
-        <Input id="g-email" type="email" inputMode="email" value={form.email} maxLength={254} onChange={(e) => set("email", e.target.value)} className="h-12 !text-base" autoComplete="off" />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="g-group">{t("portal.guests.fieldGroup")}</Label>
-        <Input
-          id="g-group"
-          value={form.groupLabel}
-          maxLength={40}
-          placeholder={t("portal.guests.fieldGroupHint")}
-          onChange={(e) => set("groupLabel", e.target.value)}
-          className="h-12 !text-base"
-          autoComplete="off"
-        />
-        {existingGroups.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {existingGroups.map((g) => (
+    <form onSubmit={submit} className="mx-auto flex w-full max-w-lg flex-col gap-5 pb-2">
+      <div className="flex flex-col gap-3.5">
+        <IconField id="g-name" icon={UserRound} label={t("portal.guests.fieldName")}>
+          <Input id="g-name" required value={form.name} maxLength={80} onChange={(e) => set("name", e.target.value)} className="h-12 !pl-10 !text-base" autoComplete="off" />
+        </IconField>
+        <IconField id="g-email" icon={Mail} label={t("portal.guests.fieldEmail")}>
+          <Input id="g-email" type="email" inputMode="email" value={form.email} maxLength={254} onChange={(e) => set("email", e.target.value)} className="h-12 !pl-10 !text-base" autoComplete="off" />
+        </IconField>
+        <IconField id="g-phone" icon={Phone} label={t("portal.guests.fieldPhone")}>
+          <Input id="g-phone" type="tel" inputMode="tel" value={form.phone} maxLength={30} onChange={(e) => set("phone", e.target.value)} className="h-12 !pl-10 !text-base" autoComplete="off" />
+        </IconField>
+        <IconField id="g-group" icon={Tag} label={t("portal.guests.fieldGroup")}>
+          <Input
+            id="g-group"
+            value={form.groupLabel}
+            maxLength={40}
+            placeholder={t("portal.guests.fieldGroupHint")}
+            onChange={(e) => set("groupLabel", e.target.value)}
+            className="h-12 !pl-10 !text-base"
+            autoComplete="off"
+          />
+        </IconField>
+        {groups.length > 0 ? (
+          <div className="-mt-1 flex flex-wrap gap-2">
+            {groups.map((g) => (
               <button
                 key={g}
                 type="button"
                 aria-pressed={form.groupLabel === g}
                 onClick={() => set("groupLabel", form.groupLabel === g ? "" : g)}
                 className={cn(
-                  "min-h-11 rounded-full px-4 text-app-sm font-semibold ring-1 transition-colors",
-                  form.groupLabel === g ? "bg-primary !text-primary-foreground ring-primary" : "bg-card ring-foreground/15 hover:bg-muted/60",
+                  "min-h-9 rounded-full px-3.5 text-app-sm font-semibold ring-1 transition-colors",
+                  form.groupLabel === g ? "bg-primary !text-primary-foreground ring-primary" : "bg-primary-soft/60 ring-gold/40 hover:bg-primary-soft",
                 )}
               >
                 {g}
@@ -549,32 +558,39 @@ function GuestForm({
           </div>
         ) : null}
       </div>
-      <div className="grid grid-cols-2 items-end gap-3">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="g-party">{t("portal.guests.fieldMaxParty")}</Label>
-          <select
-            id="g-party"
-            value={form.maxParty}
-            onChange={(e) => set("maxParty", e.target.value)}
-            className="h-12 w-full rounded-2xl border border-gold/40 bg-card px-3 text-base"
+      <div className="flex items-center justify-between gap-4 rounded-2xl bg-primary-soft/50 px-4 py-3 ring-1 ring-gold/30">
+        <Label htmlFor="g-party" className="max-w-[11rem] leading-snug">
+          {t("portal.guests.fieldMaxParty")}
+        </Label>
+        <div className="flex items-center gap-3" role="group" aria-label={t("portal.guests.fieldMaxParty")}>
+          <button
+            type="button"
+            aria-label="−"
+            disabled={party <= 1}
+            onClick={() => setParty(party - 1)}
+            className="flex size-10 items-center justify-center rounded-full bg-card ring-1 ring-gold/50 transition-transform active:scale-90 disabled:opacity-40"
           >
-            {Array.from({ length: MAX_PARTY }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="g-phone">{t("portal.guests.fieldPhone")}</Label>
-          <Input id="g-phone" type="tel" inputMode="tel" value={form.phone} maxLength={30} onChange={(e) => set("phone", e.target.value)} className="h-12 !text-base rounded-2xl border-gold/40 bg-card" autoComplete="off" />
+            <Minus className="size-4" aria-hidden />
+          </button>
+          <output id="g-party" className="w-6 text-center font-serif text-xl font-semibold tabular-nums">
+            {party}
+          </output>
+          <button
+            type="button"
+            aria-label="+"
+            disabled={party >= MAX_PARTY}
+            onClick={() => setParty(party + 1)}
+            className="flex size-10 items-center justify-center rounded-full bg-card ring-1 ring-gold/50 transition-transform active:scale-90 disabled:opacity-40"
+          >
+            <Plus className="size-4" aria-hidden />
+          </button>
         </div>
       </div>
-      <div className="flex gap-2">
-        <Button type="submit" variant="success" size="cta" className="flex-1" disabled={busy}>
+      <div className="flex flex-col gap-2">
+        <Button type="submit" variant="success" size="cta" disabled={busy}>
           {t("portal.guests.save")}
         </Button>
-        <Button type="button" variant="outline" size="cta" onClick={onCancel}>
+        <Button type="button" variant="ghost" size="cta" onClick={onCancel}>
           {t("portal.guests.cancel")}
         </Button>
       </div>
@@ -584,6 +600,21 @@ function GuestForm({
         </Button>
       ) : null}
     </form>
+  );
+}
+
+/** A labelled input with a leading icon, used by the guest form. */
+function IconField({ id, icon: Icon, label, children }: { id: string; icon: LucideIcon; label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={id} className="text-app-sm font-semibold text-muted-foreground">
+        {label}
+      </Label>
+      <div className="relative">
+        <Icon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-gold" aria-hidden />
+        {children}
+      </div>
+    </div>
   );
 }
 
