@@ -25,12 +25,21 @@ type CardDesign = Pick<
  * User text is rendered as text only.
  */
 export function InviteCard({ design, labels }: { design: CardDesign; labels: InviteCardLabels }) {
+  // The container must be an ancestor of the card: cqw units on the container element itself resolve against the viewport.
+  return (
+    <div style={{ containerType: "inline-size", width: "100%" }}>
+      <InviteCardFace design={design} labels={labels} />
+    </div>
+  );
+}
+
+function InviteCardFace({ design, labels }: { design: CardDesign; labels: InviteCardLabels }) {
   const p = PALETTES[design.paletteKey];
   const f = FONTS[design.fontKey];
 
   const decor = flowerDecor(design.flowerStyle ?? "none", design.flowerType ?? "blomst", design.flowerTone ?? "accent", design.paletteKey);
   // Flowers are positioned against the card, so it clips them like a real card edge.
-  const root: CSSProperties = { containerType: "inline-size", width: "100%", position: "relative", overflow: "hidden" };
+  const root: CSSProperties = { width: "100%", position: "relative", overflow: "hidden" };
   const heading: CSSProperties = {
     fontFamily: f.heading,
     fontStyle: f.headingStyle,
