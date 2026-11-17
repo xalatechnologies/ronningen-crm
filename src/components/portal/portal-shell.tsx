@@ -85,7 +85,7 @@ export function PortalShell({
         <BigBloom className="absolute -left-28 bottom-24 size-72 rotate-12 text-gold/20 sm:-left-20 sm:size-96" />
       </div>
       <header className="sticky top-0 z-20 border-b border-gold/40 bg-gradient-to-b from-card/95 to-background/85 shadow-[0_6px_20px_-12px_rgba(138,44,82,0.35)] backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:h-[4.5rem] sm:px-6">
+        <div className="mx-auto flex h-16 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:h-[4.5rem] sm:px-6 lg:max-w-6xl lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <VenueMark logoUrl={logoUrl} />
             <div className="flex min-w-0 flex-col leading-tight">
@@ -109,7 +109,7 @@ export function PortalShell({
         aria-label={organizationName}
         className="kb-hide fixed inset-x-0 bottom-0 z-20 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:static sm:border-b sm:border-gold/40 sm:bg-background sm:p-0"
       >
-        <ul className="relative mx-auto flex w-full max-w-md rounded-full bg-card/90 p-1.5 shadow-[0_10px_30px_-8px_rgba(138,44,82,0.35)] ring-1 ring-gold/50 backdrop-blur-xl sm:max-w-3xl sm:gap-1 sm:rounded-none sm:bg-transparent sm:px-6 sm:py-2 sm:shadow-none sm:ring-0 sm:backdrop-blur-none">
+        <ul className="relative mx-auto flex w-full max-w-md rounded-full bg-card/90 p-1.5 shadow-[0_10px_30px_-8px_rgba(138,44,82,0.35)] ring-1 ring-gold/50 backdrop-blur-xl sm:max-w-3xl sm:gap-1 sm:rounded-none sm:bg-transparent sm:px-6 sm:py-2 sm:shadow-none sm:ring-0 sm:backdrop-blur-none lg:max-w-6xl lg:gap-2 lg:px-8">
           {/* Mobile: one berry pill that glides to the active tab. */}
           <span
             aria-hidden
@@ -158,7 +158,7 @@ export function PortalShell({
           })}
         </ul>
       </nav>
-      <main className="relative z-10 mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-5 sm:px-6 sm:py-10">{children}</main>
+      <main className="relative z-10 mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-5 sm:px-6 sm:py-10 lg:max-w-6xl lg:px-8 lg:py-12">{children}</main>
     </div>
     </InstallProvider>
   );

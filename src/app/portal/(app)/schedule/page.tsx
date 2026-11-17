@@ -25,7 +25,7 @@ export default async function PortalSchedulePage() {
   });
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 lg:mx-auto lg:w-full lg:max-w-4xl">
       <header className="flex flex-col gap-2">
         <h1 className="font-serif text-2xl font-semibold tracking-tight sm:text-3xl">{t("portal.schedule.title")}</h1>
         <p className="text-muted-foreground">{t("portal.schedule.lead", { org: ctx.organization.name })}</p>

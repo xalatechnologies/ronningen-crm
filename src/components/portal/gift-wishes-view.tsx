@@ -118,7 +118,7 @@ export function GiftWishesView({ wishes, settings, giversShown }: { wishes: Coup
       ) : (
         <>
           <p className="px-1 text-app-sm font-semibold text-muted-foreground">{t("portal.gifts.summary", { taken: takenPlaces, total: totalPlaces })}</p>
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4">
             {wishes.map((w) => (
               <li key={w.id} className={cn("relative flex overflow-hidden rounded-3xl bg-card shadow-rn-card ring-1", w.takenCount >= w.quantity ? "ring-success/40" : "ring-gold/40")}>
                 <span aria-hidden className={cn("absolute inset-y-0 left-0 w-1.5", w.takenCount >= w.quantity ? "bg-success" : w.takenCount > 0 ? "bg-gradient-to-b from-success to-gold" : "bg-gold")} />
