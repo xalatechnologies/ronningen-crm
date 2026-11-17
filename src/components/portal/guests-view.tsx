@@ -180,6 +180,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
         </div>
       ) : (
         <>
+          <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[1.5fr_1fr] lg:items-start">
           <section className="relative flex flex-col gap-4 overflow-hidden rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
             <BotanicalSprig className="absolute -right-3 -top-3 h-28 w-20 text-primary/15" />
             <p className="relative font-serif text-3xl font-semibold leading-none">{t("portal.guests.countLine", { count: summary.total })}</p>
@@ -214,6 +215,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
               )}
             </CollapsibleCard>
           ) : null}
+          </div>
 
           {allGroupLabels.length > 0 ? (
             <div role="group" aria-label={t("portal.guests.groupsLabel")} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
@@ -258,6 +260,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
             </div>
           ) : null}
 
+          <div className="flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
           {groups.map((section) => {
             const title = section.label || (groups.length > 1 ? t("portal.guests.groupNone") : "");
             const list = (
@@ -319,6 +322,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
               </CollapsibleCard>
             );
           })}
+          </div>
 
           {visible.length > limit ? (
             <Button type="button" variant="outline" className="self-center rounded-full border-gold/60" onClick={() => setLimit((n) => n + PAGE_SIZE)}>
@@ -381,7 +385,7 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
 
       {sendState.enabled && sendState.published && (sendState.inviteCount > 0 || sendState.reminderCount > 0) ? (
         <div className="flex flex-col pb-12 pt-1 sm:pb-0">
-          <Button type="button" variant="success" size="cta" className="w-full" onClick={() => setSendMode(sendState.inviteCount > 0 ? "invite" : "reminder")}>
+          <Button type="button" variant="success" size="cta" className="w-full lg:w-auto lg:min-w-80 lg:self-center" onClick={() => setSendMode(sendState.inviteCount > 0 ? "invite" : "reminder")}>
             {sendState.inviteCount > 0
               ? t("portal.guestSend.sendInvite", { count: sendState.inviteCount })
               : t("portal.guestSend.sendReminder", { count: sendState.reminderCount })}

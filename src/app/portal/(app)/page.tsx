@@ -139,7 +139,7 @@ export default async function PortalHomePage() {
         </ul>
       </header>
 
-      <section className="flex flex-col gap-4">
+      <section className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,24rem)_1fr] lg:items-start lg:gap-6">
         <div className="relative flex items-center gap-5 overflow-hidden rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
           <BotanicalSprig className="absolute -right-4 -top-3 h-32 w-24 text-primary/15" />
           <div className="relative size-24 shrink-0" role="img" aria-label={`${percent} %`}>
