@@ -5,6 +5,7 @@ export const authNb = {
   showPassword: "Vis passord",
   hidePassword: "Skjul passord",
   rememberMe: "Hold meg innlogget i 30 dager",
+  switchAccount: "Bytt konto",
   loginWithCode: "Logg inn med e-postkode",
   loginWithPassword: "Bruk passord i stedet",
   otp: {

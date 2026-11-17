@@ -254,6 +254,7 @@ export const en = {
     showPassword: "Show password",
     hidePassword: "Hide password",
     rememberMe: "Keep me signed in for 30 days",
+    switchAccount: "Switch account",
     loginWithCode: "Sign in with an e-mail code",
     loginWithPassword: "Use a password instead",
     otp: {
