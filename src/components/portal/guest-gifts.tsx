@@ -53,6 +53,9 @@ export function GuestGifts({ token, wishes }: { token: string; wishes: GuestGift
                 {w.title}
               </p>
               {w.priceNok !== null ? <p className="text-app-sm text-muted-foreground">{nok.format(w.priceNok)}</p> : null}
+              {w.quantity > 1 ? (
+                <p className="w-fit rounded-full bg-gold/20 px-3 py-1 text-app-xs font-semibold text-primary">{t("portal.guestPage.giftLeft", { left: w.left, total: w.quantity })}</p>
+              ) : null}
               {w.note ? <p className="whitespace-pre-wrap break-words text-app-sm">{w.note}</p> : null}
               {w.url ? (
                 <a href={w.url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex min-h-11 w-fit items-center gap-1 text-app-sm font-semibold text-primary underline">
@@ -62,7 +65,7 @@ export function GuestGifts({ token, wishes }: { token: string; wishes: GuestGift
               ) : null}
             </div>
             {w.state === "taken" ? (
-              <p className="rounded-full bg-muted px-4 py-3 text-center text-app-sm font-semibold text-muted-foreground">{t("portal.guestPage.giftTaken")}</p>
+              <p className="rounded-full bg-muted px-4 py-3 text-center text-app-sm font-semibold text-muted-foreground">{w.quantity > 1 ? t("portal.guestPage.giftAllTaken") : t("portal.guestPage.giftTaken")}</p>
             ) : (
               <button
                 type="button"

@@ -9,6 +9,7 @@ import { GuestGifts } from "@/components/portal/guest-gifts";
 import { CollapsibleCard } from "@/components/portal/collapsible-card";
 import { GuestSummary } from "@/components/portal/guest-summary";
 import { loadGuestGifts } from "@/lib/portal/gifts";
+import { loadGuestTable } from "@/lib/portal/seating";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
 
   const { design, guest } = invite;
   const activities = guest.status === "declined" ? [] : await listGuestActivities(guest.id, invite.bookingId);
-  const gifts = await loadGuestGifts(guest.id, invite.bookingId);
+  const [gifts, table] = await Promise.all([loadGuestGifts(guest.id, invite.bookingId), loadGuestTable(guest.id, invite.bookingId)]);
   const deadline = design.rsvpDeadline
     ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${design.rsvpDeadline}T00:00:00Z`))
     : "";
@@ -54,7 +55,7 @@ export default async function GuestInvitePage({ params }: { params: Promise<{ to
             }}
           />
         </div>
-        <GuestSummary status={guest.status} partySize={guest.partySize} activities={activities} gifts={gifts} />
+        <GuestSummary status={guest.status} partySize={guest.partySize} activities={activities} gifts={gifts} table={table} />
         <div id="rsvp" className="scroll-mt-4">
           <GuestRsvpForm token={token} guest={guest} closed={invite.closed} hostName={invite.hostName || invite.venueName} />
         </div>
