@@ -186,10 +186,10 @@ export async function deleteOrganization(input: {
     return { ok: false as const, error: purgeResult.error };
   }
 
-  const { error } = await admin
-    .from("organizations")
-    .delete()
-    .eq("id", input.organizationId);
+  // One database function: it also removes the append-only audit trail, which plain deletes cannot.
+  const { error } = await admin.rpc("platform_delete_organization" as never, {
+    p_organization_id: input.organizationId,
+  } as never);
 
   if (error) {
     return {
