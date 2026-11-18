@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/i18n/client";
+import { PLATFORM_ADMIN_EMAIL } from "@/config/admin-routes";
 import { LOGIN_CODE_TTL_MINUTES } from "@/lib/auth/login-code-config";
 import { X } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
@@ -20,6 +21,7 @@ export function CodeLogin({
   initialEmail = "",
   savedEmails = [],
   onForgetEmail,
+  onUsePassword,
 }: {
   remember: boolean;
   onRememberChange: (value: boolean) => void;
@@ -29,6 +31,8 @@ export function CodeLogin({
   /** Accounts remembered on this device: one tap sends the code, no e-mail to type. */
   savedEmails?: string[];
   onForgetEmail?: (email: string) => void;
+  /** The platform admin signs in with the password only: no code is sent, the password form opens instead. */
+  onUsePassword: (email: string) => void;
 }) {
   const { t } = useTranslation();
   const [step, setStep] = useState<"email" | "code">("email");
@@ -47,6 +51,10 @@ export function CodeLogin({
 
   async function sendCode(event?: FormEvent, to: string = email) {
     event?.preventDefault();
+    if (to.trim().toLowerCase() === PLATFORM_ADMIN_EMAIL) {
+      onUsePassword(to.trim().toLowerCase());
+      return;
+    }
     setError(null);
     setNotice(null);
     setBusy(true);

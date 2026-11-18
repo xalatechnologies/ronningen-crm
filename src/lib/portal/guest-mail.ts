@@ -83,3 +83,60 @@ export async function sendGuestInviteEmail(input: {
     idempotencyKey: `guest-${input.kind}:${input.attemptId}`,
   });
 }
+
+/**
+ * A message from the couple to a guest. Same pattern as the invitation: a fixed subject around the host's
+ * name (the free text is never the subject line), one button to the guest's own page, everything escaped.
+ */
+export async function sendGuestMessageEmail(input: {
+  to: string;
+  token: string;
+  attemptId: string;
+  guestName: string;
+  hostName: string;
+  hostEmail: string | null;
+  venueName: string;
+  heading: string;
+  body: string;
+  paletteKey: PaletteKey;
+  t: Translator;
+}): Promise<SendEmailResult> {
+  const { t } = input;
+  const p = PALETTES[input.paletteKey];
+  const host = sanitizeHostName(input.hostName, input.venueName);
+  const url = guestInviteUrl(input.token);
+  const cta = t("portal.guestMail.messageCta");
+  const footer = t("portal.guestMail.messageFooter", { host });
+  const paragraphs = input.body
+    .split(/\n{2,}/)
+    .map((para) => `<p style="margin:0 0 16px;">${escapeHtml(para).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+
+  const html = `<!DOCTYPE html>
+<html><body style="margin:0;padding:24px 12px;background:#f4f1ea;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+    <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;color:#1c1917;">
+      <tr><td style="background:${p.bg};padding:28px;text-align:center;">
+        <p style="margin:0 0 8px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${p.accent};font-weight:700;">${escapeHtml(t("portal.guestMail.messageLabel", { host }))}</p>
+        <p style="margin:0;font-size:24px;line-height:1.25;color:${p.ink};font-family:Georgia,serif;">${escapeHtml(input.heading)}</p>
+      </td></tr>
+      <tr><td style="padding:28px;font-size:16px;line-height:1.6;">
+        <p style="margin:0 0 16px;">${escapeHtml(t("portal.guestMail.hello", { name: safeName(input.guestName) }))}</p>
+        ${paragraphs}
+        <p style="margin:8px 0 24px;"><a href="${url}" style="display:inline-block;background:#1a4331;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:10px;font-weight:700;">${escapeHtml(cta)}</a></p>
+        <p style="margin:0;font-size:12px;color:#57534e;">${escapeHtml(footer)}</p>
+      </td></tr>
+    </table>
+  </td></tr></table>
+</body></html>`;
+
+  return sendEmail({
+    to: input.to,
+    from: brandedFromAddress(`${host} via ${input.venueName}`),
+    replyTo: input.hostEmail ?? undefined,
+    subject: t("portal.guestMail.subjectMessage", { host }),
+    html,
+    text: `${input.heading}\n\n${input.body}\n\n${cta}: ${url}\n\n${footer}`,
+    idempotencyKey: `guest-message:${input.attemptId}`,
+  });
+}

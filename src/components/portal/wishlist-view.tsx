@@ -181,7 +181,7 @@ export function WishlistView({ items }: { items: WishItemView[] }) {
                 {t(sec.label)}
                 <span className="rounded-full bg-primary-soft px-2.5 py-0.5 font-sans text-app-xs font-semibold tabular-nums text-muted-foreground">{sec.rows.length}</span>
               </h2>
-              <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4">
+              <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4">
                 {sec.rows.map((item) => (
                   <li key={item.id}>
                     <WishCard item={item} busy={busy} run={run} onEdit={() => setSheet(toDraft(item))} />

@@ -79,7 +79,6 @@ export default async function BookingPortalPage({
   const scheduleWaiting = scheduleVersions[0] && !scheduleVersions[0].acknowledgedAt ? 1 : 0;
   const approved = approvedTotalNok(wishItems.filter((i) => i.status !== "draft"));
   const nok = new Intl.NumberFormat(locale, { style: "currency", currency: "NOK", maximumFractionDigits: 2 }).format(approved);
-  const initials = (customerName || "?").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("");
   const tabHref = (id: string) => (id === "messages" ? `/app/bookings/${bookingId}/portal` : `/app/bookings/${bookingId}/portal?tab=${id}`);
   const unread = unreadCount ?? 0;
   const todo = [
@@ -102,19 +101,16 @@ export default async function BookingPortalPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="rounded-2xl bg-card p-5 ring-1 ring-foreground/8 sm:p-6">
+      <header className="rounded-2xl bg-card p-5 ring-1 ring-foreground/8 sm:p-6 lg:px-8 lg:py-6">
         <Link
           href="/app/portal"
-          className="mb-5 inline-flex min-h-11 w-fit items-center gap-1.5 rounded-xl border border-foreground/20 bg-card pl-2 pr-4 text-app-sm font-semibold transition-colors hover:bg-muted/60"
+          className="mb-5 inline-flex min-h-11 w-fit items-center gap-1.5 rounded-xl border border-foreground/20 bg-card pl-2 pr-4 text-app-sm font-semibold transition-colors hover:bg-muted/60 lg:mb-4 lg:min-h-0 lg:rounded-md lg:border-0 lg:bg-transparent lg:px-0 lg:pl-0 lg:text-muted-foreground lg:hover:bg-transparent lg:hover:text-foreground"
         >
           <ChevronLeft className="size-5" aria-hidden />
           {t("portal.staffPage.back")}
         </Link>
         <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="flex min-w-0 items-center gap-4">
-            <span aria-hidden className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-primary font-heading text-xl font-bold !text-primary-foreground sm:size-20 sm:text-2xl">
-              {initials}
-            </span>
             <div className="flex min-w-0 flex-col gap-2">
               <h1 className="app-title break-words">{customerName || t("portal.staffPage.title")}</h1>
               <p className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-app-base text-muted-foreground">
@@ -133,9 +129,9 @@ export default async function BookingPortalPage({
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
         <div className="flex min-w-0 flex-col gap-5">
-          <nav aria-label={t("portal.staffPage.title")} className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <nav aria-label={t("portal.staffPage.title")} className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] lg:mx-0 lg:w-fit lg:gap-1 lg:rounded-full lg:bg-card lg:p-1.5 lg:pb-1.5 lg:ring-1 lg:ring-foreground/8 [&::-webkit-scrollbar]:hidden">
             {(
               [
                 { id: "messages", label: t("portal.staffPage.tabMessages"), badge: unread },
@@ -149,8 +145,8 @@ export default async function BookingPortalPage({
                 href={tabHref(item.id)}
                 aria-current={activeTab === item.id ? "page" : undefined}
                 className={cn(
-                  "inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full px-6 text-app-base font-semibold ring-1 transition-colors",
-                  activeTab === item.id ? "bg-primary !text-primary-foreground ring-primary" : "bg-card text-foreground ring-foreground/12 hover:bg-muted/60",
+                  "inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full px-6 text-app-base font-semibold ring-1 transition-colors lg:min-h-10 lg:px-5 lg:ring-0",
+                  activeTab === item.id ? "bg-primary !text-primary-foreground ring-primary" : "bg-card text-foreground ring-foreground/12 hover:bg-muted/60 lg:bg-transparent lg:text-muted-foreground lg:hover:text-foreground",
                 )}
               >
                 {item.label}
@@ -173,7 +169,7 @@ export default async function BookingPortalPage({
         </div>
 
         <aside className="flex flex-col gap-4 lg:sticky lg:top-6">
-          <section className={card}>
+          <section className={cn(card, todo.length > 0 && "bg-success/10 ring-success/30")}>
             <h2 className="font-heading text-lg font-semibold">{t("portal.staffPage.sideWaiting")}</h2>
             {todo.length === 0 ? (
               <p className="mt-2 text-app-base text-muted-foreground">{t("portal.staffPage.sideAllDone")}</p>

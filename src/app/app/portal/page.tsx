@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronRight, Inbox } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -86,17 +86,62 @@ export default async function PortalInboxPage({ searchParams }: { searchParams: 
       </nav>
 
       {rows.length === 0 ? (
-        <p className="rounded-2xl bg-card px-6 py-10 text-center text-muted-foreground ring-1 ring-foreground/8">
-          {all.length === 0 ? t("portal.inbox.emptyAll") : filter === "attention" ? t("portal.inbox.emptyAttention") : t("portal.inbox.emptyFiltered")}
-        </p>
+        <EmptyInbox
+          icon={filter === "attention" && all.length > 0 ? CheckCircle2 : Inbox}
+          title={filter === "attention" && all.length > 0 ? t("portal.inbox.emptyAttentionTitle") : null}
+          text={all.length === 0 ? t("portal.inbox.emptyAll") : filter === "attention" ? t("portal.inbox.emptyAttention") : t("portal.inbox.emptyFiltered")}
+          cta={
+            filter === "attention" && counts.active > 0
+              ? { href: "/app/portal?filter=active", label: t("portal.inbox.emptyAttentionCta", { count: counts.active }) }
+              : null
+          }
+        />
       ) : (
-        <ul className="divide-y divide-foreground/8 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
-          {rows.map((row) => (
-            <InboxItem key={row.bookingId} row={row} t={t} formatDate={formatDate} />
-          ))}
-        </ul>
+        <section className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
+          <div className="hidden items-center gap-4 border-b border-foreground/8 bg-muted/40 px-5 py-2.5 text-app-xs font-semibold uppercase tracking-wide text-muted-foreground sm:flex">
+            <span className="w-11 shrink-0" aria-hidden />
+            <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.4fr)] gap-6">
+              <span>{t("portal.inbox.colCustomer")}</span>
+              <span>{t("portal.inbox.colEvent")}</span>
+              <span className="text-right">{t("portal.inbox.colStatus")}</span>
+            </span>
+            <span className="w-5 shrink-0" aria-hidden />
+          </div>
+          <ul className="divide-y divide-foreground/8">
+            {rows.map((row) => (
+              <InboxItem key={row.bookingId} row={row} t={t} formatDate={formatDate} />
+            ))}
+          </ul>
+        </section>
       )}
     </div>
+  );
+}
+
+function EmptyInbox({
+  icon: Icon,
+  title,
+  text,
+  cta,
+}: {
+  icon: typeof Inbox;
+  title: string | null;
+  text: string;
+  cta: { href: string; label: string } | null;
+}) {
+  return (
+    <section className="flex flex-col items-center gap-3 rounded-2xl bg-card px-6 py-12 text-center ring-1 ring-foreground/8 lg:py-16">
+      <span className="flex size-14 items-center justify-center rounded-full bg-accent text-primary">
+        <Icon className="size-7" aria-hidden />
+      </span>
+      {title ? <h2 className="font-heading text-lg font-semibold">{title}</h2> : null}
+      <p className="max-w-md text-muted-foreground">{text}</p>
+      {cta ? (
+        <Link href={cta.href} className="mt-2 inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-app-sm font-semibold !text-primary-foreground">
+          {cta.label}
+        </Link>
+      ) : null}
+    </section>
   );
 }
 

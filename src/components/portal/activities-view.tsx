@@ -87,7 +87,7 @@ export function ActivitiesView({ items, guests }: { items: CustomerActivity[]; g
         </div>
       ) : (
         <>
-          <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4">
+          <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4">
             {items.map((item) => {
               const a = item.activity;
               const c = item.counts;
