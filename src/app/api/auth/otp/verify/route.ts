@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { getServerTranslation } from "@/i18n/server";
 import { mapAuthErrorToUserMessage } from "@/lib/auth/auth-error-messages";
+import { allowLoginCodeIp } from "@/lib/auth/login-code-ip";
 import { consumeLoginCode } from "@/lib/auth/login-codes";
 import { normalizeEmail } from "@/lib/auth/normalize-email";
 import { setRememberCookie } from "@/lib/auth/remember";
@@ -21,6 +22,10 @@ const bodySchema = z.object({
 export async function POST(request: Request) {
   const { t, locale } = await getServerTranslation();
   const invalid = NextResponse.json({ error: t("auth.otp.invalid") }, { status: 401 });
+
+  if (!(await allowLoginCodeIp(request, "verify"))) {
+    return NextResponse.json({ error: t("auth.otp.tooMany") }, { status: 429 });
+  }
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return invalid;
