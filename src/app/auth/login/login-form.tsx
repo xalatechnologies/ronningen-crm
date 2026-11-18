@@ -455,6 +455,10 @@ export function LoginForm() {
               initialEmail={form.getValues("email")}
               savedEmails={savedEmails.map((x) => x.email)}
               onForgetEmail={forgetSavedEmail}
+              onUsePassword={(email) => {
+                setMode("password");
+                pickSavedEmail(email);
+              }}
             />
           )}
 
