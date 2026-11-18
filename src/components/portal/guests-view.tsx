@@ -183,7 +183,6 @@ export function GuestsView({ guests, sendState }: { guests: GuestRow[]; sendStat
           <div className="flex flex-col gap-6 lg:col-start-1 lg:mb-6">
           <section className="relative flex flex-col gap-4 overflow-hidden rounded-3xl bg-card p-5 shadow-rn-card ring-1 ring-gold/40">
             <BotanicalSprig className="absolute -right-3 -top-3 h-28 w-20 text-primary/15" />
-            <p className="relative font-serif text-3xl font-semibold leading-none">{t("portal.guests.countLine", { count: summary.total })}</p>
             {summary.invited === 0 ? (
               <p className="text-app-sm text-muted-foreground">{t("portal.guests.comingSoon")}</p>
             ) : (
