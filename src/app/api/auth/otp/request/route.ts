@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getServerTranslation } from "@/i18n/server";
 import { sendLoginCodeEmail } from "@/lib/auth/mail";
 import { issueLoginCode } from "@/lib/auth/login-codes";
+import { allowLoginCodeIp } from "@/lib/auth/login-code-ip";
 import { normalizeEmail } from "@/lib/auth/normalize-email";
 
 export const runtime = "nodejs";
@@ -16,6 +17,9 @@ export async function POST(request: Request) {
   if (!z.string().email().safeParse(email).success) {
     return NextResponse.json({ error: t("serverErrors.auth.invalidRequest") }, { status: 400 });
   }
+
+  // Over the per-IP limit: answer the same, send nothing.
+  if (!(await allowLoginCodeIp(request, "request"))) return NextResponse.json({ ok: true });
 
   try {
     const code = await issueLoginCode(email);

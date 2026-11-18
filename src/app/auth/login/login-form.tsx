@@ -71,7 +71,8 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [redirecting, setRedirecting] = useState(false);
-  const [mode, setMode] = useState<"password" | "code">("password");
+  // The one-time code is the default way in; the password form is one tap away.
+  const [mode, setMode] = useState<"password" | "code">("code");
 
   const [savedEmails, setSavedEmails] = useState<SavedEmail[]>([]);
   /** A saved account the user tapped: its email is known, so only the password is asked for. */
@@ -452,6 +453,8 @@ export function LoginForm() {
               onSuccess={goTo}
               onBack={() => setMode("password")}
               initialEmail={form.getValues("email")}
+              savedEmails={savedEmails.map((x) => x.email)}
+              onForgetEmail={forgetSavedEmail}
             />
           )}
 

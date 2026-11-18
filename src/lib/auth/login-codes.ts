@@ -17,9 +17,6 @@ export function hashLoginCode(id: string, code: string): string {
 type LoginCodeRow = {
   id: string;
   code_hash: string;
-  expires_at: string;
-  attempts: number;
-  used_at: string | null;
 };
 
 /** The table is new and not yet in the generated types. */
@@ -45,6 +42,10 @@ export async function issueLoginCode(email: string): Promise<string | null> {
     .gte("created_at", hourAgo);
   if ((count ?? 0) >= LOGIN_CODE_MAX_REQUESTS_PER_HOUR) return null;
 
+  // A new code kills the older ones, and nothing older than a day is kept.
+  await codesTable().update({ used_at: new Date().toISOString() } as never).eq("email", email).is("used_at", null);
+  await codesTable().delete().lt("created_at", new Date(Date.now() - 86_400_000).toISOString());
+
   const id = randomUUID();
   const code = generateOtpCode();
   const { error } = await codesTable().insert({
@@ -60,7 +61,7 @@ export async function issueLoginCode(email: string): Promise<string | null> {
 /** Checks a code against the newest unused, unexpired one for the e-mail. Single use. */
 export async function consumeLoginCode(email: string, code: string): Promise<boolean> {
   const { data } = await codesTable()
-    .select("id, code_hash, expires_at, attempts, used_at")
+    .select("id, code_hash")
     .eq("email", email)
     .is("used_at", null)
     .gt("expires_at", new Date().toISOString())
@@ -68,14 +69,16 @@ export async function consumeLoginCode(email: string, code: string): Promise<boo
     .limit(1)
     .maybeSingle();
   const row = data as unknown as LoginCodeRow | null;
-  if (!row || row.attempts >= LOGIN_CODE_MAX_ATTEMPTS) return false;
+  if (!row) return false;
 
-  if (!safeEqualHex(hashLoginCode(row.id, code), row.code_hash)) {
-    await codesTable()
-      .update({ attempts: row.attempts + 1 } as never)
-      .eq("id", row.id);
-    return false;
-  }
+  // Count the attempt first, atomically: parallel guesses cannot all read the same old count.
+  const { data: attempt } = await createSupabaseAdminClient().rpc("login_code_register_attempt" as never, {
+    p_id: row.id,
+    p_max: LOGIN_CODE_MAX_ATTEMPTS,
+  } as never);
+  if (typeof attempt !== "number") return false;
+
+  if (!safeEqualHex(hashLoginCode(row.id, code), row.code_hash)) return false;
 
   // Claim atomically so one code can only log in once.
   const { data: claimed } = await codesTable()
