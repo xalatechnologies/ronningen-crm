@@ -90,3 +90,17 @@ Replaced the forest-green palette with the supplied brand-blue / navy / warm-can
 - PWA `theme_color` / `background_color` and the offline page set to the canvas `#f7f6f2`.
 - Not changed: logo and app icon image files in `public/` and `src/app/*.png` (still the old artwork), the portal wedding palette, status colours that use Tailwind emerald/amber/red classes.
 - Known follow-ups: check text contrast of `text-success` (now blue) on tinted surfaces and in dark mode; replace the remaining raw hex values with tokens; recolour the logo and icons if the new brand should change them too.
+
+## Status and neutral colours, 2026-11-20
+
+`src/app/globals.css` now has a `@theme` block that overrides the default Tailwind scales, so every existing class resolves to the design-system set without editing each component:
+
+| Meaning | Tailwind families remapped | Anchors (50 / 200 / 700 or 800 / 500-600) |
+|---|---|---|
+| Success | emerald, green, teal, lime | `#eaf5ef` / `#b7dcc9` / `#226b59` / `#2f8a68` |
+| Warning | amber, yellow, orange | `#fcf3e4` / `#f0d3a3` / `#855a26` / `#c98a2e` |
+| Danger | red, rose, pink | `#fdecee` / `#f2b8bf` / `#ad3d49` (600) |
+| Info and brand | blue, sky, indigo, cyan | `#eef2fd` / `#c9d6f7` / `#2f51b8` / `#3d62cf` |
+| Neutral | zinc, slate, gray, stone, neutral | `#fbfaf7` ... `#13233a` |
+
+Not remapped: `violet` (used for the inkasso status), `fuchsia`, `purple`. Chart colours in `src/lib/charts/chart-theme.ts` use the same status set. Prefer these families (or the `--rn-*` tokens) for new status UI; do not add raw hex values.
