@@ -21,6 +21,8 @@ import {
   toIdNameOptions,
 } from "@/components/ui/form-select";
 import { PropertySelectField } from "@/components/properties/property-select-field";
+import { StatCard } from "@/components/ui/stat-card";
+import { StatusBadge, statusTextClass } from "@/components/ui/status-badge";
 import {
   Table,
   TableBody,
@@ -49,10 +51,9 @@ import {
   ChevronRight,
   Download,
   Filter,
-  MinusCircle,
   Pencil,
   Plus,
-  PlusCircle,
+  ReceiptText,
   RotateCcw,
   Tag,
   Trash2,
@@ -71,7 +72,7 @@ import { toast } from "sonner";
 import type { TransactionListItem } from "./types";
 
 const financeTableHeadClass = cn("finance-table-head", APP_TABLE_HEAD_CELL);
-const financeTableCellClass = "px-6 py-5 md:px-8 md:py-6";
+const financeTableCellClass = "px-4 py-3.5 sm:px-6";
 
 const txDialogFieldLabel = "text-[13px] font-semibold text-foreground md:text-sm";
 
@@ -193,15 +194,15 @@ function categoryPillClass(category: string) {
     c.includes("deposit") ||
     c.includes("park")
   ) {
-    return "bg-success/15 text-success";
+    return "bg-status-success-bg text-status-success-text";
   }
   if (c.includes("vedlikehold") || c.includes("repar")) {
-    return "bg-amber-100/90 text-amber-900";
+    return "bg-status-warning-bg text-status-warning-text";
   }
   if (c.includes("skatt")) {
-    return "bg-violet-100/90 text-violet-900";
+    return "bg-status-info-bg text-status-info-text";
   }
-  return "bg-muted text-muted-foreground";
+  return "bg-status-neutral-bg text-status-neutral-text";
 }
 
 function csvEscape(s: string) {
@@ -592,7 +593,7 @@ function TransactionFormInner({
 }
 
 const financeToolbarControlClass =
-  "box-border h-12 min-h-12 max-h-12 shrink-0 rounded-xl border border-foreground/25 py-0 shadow-none md:h-14 md:min-h-14 md:max-h-14";
+  "box-border h-11 min-h-11 max-h-11 shrink-0 rounded-xl border border-foreground/25 py-0 shadow-none md:h-12 md:min-h-12 md:max-h-12";
 
 export function FinanceSection({
   transactions,
@@ -734,9 +735,6 @@ export function FinanceSection({
     }
   }
 
-  const kpiTileClass =
-    "flex flex-col justify-between rounded-2xl bg-card p-6 ring-1 ring-foreground/20";
-
   return (
     <div className="mx-auto flex w-full flex-col pb-24 md:pb-8">
       <div className="finance-page-workspace flex w-full flex-col">
@@ -783,66 +781,65 @@ export function FinanceSection({
         }
       />
       <div className="mt-6 flex min-w-0 flex-col gap-6">
-            <div className="overflow-x-auto rounded-2xl bg-card p-5 ring-1 ring-foreground/8">
-            <section className="grid w-full min-w-max grid-cols-[minmax(12rem,1fr)_10.5rem_10.5rem_auto] gap-x-4 gap-y-2 md:gap-x-5">
-                <Label className="finance-filter-label font-semibold text-foreground">
-                  {t("finance.filterVenue")}
-                </Label>
-                <Label
-                  htmlFor="finance-filter-from"
-                  className="finance-filter-label font-semibold text-foreground"
-                >
-                  {t("finance.fromDate")}
-                </Label>
-                <Label
-                  htmlFor="finance-filter-to"
-                  className="finance-filter-label font-semibold text-foreground"
-                >
-                  {t("finance.toDate")}
-                </Label>
-                <span
-                  className="finance-filter-label invisible font-semibold tracking-wider uppercase select-none"
-                  aria-hidden
-                >
-                  &nbsp;
-                </span>
-
-                <FormSelect
-                  value={propertyId}
-                  onValueChange={(v) => {
-                    setPropertyId(v);
-                    setPage(1);
-                  }}
-                  aria-label={t("finance.filterVenueAria")}
-                  className={cn(
-                    "finance-filter-control bg-card",
-                    financeToolbarControlClass,
-                  )}
-                  placeholder={t("finance.allVenues")}
-                  options={toIdNameOptions(properties)}
-                />
-                <DatePickerField
-                  id="finance-filter-from"
-                  value={range.from}
-                  onChange={setDateFrom}
-                  maxYmd={range.to || undefined}
-                  variant="toolbar"
-                  className={cn("finance-date-input", financeToolbarControlClass)}
-                />
-                <DatePickerField
-                  id="finance-filter-to"
-                  value={range.to}
-                  onChange={setDateTo}
-                  minYmd={range.from || undefined}
-                  variant="toolbar"
-                  className={cn("finance-date-input", financeToolbarControlClass)}
-                />
-                <div className="flex items-center gap-2">
+            <section
+              className={cn("flex flex-col gap-4 p-4 sm:p-5", cardClass)}
+              aria-label={t("finance.filterVenueAria")}
+            >
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_repeat(2,minmax(0,1fr))_auto] lg:items-end">
+                <div className="min-w-0">
+                  <Label className="finance-filter-label mb-1.5 block font-semibold text-foreground">
+                    {t("finance.filterVenue")}
+                  </Label>
+                  <FormSelect
+                    value={propertyId}
+                    onValueChange={(v) => {
+                      setPropertyId(v);
+                      setPage(1);
+                    }}
+                    aria-label={t("finance.filterVenueAria")}
+                    className={cn("finance-filter-control w-full bg-card", financeToolbarControlClass)}
+                    placeholder={t("finance.allVenues")}
+                    options={toIdNameOptions(properties)}
+                  />
+                </div>
+                <div className="min-w-0">
+                  <Label
+                    htmlFor="finance-filter-from"
+                    className="finance-filter-label mb-1.5 block font-semibold text-foreground"
+                  >
+                    {t("finance.fromDate")}
+                  </Label>
+                  <DatePickerField
+                    id="finance-filter-from"
+                    value={range.from}
+                    onChange={setDateFrom}
+                    maxYmd={range.to || undefined}
+                    variant="toolbar"
+                    className={cn("finance-date-input w-full", financeToolbarControlClass)}
+                  />
+                </div>
+                <div className="min-w-0">
+                  <Label
+                    htmlFor="finance-filter-to"
+                    className="finance-filter-label mb-1.5 block font-semibold text-foreground"
+                  >
+                    {t("finance.toDate")}
+                  </Label>
+                  <DatePickerField
+                    id="finance-filter-to"
+                    value={range.to}
+                    onChange={setDateTo}
+                    minYmd={range.from || undefined}
+                    variant="toolbar"
+                    className={cn("finance-date-input w-full", financeToolbarControlClass)}
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2 sm:col-span-2 lg:col-span-1">
                   <Button
                     type="button"
                     variant="outline"
                     className={cn(
-                      "gap-2 rounded-xl border border-foreground/30 bg-card px-5 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15",
+                      "gap-2 rounded-xl border border-foreground/30 bg-card px-4 text-app-sm font-semibold shadow-none hover:bg-muted",
                       financeToolbarControlClass,
                     )}
                     onClick={() => {
@@ -851,33 +848,30 @@ export function FinanceSection({
                       setPage(1);
                     }}
                   >
-                    <Filter className="size-5" aria-hidden />
+                    <Filter className="size-4" aria-hidden />
                     {t("finance.thisMonth")}
                   </Button>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     disabled={!hasActiveFilters}
-                    className={cn(
-                      "gap-2 rounded-xl border border-foreground/30 bg-card px-5 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15",
-                      financeToolbarControlClass,
-                    )}
+                    className={cn("gap-2 rounded-xl px-4 text-app-sm font-semibold", financeToolbarControlClass, "border-0")}
                     onClick={resetFilters}
                   >
-                    <RotateCcw className="size-5" aria-hidden />
+                    <RotateCcw className="size-4" aria-hidden />
                     {t("finance.resetFilters")}
                   </Button>
                 </div>
-              </section>
-            </div>
+              </div>
+            </section>
 
             {!loadError && properties.length === 0 ? (
               <div role="status">
-                <div className="rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-950 md:text-base dark:text-amber-50">
+                <div className="rounded-xl border border-status-warning-border bg-status-warning-bg px-4 py-3 text-sm text-status-warning-text md:text-base">
                   {t("finance.noVenuesHint")}{" "}
                   <Link
                     href="/app/settings/lokaler"
-                    className="font-semibold text-amber-950 underline underline-offset-2 dark:text-amber-50"
+                    className="font-semibold underline underline-offset-2"
                   >
                     {t("finance.registerVenuesLink")}
                   </Link>
@@ -894,327 +888,322 @@ export function FinanceSection({
               </div>
             ) : null}
 
-            <section
-              aria-label={t("finance.kpiAria")}
-            >
-              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3">
-            <div className={kpiTileClass}>
-              <div className="mb-3 flex items-start justify-between">
-                <span className="finance-kpi-label text-muted-foreground">
-                  {t("finance.kpiIncome")}
-                </span>
-                <TrendingUp
-                  className="size-9 rounded-xl bg-success/15 p-2 text-success dark:bg-white/10 dark:!text-white md:size-10"
-                  aria-hidden
-                />
-              </div>
-              <p className="finance-kpi-value text-success">
-                {formatCurrency(income)}
-              </p>
-              {comparison.dIncome != null ? (
-                <p
-                  className={cn(
-                    "finance-kpi-caption mt-3 flex items-center gap-1 font-semibold",
-                    comparison.dIncome >= 0 ? "text-success" : "text-destructive",
-                  )}
-                >
-                  {comparison.dIncome >= 0 ? (
-                    <ArrowUpRight className="size-4 md:size-5" aria-hidden />
-                  ) : (
-                    <ArrowDownRight className="size-4 md:size-5" aria-hidden />
-                  )}
-                  {t("finance.vsPreviousPeriod", {
-                    percent: Math.abs(comparison.dIncome).toFixed(1),
-                  })}
-                </p>
-              ) : (
-                <p className="finance-kpi-caption mt-3 text-muted-foreground">
-                  —
-                </p>
-              )}
-            </div>
-
-            <div className={kpiTileClass}>
-              <div className="mb-3 flex items-start justify-between">
-                <span className="finance-kpi-label text-muted-foreground">
-                  {t("finance.kpiExpense")}
-                </span>
-                <TrendingDown
-                  className="size-9 rounded-xl bg-destructive/15 p-2 text-destructive md:size-10"
-                  aria-hidden
-                />
-              </div>
-              <p className="finance-kpi-value text-rn-text-heading">
-                {formatCurrency(expense)}
-              </p>
-              {comparison.dExpense != null ? (
-                <p
-                  className={cn(
-                    "finance-kpi-caption mt-3 flex items-center gap-1 font-semibold",
-                    comparison.dExpense <= 0 ? "text-success" : "text-destructive",
-                  )}
-                >
-                  {comparison.dExpense <= 0 ? (
-                    <ArrowDownRight className="size-4 md:size-5" aria-hidden />
-                  ) : (
-                    <ArrowUpRight className="size-4 md:size-5" aria-hidden />
-                  )}
-                  {t("finance.vsPreviousPeriod", {
-                    percent: Math.abs(comparison.dExpense).toFixed(1),
-                  })}
-                </p>
-              ) : (
-                <p className="finance-kpi-caption mt-3 text-muted-foreground">
-                  —
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-col justify-between rounded-2xl bg-[#3d62cf] p-6 text-white">
-              <div className="mb-3 flex items-start justify-between">
-                <span className="finance-kpi-label text-white/80">
-                  {t("finance.kpiResult")}
-                </span>
-                <Wallet
-                  className="size-9 rounded-xl bg-white/10 p-2 text-primary-light md:size-10"
-                  aria-hidden
-                />
-              </div>
-              <p
-                className={cn(
-                  "finance-kpi-value",
-                  net >= 0 ? "text-white" : "text-red-200",
-                )}
+            <section aria-label={t("finance.kpiAria")} className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4">
+              <StatCard
+                icon={TrendingUp}
+                label={t("finance.kpiIncome")}
+                value={formatCurrency(income)}
+                valueClassName={statusTextClass("success")}
               >
-                {net >= 0 ? "+" : ""}
-                {formatCurrency(net)}
-              </p>
-              {margin != null ? (
-                <p className="finance-kpi-caption mt-3 font-semibold text-primary-light">
-                  {t("finance.netMargin", { percent: margin.toFixed(1) })}
-                </p>
-              ) : (
-                <p className="finance-kpi-caption mt-3 font-semibold text-white/80">
-                  {t("finance.noIncomeInPeriod")}
-                </p>
-              )}
-            </div>
-          </div>
+                {comparison.dIncome != null ? (
+                  <p
+                    className={cn(
+                      "mt-3 flex items-center gap-1 text-app-xs font-semibold",
+                      statusTextClass(comparison.dIncome >= 0 ? "success" : "danger"),
+                    )}
+                  >
+                    {comparison.dIncome >= 0 ? (
+                      <ArrowUpRight className="size-4" aria-hidden />
+                    ) : (
+                      <ArrowDownRight className="size-4" aria-hidden />
+                    )}
+                    {t("finance.vsPreviousPeriod", { percent: Math.abs(comparison.dIncome).toFixed(1) })}
+                  </p>
+                ) : (
+                  <p className="mt-3 text-app-xs text-muted-foreground">—</p>
+                )}
+              </StatCard>
+
+              <StatCard
+                icon={TrendingDown}
+                label={t("finance.kpiExpense")}
+                value={formatCurrency(expense)}
+                valueClassName={statusTextClass("danger")}
+              >
+                {comparison.dExpense != null ? (
+                  <p
+                    className={cn(
+                      "mt-3 flex items-center gap-1 text-app-xs font-semibold",
+                      statusTextClass(comparison.dExpense <= 0 ? "success" : "danger"),
+                    )}
+                  >
+                    {comparison.dExpense <= 0 ? (
+                      <ArrowDownRight className="size-4" aria-hidden />
+                    ) : (
+                      <ArrowUpRight className="size-4" aria-hidden />
+                    )}
+                    {t("finance.vsPreviousPeriod", { percent: Math.abs(comparison.dExpense).toFixed(1) })}
+                  </p>
+                ) : (
+                  <p className="mt-3 text-app-xs text-muted-foreground">—</p>
+                )}
+              </StatCard>
+
+              <StatCard
+                variant="brand"
+                icon={Wallet}
+                label={t("finance.kpiResult")}
+                value={`${net >= 0 ? "+" : ""}${formatCurrency(net)}`}
+                caption={
+                  margin != null
+                    ? t("finance.netMargin", { percent: margin.toFixed(1) })
+                    : t("finance.noIncomeInPeriod")
+                }
+              />
             </section>
 
             <div className={cardClass}>
-              <div className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 md:px-8 md:py-6">
+              <div className="flex flex-col gap-3 border-b border-foreground/8 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
                 <h2 className="finance-transactions-title app-section-title">
                   {t("finance.transactions")}
                 </h2>
-                <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="size-12 shrink-0 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted"
-              onClick={() => downloadTransactionsCsv(filtered, t)}
-              disabled={filtered.length === 0}
-              aria-label={t("finance.downloadCsvAria")}
-            >
-              <Download className="size-5" aria-hidden />
-            </Button>
-          </div>
-        </div>
-
-        {filtered.length === 0 ? (
-          <div className="finance-empty-hint space-y-3 p-8 text-center text-muted-foreground md:p-10">
-            <p>{t("finance.emptyPeriod")}</p>
-            {properties.length === 0 ? (
-              <p>
-                <Link
-                  href="/app/settings/lokaler"
-                  className="font-semibold text-success underline underline-offset-2"
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="size-11 shrink-0 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted"
+                  onClick={() => downloadTransactionsCsv(filtered, t)}
+                  disabled={filtered.length === 0}
+                  aria-label={t("finance.downloadCsvAria")}
+                  title={t("finance.downloadCsvAria")}
                 >
-                  {t("finance.emptyRegisterVenues")}
-                </Link>{" "}
-                {t("finance.emptyBeforeTransactions")}
-              </p>
-            ) : canManageTransactions ? (
-              <p>{t("finance.emptyUseNewTransaction")}</p>
-            ) : (
-              <p>{t("finance.emptyContactAdmin")}</p>
-            )}
-          </div>
-        ) : (
-          <Table className="min-w-[720px]">
-            <TableHeader>
-              <TableRow className="border-0 bg-muted/60 hover:bg-muted/60">
-                <TableHead className={financeTableHeadClass}>{t("finance.tableDate")}</TableHead>
-                <TableHead className={financeTableHeadClass}>
-                  {t("finance.tableDescription")}
-                </TableHead>
-                <TableHead className={financeTableHeadClass}>{t("finance.tableVenue")}</TableHead>
-                <TableHead className={financeTableHeadClass}>
-                  {t("finance.tableCategory")}
-                </TableHead>
-                <TableHead className={financeTableHeadClass}>{t("finance.tableType")}</TableHead>
-                <TableHead
-                  className={cn(financeTableHeadClass, "text-right")}
-                >
-                  {t("finance.tableAmount")}
-                </TableHead>
-                {canManageTransactions ? (
-                  <TableHead className="min-w-[5.5rem] px-3 py-2.5 text-right sm:min-w-28">
-                    <span className="sr-only">{t("finance.editOrDelete")}</span>
-                  </TableHead>
-                ) : null}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pageRows.map((r) => {
-                const inc = rowIsIncome(r.type);
-                return (
-                  <TableRow
-                    key={r.id}
-                    className="border-foreground/6 hover:bg-muted/50"
-                  >
-                    <TableCell
-                      className={cn(
-                        financeTableCellClass,
-                        APP_DATA_DATE,
-                        "finance-row-date",
-                      )}
-                    >
-                      {formatDisplayDate(r.transaction_date, formatDate)}
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        financeTableCellClass,
-                        APP_DATA_PRIMARY,
-                        "finance-row-desc max-w-[220px]",
-                      )}
-                    >
-                      <span className="line-clamp-2">
-                        {r.description?.trim() || "—"}
-                      </span>
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        financeTableCellClass,
-                        APP_DATA_BODY,
-                        "finance-row-meta",
-                      )}
-                    >
-                      {r.propertyName ?? "—"}
-                    </TableCell>
-                    <TableCell className={financeTableCellClass}>
-                      <span
-                        className={cn(
-                          "finance-category-pill inline-flex rounded-full px-3 py-1 font-bold",
-                          categoryPillClass(r.category),
-                        )}
-                      >
-                        {r.category}
-                      </span>
-                    </TableCell>
-                    <TableCell className={financeTableCellClass}>
-                      <div
-                        className={cn(
-                          "finance-row-type flex items-center gap-2 font-semibold",
-                          inc ? "text-success" : "text-destructive",
-                        )}
-                      >
-                        {inc ? (
-                          <PlusCircle className="size-4 shrink-0 md:size-5" aria-hidden />
-                        ) : (
-                          <MinusCircle className="size-4 shrink-0 md:size-5" aria-hidden />
-                        )}
-                        {inc ? t("finance.income") : t("finance.expense")}
-                      </div>
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        financeTableCellClass,
-                        "finance-row-amount text-right font-bold tabular-nums",
-                        inc ? "text-success" : "text-destructive",
-                      )}
-                    >
-                      <span className="tabular-nums">
-                        {inc ? "+" : "−"}
-                        {formatCurrency(Number(r.amount))}
-                      </span>
-                    </TableCell>
-                    {canManageTransactions ? (
-                      <TableCell className="min-w-[5.5rem] px-2 py-5 text-right sm:min-w-28 sm:px-3 md:py-6">
-                        <div className="flex items-center justify-end gap-0.5">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="size-10 shrink-0 rounded-xl text-foreground"
-                            aria-label={t("finance.editTransactionAria", {
-                              date: formatDisplayDate(r.transaction_date, formatDate),
-                            })}
-                            onClick={() => setEditRow(r)}
-                          >
-                            <Pencil className="size-5" aria-hidden />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="size-10 shrink-0 rounded-xl text-destructive hover:bg-destructive/10"
-                            aria-label={t("finance.deleteTransactionAria", {
-                              date: formatDisplayDate(r.transaction_date, formatDate),
-                            })}
-                            onClick={() => setDeleteTarget(r)}
-                          >
-                            <Trash2 className="size-5" aria-hidden />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    ) : null}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        )}
+                  <Download className="size-5" aria-hidden />
+                </Button>
+              </div>
 
-        {filtered.length > 0 ? (
-          <div className="finance-page-footer flex flex-col gap-3 border-t border-foreground/8 bg-muted/40 px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
-            <span>
-              {t("finance.footerShowing", {
-                from: pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0,
-                to: Math.min(currentPage * PAGE_SIZE, filtered.length),
-                total: filtered.length,
-              })}
-            </span>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 gap-1 rounded-xl border border-foreground/30 bg-card px-4 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
-                disabled={currentPage <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                <ChevronLeft className="size-5" aria-hidden />
-                {t("finance.footerPrev")}
-              </Button>
-              <span className="flex items-center px-2 tabular-nums">
-                {t("finance.footerPageOf", {
-                  current: currentPage,
-                  total: totalPages,
-                })}
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 gap-1 rounded-xl border border-foreground/30 bg-card px-4 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
-                disabled={currentPage >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              >
-                {t("common.actions.next")}
-                <ChevronRight className="size-5" aria-hidden />
-              </Button>
-            </div>
-          </div>
-        ) : null}
+              {filtered.length === 0 ? (
+                <div className="finance-empty-hint flex flex-col items-center gap-3 px-6 py-12 text-center text-muted-foreground">
+                  <span className="flex size-12 items-center justify-center rounded-2xl bg-muted">
+                    <ReceiptText className="size-6" aria-hidden />
+                  </span>
+                  <p>{t("finance.emptyPeriod")}</p>
+                  {properties.length === 0 ? (
+                    <p>
+                      <Link
+                        href="/app/settings/lokaler"
+                        className="font-semibold text-success underline underline-offset-2"
+                      >
+                        {t("finance.emptyRegisterVenues")}
+                      </Link>{" "}
+                      {t("finance.emptyBeforeTransactions")}
+                    </p>
+                  ) : canManageTransactions ? (
+                    <Button
+                      type="button"
+                      onClick={() => setAddOpen(true)}
+                      className={cn(buttonVariants({ variant: "success", size: "cta" }), "gap-2 rounded-xl shadow-none")}
+                    >
+                      <Plus className="size-4" aria-hidden />
+                      {t("finance.newTransaction")}
+                    </Button>
+                  ) : (
+                    <p>{t("finance.emptyContactAdmin")}</p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-0 bg-muted/50 hover:bg-muted/50">
+                          <TableHead className={financeTableHeadClass}>{t("finance.tableDate")}</TableHead>
+                          <TableHead className={financeTableHeadClass}>{t("finance.tableDescription")}</TableHead>
+                          <TableHead className={financeTableHeadClass}>{t("finance.tableVenue")}</TableHead>
+                          <TableHead className={financeTableHeadClass}>{t("finance.tableCategory")}</TableHead>
+                          <TableHead className={financeTableHeadClass}>{t("finance.tableType")}</TableHead>
+                          <TableHead className={cn(financeTableHeadClass, "text-right")}>
+                            {t("finance.tableAmount")}
+                          </TableHead>
+                          {canManageTransactions ? (
+                            <TableHead className="min-w-24 px-3 py-2.5 text-right">
+                              <span className="sr-only">{t("finance.editOrDelete")}</span>
+                            </TableHead>
+                          ) : null}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pageRows.map((r) => {
+                          const inc = rowIsIncome(r.type);
+                          return (
+                            <TableRow key={r.id} className="border-foreground/6 hover:bg-muted/50">
+                              <TableCell className={cn(financeTableCellClass, APP_DATA_DATE, "finance-row-date")}>
+                                {formatDisplayDate(r.transaction_date, formatDate)}
+                              </TableCell>
+                              <TableCell
+                                className={cn(financeTableCellClass, APP_DATA_PRIMARY, "finance-row-desc max-w-[240px]")}
+                              >
+                                <span className="line-clamp-2">{r.description?.trim() || "—"}</span>
+                              </TableCell>
+                              <TableCell className={cn(financeTableCellClass, APP_DATA_BODY, "finance-row-meta")}>
+                                {r.propertyName ?? "—"}
+                              </TableCell>
+                              <TableCell className={financeTableCellClass}>
+                                <span
+                                  className={cn(
+                                    "finance-category-pill inline-flex rounded-full px-3 py-1 font-semibold",
+                                    categoryPillClass(r.category),
+                                  )}
+                                >
+                                  {r.category}
+                                </span>
+                              </TableCell>
+                              <TableCell className={financeTableCellClass}>
+                                <StatusBadge tone={inc ? "success" : "danger"}>
+                                  {inc ? t("finance.income") : t("finance.expense")}
+                                </StatusBadge>
+                              </TableCell>
+                              <TableCell
+                                className={cn(
+                                  financeTableCellClass,
+                                  "finance-row-amount text-right font-bold tabular-nums",
+                                  statusTextClass(inc ? "success" : "danger"),
+                                )}
+                              >
+                                {inc ? "+" : "−"}
+                                {formatCurrency(Number(r.amount))}
+                              </TableCell>
+                              {canManageTransactions ? (
+                                <TableCell className="min-w-24 px-2 py-3.5 text-right sm:px-3">
+                                  <div className="flex items-center justify-end gap-0.5">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon-sm"
+                                      className="size-10 shrink-0 rounded-lg text-muted-foreground hover:text-foreground"
+                                      aria-label={t("finance.editTransactionAria", {
+                                        date: formatDisplayDate(r.transaction_date, formatDate),
+                                      })}
+                                      onClick={() => setEditRow(r)}
+                                    >
+                                      <Pencil className="size-4" aria-hidden />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon-sm"
+                                      className="size-10 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                      aria-label={t("finance.deleteTransactionAria", {
+                                        date: formatDisplayDate(r.transaction_date, formatDate),
+                                      })}
+                                      onClick={() => setDeleteTarget(r)}
+                                    >
+                                      <Trash2 className="size-4" aria-hidden />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              ) : null}
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  <ul className="divide-y divide-foreground/8 md:hidden">
+                    {pageRows.map((r) => {
+                      const inc = rowIsIncome(r.type);
+                      return (
+                        <li key={r.id} className="flex flex-col gap-2.5 px-4 py-3.5">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="break-words font-heading font-semibold text-foreground">
+                                {r.description?.trim() || "—"}
+                              </p>
+                              <p className="mt-0.5 text-app-xs text-muted-foreground">
+                                {formatDisplayDate(r.transaction_date, formatDate)}
+                                {r.propertyName ? ` · ${r.propertyName}` : ""}
+                              </p>
+                            </div>
+                            <p className={cn("shrink-0 font-bold tabular-nums", statusTextClass(inc ? "success" : "danger"))}>
+                              {inc ? "+" : "−"}
+                              {formatCurrency(Number(r.amount))}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <StatusBadge tone={inc ? "success" : "danger"}>
+                                {inc ? t("finance.income") : t("finance.expense")}
+                              </StatusBadge>
+                              <span
+                                className={cn(
+                                  "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
+                                  categoryPillClass(r.category),
+                                )}
+                              >
+                                {r.category}
+                              </span>
+                            </div>
+                            {canManageTransactions ? (
+                              <div className="flex items-center gap-0.5">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  className="size-10 rounded-lg text-muted-foreground"
+                                  aria-label={t("finance.editTransactionAria", {
+                                    date: formatDisplayDate(r.transaction_date, formatDate),
+                                  })}
+                                  onClick={() => setEditRow(r)}
+                                >
+                                  <Pencil className="size-4" aria-hidden />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  className="size-10 rounded-lg text-muted-foreground hover:text-destructive"
+                                  aria-label={t("finance.deleteTransactionAria", {
+                                    date: formatDisplayDate(r.transaction_date, formatDate),
+                                  })}
+                                  onClick={() => setDeleteTarget(r)}
+                                >
+                                  <Trash2 className="size-4" aria-hidden />
+                                </Button>
+                              </div>
+                            ) : null}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
+
+              {filtered.length > 0 ? (
+                <div className="finance-page-footer flex flex-col gap-3 border-t border-foreground/8 px-4 py-4 text-app-sm font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <span>
+                    {t("finance.footerShowing", {
+                      from: pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0,
+                      to: Math.min(currentPage * PAGE_SIZE, filtered.length),
+                      total: filtered.length,
+                    })}
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
+                      disabled={currentPage <= 1}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    >
+                      <ChevronLeft className="size-4" aria-hidden />
+                      {t("finance.footerPrev")}
+                    </Button>
+                    <span className="flex items-center px-2 tabular-nums">
+                      {t("finance.footerPageOf", { current: currentPage, total: totalPages })}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    >
+                      {t("common.actions.next")}
+                      <ChevronRight className="size-4" aria-hidden />
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
             </div>
       </div>
       </div>

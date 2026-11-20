@@ -30,7 +30,7 @@ function formatPct(n: number | null, digits = 1) {
 }
 
 const KPI_TILE_CLASS =
-  "flex flex-col justify-between rounded-2xl bg-muted/50 p-6 ring-1 ring-foreground/10";
+  "flex flex-col justify-between rounded-xl bg-muted/40 p-5";
 
 const KPI_GRID =
   "grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4";
@@ -68,7 +68,7 @@ function TrendBadge({
     <div
       className={cn(
         "reports-kpi-trend mt-3 flex items-center gap-1",
-        pct >= 0 ? "text-emerald-600" : "text-destructive",
+        pct >= 0 ? "text-status-success-text" : "text-status-danger-text",
       )}
     >
       {pct >= 0 ? (
@@ -160,7 +160,7 @@ function OkonomiSection({
         <ReportsKpiTile
           label={t("reports.economy.paid")}
           value={formatCurrency(revenue.totalPaid)}
-          valueClassName="text-success"
+          valueClassName="text-status-success-text"
         >
           {revenue.fakturertNok > 0 ? (
             <p className="reports-kpi-caption mt-3 font-medium tabular-nums">
@@ -176,7 +176,7 @@ function OkonomiSection({
           </p>
           <div className="mt-4 h-1.5 w-full rounded-full border border-rn-border-strong/30 bg-muted/40">
             <div
-              className="h-full rounded-full bg-success"
+              className="h-full rounded-full bg-status-success-solid"
               style={{
                 width: `${Math.min(100, Math.round(revenue.paidShare * 100))}%`,
               }}
@@ -186,7 +186,7 @@ function OkonomiSection({
         <ReportsKpiTile
           label={t("reports.economy.unpaid")}
           value={formatCurrency(revenue.totalUnpaid)}
-          valueClassName="text-destructive"
+          valueClassName="text-status-danger-text"
         >
           {revenue.fakturertNok > 0 ? (
             <p className="reports-kpi-caption mt-3 font-medium tabular-nums">
@@ -213,7 +213,7 @@ function OkonomiSection({
           label={t("reports.economy.result")}
           value={formatCurrency(finance.netNok)}
           valueClassName={
-            finance.netNok >= 0 ? "text-success" : "text-destructive"
+            finance.netNok >= 0 ? "text-status-success-text" : "text-status-danger-text"
           }
         >
           <p className="reports-kpi-caption mt-3">
@@ -279,13 +279,13 @@ function PipelineSection({
           valueClassName="text-success"
         >
           <p className="reports-kpi-caption-strong mt-3">
-            <span className="text-emerald-600">
+            <span className="text-status-success-text">
               {t("reports.pipeline.confirmed", {
                 count: bookings.confirmedBookingCount,
               })}
             </span>
             {" · "}
-            <span className="text-amber-700 dark:text-amber-400">
+            <span className="text-status-warning-text">
               {t("reports.pipeline.pending", {
                 count: bookings.pendingBookingCount,
               })}
@@ -437,14 +437,14 @@ function ReportsDetailsCollapsible({
               <ReportsKpiTile
                 label={t("reports.details.income")}
                 value={formatCurrency(finance.incomeNok)}
-                valueClassName="text-success"
+                valueClassName="text-status-success-text"
               >
                 <TrendBadge pct={finance.incomeTrendPct} focusMonth={focusMonth} />
               </ReportsKpiTile>
               <ReportsKpiTile
                 label={t("reports.details.expense")}
                 value={formatCurrency(finance.expenseNok)}
-                valueClassName="text-destructive"
+                valueClassName="text-status-danger-text"
               >
                 <TrendBadge pct={finance.expenseTrendPct} focusMonth={focusMonth} />
               </ReportsKpiTile>
@@ -462,14 +462,14 @@ function ReportsDetailsCollapsible({
               <ReportsKpiTile
                 label={t("reports.outstandingTotal")}
                 value={formatCurrency(invoices.outstandingNok)}
-                valueClassName="text-destructive"
+                valueClassName="text-status-danger-text"
               />
               <ReportsKpiTile
                 label={t("reports.details.overdueUnpaid")}
                 value={invoices.overdueUnpaidCount}
                 valueClassName={
                   invoices.overdueUnpaidCount > 0
-                    ? "text-destructive"
+                    ? "text-status-danger-text"
                     : "text-foreground"
                 }
               >
@@ -495,12 +495,12 @@ function ReportsDetailsCollapsible({
               <ReportsKpiTile
                 label={t("reports.details.converted")}
                 value={inquiries.convertedCount}
-                valueClassName="text-success"
+                valueClassName="text-status-success-text"
               />
               <ReportsKpiTile
                 label={t("reports.details.lost")}
                 value={inquiries.lostCount}
-                valueClassName="text-destructive"
+                valueClassName="text-status-danger-text"
               />
             </div>
           </div>
@@ -539,27 +539,27 @@ function ReportsDetailsCollapsible({
                   label={
                     <span className="flex items-center gap-2">
                       <Wrench
-                        className="size-4 text-amber-700 dark:text-amber-400"
+                        className="size-4 text-status-warning-text"
                         aria-hidden
                       />
                       {t("reports.inventory.maintenance")}
                     </span>
                   }
                   value={facility.assetMaintenanceCount}
-                  valueClassName="text-amber-900 dark:text-amber-200"
+                  valueClassName="text-status-warning-text"
                 />
                 <ReportsKpiTile
                   label={
                     <span className="flex items-center gap-2">
                       <AlertTriangle
-                        className="size-4 text-destructive"
+                        className="size-4 text-status-danger-text"
                         aria-hidden
                       />
                       {t("reports.details.needsReplacement")}
                     </span>
                   }
                   value={facility.assetReplaceCount}
-                  valueClassName="text-destructive"
+                  valueClassName="text-status-danger-text"
                 />
               </div>
             </div>
@@ -611,22 +611,22 @@ function ReportsModuleFooter() {
 function eventPillClass(eventType: string) {
   const t = eventType.toLowerCase();
   if (t.includes("bryllup") || t.includes("wedding")) {
-    return "bg-emerald-50 text-emerald-900";
+    return "bg-status-success-bg text-status-success-text";
   }
   if (t.includes("bedrift") || t.includes("corporate")) {
-    return "bg-blue-50 text-blue-900";
+    return "bg-status-info-bg text-status-info-text";
   }
   if (t.includes("privat") || t.includes("private")) {
-    return "bg-amber-50 text-amber-900";
+    return "bg-status-warning-bg text-status-warning-text";
   }
   return "bg-muted text-muted-foreground";
 }
 
 const BAR_BG = [
-  "bg-emerald-100",
-  "bg-emerald-500",
-  "bg-emerald-400",
-  "bg-emerald-300",
+  "bg-blue-200",
+  "bg-blue-500",
+  "bg-blue-400",
+  "bg-blue-300",
   "bg-success",
 ] as const;
 

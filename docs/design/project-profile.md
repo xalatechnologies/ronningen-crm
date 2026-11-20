@@ -64,7 +64,12 @@ Not yet added: skip link in the portal shell and auth pages.
 | Staff: Priser | Redesigned and released 2026-11-20. |
 | Staff: Dashboard | 12-month chart implemented, **not released**. |
 | Staff: Bookings, Invoices | Shared table and status-filter changes applied. Invoices list is still a wide table on phones (scrolls inside its own region); a card layout is the next step. |
-| Staff: Inquiries, Inventory, Finance, Reports, Settings | Screenshot-checked at desktop width after the shared table change; look consistent. Phone view and difficult states not reviewed. |
+| Staff: Inquiries | Redesigned 2026-11-20 with `StatCard`, `SegmentedFilter`, `StatusBadge` and initials avatars; overdue follow-up shown with an icon, not colour alone. Not yet released. |
+| Staff: Finance | Redesigned 2026-11-20: compact filter card, three `StatCard`s (income green, expense red, result brand), status badges for type, card list on phones. Not yet released. |
+| Staff: Invoices | Redesigned 2026-11-20: summary cards, filter inside the list card, status badges, card list on phones (no sideways scroll). Not yet released. |
+| Staff: Inventory | Redesigned 2026-11-20: 3 summary cards, status as `SegmentedFilter`, condition and insurance as `StatusBadge`, card list on phones. Not yet released. |
+| Staff: Reports | Colours moved to status tokens, lighter KPI tiles. Layout unchanged. Not yet released. |
+| Staff: Settings | Screenshot-checked at desktop width after the shared table change; look consistent. Phone view and difficult states not reviewed. |
 | Staff: Calendar, Notifications, Onboarding | Not reviewed against the standard. |
 | Platform admin | Footer copyright removed; rest not reviewed. Has uncommitted work from earlier. |
 | Auth pages, landing page | Not reviewed. |
@@ -112,6 +117,7 @@ Not remapped: `violet` (used for the inkasso status), `fuchsia`, `purple`. Chart
 | Status tokens `--status-{success,warning,danger,info,neutral}-{bg,border,text,solid}` for light and dark | `src/styles/tokens.css`, mapped to Tailwind as `bg-status-*-bg`, `text-status-*-text`, `border-status-*-border`, `bg-status-*-solid` in `globals.css` | All new status UI |
 | `StatusBadge`, `statusDotClass`, `statusTextClass` | `src/components/ui/status-badge.tsx` | Status pills, dots, bars. Used by booking list, Overnatting, filters |
 | `StatCard` | `src/components/ui/stat-card.tsx` | Summary cards (Overnatting, Kunder) |
+| `ViewSwitch` | `src/components/ui/view-switch.tsx` | List / Calendar switch (Reservasjoner, Forespørsler) |
 | `SegmentedFilter` (now takes `tone`) | `src/components/ui/segmented-filter.tsx` | Status filters |
 | Raw-colour guard | `src/lib/design/raw-colors.test.ts` + `raw-colors.baseline.json` | Fails when a file gets MORE raw hex / rgb values than its baseline. Lower the baseline after cleaning up: `UPDATE_COLOR_BASELINE=1 npx vitest run src/lib/design` |
 
