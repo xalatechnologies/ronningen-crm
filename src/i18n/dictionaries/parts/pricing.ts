@@ -35,7 +35,7 @@ export const pricingNb = {
   mostPopular: "Mest populær",
   priceOnRequest: "Pris etter avtale",
   emptyFeaturesHint:
-    "Legg inn punkter i beskrivelsen (– foran hver linje). Første linje uten – blir undertittel.",
+    "Ingen punkter ennå. Trykk «Rediger» for å legge til hva som er inkludert.",
   emptyServices:
     "Ingen tilleggstjenester. Aktive rader her vises som valgfrie tillegg på Ny booking (navn og pris kan du endre når som helst).",
   tableService: "Tjeneste",
@@ -52,6 +52,21 @@ export const pricingNb = {
   editServiceAria: "Rediger {name}",
   deleteServiceAria: "Slett {name}",
   deleteServiceTitleAttr: "Slett tjeneste",
+  taglineLabel: "Undertittel (valgfritt)",
+  taglinePlaceholder: "F.eks. Perfekt for mindre selskap",
+  featuresLabel: "Dette er inkludert",
+  featurePlaceholder: "F.eks. Lokale med bord og stoler",
+  featuresHint: "Trykk Enter for å legge til neste punkt.",
+  addFeature: "Legg til punkt",
+  removeFeatureAria: "Fjern punkt {number}",
+  showAllFeatures: "Vis alle {count} punkter",
+  showFewerFeatures: "Vis færre",
+  duplicatePackage: "Lag kopi",
+  duplicatePackageAria: "Lag kopi av pakke {name}",
+  copySuffix: "kopi",
+  packagesCount: "{count} pakker",
+  servicesCount: "{count} tilleggstjenester",
+  addPackageHint: "Legg til en ny pakke",
 } as const;
 
 export const pricingEn = {
@@ -91,7 +106,7 @@ export const pricingEn = {
   mostPopular: "Most popular",
   priceOnRequest: "Price on request",
   emptyFeaturesHint:
-    "Add bullet points in the description (– before each line). The first line without – becomes the tagline.",
+    "No points yet. Press “Edit” to add what is included.",
   emptyServices:
     "No add-on services. Active rows here appear as optional extras on New booking (you can change name and price at any time).",
   tableService: "Service",
@@ -108,4 +123,19 @@ export const pricingEn = {
   editServiceAria: "Edit {name}",
   deleteServiceAria: "Delete {name}",
   deleteServiceTitleAttr: "Delete service",
+  taglineLabel: "Tagline (optional)",
+  taglinePlaceholder: "E.g. Perfect for smaller events",
+  featuresLabel: "What is included",
+  featurePlaceholder: "E.g. Venue with tables and chairs",
+  featuresHint: "Press Enter to add the next point.",
+  addFeature: "Add point",
+  removeFeatureAria: "Remove point {number}",
+  showAllFeatures: "Show all {count} points",
+  showFewerFeatures: "Show fewer",
+  duplicatePackage: "Make a copy",
+  duplicatePackageAria: "Make a copy of package {name}",
+  copySuffix: "copy",
+  packagesCount: "{count} packages",
+  servicesCount: "{count} add-on services",
+  addPackageHint: "Add a new package",
 } as const;
