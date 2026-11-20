@@ -104,3 +104,15 @@ Replaced the forest-green palette with the supplied brand-blue / navy / warm-can
 | Neutral | zinc, slate, gray, stone, neutral | `#fbfaf7` ... `#13233a` |
 
 Not remapped: `violet` (used for the inkasso status), `fuchsia`, `purple`. Chart colours in `src/lib/charts/chart-theme.ts` use the same status set. Prefer these families (or the `--rn-*` tokens) for new status UI; do not add raw hex values.
+
+## Shared building blocks added 2026-11-20 (follow-up)
+
+| Piece | Where | Use |
+|---|---|---|
+| Status tokens `--status-{success,warning,danger,info,neutral}-{bg,border,text,solid}` for light and dark | `src/styles/tokens.css`, mapped to Tailwind as `bg-status-*-bg`, `text-status-*-text`, `border-status-*-border`, `bg-status-*-solid` in `globals.css` | All new status UI |
+| `StatusBadge`, `statusDotClass`, `statusTextClass` | `src/components/ui/status-badge.tsx` | Status pills, dots, bars. Used by booking list, Overnatting, filters |
+| `StatCard` | `src/components/ui/stat-card.tsx` | Summary cards (Overnatting, Kunder) |
+| `SegmentedFilter` (now takes `tone`) | `src/components/ui/segmented-filter.tsx` | Status filters |
+| Raw-colour guard | `src/lib/design/raw-colors.test.ts` + `raw-colors.baseline.json` | Fails when a file gets MORE raw hex / rgb values than its baseline. Lower the baseline after cleaning up: `UPDATE_COLOR_BASELINE=1 npx vitest run src/lib/design` |
+
+Migrated so far: booking status badge, Overnatting (badges, dots, summary cards), booking list paid bar, invoice and booking filters, admin support badge, portal wish chip. Still on the old palette-scale classes (`bg-emerald-50` and similar, which work through the scale override): about 30 other files. The guard baseline lists the raw hex values still in the landing page, login and a few components.

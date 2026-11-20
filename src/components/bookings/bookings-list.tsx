@@ -10,6 +10,7 @@ import {
   useBookingsMonthCalendarNavigation,
 } from "@/components/bookings/bookings-month-calendar";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
+import { statusDotClass, statusTextClass } from "@/components/ui/status-badge";
 import { BookingDetailSheet } from "@/components/bookings/booking-detail-sheet";
 import { BookingListContractAction } from "@/components/bookings/booking-list-contract-action";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
@@ -174,9 +175,9 @@ function BookingsFiltersSection({
               onChange={setFilter}
               options={[
                 { key: "all", label: t("common.actions.all"), count: filterCounts.all },
-                { key: "confirmed", label: statusLabel("confirmed", t), count: filterCounts.confirmed, dot: "bg-emerald-500" },
-                { key: "pending", label: statusLabel("pending", t), count: filterCounts.pending, dot: "bg-amber-500" },
-                { key: "cancelled", label: statusLabel("cancelled", t), count: filterCounts.cancelled, dot: "bg-red-500" },
+                { key: "confirmed", label: statusLabel("confirmed", t), count: filterCounts.confirmed, tone: "success" },
+                { key: "pending", label: statusLabel("pending", t), count: filterCounts.pending, tone: "warning" },
+                { key: "cancelled", label: statusLabel("cancelled", t), count: filterCounts.cancelled, tone: "danger" },
               ]}
             />
           </div>
@@ -753,8 +754,8 @@ export function BookingsList({
                                 className={cn(
                                   "h-full rounded-full",
                                   row.paidFraction >= 1
-                                    ? "bg-emerald-600"
-                                    : "bg-amber-500",
+                                    ? statusDotClass("success")
+                                    : statusDotClass("warning"),
                                 )}
                                 style={{
                                   width: `${Math.round(row.paidFraction * 100)}%`,
@@ -765,8 +766,8 @@ export function BookingsList({
                               className={cn(
                                 "bookings-list-row-paid font-bold",
                                 row.paidFraction >= 1
-                                  ? "text-emerald-700"
-                                  : "text-amber-600",
+                                  ? statusTextClass("success")
+                                  : statusTextClass("warning"),
                               )}
                             >
                               {row.paidLabel}

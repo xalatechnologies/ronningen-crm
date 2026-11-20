@@ -9,13 +9,13 @@ import type { WishStatus } from "@/lib/portal/wishlist-rules";
 
 const TONE: Record<WishStatus, string> = {
   draft: "bg-foreground/8 text-muted-foreground",
-  requested: "bg-amber-500/15 text-amber-800 dark:text-amber-300",
-  quoted: "bg-sky-500/15 text-sky-800 dark:text-sky-300",
-  countered: "bg-amber-500/15 text-amber-800 dark:text-amber-300",
-  approved: "bg-success/15 text-success dark:!text-white",
-  declined: "bg-destructive/12 text-destructive",
+  requested: "bg-status-warning-bg text-status-warning-text",
+  quoted: "bg-status-info-bg text-status-info-text",
+  countered: "bg-status-warning-bg text-status-warning-text",
+  approved: "bg-status-success-bg text-status-success-text",
+  declined: "bg-status-danger-bg text-status-danger-text",
   withdrawn: "bg-foreground/8 text-muted-foreground",
-  unavailable: "bg-destructive/12 text-destructive",
+  unavailable: "bg-status-danger-bg text-status-danger-text",
 };
 
 const ICON: Record<WishStatus, LucideIcon> = {

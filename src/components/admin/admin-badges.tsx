@@ -60,7 +60,7 @@ export function AdminSupportStatusBadge({
       : status;
   const tone =
     status === "open"
-      ? "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300"
+      ? "border-status-warning-border bg-status-warning-bg text-status-warning-text"
       : status === "waiting"
         ? "border-foreground/15 bg-muted/50 text-muted-foreground"
         : "border-foreground/15 bg-muted/40 text-muted-foreground";

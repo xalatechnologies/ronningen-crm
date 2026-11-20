@@ -38,15 +38,15 @@ export function InvoiceSegmentFilter({
     const count = countInvoiceFilter(rows, spec.id, todayYmd);
     const visible = spec.id === "all" || count > 0 || filter === spec.id;
     if (!visible) return [];
-    const dot =
+    const tone =
       spec.id === "overdue"
-        ? "bg-red-500"
+        ? ("danger" as const)
         : spec.id === "partial"
-          ? "bg-amber-500"
+          ? ("warning" as const)
           : spec.id === "inkasso"
-            ? "bg-violet-500"
+            ? ("info" as const)
             : undefined;
-    return [{ key: spec.id, label: t(FILTER_LABEL_KEYS[spec.id]), count, dot }];
+    return [{ key: spec.id, label: t(FILTER_LABEL_KEYS[spec.id]), count, tone }];
   });
 
   return (
