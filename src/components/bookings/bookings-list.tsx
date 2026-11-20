@@ -10,6 +10,7 @@ import {
   useBookingsMonthCalendarNavigation,
 } from "@/components/bookings/bookings-month-calendar";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
+import { ViewSwitch } from "@/components/ui/view-switch";
 import { statusDotClass, statusTextClass } from "@/components/ui/status-badge";
 import { BookingDetailSheet } from "@/components/bookings/booking-detail-sheet";
 import { BookingListContractAction } from "@/components/bookings/booking-list-contract-action";
@@ -31,10 +32,8 @@ import { APP_LIST_ROW_DATE, APP_TABLE_HEAD, APP_TABLE_HEAD_BAR } from "@/lib/tab
 import {
   ArrowDownRight,
   ArrowUpRight,
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
-  List,
   Phone,
   Plus,
   RotateCcw,
@@ -321,44 +320,13 @@ function FindBookingsCardHeader({
           title={t("bookings.title")}
           actions={
           <div className="flex flex-wrap items-center gap-3 lg:shrink-0">
-            <div
-              className="inline-flex rounded-xl bg-muted p-1"
-              role="tablist"
-              aria-label={t("bookings.switchViewAria")}
-            >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={view === "list"}
-                onClick={() => setView("list")}
-                className={cn(
-                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-app-sm font-semibold transition-colors outline-none select-none md:min-h-12 md:px-6 md:text-app-base",
-                  "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
-                  view === "list"
-                    ? "bg-success !text-white [&_svg]:!text-white"
-                    : "text-rn-text-body hover:bg-card",
-                )}
-              >
-                <List className="size-5 shrink-0 opacity-90" aria-hidden />
-                {t("bookings.list")}
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={view === "calendar"}
-                onClick={() => setView("calendar")}
-                className={cn(
-                  "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-app-sm font-semibold transition-colors outline-none select-none md:min-h-12 md:px-6 md:text-app-base",
-                  "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
-                  view === "calendar"
-                    ? "bg-success !text-white [&_svg]:!text-white"
-                    : "text-rn-text-body hover:bg-card",
-                )}
-              >
-                <CalendarDays className="size-5 shrink-0 opacity-90" aria-hidden />
-                {t("bookings.calendar")}
-              </button>
-            </div>
+            <ViewSwitch
+              value={view}
+              onChange={setView}
+              listLabel={t("bookings.list")}
+              calendarLabel={t("bookings.calendar")}
+              ariaLabel={t("bookings.switchViewAria")}
+            />
             {canManageBookings ? (
               <Link
                 href="/app/bookings/new"

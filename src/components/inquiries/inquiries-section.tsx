@@ -11,19 +11,11 @@ import {
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePickerField } from "@/components/ui/date-picker-field";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
+import { StatCard } from "@/components/ui/stat-card";
+import { ViewSwitch } from "@/components/ui/view-switch";
+import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
+import { CustomerAvatar } from "@/components/customers/customer-avatar";
 import { usePageSearch } from "@/providers/page-search-provider";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/i18n/client";
@@ -40,7 +32,19 @@ import {
 } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { isBefore } from "date-fns";
-import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Inbox, ListFilter, Mail, Phone, Plus } from "lucide-react";
+import {
+  AlarmClock,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Inbox,
+  Mail,
+  Phone,
+  Plus,
+  RotateCcw,
+  Sparkles,
+  TriangleAlert,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -127,22 +131,14 @@ function isOverdueFollowUp(row: InquiryListRow, now = new Date()): boolean {
   return !isBefore(now, d);
 }
 
-function statusBadgeClass(status: BookingInquiryStatus): string {
-  switch (status) {
-    case "converted":
-      return "bg-success/15 text-success";
-    case "lost":
-      return "bg-muted text-muted-foreground";
-    case "contacted":
-      return "bg-sky-50 text-sky-900 dark:bg-sky-950/40 dark:text-sky-200";
-    case "quote_sent":
-      return "bg-violet-50 text-violet-900 dark:bg-violet-950/40 dark:text-violet-200";
-    case "awaiting_customer":
-      return "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200";
-    default:
-      return "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200";
-  }
-}
+const INQUIRY_TONE: Record<BookingInquiryStatus, StatusTone> = {
+  new: "info",
+  contacted: "neutral",
+  quote_sent: "warning",
+  awaiting_customer: "warning",
+  lost: "neutral",
+  converted: "success",
+};
 
 export type InquiriesSectionProps = {
   inquiries: InquiryListRow[];
@@ -228,18 +224,6 @@ export function InquiriesSection({
     dateFrom !== "" ||
     dateTo !== "";
 
-  const menuFilterCount =
-    (statusFilter !== "all" ? 1 : 0) + (dueOnly ? 1 : 0);
-
-  const filterButtonLabel = useMemo(() => {
-    if (statusFilter !== "all" && dueOnly) return t("inquiries.filterActive");
-    if (statusFilter !== "all") {
-      return inquiryStatusLabel(statusFilter, t);
-    }
-    if (dueOnly) return t("inquiries.overdueFollowUp");
-    return t("common.actions.filter");
-  }, [statusFilter, dueOnly, t]);
-
   const filtered = useMemo(() => {
     return activeInquiries.filter((row) => {
       if (statusFilter !== "all" && row.status !== statusFilter) return false;
@@ -297,19 +281,13 @@ export function InquiriesSection({
               actions={
                 <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
                   {!loadError ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="cta"
-                      className="w-full gap-2 rounded-xl border border-foreground/30 bg-card px-4 font-semibold text-foreground shadow-none hover:border-foreground/50 hover:bg-muted sm:w-auto md:px-8"
-                      aria-expanded={showCalendarView}
-                      onClick={() => setShowCalendarView((v) => !v)}
-                    >
-                      <Calendar className="size-5 shrink-0" aria-hidden />
-                      {showCalendarView
-                        ? t("inquiries.showList")
-                        : t("inquiries.followUpCalendar")}
-                    </Button>
+                    <ViewSwitch
+                      value={showCalendarView ? "calendar" : "list"}
+                      onChange={(next) => setShowCalendarView(next === "calendar")}
+                      listLabel={t("bookings.list")}
+                      calendarLabel={t("bookings.calendar")}
+                      ariaLabel={t("bookings.switchViewAria")}
+                    />
                   ) : null}
                   {canManageInquiries ? (
                     <Link
@@ -339,133 +317,106 @@ export function InquiriesSection({
 
         {!loadError ? (
           <section
-            className={cn("inquiries-list-filters px-4 py-5 sm:px-6 md:px-8 md:py-6", cardClass)}
+            className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4"
+            aria-label={t("inquiries.title")}
+          >
+            <StatCard icon={Inbox} label={t("inquiries.title")} value={activeInquiries.length} />
+            <StatCard
+              icon={Sparkles}
+              label={inquiryStatusLabel("new", t)}
+              value={filterCounts.new}
+            />
+            <StatCard
+              icon={FileText}
+              label={inquiryStatusLabel("quote_sent", t)}
+              value={filterCounts.quote_sent}
+            />
+            <StatCard
+              icon={AlarmClock}
+              label={t("inquiries.overdueFollowUp")}
+              value={overdueCount}
+              className={cn(overdueCount > 0 && "ring-status-danger-border")}
+            />
+          </section>
+        ) : null}
+
+        {!loadError ? (
+          <section
+            className={cn("inquiries-list-filters flex flex-col gap-4 px-4 py-5 sm:px-6", cardClass)}
             aria-label={t("inquiries.searchFilterAria")}
           >
-            <div className="flex min-w-0 flex-col gap-4">
-              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
-                <div className="min-w-0">
-                  <Label htmlFor="inquiries-date-from" className={filterEyebrowClass}>
-                    {t("inquiries.dateFrom")}
-                  </Label>
-                  <DatePickerField
-                    id="inquiries-date-from"
-                    value={dateFrom}
-                    onChange={setDateFrom}
-                    maxYmd={dateTo || undefined}
-                    variant="toolbar"
-                    className={dateFieldClass}
-                  />
-                </div>
-                <div className="min-w-0">
-                  <Label htmlFor="inquiries-date-to" className={filterEyebrowClass}>
-                    {t("inquiries.dateTo")}
-                  </Label>
-                  <DatePickerField
-                    id="inquiries-date-to"
-                    value={dateTo}
-                    onChange={setDateTo}
-                    minYmd={dateFrom || undefined}
-                    variant="toolbar"
-                    className={dateFieldClass}
-                  />
-                </div>
-                <div className="min-w-0 sm:col-span-2 lg:col-span-1">
-                <p className={cn(filterEyebrowClass, "hidden lg:block")} aria-hidden>
-                  {"\u00a0"}
-                </p>
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    className={cn(
-                      buttonVariants({ variant: "outline" }),
-                      "h-11 min-h-11 w-full gap-2 rounded-xl border border-foreground/25 px-4 font-heading text-app-sm font-semibold shadow-none sm:h-12 sm:min-h-12 sm:text-app-base lg:min-w-[11.5rem]",
-                      menuFilterCount > 0 &&
-                        "border-success/50 bg-success/5 text-foreground",
-                    )}
-                    aria-label={t("inquiries.openFilterMenu")}
-                  >
-                    <ListFilter className="size-4 shrink-0" aria-hidden />
-                    <span>{filterButtonLabel}</span>
-                    {menuFilterCount > 0 ? (
-                      <span className="inquiries-list-filter-count inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-success px-1.5 py-0.5 font-bold text-white tabular-nums">
-                        {menuFilterCount}
-                      </span>
-                    ) : null}
-                    <ChevronDown className="size-4 shrink-0 opacity-60" aria-hidden />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    sideOffset={8}
-                    className="min-w-56 rounded-xl border border-foreground/10 p-2 shadow-lg"
-                  >
-                    <DropdownMenuGroup>
-                      <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                        {t("common.fields.status")}
-                      </DropdownMenuLabel>
-                      <DropdownMenuRadioGroup
-                        value={statusFilter}
-                        onValueChange={(value) => {
-                          if (!value) return;
-                          setStatusFilter(value as InquiryStatusFilter);
-                        }}
-                      >
-                        {(
-                          [
-                            "all",
-                            "new",
-                            "contacted",
-                            "quote_sent",
-                            "awaiting_customer",
-                            "lost",
-                          ] as const
-                        ).map((key) => (
-                          <DropdownMenuRadioItem
-                            key={key}
-                            value={key}
-                            className="font-medium"
-                          >
-                            {key === "all"
-                              ? t("common.actions.all")
-                              : inquiryStatusLabel(key, t)}
-                            <DropdownMenuShortcut>
-                              {filterCounts[key]}
-                            </DropdownMenuShortcut>
-                          </DropdownMenuRadioItem>
-                        ))}
-                      </DropdownMenuRadioGroup>
-                    </DropdownMenuGroup>
+            <div className="flex min-w-0 flex-wrap items-center gap-3">
+              <SegmentedFilter
+                ariaLabel={t("common.fields.status")}
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={[
+                  { key: "all", label: t("common.actions.all"), count: filterCounts.all },
+                  { key: "new", label: inquiryStatusLabel("new", t), count: filterCounts.new, tone: "info" },
+                  { key: "contacted", label: inquiryStatusLabel("contacted", t), count: filterCounts.contacted, tone: "neutral" },
+                  { key: "quote_sent", label: inquiryStatusLabel("quote_sent", t), count: filterCounts.quote_sent, tone: "warning" },
+                  { key: "awaiting_customer", label: inquiryStatusLabel("awaiting_customer", t), count: filterCounts.awaiting_customer, tone: "warning" },
+                  { key: "lost", label: inquiryStatusLabel("lost", t), count: filterCounts.lost, tone: "neutral" },
+                ]}
+              />
+              <button
+                type="button"
+                aria-pressed={dueOnly}
+                onClick={() => setDueOnly((v) => !v)}
+                className={cn(
+                  "inline-flex h-10 items-center gap-2 rounded-xl border px-3.5 text-app-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-success/40",
+                  dueOnly
+                    ? "border-status-danger-border bg-status-danger-bg text-status-danger-text"
+                    : "border-foreground/25 bg-card text-foreground hover:bg-muted",
+                )}
+              >
+                <AlarmClock className="size-4 shrink-0" aria-hidden />
+                {t("inquiries.overdueFollowUp")}
+                <span className="tabular-nums opacity-70">{overdueCount}</span>
+              </button>
+            </div>
 
-                    <DropdownMenuSeparator className="my-2" />
-
-                    <DropdownMenuCheckboxItem
-                      checked={dueOnly}
-                      onCheckedChange={(checked) => setDueOnly(checked === true)}
-                      className="font-medium"
-                    >
-                      {t("inquiries.overdueFollowUp")}
-                      <DropdownMenuShortcut>{overdueCount}</DropdownMenuShortcut>
-                    </DropdownMenuCheckboxItem>
-
-                    {hasActiveFilters ? (
-                      <>
-                        <DropdownMenuSeparator className="my-2" />
-                        <DropdownMenuItem
-                          variant="destructive"
-                          className="font-medium"
-                          onSelect={() => resetFilters()}
-                        >
-                          {t("inquiries.resetFilters")}
-                        </DropdownMenuItem>
-                      </>
-                    ) : null}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                </div>
+            <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,1fr))_auto] lg:items-end">
+              <div className="min-w-0">
+                <Label htmlFor="inquiries-date-from" className={filterEyebrowClass}>
+                  {t("inquiries.dateFrom")}
+                </Label>
+                <DatePickerField
+                  id="inquiries-date-from"
+                  value={dateFrom}
+                  onChange={setDateFrom}
+                  maxYmd={dateTo || undefined}
+                  variant="toolbar"
+                  className={dateFieldClass}
+                />
               </div>
+              <div className="min-w-0">
+                <Label htmlFor="inquiries-date-to" className={filterEyebrowClass}>
+                  {t("inquiries.dateTo")}
+                </Label>
+                <DatePickerField
+                  id="inquiries-date-to"
+                  value={dateTo}
+                  onChange={setDateTo}
+                  minYmd={dateFrom || undefined}
+                  variant="toolbar"
+                  className={dateFieldClass}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={!hasActiveFilters}
+                className="h-11 gap-2 rounded-xl px-4 font-heading text-app-sm font-semibold sm:col-span-2 sm:h-12 lg:col-span-1"
+                onClick={resetFilters}
+              >
+                <RotateCcw className="size-4 shrink-0" aria-hidden />
+                {t("inquiries.resetFilters")}
+              </Button>
             </div>
 
             {hasActiveFilters ? (
-              <p className="mt-2 text-app-sm text-muted-foreground">
+              <p className="text-app-sm text-muted-foreground">
                 {t("inquiries.showingCount", {
                   shown: filtered.length,
                   total: activeInquiries.length,
@@ -486,6 +437,18 @@ export function InquiriesSection({
                 ? t("inquiries.emptyNone")
                 : t("inquiries.emptyFiltered")}
             </p>
+            {canManageInquiries && activeInquiries.length === 0 ? (
+              <Link
+                href="/app/inquiries/new"
+                className={cn(
+                  buttonVariants({ variant: "success", size: "cta" }),
+                  "inline-flex items-center gap-2 rounded-xl shadow-none",
+                )}
+              >
+                <Plus className="size-4" aria-hidden />
+                {t("inquiries.new")}
+              </Link>
+            ) : null}
           </div>
         ) : null}
 
@@ -532,14 +495,16 @@ export function InquiriesSection({
                   key={row.id}
                   type="button"
                   className={cn(
-                    "grid w-full grid-cols-1 gap-3 px-4 py-4 text-left font-inherit text-foreground transition-colors sm:px-6 md:grid-cols-12 md:items-center md:gap-4 md:px-8 md:py-5",
+                    "grid w-full grid-cols-1 gap-3 px-4 py-3.5 text-left font-inherit text-foreground transition-colors sm:px-6 md:grid-cols-12 md:items-center md:gap-4",
                     "cursor-pointer border-0 bg-transparent outline-none hover:bg-rn-surface-row-hover",
                     "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-inset",
                   )}
                   onClick={() => openRow(row)}
                   aria-label={t("inquiries.openAria", { name: row.customerName })}
                 >
-                  <div className="min-w-0 md:col-span-3">
+                  <div className="flex min-w-0 items-start gap-3 md:col-span-3">
+                    <CustomerAvatar name={row.customerName} />
+                    <div className="min-w-0">
                     <h4 className={inquiriesTableCellPrimaryClass}>
                       {row.customerName}
                     </h4>
@@ -570,6 +535,7 @@ export function InquiriesSection({
                       {" · "}
                       {formatInquiryPreferredDate(row)}
                     </p>
+                    </div>
                   </div>
                   <div
                     className={cn(
@@ -588,14 +554,9 @@ export function InquiriesSection({
                     {formatInquiryPreferredDate(row)}
                   </div>
                   <div className="flex flex-wrap items-center gap-2 md:col-span-2">
-                    <span
-                      className={cn(
-                        "inquiries-list-status-pill inline-flex rounded-full px-3 py-1 font-semibold",
-                        statusBadgeClass(row.status),
-                      )}
-                    >
+                    <StatusBadge tone={INQUIRY_TONE[row.status]} className="inquiries-list-status-pill">
                       {inquiryStatusLabel(row.status, t)}
-                    </span>
+                    </StatusBadge>
                   </div>
                   <div className="grid grid-cols-2 gap-3 md:col-span-3 md:grid-cols-2">
                     <div className="min-w-0">
@@ -605,9 +566,10 @@ export function InquiriesSection({
                       <p
                         className={cn(
                           inquiriesTableCellDateClass,
-                          isOverdueFollowUp(row) && "font-semibold text-destructive",
+                          isOverdueFollowUp(row) && "inline-flex items-center gap-1.5 font-semibold text-status-danger-text",
                         )}
                       >
+                        {isOverdueFollowUp(row) ? <TriangleAlert className="size-4 shrink-0" aria-hidden /> : null}
                         {row.nextFollowUpAtIso
                           ? formatAppDateTime(row.nextFollowUpAtIso, locale)
                           : "—"}
@@ -632,7 +594,7 @@ export function InquiriesSection({
               ))}
             </div>
             {filtered.length > TENANT_LIST_PAGE_SIZE ? (
-              <div className="flex flex-col items-stretch justify-between gap-4 border-t border-foreground/8 bg-muted/40 px-6 py-5 sm:flex-row sm:items-center sm:px-8 md:py-6">
+              <div className="flex flex-col items-stretch justify-between gap-4 border-t border-foreground/8 px-4 py-4 sm:flex-row sm:items-center sm:px-6">
                 <span className="inquiries-list-footer-caption font-medium text-rn-footer-text">
                   {t("inquiries.footer.showingRange", {
                     from: (currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1,

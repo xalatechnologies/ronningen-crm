@@ -21,6 +21,9 @@ import {
   toIdNameOptions,
 } from "@/components/ui/form-select";
 import { PropertySelectField } from "@/components/properties/property-select-field";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
+import { StatCard } from "@/components/ui/stat-card";
+import { StatusBadge, statusTextClass, type StatusTone } from "@/components/ui/status-badge";
 import {
   Table,
   TableBody,
@@ -52,11 +55,13 @@ import {
   Coffee,
   Download,
   Package,
+  ShieldAlert,
+  ShieldCheck,
   Pencil,
   Plus,
+  RotateCcw,
   Snowflake,
   Trash2,
-  Wrench,
   Wind,
 } from "lucide-react";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
@@ -74,14 +79,8 @@ import { toast } from "sonner";
 
 import type { AssetListItem } from "./types";
 
-const assetsTableHeadClass = cn(
-  "assets-table-head",
-  APP_TABLE_HEAD_CELL,
-  "px-4 md:px-5",
-);
-const assetsTableCellClass = "px-4 py-5 md:px-5 md:py-6";
-const assetsKpiCompactStatClass =
-  "flex min-w-0 flex-col gap-1.5 rounded-xl bg-muted/50 px-4 py-3 ring-1 ring-foreground/10 sm:gap-2 sm:px-4 sm:py-3.5";
+const assetsTableHeadClass = cn("assets-table-head", APP_TABLE_HEAD_CELL);
+const assetsTableCellClass = "px-4 py-3.5 sm:px-6";
 
 export type AssetsSectionProps = {
   assets: AssetListItem[];
@@ -161,63 +160,38 @@ function AssetsKpiSummary({
   const unitsLabel =
     stats.totalUnits === 1 ? t("assets.unitWord") : t("assets.unitsWord");
 
-  const statTiles = [
-    { label: t("assets.statusOperational"), value: stats.counts.operational },
-    { label: t("assets.statusMaintenance"), value: stats.counts.maintenance },
-    { label: t("assets.statusReplace"), value: stats.counts.replace },
-    { label: t("assets.insuredValue"), value: formatCurrency(stats.insuredValue) },
-    {
-      label: t("assets.uninsuredValue"),
-      value: formatCurrency(stats.uninsuredValue),
-      highlight: stats.uninsuredValue > 0,
-    },
-  ] as const;
-
   return (
     <section
-      className="assets-kpi-summary overflow-hidden rounded-2xl bg-card px-5 py-5 ring-1 ring-foreground/8 sm:px-6 sm:py-6 md:py-7 lg:px-8"
+      className="assets-kpi-summary grid grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4"
       aria-label={t("assets.kpiAria")}
     >
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10 xl:gap-12">
-        <div className="min-w-0 shrink-0 lg:max-w-sm">
-          <p className="dashboard-kpi-label">{t("assets.kpiTotal")}</p>
-          <p className="dashboard-kpi-value mt-2 text-success">
-            {formatCurrency(stats.totalValue)}
+      <StatCard
+        variant="brand"
+        icon={Package}
+        label={t("assets.kpiTotal")}
+        value={formatCurrency(stats.totalValue)}
+        caption={`${stats.rowCount} ${entriesLabel} · ${stats.totalUnits} ${unitsLabel}`}
+      >
+        {hasActiveFilters ? (
+          <p className="assets-filter-hint mt-3 border-t border-white/20 pt-3 text-app-xs text-white/85">
+            <span className="font-semibold text-white">{t("assets.filteredLabel")}</span>{" "}
+            {formatCurrency(filteredStats.totalValue)} · {filteredStats.totalUnits} {t("assets.unitsWord")} (
+            {filteredCount} {filteredCount === 1 ? t("assets.lineWord") : t("assets.linesWord")})
           </p>
-          <p className="dashboard-kpi-caption mt-2 text-muted-foreground">
-            {stats.rowCount} {entriesLabel} · {stats.totalUnits} {unitsLabel}
-          </p>
-        </div>
-
-        <div className="grid min-w-0 flex-1 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-3 xl:gap-4">
-          {statTiles.map((tile) => (
-            <div key={tile.label} className={assetsKpiCompactStatClass}>
-              <p className="text-app-xs font-medium leading-snug text-muted-foreground sm:text-app-sm">
-                {tile.label}
-              </p>
-              <p
-                className={cn(
-                  "font-heading text-xl font-bold tabular-nums tracking-tight text-foreground sm:text-2xl",
-                  "highlight" in tile && tile.highlight
-                    ? "text-amber-900 dark:text-amber-200"
-                    : undefined,
-                )}
-              >
-                {tile.value}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {hasActiveFilters ? (
-        <p className="assets-filter-hint mt-5 border-t border-foreground/10 pt-5 text-muted-foreground lg:mt-6">
-          <span className="font-semibold text-foreground">{t("assets.filteredLabel")}</span>{" "}
-          {formatCurrency(filteredStats.totalValue)} · {filteredStats.totalUnits}{" "}
-          {t("assets.unitsWord")} ({filteredCount}{" "}
-          {filteredCount === 1 ? t("assets.lineWord") : t("assets.linesWord")})
-        </p>
-      ) : null}
+        ) : null}
+      </StatCard>
+      <StatCard
+        icon={ShieldCheck}
+        label={t("assets.insuredValue")}
+        value={formatCurrency(stats.insuredValue)}
+        valueClassName={statusTextClass("success")}
+      />
+      <StatCard
+        icon={ShieldAlert}
+        label={t("assets.uninsuredValue")}
+        value={formatCurrency(stats.uninsuredValue)}
+        valueClassName={stats.uninsuredValue > 0 ? statusTextClass("warning") : undefined}
+      />
     </section>
   );
 }
@@ -287,14 +261,18 @@ function csvEscape(s: string) {
   return s;
 }
 
-function conditionPillClass(condition: string | null) {
+function conditionTone(condition: string | null): StatusTone {
   const b = assetStatusBucket(condition);
-  if (b === "operational")
-    return "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200";
-  if (b === "maintenance")
-    return "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200";
-  return "bg-destructive/15 text-destructive";
+  if (b === "operational") return "success";
+  if (b === "maintenance") return "warning";
+  return "danger";
 }
+
+const INSURANCE_TONE: Record<"ok" | "warn" | "bad", StatusTone> = {
+  ok: "success",
+  warn: "warning",
+  bad: "danger",
+};
 
 function AssetFormFields({
   properties,
@@ -760,11 +738,11 @@ export function AssetsSection({
 
         {!loadError && properties.length === 0 ? (
           <div role="status">
-            <div className="assets-setup-hint rounded-xl bg-amber-500/10 px-4 py-3 text-amber-950 dark:text-amber-50">
+            <div className="assets-setup-hint rounded-xl border border-status-warning-border bg-status-warning-bg px-4 py-3 text-status-warning-text">
               {t("assets.noVenuesHint")}{" "}
               <Link
                 href="/app/settings/lokaler"
-                className="font-semibold text-amber-950 underline underline-offset-2 dark:text-amber-50"
+                className="font-semibold underline underline-offset-2"
               >
                 {t("assets.registerVenuesLink")}
               </Link>{" "}
@@ -785,93 +763,76 @@ export function AssetsSection({
         ) : null}
 
         <div className="min-w-0 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
-          <div className="border-b border-foreground/8 px-4 py-4 sm:px-6 md:px-8">
-          <div className="flex min-h-12 flex-nowrap items-center gap-2 overflow-x-auto sm:gap-3 md:min-h-14 md:gap-4">
-            {assets.length === 0 || hasActiveFilters ? (
-              <div className="flex shrink-0 items-center pr-1">
+          <div className="flex flex-col gap-3 border-b border-foreground/8 px-4 py-4 sm:px-6">
+            <div className="flex min-w-0 flex-wrap items-center gap-3">
+              <div className="relative w-full sm:w-60">
+                <Building2
+                  className="pointer-events-none absolute top-1/2 left-4 z-10 size-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden
+                />
+                <FormSelect
+                  value={propertyId}
+                  onValueChange={(v) => {
+                    setPropertyId(v);
+                    setPage(1);
+                  }}
+                  aria-label={t("assets.filterVenueAria")}
+                  className="assets-filter-select h-11 min-h-11 rounded-xl border border-foreground/25 py-0 pl-11 shadow-none"
+                  placeholder={t("assets.allVenues")}
+                  options={toIdNameOptions(properties)}
+                />
+              </div>
+              <SegmentedFilter
+                ariaLabel={t("assets.filterConditionAria")}
+                value={statusFilter}
+                onChange={(v) => {
+                  setStatusFilter(v);
+                  setPage(1);
+                }}
+                options={[
+                  { key: "all", label: statusFilterLabel("all", t), count: stats.rowCount },
+                  { key: "operational", label: statusFilterLabel("operational", t), count: stats.counts.operational, tone: "success" },
+                  { key: "maintenance", label: statusFilterLabel("maintenance", t), count: stats.counts.maintenance, tone: "warning" },
+                  { key: "replace", label: statusFilterLabel("replace", t), count: stats.counts.replace, tone: "danger" },
+                ]}
+              />
+              <div className="ml-auto flex shrink-0 items-center gap-2">
                 {assets.length === 0 ? (
-                  <span className="assets-toolbar-meta text-muted-foreground whitespace-nowrap">
-                    {t("assets.noData")}
-                  </span>
-                ) : (
+                  <span className="assets-toolbar-meta whitespace-nowrap text-muted-foreground">{t("assets.noData")}</span>
+                ) : hasActiveFilters ? (
                   <span
-                    className="assets-toolbar-meta tabular-nums text-muted-foreground whitespace-nowrap"
+                    className="assets-toolbar-meta whitespace-nowrap tabular-nums text-muted-foreground"
                     title={t("assets.visibleOfTotal")}
                   >
                     {filtered.length}/{assets.length}
                   </span>
-                )}
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="assets-toolbar-btn h-11 shrink-0 gap-2 rounded-xl border border-foreground/30 bg-card px-3.5 font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
+                  disabled={filtered.length === 0}
+                  onClick={() => downloadAssetsCsv(filtered, t)}
+                  aria-label={t("assets.downloadCsvAria")}
+                  title={t("assets.downloadCsvTitle")}
+                >
+                  <Download className="size-4 shrink-0" aria-hidden />
+                  CSV
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="assets-toolbar-btn h-11 shrink-0 gap-2 rounded-xl px-3.5 font-semibold"
+                  disabled={!hasActiveFilters}
+                  title={hasActiveFilters ? t("assets.clearFilters") : t("assets.noActiveFilters")}
+                  onClick={resetFilters}
+                >
+                  <RotateCcw className="size-4" aria-hidden />
+                  {t("assets.reset")}
+                </Button>
               </div>
-            ) : null}
-
-            <div className="relative w-48 shrink-0 sm:w-56 md:w-60">
-              <Building2
-                className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground md:left-5"
-                aria-hidden
-              />
-              <FormSelect
-                value={propertyId}
-                onValueChange={(v) => {
-                  setPropertyId(v);
-                  setPage(1);
-                }}
-                aria-label={t("assets.filterVenueAria")}
-                className="assets-filter-select h-12 min-h-12 rounded-xl border border-foreground/25 py-0 pl-12 shadow-none md:h-14 md:min-h-14 md:pl-14"
-                placeholder={t("assets.allVenues")}
-                options={toIdNameOptions(properties)}
-              />
-            </div>
-
-            <div className="relative w-36 shrink-0 sm:w-44">
-              <Wrench
-                className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground md:left-5"
-                aria-hidden
-              />
-              <FormSelect
-                value={statusFilter}
-                onValueChange={(v) => {
-                  setStatusFilter(v as "all" | AssetStatusBucket);
-                  setPage(1);
-                }}
-                aria-label={t("assets.filterConditionAria")}
-                className="assets-filter-select h-12 min-h-12 rounded-xl border border-foreground/25 py-0 pl-12 shadow-none md:h-14 md:min-h-14 md:pl-14"
-                options={STATUS_FILTER_IDS.map((id) => ({
-                  value: id,
-                  label: statusFilterLabel(id, t),
-                }))}
-              />
-            </div>
-
-            <div className="ml-auto flex shrink-0 items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="assets-toolbar-btn h-12 min-h-12 shrink-0 gap-2 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted disabled:border-foreground/15 px-3 font-semibold sm:px-4 md:h-14 md:min-h-14 md:px-5"
-                disabled={filtered.length === 0}
-                onClick={() => downloadAssetsCsv(filtered, t)}
-                aria-label={t("assets.downloadCsvAria")}
-                title={t("assets.downloadCsvTitle")}
-              >
-                <Download className="size-4 shrink-0 sm:size-5" aria-hidden />
-                CSV
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="assets-toolbar-btn h-12 min-h-12 shrink-0 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted disabled:border-foreground/15 px-4 font-semibold md:h-14 md:min-h-14 md:px-5"
-                disabled={!hasActiveFilters}
-                title={
-                  hasActiveFilters
-                    ? t("assets.clearFilters")
-                    : t("assets.noActiveFilters")
-                }
-                onClick={resetFilters}
-              >
-                {t("assets.reset")}
-              </Button>
             </div>
           </div>
-        </div>
 
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-4 px-6 py-16 text-center md:gap-5 md:px-8 md:py-20">
@@ -911,155 +872,152 @@ export function AssetsSection({
             </p>
           </div>
         ) : (
-          <Table className="min-w-[920px]">
-            <TableHeader>
-              <TableRow className="border-0 bg-muted/60 hover:bg-muted/60">
-                <TableHead className={assetsTableHeadClass}>{t("common.fields.name")}</TableHead>
-                <TableHead className={assetsTableHeadClass}>{t("finance.filterVenue")}</TableHead>
-                <TableHead
-                  className={cn(assetsTableHeadClass, "text-center")}
-                >
-                  {t("assets.tableQuantity")}
-                </TableHead>
-                <TableHead className={assetsTableHeadClass}>{t("assets.tableValue")}</TableHead>
-                <TableHead className={assetsTableHeadClass}>{t("assets.tableCondition")}</TableHead>
-                <TableHead className={assetsTableHeadClass}>
-                  {t("assets.tableInsurance")}
-                </TableHead>
-                <TableHead
-                  className={cn(
-                    "min-w-[5.5rem] px-3 py-2.5 text-right sm:min-w-28 md:px-5",
-                    assetsTableHeadClass,
-                  )}
-                >
-                  <span className="sr-only">{t("assets.editOrDelete")}</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-0 bg-muted/50 hover:bg-muted/50">
+                    <TableHead className={assetsTableHeadClass}>{t("common.fields.name")}</TableHead>
+                    <TableHead className={assetsTableHeadClass}>{t("finance.filterVenue")}</TableHead>
+                    <TableHead className={cn(assetsTableHeadClass, "text-center")}>
+                      {t("assets.tableQuantity")}
+                    </TableHead>
+                    <TableHead className={cn(assetsTableHeadClass, "text-right")}>{t("assets.tableValue")}</TableHead>
+                    <TableHead className={assetsTableHeadClass}>{t("assets.tableCondition")}</TableHead>
+                    <TableHead className={assetsTableHeadClass}>{t("assets.tableInsurance")}</TableHead>
+                    <TableHead className="min-w-24 px-3 py-2.5 text-right">
+                      <span className="sr-only">{t("assets.editOrDelete")}</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pageRows.map((a) => {
+                    const Icon = assetIconForName(a.name);
+                    const ins = insurancePresentation(a.insurance_status, t);
+                    return (
+                      <TableRow
+                        key={a.id}
+                        onClick={() => {
+                          if (canEdit) setDialog({ open: true, row: a });
+                        }}
+                        className={cn("border-foreground/6 hover:bg-muted/50", canEdit && "cursor-pointer")}
+                      >
+                        <TableCell className={assetsTableCellClass}>
+                          <div className="flex items-center gap-3">
+                            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-rn-text-heading">
+                              <Icon className="size-5" aria-hidden />
+                            </div>
+                            <span className={cn("assets-row-name", APP_DATA_PRIMARY)}>{a.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className={cn(assetsTableCellClass, APP_DATA_BODY, "assets-row-meta")}>
+                          {a.propertyName ?? "—"}
+                        </TableCell>
+                        <TableCell className={cn(assetsTableCellClass, APP_DATA_BODY, "assets-row-qty text-center tabular-nums")}>
+                          {a.quantity}
+                        </TableCell>
+                        <TableCell className={cn(assetsTableCellClass, "assets-row-value text-right font-semibold tabular-nums")}>
+                          {formatCurrency(Number(a.value))}
+                        </TableCell>
+                        <TableCell className={assetsTableCellClass}>
+                          <StatusBadge tone={conditionTone(a.condition)} className="assets-condition-pill">
+                            {a.condition?.trim() || t("assets.conditionNotSet")}
+                          </StatusBadge>
+                        </TableCell>
+                        <TableCell className={assetsTableCellClass}>
+                          <StatusBadge tone={INSURANCE_TONE[ins.tone]} className="assets-insurance-pill">
+                            {ins.safeLabel}
+                          </StatusBadge>
+                        </TableCell>
+                        <TableCell className="min-w-24 px-2 py-3.5 text-right sm:px-3" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-0.5">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              disabled={!canEdit}
+                              className="size-10 shrink-0 rounded-lg text-muted-foreground hover:text-foreground disabled:opacity-40"
+                              aria-label={t("assets.editAria", { name: a.name })}
+                              onClick={() => setDialog({ open: true, row: a })}
+                            >
+                              <Pencil className="size-4" aria-hidden />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              disabled={!canEdit}
+                              className="size-10 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
+                              aria-label={t("assets.deleteAria", { name: a.name })}
+                              onClick={() => setDeleteTarget({ id: a.id, name: a.name })}
+                            >
+                              <Trash2 className="size-4" aria-hidden />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+
+            <ul className="divide-y divide-foreground/8 md:hidden">
               {pageRows.map((a) => {
                 const Icon = assetIconForName(a.name);
                 const ins = insurancePresentation(a.insurance_status, t);
                 return (
-                  <TableRow
-                    key={a.id}
-                    onClick={() => {
-                      if (canEdit) setDialog({ open: true, row: a });
-                    }}
-                    className={cn(
-                      "border-foreground/6 hover:bg-muted/50",
-                      canEdit && "cursor-pointer",
-                    )}
-                  >
-                    <TableCell className={assetsTableCellClass}>
-                      <div className="flex items-center gap-3">
-                        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-success md:size-12">
-                          <Icon className="size-5 md:size-6" aria-hidden />
+                  <li key={a.id} className="flex flex-col gap-2.5 px-4 py-3.5">
+                    <div className="flex items-start gap-3">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-rn-text-heading">
+                        <Icon className="size-5" aria-hidden />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="assets-row-name break-words font-heading font-semibold text-foreground">{a.name}</p>
+                        <p className="mt-0.5 text-app-xs text-muted-foreground">
+                          {a.propertyName ?? "—"} · {a.quantity} × {formatCurrency(Number(a.value))}
+                        </p>
+                      </div>
+                      {canEdit ? (
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="size-10 rounded-lg text-muted-foreground"
+                            aria-label={t("assets.editAria", { name: a.name })}
+                            onClick={() => setDialog({ open: true, row: a })}
+                          >
+                            <Pencil className="size-4" aria-hidden />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="size-10 rounded-lg text-muted-foreground hover:text-destructive"
+                            aria-label={t("assets.deleteAria", { name: a.name })}
+                            onClick={() => setDeleteTarget({ id: a.id, name: a.name })}
+                          >
+                            <Trash2 className="size-4" aria-hidden />
+                          </Button>
                         </div>
-                        <span className={cn("assets-row-name", APP_DATA_PRIMARY, "text-success")}>
-                          {a.name}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        assetsTableCellClass,
-                        APP_DATA_BODY,
-                        "assets-row-meta",
-                      )}
-                    >
-                      {a.propertyName ?? "—"}
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        assetsTableCellClass,
-                        APP_DATA_BODY,
-                        "assets-row-qty text-center tabular-nums",
-                      )}
-                    >
-                      {a.quantity}
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        assetsTableCellClass,
-                        "assets-row-value text-success",
-                      )}
-                    >
-                      {formatCurrency(Number(a.value))}
-                    </TableCell>
-                    <TableCell className={assetsTableCellClass}>
-                      <span
-                        className={cn(
-                          "assets-condition-pill inline-flex rounded-full px-3 py-1 font-bold",
-                          conditionPillClass(a.condition),
-                        )}
-                      >
+                      ) : null}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pl-[3.25rem]">
+                      <StatusBadge tone={conditionTone(a.condition)}>
                         {a.condition?.trim() || t("assets.conditionNotSet")}
-                      </span>
-                    </TableCell>
-                    <TableCell className={assetsTableCellClass}>
-                      <span
-                        className={cn(
-                          "assets-insurance-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-bold",
-                          ins.tone === "ok" &&
-                            "bg-success/15 text-success",
-                          ins.tone === "bad" && "bg-destructive/15 text-destructive",
-                          ins.tone === "warn" &&
-                            "bg-amber-500/10 text-amber-950 dark:text-amber-100",
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "size-1.5 shrink-0 rounded-full",
-                            ins.tone === "ok" && "bg-emerald-600",
-                            ins.tone === "bad" && "bg-destructive",
-                            ins.tone === "warn" && "bg-amber-600",
-                          )}
-                          aria-hidden
-                        />
-                        {ins.safeLabel}
-                      </span>
-                    </TableCell>
-                    <TableCell
-                      className={cn(assetsTableCellClass, "text-right")}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="flex items-center justify-end gap-0.5">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          disabled={!canEdit}
-                          className="size-10 shrink-0 rounded-xl text-foreground disabled:opacity-40"
-                          aria-label={t("assets.editAria", { name: a.name })}
-                          onClick={() => setDialog({ open: true, row: a })}
-                        >
-                          <Pencil className="size-5" aria-hidden />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          disabled={!canEdit}
-                          className="size-10 shrink-0 rounded-xl text-destructive hover:bg-destructive/10 disabled:opacity-40"
-                          aria-label={t("assets.deleteAria", { name: a.name })}
-                          onClick={() =>
-                            setDeleteTarget({ id: a.id, name: a.name })
-                          }
-                        >
-                          <Trash2 className="size-5" aria-hidden />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                      </StatusBadge>
+                      <StatusBadge tone={INSURANCE_TONE[ins.tone]}>{ins.safeLabel}</StatusBadge>
+                    </div>
+                  </li>
                 );
               })}
-            </TableBody>
-          </Table>
+            </ul>
+          </>
         )}
 
         {filtered.length > 0 ? (
-          <div className="assets-page-footer flex flex-col gap-3 border-t border-foreground/8 bg-muted/40 px-6 py-5 text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
+          <div className="assets-page-footer flex flex-col gap-3 border-t border-foreground/8 px-4 py-4 text-app-sm font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <span>
               {t("assets.footerShowing", {
                 from: pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0,
@@ -1074,7 +1032,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="assets-toolbar-btn h-12 min-h-12 gap-1 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted disabled:border-foreground/15 px-4 font-semibold md:h-14 md:min-h-14 md:px-5"
+                className="assets-toolbar-btn h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
                 disabled={currentPage <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
@@ -1090,7 +1048,7 @@ export function AssetsSection({
               <Button
                 type="button"
                 variant="outline"
-                className="assets-toolbar-btn h-12 min-h-12 gap-1 rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted disabled:border-foreground/15 px-4 font-semibold md:h-14 md:min-h-14 md:px-5"
+                className="assets-toolbar-btn h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >

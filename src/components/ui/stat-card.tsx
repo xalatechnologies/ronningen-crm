@@ -15,6 +15,7 @@ export function StatCard({
   caption,
   children,
   variant = "default",
+  valueClassName,
   className,
 }: {
   icon?: LucideIcon;
@@ -24,6 +25,8 @@ export function StatCard({
   caption?: ReactNode;
   children?: ReactNode;
   variant?: "default" | "brand";
+  /** Overrides the value colour, for example a status text class. */
+  valueClassName?: string;
   className?: string;
 }) {
   const brand = variant === "brand";
@@ -55,10 +58,10 @@ export function StatCard({
         <p
           className={cn(
             "break-words font-extrabold leading-none tabular-nums",
-            brand ? "text-app-3xl font-black tracking-tight" : "text-app-2xl text-rn-text-heading",
+            brand ? "text-app-3xl font-black tracking-tight" : "text-app-2xl",
           )}
         >
-          {value}
+          {brand ? value : <span className={valueClassName ?? "text-rn-text-heading"}>{value}</span>}
         </p>
         {caption ? (
           <p className={cn("mt-3 text-app-xs leading-snug", brand ? "text-white/75" : "text-muted-foreground")}>

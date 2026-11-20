@@ -3,7 +3,7 @@
 import type { UnpaidInvoiceRow } from "@/components/invoices/types";
 import { bookingPaymentStatusLabel } from "@/constants/booking-payment-status";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge, statusDotClass, statusTextClass, type StatusTone } from "@/components/ui/status-badge";
 import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
 import { useTranslation } from "@/i18n/client";
 import {
@@ -22,6 +22,8 @@ import { useSupabase } from "@/providers/supabase-provider";
 import {
   AlertTriangle,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   ExternalLink,
   FileText,
   Scale,
@@ -29,14 +31,10 @@ import {
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
-const invoicesTableHeadClass = cn(
-  "invoices-table-head",
-  APP_TABLE_HEAD_CELL,
-  "px-4 md:px-5",
-);
-const invoicesTableCellClass =
-  "px-4 py-5 align-top md:px-5 md:py-6";
+const invoicesTableHeadClass = cn("invoices-table-head", APP_TABLE_HEAD_CELL);
+const invoicesTableCellClass = "px-4 py-4 align-top sm:px-6";
 
 function paidSharePct(row: UnpaidInvoiceRow): number {
   if (row.totalNok <= 0) return 0;
@@ -85,40 +83,28 @@ function DueAndWarnings({
       </div>
       <div className="flex flex-col items-start gap-1.5">
         {overdue ? (
-          <Badge
-            variant="destructive"
-            className="invoices-alert-pill h-auto w-fit rounded-full px-3 py-1 font-bold leading-snug"
-          >
+          <StatusBadge tone="danger" size="md" className="invoices-alert-pill">
             {t("invoices.workspace.overdueBadge", { label: relLabel })}
-          </Badge>
+          </StatusBadge>
         ) : rel === 0 ? (
-          <Badge
-            variant="secondary"
-            className="invoices-alert-pill h-auto w-fit rounded-full border-0 bg-amber-50 px-3 py-1 font-bold text-amber-900"
-          >
+          <StatusBadge tone="warning" className="invoices-alert-pill">
             {t("invoices.workspace.dueToday")}
-          </Badge>
+          </StatusBadge>
         ) : (
           <span className="invoices-row-meta leading-snug">{relLabel}</span>
         )}
         {row.collectionNoticeSentAt ? (
-          <Badge
-            variant="secondary"
-            className="invoices-alert-pill h-auto w-fit max-w-full flex-wrap items-start gap-1 rounded-xl border-0 bg-violet-50 py-1.5 pl-2.5 pr-2.5 text-left font-semibold leading-snug text-violet-900"
-          >
+          <StatusBadge tone="info" dot={false} className="invoices-alert-pill h-auto max-w-full items-start gap-1 rounded-xl py-1.5 text-left leading-snug">
             <Scale className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             {t("invoices.workspace.collectionNotice", {
               date: formatDate(row.collectionNoticeSentAt),
             })}
-          </Badge>
+          </StatusBadge>
         ) : suggestInkasso ? (
-          <Badge
-            variant="outline"
-            className="invoices-alert-pill h-auto w-fit max-w-full items-start gap-1 rounded-xl border-0 bg-amber-50 py-1.5 pl-2.5 pr-2.5 text-left font-semibold leading-snug text-amber-950"
-          >
-            <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-700" aria-hidden />
+          <StatusBadge tone="warning" dot={false} className="invoices-alert-pill h-auto max-w-full items-start gap-1 rounded-xl py-1.5 text-left leading-snug">
+            <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             {t("invoices.workspace.suggestCollection")}
-          </Badge>
+          </StatusBadge>
         ) : null}
       </div>
     </div>
@@ -130,44 +116,31 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
   const pct = paidSharePct(row);
   const paymentLabel = bookingPaymentStatusLabel(row.paymentStatus, t);
 
-  const badgeClass = (() => {
-    switch (row.paymentStatus) {
-      case "paid":
-        return "rounded-full border-0 bg-emerald-50 font-bold text-emerald-950";
-      case "unpaid":
-        return "rounded-full border border-foreground/25 bg-card font-bold";
-      case "partial":
-        return "rounded-full border-0 bg-amber-50 font-bold text-amber-950";
-      case "waived":
-        return "rounded-full border-0 bg-muted font-bold text-foreground";
-      case "disputed":
-        return "rounded-full border-0 bg-orange-50 font-bold text-orange-950";
-      case "other":
-      default:
-        return "rounded-full border-0 bg-violet-50 font-bold text-violet-950";
-    }
-  })();
+  const paymentTone: StatusTone = (
+    {
+      paid: "success",
+      unpaid: "neutral",
+      partial: "warning",
+      waived: "neutral",
+      disputed: "danger",
+      other: "info",
+    } as Record<string, StatusTone>
+  )[row.paymentStatus] ?? "info";
 
   const unpaid = row.paidNok <= 0;
 
   return (
-    <div className="flex min-w-36 max-w-56 flex-col gap-2">
-      <Badge
-        variant="outline"
-        className={cn(
-          "invoices-status-pill h-auto w-fit px-3 py-1 font-bold",
-          badgeClass,
-        )}
-      >
+    <div className="flex min-w-36 max-w-56 flex-col items-start gap-2">
+      <StatusBadge tone={paymentTone} className="invoices-status-pill">
         {paymentLabel}
-      </Badge>
+      </StatusBadge>
       {row.paymentStatus === "partial" ? (
         <span className="invoices-row-caption font-semibold">
           {t("invoices.workspace.percentPaid", { pct })}
         </span>
       ) : null}
       <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0 tabular-nums">
-        <span className="invoices-payment-major font-bold text-success">
+        <span className={cn("invoices-payment-major font-bold", statusTextClass("success"))}>
           {formatCurrency(row.paidNok)}
         </span>
         <span className="invoices-payment-slash">/</span>
@@ -186,7 +159,7 @@ function PaymentColumn({ row }: { row: UnpaidInvoiceRow }) {
         <div
           className={cn(
             "h-full min-w-0 rounded-full transition-[width]",
-            unpaid ? "bg-muted-foreground/30" : "bg-success",
+            unpaid ? "bg-muted-foreground/30" : statusDotClass("success"),
           )}
           style={{ width: `${pct}%` }}
         />
@@ -216,7 +189,7 @@ function MarkInvoicePaidButton({
       disabled={busy || row.remainingNok <= 0}
       title={t("invoices.markPaidTitle")}
       className={cn(
-        "invoices-action-btn h-10 w-full justify-center gap-1.5 rounded-xl border border-success/50 bg-success/10 px-3 font-heading font-bold text-emerald-950 shadow-none hover:bg-success/20 md:h-11 md:gap-2 md:px-4 dark:text-emerald-100",
+        "invoices-action-btn h-10 w-full justify-center gap-1.5 rounded-xl border border-status-success-border bg-status-success-bg px-3 font-heading font-bold text-status-success-text shadow-none hover:bg-status-success-bg/70 md:gap-2 md:px-4",
         busy && "opacity-70",
       )}
       onClick={onRequestConfirm}
@@ -260,6 +233,18 @@ export function InvoicesWorkspace({
     [rows, filter, searchQuery, todayYmd],
   );
   const hasSearchQuery = searchQuery.trim() !== "";
+
+  // Page resets to 1 whenever the filter or the search text changes.
+  const pageKey = `${filter}|${searchQuery}`;
+  const [pageState, setPageState] = useState({ key: pageKey, page: 1 });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / TENANT_LIST_PAGE_SIZE));
+  const currentPage = Math.min(pageState.key === pageKey ? pageState.page : 1, totalPages);
+  const pageRows = filtered.slice(
+    (currentPage - 1) * TENANT_LIST_PAGE_SIZE,
+    currentPage * TENANT_LIST_PAGE_SIZE,
+  );
+  const goToPage = (next: number) =>
+    setPageState({ key: pageKey, page: Math.min(Math.max(1, next), totalPages) });
 
   async function confirmMarkPaid() {
     if (!markPaidConfirmRow) return;
@@ -334,10 +319,11 @@ export function InvoicesWorkspace({
           </p>
         </div>
       ) : (
-        <div className="app-table overflow-x-auto">
-          <table className="min-w-[920px] w-full border-collapse text-left">
+        <>
+        <div className="app-table hidden overflow-x-auto md:block">
+          <table className="w-full min-w-[760px] border-collapse text-left">
             <thead>
-              <tr className="border-0 bg-muted/60">
+              <tr className="border-0 bg-muted/50">
                 <th className={invoicesTableHeadClass}>{t("invoices.customer")}</th>
                 <th
                   className={cn(
@@ -374,7 +360,7 @@ export function InvoicesWorkspace({
               </tr>
             </thead>
             <tbody className="divide-y divide-foreground/6">
-              {filtered.map((r) => (
+              {pageRows.map((r) => (
                 <tr
                   key={r.id}
                   className="transition-colors hover:bg-muted/50"
@@ -394,7 +380,7 @@ export function InvoicesWorkspace({
                         <span> · </span>
                         <span className={APP_DATA_DATE}>{r.eventDateLabel}</span>
                       </div>
-                      <div className="invoices-rest-amount-mobile mt-2 text-destructive md:hidden">
+                      <div className={cn("invoices-rest-amount-mobile mt-2 md:hidden", statusTextClass("danger"))}>
                         {formatCurrency(r.remainingNok)}
                         <div className="invoices-row-caption mt-0.5 font-normal">
                           {t("invoices.workspace.toPay")}
@@ -409,9 +395,9 @@ export function InvoicesWorkspace({
                     )}
                   >
                     <div className="flex min-w-0 max-w-56 flex-col gap-2">
-                      <span className="invoices-row-pill inline-flex w-fit rounded-full bg-emerald-50 px-3 py-1 font-bold text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-100">
+                      <StatusBadge tone="neutral" dot={false} className="invoices-row-pill w-fit">
                         {r.eventType}
-                      </span>
+                      </StatusBadge>
                       <div className={cn("invoices-row-meta", APP_DATA_DATE)}>
                         {r.eventDateLabel}
                       </div>
@@ -440,7 +426,7 @@ export function InvoicesWorkspace({
                     )}
                   >
                     <div className="inline-block text-right">
-                      <div className="invoices-rest-amount font-semibold text-destructive tabular-nums">
+                      <div className={cn("invoices-rest-amount font-semibold tabular-nums", statusTextClass("danger"))}>
                         {formatCurrency(r.remainingNok)}
                       </div>
                       <p className="invoices-row-caption mt-1">
@@ -451,7 +437,7 @@ export function InvoicesWorkspace({
                     </div>
                   </td>
                   <td className={cn(invoicesTableCellClass, "text-right")}>
-                    <div className="flex min-w-42 flex-col items-stretch gap-2 sm:min-w-44 sm:items-end">
+                    <div className="flex min-w-40 flex-col items-stretch gap-2 sm:items-end">
                       <MarkInvoicePaidButton
                         row={r}
                         canMark={canMarkInvoicesPaid}
@@ -464,7 +450,7 @@ export function InvoicesWorkspace({
                         rel="noopener noreferrer"
                         className={cn(
                           buttonVariants({ variant: "outline" }),
-                          "invoices-action-btn inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-foreground/30 bg-card px-3 font-heading font-bold shadow-none hover:bg-muted md:h-11 md:gap-2 md:px-4",
+                          "invoices-action-btn inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-foreground/30 bg-card px-3 font-heading font-bold shadow-none hover:bg-muted md:gap-2 md:px-4",
                         )}
                       >
                         {t("invoices.title")}
@@ -480,6 +466,98 @@ export function InvoicesWorkspace({
             </tbody>
           </table>
         </div>
+
+        <ul className="divide-y divide-foreground/8 md:hidden">
+          {pageRows.map((r) => (
+            <li key={r.id} className="flex flex-col gap-3 px-4 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="invoices-row-title break-words font-heading font-semibold text-foreground">
+                    {r.customerName}
+                  </p>
+                  <p className="invoices-row-meta mt-0.5">
+                    {r.eventType} · {r.eventDateLabel}
+                  </p>
+                  {r.bookingReference ? (
+                    <p className="invoices-row-caption tabular-nums">
+                      {t("invoices.workspace.refPrefix")}&nbsp;{r.bookingReference}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className={cn("invoices-rest-amount font-semibold tabular-nums", statusTextClass("danger"))}>
+                    {formatCurrency(r.remainingNok)}
+                  </p>
+                  <p className="invoices-row-caption">{t("invoices.workspace.toPay")}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <PaymentColumn row={r} />
+                <DueAndWarnings row={r} todayYmd={todayYmd} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <MarkInvoicePaidButton
+                  row={r}
+                  canMark={canMarkInvoicesPaid}
+                  busy={markingBookingId === r.id}
+                  onRequestConfirm={() => setMarkPaidConfirmRow(r)}
+                />
+                <Link
+                  href={`/app/invoices/print/${r.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    buttonVariants({ variant: "outline" }),
+                    "invoices-action-btn inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-foreground/30 bg-card px-3 font-heading font-bold shadow-none hover:bg-muted",
+                  )}
+                >
+                  {t("invoices.title")}
+                  <ExternalLink className="size-3.5 shrink-0 opacity-70" aria-hidden />
+                </Link>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {filtered.length > 0 ? (
+          <div className="flex flex-col gap-3 border-t border-foreground/8 px-4 py-4 text-app-sm font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <span>
+              {t("customers.footer.showingRange", {
+                from: (currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1,
+                to: Math.min(currentPage * TENANT_LIST_PAGE_SIZE, filtered.length),
+                total: filtered.length,
+              })}
+            </span>
+            {filtered.length > TENANT_LIST_PAGE_SIZE ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
+                  disabled={currentPage <= 1}
+                  onClick={() => goToPage(currentPage - 1)}
+                >
+                  <ChevronLeft className="size-4" aria-hidden />
+                  {t("customers.footer.prev")}
+                </Button>
+                <span className="flex items-center px-2 tabular-nums">
+                  {t("common.pagination.pageOf", { current: currentPage, total: totalPages })}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => goToPage(currentPage + 1)}
+                >
+                  {t("common.actions.next")}
+                  <ChevronRight className="size-4" aria-hidden />
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+        </>
       )}
 
       <ConfirmActionDialog
