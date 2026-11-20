@@ -233,6 +233,26 @@
 }
 
 @theme inline {
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-success-border: var(--status-success-border);
+  --color-status-success-text: var(--status-success-text);
+  --color-status-success-solid: var(--status-success-solid);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-warning-border: var(--status-warning-border);
+  --color-status-warning-text: var(--status-warning-text);
+  --color-status-warning-solid: var(--status-warning-solid);
+  --color-status-danger-bg: var(--status-danger-bg);
+  --color-status-danger-border: var(--status-danger-border);
+  --color-status-danger-text: var(--status-danger-text);
+  --color-status-danger-solid: var(--status-danger-solid);
+  --color-status-info-bg: var(--status-info-bg);
+  --color-status-info-border: var(--status-info-border);
+  --color-status-info-text: var(--status-info-text);
+  --color-status-info-solid: var(--status-info-solid);
+  --color-status-neutral-bg: var(--status-neutral-bg);
+  --color-status-neutral-border: var(--status-neutral-border);
+  --color-status-neutral-text: var(--status-neutral-text);
+  --color-status-neutral-solid: var(--status-neutral-solid);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-sans);
   --font-heading: var(--font-sans);

@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { StatCard } from "@/components/ui/stat-card";
 import {
   customerUpsertFormSchema,
   type CustomerUpsertFormInput,
@@ -335,18 +336,12 @@ export function CustomersSection({
                   [t("customers.table.totalSpent"), formatCurrency(totals.spent)],
                 ] as const
               ).map(([label, value], i) => (
-                <div
+                <StatCard
                   key={label}
-                  className={cn(
-                    "min-w-0 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 lg:p-5",
-                    i === 2 && "col-span-2 sm:col-span-1",
-                  )}
-                >
-                  <p className="truncate text-app-xs font-semibold text-muted-foreground sm:text-app-sm">{label}</p>
-                  <p className="mt-2 break-words text-app-xl font-extrabold tabular-nums text-rn-text-heading sm:text-app-2xl">
-                    {value}
-                  </p>
-                </div>
+                  label={label}
+                  value={value}
+                  className={cn(i === 2 && "col-span-2 sm:col-span-1")}
+                />
               ))}
             </section>
           ) : null}

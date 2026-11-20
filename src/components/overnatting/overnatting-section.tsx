@@ -31,6 +31,8 @@ import {
 } from "@/components/ui/form-select";
 import { PropertySelectField } from "@/components/properties/property-select-field";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
+import { StatCard } from "@/components/ui/stat-card";
+import { StatusBadge, statusDotClass, type StatusTone } from "@/components/ui/status-badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
@@ -141,30 +143,14 @@ function matchesAccommodationDateRange(
   return true;
 }
 
-const STATUS_BADGE_CLASS: Record<string, string> = {
-  confirmed: "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200",
-  tentative: "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
-  cancelled: "bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-200",
-};
-
-const STATUS_DOT_CLASS: Record<string, string> = {
-  confirmed: "bg-emerald-500",
-  tentative: "bg-amber-500",
-  cancelled: "bg-red-500",
+const RESERVATION_TONE: Record<string, StatusTone> = {
+  confirmed: "success",
+  tentative: "warning",
+  cancelled: "danger",
 };
 
 function ReservationStatusBadge({ status, label }: { status: string; label: string }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
-        STATUS_BADGE_CLASS[status],
-      )}
-    >
-      <span className={cn("size-1.5 rounded-full", STATUS_DOT_CLASS[status])} aria-hidden />
-      {label}
-    </span>
-  );
+  return <StatusBadge tone={RESERVATION_TONE[status] ?? "neutral"}>{label}</StatusBadge>;
 }
 
 const dialogSectionTitleClass = "text-xs font-semibold text-muted-foreground";
@@ -675,126 +661,85 @@ export function OvernattingSection({
           className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4"
           aria-label={quickStats.monthLabel}
         >
-          <div className="col-span-2 flex min-w-0 flex-col gap-3 rounded-2xl bg-success p-4 text-white lg:col-span-1 lg:p-5">
-            <div className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-white/15">
-                <Wallet className="size-[18px]" aria-hidden />
-              </span>
-              <p className="text-app-sm font-semibold text-white/90">
-                {t("overnatting.monthlyRevenue")}
-                <span className="font-normal text-white/65"> · {quickStats.monthLabel}</span>
-              </p>
-            </div>
-            <div className="min-w-0">
-              <p className="break-words text-app-3xl font-black leading-none tracking-tight tabular-nums">
-                {formatCurrency(quickStats.currentMonthRevenue)}
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-app-xs">
-                {quickStats.monthOverMonthPct != null ? (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 font-bold",
-                      trendPositive ? "text-emerald-200" : "text-rose-200",
-                    )}
-                  >
-                    {trendPositive ? (
-                      <ArrowUpRight className="size-4 shrink-0" aria-hidden />
-                    ) : (
-                      <ArrowDownRight className="size-4 shrink-0" aria-hidden />
-                    )}
-                    {t("overnatting.percentFromPrevMonth", {
-                      sign: trendPositive ? "+" : "",
-                      percent: quickStats.monthOverMonthPct
-                        .toFixed(1)
-                        .replace(".", locale === "nb" ? "," : "."),
-                    })}
-                  </span>
-                ) : (
-                  <span className="font-medium text-white/75">{t("overnatting.noComparison")}</span>
-                )}
-                <span className="text-white/70">
-                  {t("overnatting.prevMonth")}: {formatCurrency(quickStats.prevMonthRevenue)}
+          <StatCard
+            variant="brand"
+            className="col-span-2 lg:col-span-1"
+            icon={Wallet}
+            label={t("overnatting.monthlyRevenue")}
+            sublabel={quickStats.monthLabel}
+            value={formatCurrency(quickStats.currentMonthRevenue)}
+          >
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-app-xs">
+              {quickStats.monthOverMonthPct != null ? (
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 font-bold",
+                    trendPositive ? "text-emerald-200" : "text-rose-200",
+                  )}
+                >
+                  {trendPositive ? (
+                    <ArrowUpRight className="size-4 shrink-0" aria-hidden />
+                  ) : (
+                    <ArrowDownRight className="size-4 shrink-0" aria-hidden />
+                  )}
+                  {t("overnatting.percentFromPrevMonth", {
+                    sign: trendPositive ? "+" : "",
+                    percent: quickStats.monthOverMonthPct
+                      .toFixed(1)
+                      .replace(".", locale === "nb" ? "," : "."),
+                  })}
                 </span>
-              </div>
-            </div>
-          </div>
-
-          <div className={cn("flex min-w-0 flex-col gap-3 p-4 lg:p-5", cardClass)}>
-            <div className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-muted text-rn-text-heading">
-                <Percent className="size-[18px]" aria-hidden />
+              ) : (
+                <span className="font-medium text-white/75">{t("overnatting.noComparison")}</span>
+              )}
+              <span className="text-white/70">
+                {t("overnatting.prevMonth")}: {formatCurrency(quickStats.prevMonthRevenue)}
               </span>
-              <p className="text-app-sm font-semibold text-muted-foreground">
-                {t("overnatting.occupancyRate")}
-              </p>
             </div>
-            <div>
-              <p className="text-app-2xl font-extrabold leading-none tabular-nums text-rn-text-heading">
-                {quickStats.occupancyPct}%
-              </p>
+          </StatCard>
+
+          <StatCard
+            icon={Percent}
+            label={t("overnatting.occupancyRate")}
+            value={`${quickStats.occupancyPct}%`}
+            caption={<span className="line-clamp-2">{t("overnatting.occupancyDescription")}</span>}
+          >
+            <div
+              className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={quickStats.occupancyPct}
+              aria-label={t("overnatting.occupancyRate")}
+            >
               <div
-                className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"
-                role="progressbar"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={quickStats.occupancyPct}
-                aria-label={t("overnatting.occupancyRate")}
-              >
-                <div
-                  className="h-full rounded-full bg-success transition-[width]"
-                  style={{ width: `${Math.min(100, Math.max(0, quickStats.occupancyPct))}%` }}
-                />
-              </div>
-              <p className="mt-2 line-clamp-2 text-app-xs leading-snug text-muted-foreground">
-                {t("overnatting.occupancyDescription")}
-              </p>
+                className="h-full rounded-full bg-success transition-[width]"
+                style={{ width: `${Math.min(100, Math.max(0, quickStats.occupancyPct))}%` }}
+              />
             </div>
-          </div>
+          </StatCard>
 
-          <div className={cn("flex min-w-0 flex-col gap-3 p-4 lg:p-5", cardClass)}>
-            <div className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-muted text-rn-text-heading">
-                <Users className="size-[18px]" aria-hidden />
-              </span>
-              <p className="text-app-sm font-semibold text-muted-foreground">
-                {t("overnatting.avgGuests")}
-              </p>
-            </div>
-            <div>
-              <p className="text-app-2xl font-extrabold leading-none tabular-nums text-rn-text-heading">
-                {quickStats.avgGuestsActive ?? "—"}
-              </p>
-              <p className="mt-3 text-app-xs text-muted-foreground">
-                {t("overnatting.perReservation")}
-              </p>
-            </div>
-          </div>
+          <StatCard
+            icon={Users}
+            label={t("overnatting.avgGuests")}
+            value={quickStats.avgGuestsActive ?? "—"}
+            caption={t("overnatting.perReservation")}
+          />
 
-          <div className={cn("col-span-2 flex min-w-0 flex-col gap-3 p-4 lg:col-span-1 lg:p-5", cardClass)}>
-            <div className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-muted text-rn-text-heading">
-                <BedDouble className="size-[18px]" aria-hidden />
-              </span>
-              <p className="text-app-sm font-semibold text-muted-foreground">
-                {t("overnatting.units")}
-              </p>
-            </div>
-            <div>
-              <p className="text-app-2xl font-extrabold leading-none tabular-nums text-rn-text-heading">
+          <StatCard
+            className="col-span-2 lg:col-span-1"
+            icon={BedDouble}
+            label={t("overnatting.units")}
+            value={
+              <>
                 {activeUnitCount}
-                <span className="text-app-lg font-semibold text-muted-foreground">
-                  {" "}
-                  / {sortedUnits.length}
-                </span>
-              </p>
-              <p className="mt-3 text-app-xs text-muted-foreground">
-                {sortedUnits.length === 1
-                  ? t("overnatting.unitSingular")
-                  : t("overnatting.unitPlural")}{" "}
-                {t("overnatting.unitsAvailableSuffix")}
-              </p>
-            </div>
-          </div>
+                <span className="text-app-lg font-semibold text-muted-foreground"> / {sortedUnits.length}</span>
+              </>
+            }
+            caption={`${
+              sortedUnits.length === 1 ? t("overnatting.unitSingular") : t("overnatting.unitPlural")
+            } ${t("overnatting.unitsAvailableSuffix")}`}
+          />
         </section>
       ) : null}
 
@@ -818,21 +763,21 @@ export function OvernattingSection({
             <div className="flex min-w-0 max-sm:basis-full flex-wrap items-center justify-end gap-2 sm:shrink-0">
               <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-app-xs font-medium text-rn-text-body">
                 <span
-                  className="size-2.5 shrink-0 rounded-full bg-emerald-500/90 ring-2 ring-emerald-500/25 shadow-sm dark:bg-emerald-400"
+                  className={cn("size-2.5 shrink-0 rounded-full", statusDotClass("success"))}
                   aria-hidden
                 />
                 {statusLabel("confirmed", t)}
               </span>
               <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-app-xs font-medium text-rn-text-body">
                 <span
-                  className="size-2.5 shrink-0 rounded-full bg-amber-500/90 ring-2 ring-amber-500/25 shadow-sm dark:bg-amber-400"
+                  className={cn("size-2.5 shrink-0 rounded-full", statusDotClass("warning"))}
                   aria-hidden
                 />
                 {statusLabel("tentative", t)}
               </span>
               <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-app-xs font-medium text-rn-text-body">
                 <span
-                  className="size-2.5 shrink-0 rounded-full bg-rose-500/90 ring-2 ring-rose-500/25 shadow-sm dark:bg-rose-400"
+                  className={cn("size-2.5 shrink-0 rounded-full", statusDotClass("danger"))}
                   aria-hidden
                 />
                 {t("overnatting.cancelledEmpty")}
@@ -906,9 +851,9 @@ export function OvernattingSection({
                   onChange={setStatusFilter}
                   options={[
                     { key: "all", label: t("common.actions.all"), count: filterCounts.all },
-                    { key: "confirmed", label: statusLabel("confirmed", t), count: filterCounts.confirmed, dot: "bg-emerald-500" },
-                    { key: "tentative", label: statusLabel("tentative", t), count: filterCounts.tentative, dot: "bg-amber-500" },
-                    { key: "cancelled", label: statusLabel("cancelled", t), count: filterCounts.cancelled, dot: "bg-red-500" },
+                    { key: "confirmed", label: statusLabel("confirmed", t), count: filterCounts.confirmed, tone: "success" },
+                    { key: "tentative", label: statusLabel("tentative", t), count: filterCounts.tentative, tone: "warning" },
+                    { key: "cancelled", label: statusLabel("cancelled", t), count: filterCounts.cancelled, tone: "danger" },
                   ]}
                 />
 

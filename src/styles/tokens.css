@@ -90,6 +90,29 @@
   --sidebar-border: rgba(255, 255, 255, 0.12);
   --sidebar-ring: #93acff;
 
+
+  /* Status (background / border / text / solid dot or bar). Use <StatusBadge tone=...> or bg-status-*-bg classes. */
+  --status-success-bg: #eaf5ef;
+  --status-success-border: #b7dcc9;
+  --status-success-text: #226b59;
+  --status-success-solid: #2f8a68;
+  --status-warning-bg: #fcf3e4;
+  --status-warning-border: #f0d3a3;
+  --status-warning-text: #855a26;
+  --status-warning-solid: #c98a2e;
+  --status-danger-bg: #fdecee;
+  --status-danger-border: #f2b8bf;
+  --status-danger-text: #ad3d49;
+  --status-danger-solid: #c44d5b;
+  --status-info-bg: #eef2fd;
+  --status-info-border: #c9d6f7;
+  --status-info-text: #2f51b8;
+  --status-info-solid: #5a7de0;
+  --status-neutral-bg: #f2f1ed;
+  --status-neutral-border: #e2e1dc;
+  --status-neutral-text: #4a5a70;
+  --status-neutral-solid: #97a6b8;
+
   /* Layout */
   --sidebar-width: 240px;
 }
@@ -173,4 +196,26 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: #93acff;
+
+  /* Status (background / border / text / solid dot or bar). Use <StatusBadge tone=...> or bg-status-*-bg classes. */
+  --status-success-bg: #10291f;
+  --status-success-border: #1d4a3a;
+  --status-success-text: #7cd3b4;
+  --status-success-solid: #5fe0a0;
+  --status-warning-bg: #2a2012;
+  --status-warning-border: #5a4220;
+  --status-warning-text: #f4c95d;
+  --status-warning-solid: #f4c95d;
+  --status-danger-bg: #2a1519;
+  --status-danger-border: #5a2a31;
+  --status-danger-text: #ff9d92;
+  --status-danger-solid: #ff9d92;
+  --status-info-bg: #1b2a46;
+  --status-info-border: #26439a;
+  --status-info-text: #93acff;
+  --status-info-solid: #7db4ff;
+  --status-neutral-bg: #1e2a3b;
+  --status-neutral-border: #2a3a50;
+  --status-neutral-text: #d4dce4;
+  --status-neutral-solid: #97a6b8;
 }

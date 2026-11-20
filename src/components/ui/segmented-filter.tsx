@@ -1,13 +1,14 @@
 "use client";
 
+import { statusDotClass, type StatusTone } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
 
 export type SegmentedFilterOption<K extends string> = {
   key: K;
   label: string;
   count?: number;
-  /** Tailwind background class for a small status dot, for example `bg-emerald-500`. */
-  dot?: string;
+  /** Shows a small status dot in the tone's colour. */
+  tone?: StatusTone;
 };
 
 /** One grey bar with a white selected segment. Shared by list pages for status filters. */
@@ -42,7 +43,7 @@ export function SegmentedFilter<K extends string>({
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {option.dot ? <span className={cn("size-2 rounded-full", option.dot)} aria-hidden /> : null}
+              {option.tone ? <span className={cn("size-2 rounded-full", statusDotClass(option.tone))} aria-hidden /> : null}
               <span className="text-app-sm font-semibold">{option.label}</span>
               {option.count != null ? (
                 <span className="list-filter-count text-app-xs font-bold tabular-nums opacity-70">
