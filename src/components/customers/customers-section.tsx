@@ -38,6 +38,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
+import { CustomerAvatar } from "./customer-avatar";
 import { CustomerDrawerBody } from "./customer-drawer-body";
 import { PartnersPanel } from "./partners-panel";
 import type {
@@ -80,6 +81,19 @@ function aggregateByCustomer(bookings: CustomerBookingListItem[]) {
   return map;
 }
 
+function BookingCountBadge({ count }: { count: number }) {
+  return (
+    <span
+      className={cn(
+        "customers-booking-count-pill inline-flex min-w-7 items-center justify-center rounded-full px-2.5 py-0.5 font-semibold tabular-nums",
+        count > 0 ? "bg-success/10 text-success" : "bg-muted text-muted-foreground",
+      )}
+    >
+      {count}
+    </span>
+  );
+}
+
 export function CustomersSection({
   customers,
   partners,
@@ -101,6 +115,16 @@ export function CustomersSection({
     useState<CustomerRow | null>(null);
 
   const stats = useMemo(() => aggregateByCustomer(bookings), [bookings]);
+
+  const totals = useMemo(() => {
+    let bookingCount = 0;
+    let spent = 0;
+    for (const v of stats.values()) {
+      bookingCount += v.count;
+      spent += v.spent;
+    }
+    return { bookingCount, spent };
+  }, [stats]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -302,6 +326,31 @@ export function CustomersSection({
             </div>
           </div>
 
+          {tab === "customers" && customers.length > 0 ? (
+            <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-4" aria-label={t("customers.title")}>
+              {(
+                [
+                  [t("customers.title"), String(customers.length)],
+                  [t("customers.table.bookings"), String(totals.bookingCount)],
+                  [t("customers.table.totalSpent"), formatCurrency(totals.spent)],
+                ] as const
+              ).map(([label, value], i) => (
+                <div
+                  key={label}
+                  className={cn(
+                    "min-w-0 rounded-2xl bg-card p-4 ring-1 ring-foreground/8 lg:p-5",
+                    i === 2 && "col-span-2 sm:col-span-1",
+                  )}
+                >
+                  <p className="truncate text-app-xs font-semibold text-muted-foreground sm:text-app-sm">{label}</p>
+                  <p className="mt-2 break-words text-app-xl font-extrabold tabular-nums text-rn-text-heading sm:text-app-2xl">
+                    {value}
+                  </p>
+                </div>
+              ))}
+            </section>
+          ) : null}
+
           <div
             role="tabpanel"
             id="tabpanel-customers"
@@ -317,91 +366,123 @@ export function CustomersSection({
               </div>
             ) : (
               <>
-                <div className="app-table overflow-x-auto">
-                  <table className="w-full min-w-[720px] text-left text-app-base">
+                <div className="app-table hidden overflow-x-auto md:block">
+                  <table className="w-full text-left text-app-base">
                     <thead>
-                      <tr className="border-0 bg-muted/60">
-                        <th className={customersTableHeadClass}>{t("common.fields.name")}</th>
+                      <tr className="border-0 bg-muted/50">
+                        <th className={cn(customersTableHeadClass, "pl-6")}>{t("common.fields.name")}</th>
                         <th className={customersTableHeadClass}>{t("common.fields.phone")}</th>
                         <th className={customersTableHeadClass}>{t("common.fields.email")}</th>
                         <th className={customersTableHeadClass}>{t("customers.table.bookings")}</th>
-                        <th className={customersTableHeadClass}>
+                        <th className={cn(customersTableHeadClass, "text-right")}>
                           {t("customers.table.totalSpent")}
                         </th>
-                        <th
-                          className={cn(
-                            customersTableHeadClass,
-                            "w-12 text-right",
-                          )}
-                        >
+                        <th className={cn(customersTableHeadClass, "w-12 pr-6 text-right")}>
                           <span className="sr-only">{t("customers.open")}</span>
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-foreground/6">
                       {pageRows.map((c) => {
-                      const st = stats.get(c.id) ?? {
-                        count: 0,
-                        spent: 0,
-                        outstanding: 0,
-                      };
-                      const isActive = selectedId === c.id;
-                      return (
-                        <tr
-                          key={c.id}
-                          className={cn(
-                            "cursor-pointer transition-colors hover:bg-muted/50",
-                            isActive && "bg-muted/60",
-                          )}
-                          onClick={() => setSelectedId(c.id)}
-                        >
-                          <td className="px-6 py-5 md:px-8 md:py-6">
-                            <span
+                        const st = stats.get(c.id) ?? { count: 0, spent: 0, outstanding: 0 };
+                        const isActive = selectedId === c.id;
+                        return (
+                          <tr
+                            key={c.id}
+                            tabIndex={0}
+                            className={cn(
+                              "group cursor-pointer transition-colors outline-none hover:bg-muted/50 focus-visible:bg-muted/50",
+                              isActive && "bg-muted/60",
+                            )}
+                            onClick={() => setSelectedId(c.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") setSelectedId(c.id);
+                            }}
+                          >
+                            <td className="py-3.5 pl-6 pr-4">
+                              <span className="flex items-center gap-3">
+                                <CustomerAvatar name={c.name} />
+                                <span
+                                  className={cn(
+                                    "customers-row-name min-w-0 truncate",
+                                    APP_DATA_PRIMARY,
+                                    isActive ? "text-success" : "",
+                                  )}
+                                >
+                                  {c.name}
+                                </span>
+                              </span>
+                            </td>
+                            <td className={cn("customers-row-meta px-4 py-3.5", APP_DATA_BODY)}>
+                              {c.phone ?? "—"}
+                            </td>
+                            <td className={cn("customers-row-meta px-4 py-3.5", APP_DATA_BODY)}>
+                              {c.email ?? "—"}
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <BookingCountBadge count={st.count} />
+                            </td>
+                            <td
                               className={cn(
-                                "customers-row-name",
-                                APP_DATA_PRIMARY,
-                                isActive ? "text-success" : "",
+                                "customers-row-metric px-4 py-3.5 text-right tabular-nums",
+                                APP_DATA_AMOUNT,
+                                st.spent > 0 ? "font-bold text-success" : "font-medium text-muted-foreground",
                               )}
                             >
-                              {c.name}
-                            </span>
-                          </td>
-                          <td className={cn("customers-row-meta px-6 py-5 md:px-8 md:py-6", APP_DATA_BODY)}>
-                            {c.phone ?? "—"}
-                          </td>
-                          <td className={cn("customers-row-meta px-6 py-5 md:px-8 md:py-6", APP_DATA_BODY)}>
-                            {c.email ?? "—"}
-                          </td>
-                          <td className="px-6 py-5 md:px-8 md:py-6">
-                            <span
-                              className={cn(
-                                "customers-booking-count-pill inline-flex items-center font-semibold tabular-nums",
-                                st.count > 0 ? "text-success" : "text-rn-text-body",
-                              )}
-                            >
-                              {st.count}
-                            </span>
-                          </td>
-                          <td className={cn("customers-row-metric px-6 py-5 md:px-8 md:py-6", APP_DATA_AMOUNT, "font-bold text-success")}>
-                            {formatCurrency(st.spent)}
-                          </td>
-                          <td className="px-6 py-5 text-right md:px-8 md:py-6">
-                            <div className="flex items-center justify-end">
+                              {formatCurrency(st.spent)}
+                            </td>
+                            <td className="py-3.5 pl-2 pr-6 text-right">
                               <ChevronRight
-                                className="size-6 shrink-0 text-muted-foreground md:size-7"
+                                className="ml-auto size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
                                 aria-hidden
                               />
-                            </div>
-                          </td>
-                        </tr>
-                      );
+                            </td>
+                          </tr>
+                        );
                       })}
                     </tbody>
                   </table>
                 </div>
 
+                <ul className="divide-y divide-foreground/8 md:hidden">
+                  {pageRows.map((c) => {
+                    const st = stats.get(c.id) ?? { count: 0, spent: 0, outstanding: 0 };
+                    return (
+                      <li key={c.id}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedId(c.id)}
+                          className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-muted/60"
+                        >
+                          <CustomerAvatar name={c.name} />
+                          <span className="min-w-0 flex-1">
+                            <span className="customers-row-name block truncate font-semibold text-rn-text-heading">
+                              {c.name}
+                            </span>
+                            <span className="customers-row-meta block truncate text-muted-foreground">
+                              {c.phone ?? c.email ?? "—"}
+                            </span>
+                          </span>
+                          <span className="flex shrink-0 flex-col items-end gap-1">
+                            <span
+                              className={cn(
+                                "customers-row-metric text-app-sm tabular-nums",
+                                st.spent > 0 ? "font-bold text-success" : "font-medium text-muted-foreground",
+                              )}
+                            >
+                              {formatCurrency(st.spent)}
+                            </span>
+                            <BookingCountBadge count={st.count} />
+                          </span>
+                          <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+
                 {filtered.length > 0 ? (
-                  <div className="flex flex-col gap-3 border-t border-foreground/8 bg-muted/40 px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
+                  <div className="flex flex-col gap-3 border-t border-foreground/8 px-4 py-4 text-app-sm font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <span>
                       {filtered.length <= TENANT_LIST_PAGE_SIZE
                         ? t("customers.footer.showingCount", {
@@ -426,7 +507,7 @@ export function CustomersSection({
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-11 gap-1 rounded-xl border border-foreground/30 bg-card px-4 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
+                        className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
                         disabled={currentPage <= 1}
                         onClick={() =>
                           setCustomersPage((p) => Math.max(1, p - 1))
@@ -444,7 +525,7 @@ export function CustomersSection({
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-11 gap-1 rounded-xl border border-foreground/30 bg-card px-4 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
+                        className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
                         disabled={currentPage >= totalPages}
                         onClick={() =>
                           setCustomersPage((p) =>
