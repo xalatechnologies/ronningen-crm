@@ -12,21 +12,21 @@ export type ChartColorSet = {
 export function getChartColors(resolvedTheme: ResolvedTheme): ChartColorSet {
   if (resolvedTheme === "dark") {
     return {
-      primary: "#4ade80",
+      primary: "#7db4ff",
       secondary: "#93acff",
-      success: "#4ade80",
-      danger: "#f87171",
-      warning: "#f59e0b",
-      neutral: "#94a3b8",
+      success: "#5fe0a0",
+      danger: "#ff9d92",
+      warning: "#f4c95d",
+      neutral: "#97a6b8",
     };
   }
   return {
     primary: "#3d62cf",
-    secondary: "#d4dce4",
-    success: "#3d62cf",
-    danger: "#ba1a1a",
-    warning: "#d97706",
-    neutral: "#58605e",
+    secondary: "#c9d6f7",
+    success: "#226b59",
+    danger: "#ad3d49",
+    warning: "#c98a2e",
+    neutral: "#5f6f85",
   };
 }
 
@@ -40,7 +40,7 @@ export const chartAxisColor = "var(--muted-foreground)";
 export function chartBarFillClass(highlight: boolean) {
   return highlight
     ? "bg-success shadow-md ring-2 ring-success/30 ring-offset-1 ring-offset-background"
-    : "bg-emerald-500/80 hover:bg-emerald-600 dark:bg-emerald-500/60 dark:hover:bg-emerald-500";
+    : "bg-success/45 hover:bg-success/70 dark:bg-success/60 dark:hover:bg-success/80";
 }
 
 export function chartTrackClass() {
