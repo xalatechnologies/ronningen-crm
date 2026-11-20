@@ -34,7 +34,7 @@ export function ProblemSection() {
         <div className="flex flex-col gap-6 lg:sticky lg:top-28 lg:self-start">
           <h2
             id="landing-problem-title"
-            className="max-w-[18ch] text-[clamp(30px,5vw,52px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#0c1f16]"
+            className="max-w-[18ch] text-[clamp(30px,5vw,52px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#13233a]"
           >
             {t("landing.sections.problem")}
           </h2>
@@ -70,14 +70,14 @@ export function ProblemSection() {
                   className={cn(
                     "flex flex-col gap-4 rounded-2xl p-6 sm:flex-row sm:gap-6 md:p-8",
                     isLast
-                      ? "bg-[#1a4331] text-white"
+                      ? "bg-[#3d62cf] text-white"
                       : "bg-[#eef2f0] text-[#1a1c1a]",
                   )}
                 >
                   <Icon
                     className={cn(
                       "size-7 shrink-0",
-                      isLast ? "text-[#85b098]" : "text-[#1a4331]",
+                      isLast ? "text-[#93acff]" : "text-[#3d62cf]",
                     )}
                     aria-hidden
                   />
@@ -85,7 +85,7 @@ export function ProblemSection() {
                     <h3
                       className={cn(
                         "font-heading text-xl font-semibold tracking-tight md:text-2xl",
-                        isLast ? "text-white" : "text-[#0c1f16]",
+                        isLast ? "text-white" : "text-[#13233a]",
                       )}
                     >
                       {title}
@@ -93,7 +93,7 @@ export function ProblemSection() {
                     <p
                       className={cn(
                         "max-w-[52ch] text-base leading-relaxed",
-                        isLast ? "text-[#d6e6dc]" : "text-[#475569]",
+                        isLast ? "text-[#eef2fd]" : "text-[#475569]",
                       )}
                     >
                       {text}

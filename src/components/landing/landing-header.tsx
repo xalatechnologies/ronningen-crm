@@ -102,7 +102,7 @@ export function LandingHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-card shadow-[0_1px_0_rgba(0,45,28,0.07)]">
+    <header className="sticky top-0 z-50 bg-card shadow-[0_1px_0_rgba(19,35,58,0.07)]">
       <div
         className={cn(
           LANDING_CONTAINER,
@@ -129,7 +129,7 @@ export function LandingHeader() {
                 className={cn(
                   "rounded-full px-3 py-2 font-heading text-[15px] font-semibold whitespace-nowrap transition-colors lg:px-4",
                   active
-                    ? "bg-[#e8f5ee] text-[#1a4331]"
+                    ? "bg-[#eef2fd] text-[#3d62cf]"
                     : "text-rn-text-slate hover:text-rn-text-heading",
                 )}
               >
@@ -211,7 +211,7 @@ export function LandingHeader() {
                       "rounded-[length:var(--app-radius)] px-3 py-3 text-base font-medium hover:bg-rn-surface-row-hover",
                       t(`landing.navHrefs.${item.hrefKey}`).replace(/^#/, "") ===
                         activeId
-                        ? "bg-[#e8f5ee] font-semibold text-[#1a4331]"
+                        ? "bg-[#eef2fd] font-semibold text-[#3d62cf]"
                         : "text-rn-text-body",
                     )}
                   >

@@ -13,7 +13,7 @@ export function getChartColors(resolvedTheme: ResolvedTheme): ChartColorSet {
   if (resolvedTheme === "dark") {
     return {
       primary: "#4ade80",
-      secondary: "#85b098",
+      secondary: "#93acff",
       success: "#4ade80",
       danger: "#f87171",
       warning: "#f59e0b",
@@ -21,9 +21,9 @@ export function getChartColors(resolvedTheme: ResolvedTheme): ChartColorSet {
     };
   }
   return {
-    primary: "#1a4331",
-    secondary: "#d9e1de",
-    success: "#1a4331",
+    primary: "#3d62cf",
+    secondary: "#d4dce4",
+    success: "#3d62cf",
     danger: "#ba1a1a",
     warning: "#d97706",
     neutral: "#58605e",

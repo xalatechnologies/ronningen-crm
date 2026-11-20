@@ -10,7 +10,7 @@ import { X } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
 const inputClass =
-  "h-12 rounded-xl border-0 bg-[#f1f4f2] px-4 text-app-base shadow-none focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-[#1a4331]/60";
+  "h-12 rounded-xl border-0 bg-[#f1f4f2] px-4 text-app-base shadow-none focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-[#3d62cf]/60";
 
 /** Sign in with a 6-digit code sent by e-mail (no password). */
 export function CodeLogin({
@@ -115,14 +115,14 @@ export function CodeLogin({
       {step === "email" && savedEmails.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {savedEmails.map((saved) => (
-            <li key={saved} className="flex items-center gap-1 rounded-xl bg-[#e8f5ee] pr-1 ring-1 ring-[#1a4331]/15">
+            <li key={saved} className="flex items-center gap-1 rounded-xl bg-[#eef2fd] pr-1 ring-1 ring-[#3d62cf]/15">
               <button
                 type="button"
                 disabled={busy}
                 onClick={() => pickSaved(saved)}
-                className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl px-3 text-left text-app-base font-medium text-[#0c1f16] transition-colors hover:bg-[#1a4331]/8 disabled:opacity-60"
+                className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl px-3 text-left text-app-base font-medium text-[#13233a] transition-colors hover:bg-[#3d62cf]/8 disabled:opacity-60"
               >
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#1a4331] text-app-sm font-semibold uppercase text-white">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#3d62cf] text-app-sm font-semibold uppercase text-white">
                   {saved.charAt(0)}
                 </span>
                 <span className="truncate">{saved}</span>
@@ -132,7 +132,7 @@ export function CodeLogin({
                   type="button"
                   onClick={() => onForgetEmail(saved)}
                   aria-label={`× ${saved}`}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-full text-[#55605a] hover:bg-[#1a4331]/10"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full text-[#55605a] hover:bg-[#3d62cf]/10"
                 >
                   <X className="size-4" aria-hidden />
                 </button>
@@ -157,7 +157,7 @@ export function CodeLogin({
           />
         </div>
       ) : (
-        <p className="truncate rounded-xl bg-[#e8f5ee] px-4 py-3 text-app-base font-medium text-[#0c1f16]">{email}</p>
+        <p className="truncate rounded-xl bg-[#eef2fd] px-4 py-3 text-app-base font-medium text-[#13233a]">{email}</p>
       )}
 
       {step === "code" ? (
@@ -188,12 +188,12 @@ export function CodeLogin({
           type="checkbox"
           checked={remember}
           onChange={(e) => onRememberChange(e.target.checked)}
-          className="size-4 rounded accent-[#1a4331]"
+          className="size-4 rounded accent-[#3d62cf]"
         />
         {t("auth.rememberMe")}
       </label>
 
-      {notice ? <p className="rounded-xl bg-[#e8f5ee] px-4 py-3 text-app-sm text-[#1a4331]">{notice}</p> : null}
+      {notice ? <p className="rounded-xl bg-[#eef2fd] px-4 py-3 text-app-sm text-[#3d62cf]">{notice}</p> : null}
       {error ? (
         <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-app-sm text-destructive md:text-app-base">
           {error}
@@ -216,7 +216,7 @@ export function CodeLogin({
             : t("auth.otp.verify")}
       </Button>
 
-      <div className="flex flex-col items-center gap-2 text-app-sm font-semibold text-[#1a4331]">
+      <div className="flex flex-col items-center gap-2 text-app-sm font-semibold text-[#3d62cf]">
         {step === "code" ? (
           <>
             <button type="button" onClick={() => void sendCode()} disabled={busy || cooldown > 0} className="hover:underline disabled:opacity-60 disabled:no-underline">

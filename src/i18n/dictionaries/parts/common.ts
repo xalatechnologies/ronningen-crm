@@ -1,4 +1,5 @@
 export const commonNb = {
+  skipToContent: "Hopp til hovedinnhold",
   app: {
     description: "Administrasjon av lokaler, bookinger og økonomi.",
   },

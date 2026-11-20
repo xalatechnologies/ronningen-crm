@@ -22,10 +22,10 @@ export const dashboardNb = {
     "Ingen bookinger med restbeløp der arrangementsdato er passert eller i dag.",
   revenueSubtitle:
     "Fakturert beløp per måned etter arrangementsdato (aktive bookinger)",
-  revenuePerMonth: "Fakturert per måned · {year}",
+  revenuePerMonth: "Fakturert per måned · {range}",
   highest: "Høyeste: {amount}",
   chartAria:
-    "Stolpediagram for fakturert omsetning per arrangementsmåned i {year}. Beløp vises over hver stolpe.",
+    "Stolpediagram for fakturert omsetning per arrangementsmåned, {range}. Beløp vises over hver stolpe.",
   selectYearAria: "Velg år for diagrammet",
   kpiAria: "Nøkkeltall",
   loadError: "Noe gikk galt ved lasting: {error}",

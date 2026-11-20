@@ -30,6 +30,7 @@ import {
   toStringOptions,
 } from "@/components/ui/form-select";
 import { PropertySelectField } from "@/components/properties/property-select-field";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
@@ -899,44 +900,17 @@ export function OvernattingSection({
                 className="overnatting-list-filters flex min-w-0 flex-col gap-3"
                 aria-label={t("overnatting.filterReservationsAria")}
               >
-                <div className="max-w-full overflow-x-auto">
-                  <div
-                    className="inline-flex gap-1 rounded-xl bg-muted p-1"
-                    role="group"
-                    aria-label={t("overnatting.filterStatusAria")}
-                  >
-                    {(
-                      [
-                        ["all", t("common.actions.all"), filterCounts.all, null],
-                        ["confirmed", statusLabel("confirmed", t), filterCounts.confirmed, "bg-emerald-500"],
-                        ["tentative", statusLabel("tentative", t), filterCounts.tentative, "bg-amber-500"],
-                        ["cancelled", statusLabel("cancelled", t), filterCounts.cancelled, "bg-red-500"],
-                      ] as const
-                    ).map(([key, label, count, dot]) => {
-                      const active = statusFilter === key;
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          aria-pressed={active}
-                          onClick={() => setStatusFilter(key)}
-                          className={cn(
-                            "inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-3.5 transition-colors",
-                            active
-                              ? "bg-card text-foreground shadow-sm ring-1 ring-foreground/10"
-                              : "text-muted-foreground hover:text-foreground",
-                          )}
-                        >
-                          {dot ? <span className={cn("size-2 rounded-full", dot)} aria-hidden /> : null}
-                          <span className="text-app-sm font-semibold">{label}</span>
-                          <span className="overnatting-list-filter-count text-app-xs font-bold tabular-nums opacity-70">
-                            {count}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                <SegmentedFilter
+                  ariaLabel={t("overnatting.filterStatusAria")}
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  options={[
+                    { key: "all", label: t("common.actions.all"), count: filterCounts.all },
+                    { key: "confirmed", label: statusLabel("confirmed", t), count: filterCounts.confirmed, dot: "bg-emerald-500" },
+                    { key: "tentative", label: statusLabel("tentative", t), count: filterCounts.tentative, dot: "bg-amber-500" },
+                    { key: "cancelled", label: statusLabel("cancelled", t), count: filterCounts.cancelled, dot: "bg-red-500" },
+                  ]}
+                />
 
                 <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto] lg:items-end">
                   <div className="min-w-0">
@@ -1344,7 +1318,7 @@ export function OvernattingSection({
             <label className="flex cursor-pointer items-center gap-2 text-app-sm font-medium">
               <input
                 type="checkbox"
-                className="size-5 rounded-md border border-foreground/40 accent-[#1a4331]"
+                className="size-5 rounded-md border border-foreground/40 accent-[#3d62cf]"
                 {...unitForm.register("active")}
               />
               {t("overnatting.activeForBooking")}

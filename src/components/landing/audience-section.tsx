@@ -43,7 +43,7 @@ export function AudienceSection() {
       <div className={cn(LANDING_CONTAINER, "flex flex-col gap-12 lg:gap-16")}>
         <h2
           id="landing-audience-title"
-          className="max-w-[24ch] text-[clamp(32px,5.4vw,68px)] leading-[1.04] font-bold tracking-[-0.035em] text-[#0c1f16]"
+          className="max-w-[24ch] text-[clamp(32px,5.4vw,68px)] leading-[1.04] font-bold tracking-[-0.035em] text-[#13233a]"
         >
           {t("landing.sections.audience")}
         </h2>
@@ -54,13 +54,13 @@ export function AudienceSection() {
             return (
               <li
                 key={item}
-                className="group flex min-h-44 flex-col justify-between gap-10 rounded-2xl bg-white p-6 transition-colors duration-200 hover:bg-[#1a4331] md:min-h-56 md:p-8"
+                className="group flex min-h-44 flex-col justify-between gap-10 rounded-2xl bg-white p-6 transition-colors duration-200 hover:bg-[#3d62cf] md:min-h-56 md:p-8"
               >
                 <Icon
-                  className="size-8 text-[#1a4331] transition-colors duration-200 group-hover:text-[#85b098]"
+                  className="size-8 text-[#3d62cf] transition-colors duration-200 group-hover:text-[#93acff]"
                   aria-hidden
                 />
-                <p className="font-heading text-[clamp(24px,2.6vw,36px)] leading-[1.1] font-semibold tracking-[-0.02em] text-[#0c1f16] transition-colors duration-200 group-hover:text-white">
+                <p className="font-heading text-[clamp(24px,2.6vw,36px)] leading-[1.1] font-semibold tracking-[-0.02em] text-[#13233a] transition-colors duration-200 group-hover:text-white">
                   {item}
                 </p>
               </li>

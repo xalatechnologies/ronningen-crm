@@ -163,7 +163,7 @@
 }
 
 .admin-org-detail .org-detail-tab--active {
-  border-bottom-color: var(--success, #1a4331);
+  border-bottom-color: var(--success, #3d62cf);
   color: var(--foreground);
 }
 

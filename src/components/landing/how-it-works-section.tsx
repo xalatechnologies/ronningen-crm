@@ -36,7 +36,7 @@ export function HowItWorksSection() {
       aria-labelledby="landing-how-title"
       className={cn(
         LANDING_SECTION_X,
-        "bg-[#1a4331] py-16 text-white md:py-24 lg:py-32",
+        "bg-[#3d62cf] py-16 text-white md:py-24 lg:py-32",
       )}
     >
       <div
@@ -53,7 +53,7 @@ export function HowItWorksSection() {
             >
               {t("landing.sections.howItWorks")}
             </h2>
-            <p className="max-w-[44ch] text-lg leading-relaxed !text-[#d6e6dc]">
+            <p className="max-w-[44ch] text-lg leading-relaxed !text-[#eef2fd]">
               {t("landing.howItWorks.subtitle")}
             </p>
           </div>
@@ -82,8 +82,8 @@ export function HowItWorksSection() {
                       className={cn(
                         "flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors",
                         on
-                          ? "bg-white text-[#1a4331]"
-                          : "bg-white/15 text-[#d6e6dc]",
+                          ? "bg-white text-[#3d62cf]"
+                          : "bg-white/15 text-[#eef2fd]",
                       )}
                       aria-hidden
                     >
@@ -95,7 +95,7 @@ export function HowItWorksSection() {
                       </span>
                       <span
                         className={cn(
-                          "text-base leading-relaxed text-[#d6e6dc]",
+                          "text-base leading-relaxed text-[#eef2fd]",
                           !on && "hidden lg:block lg:opacity-70",
                         )}
                       >
@@ -105,7 +105,7 @@ export function HowItWorksSection() {
                     {on && auto ? (
                       <span
                         aria-hidden
-                        className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-[#85b098] motion-reduce:hidden"
+                        className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-[#93acff] motion-reduce:hidden"
                         style={{ animation: `hiw-progress ${STEP_MS}ms linear forwards` }}
                       />
                     ) : null}

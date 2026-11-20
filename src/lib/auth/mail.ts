@@ -25,7 +25,7 @@ export async function sendLoginCodeEmail(input: { to: string; code: string; t: T
     <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border-radius:16px;padding:32px 28px;color:#1c1917;">
       <tr><td style="font-size:16px;line-height:1.6;">
         <p style="margin:0 0 16px;">${body}</p>
-        <p style="margin:20px 0;font-size:34px;font-weight:700;letter-spacing:8px;color:#1a4331;">${input.code}</p>
+        <p style="margin:20px 0;font-size:34px;font-weight:700;letter-spacing:8px;color:#3d62cf;">${input.code}</p>
         <p style="margin:0;font-size:13px;color:#57534e;">${footer}</p>
         ${autofill ? `<p style="margin:16px 0 0;font-size:11px;color:#a8a29e;">${autofill}</p>` : ""}
       </td></tr>

@@ -23,6 +23,7 @@ export const en = {
   adminLabels: adminLabelsEn,
   audit: auditEn,
   common: {
+    skipToContent: "Skip to main content",
     app: {
       description: "Manage venues, bookings and finances.",
     },
@@ -667,10 +668,10 @@ export const en = {
       "No bookings with remaining balance where the event date has passed or is today.",
     revenueSubtitle:
       "Invoiced amount per month by event date (active bookings)",
-    revenuePerMonth: "Invoiced per month · {year}",
+    revenuePerMonth: "Invoiced per month · {range}",
     highest: "Highest: {amount}",
     chartAria:
-      "Bar chart of invoiced revenue per event month in {year}. Amount shown above each bar.",
+      "Bar chart of invoiced revenue per event month, {range}. Amount shown above each bar.",
     selectYearAria: "Select year for chart",
     kpiAria: "Key figures",
     loadError: "Something went wrong while loading: {error}",

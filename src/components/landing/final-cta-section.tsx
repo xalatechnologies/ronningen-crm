@@ -26,7 +26,7 @@ export function FinalCtaSection() {
       <div
         className={cn(
           LANDING_CONTAINER,
-          "grid gap-10 overflow-hidden rounded-3xl bg-[#0c1f16] px-6 py-12 text-white sm:px-10 md:py-16 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)] lg:items-center lg:gap-16 lg:px-16 lg:py-24",
+          "grid gap-10 overflow-hidden rounded-3xl bg-[#13233a] px-6 py-12 text-white sm:px-10 md:py-16 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)] lg:items-center lg:gap-16 lg:px-16 lg:py-24",
         )}
       >
         <div className="flex flex-col gap-8">
@@ -37,14 +37,14 @@ export function FinalCtaSection() {
             >
               {t("landing.finalCta.title")}
             </h2>
-            <p className="max-w-[48ch] text-lg leading-relaxed text-[#b9d3c4]">
+            <p className="max-w-[48ch] text-lg leading-relaxed text-[#c9d6f7]">
               {t("landing.finalCta.text")}
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               href={LANDING_ROUTES.register}
-              className="inline-flex h-14 items-center justify-center rounded-xl bg-white px-7 font-heading text-base font-bold text-[#1a4331] transition-colors hover:bg-[#e8f5ee]"
+              className="inline-flex h-14 items-center justify-center rounded-xl bg-white px-7 font-heading text-base font-bold text-[#3d62cf] transition-colors hover:bg-[#eef2fd]"
             >
               {t("landing.finalCta.primaryCta")}
             </Link>
@@ -61,7 +61,7 @@ export function FinalCtaSection() {
           className="hidden items-center gap-4 rounded-2xl bg-white p-5 text-[#1a1c1a] lg:flex"
           aria-hidden
         >
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#1a4331] text-white">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#3d62cf] text-white">
             <CheckIcon className="size-6" strokeWidth={2.5} />
           </span>
           <span className="leading-tight">

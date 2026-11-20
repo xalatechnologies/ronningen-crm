@@ -139,7 +139,7 @@ export function InstallProvider({ children, placement }: { children: ReactNode; 
           )}
         >
           <div className="flex items-center gap-3">
-            <span className="block size-11 shrink-0 overflow-hidden rounded-xl [--brand-tile:#0c1f16]">
+            <span className="block size-11 shrink-0 overflow-hidden rounded-xl [--brand-tile:#13233a]">
               <BrandMark />
             </span>
             <div className="flex min-w-0 flex-col">

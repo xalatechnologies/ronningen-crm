@@ -37,7 +37,7 @@ export async function sendPortalInviteEmail(input: {
     <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;padding:32px 28px;color:#1c1917;">
       <tr><td style="font-size:16px;line-height:1.6;">
         <p style="margin:0 0 16px;">${escapeHtml(body)}</p>
-        <p style="margin:24px 0;"><a href="${url}" style="display:inline-block;background:#1a4331;color:#ffffff;text-decoration:none;padding:13px 22px;border-radius:10px;font-weight:600;">${escapeHtml(cta)}</a></p>
+        <p style="margin:24px 0;"><a href="${url}" style="display:inline-block;background:#3d62cf;color:#ffffff;text-decoration:none;padding:13px 22px;border-radius:10px;font-weight:600;">${escapeHtml(cta)}</a></p>
         <p style="margin:0;font-size:13px;color:#57534e;">${escapeHtml(footer)}<br />${escapeHtml(url)}</p>
       </td></tr>
     </table>
@@ -76,7 +76,7 @@ export async function sendPortalMessageEmail(input: {
     <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;padding:32px 28px;color:#1c1917;">
       <tr><td style="font-size:16px;line-height:1.6;">
         <p style="margin:0 0 16px;">${escapeHtml(body)}</p>
-        <p style="margin:24px 0 0;"><a href="${url}" style="display:inline-block;background:#1a4331;color:#ffffff;text-decoration:none;padding:13px 22px;border-radius:10px;font-weight:600;">${escapeHtml(cta)}</a></p>
+        <p style="margin:24px 0 0;"><a href="${url}" style="display:inline-block;background:#3d62cf;color:#ffffff;text-decoration:none;padding:13px 22px;border-radius:10px;font-weight:600;">${escapeHtml(cta)}</a></p>
       </td></tr>
     </table>
   </td></tr></table>

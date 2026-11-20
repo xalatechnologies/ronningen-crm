@@ -25,7 +25,7 @@ const CHART_MONTHS = [
 const HIGHLIGHT = 5;
 
 const STATUS_TONE: Record<string, string> = {
-  confirmed: "bg-[#e8f5ee] text-[#1a4331]",
+  confirmed: "bg-[#eef2fd] text-[#3d62cf]",
   partial: "bg-[#fdf3dc] text-[#7a5410]",
   inquiry: "bg-[#eef2f0] text-[#475569]",
 };
@@ -41,7 +41,7 @@ export function HeroDashboardPreview() {
 
   return (
     <div className="relative pb-10 lg:pb-0" aria-hidden>
-      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_24px_64px_-24px_rgba(0,45,28,0.28),0_0_0_1px_rgba(0,45,28,0.06)]">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_24px_64px_-24px_rgba(19,35,58,0.28),0_0_0_1px_rgba(19,35,58,0.06)]">
         <div className="flex items-center gap-3 bg-[#f4f6f3] px-4 py-3">
           <span className="flex gap-1.5">
             <i className="size-2.5 rounded-full bg-[#d5dbd7]" />
@@ -63,13 +63,13 @@ export function HeroDashboardPreview() {
                 key={stat.labelKey}
                 className={cn(
                   "rounded-xl px-3.5 py-3",
-                  i === 0 ? "bg-[#1a4331] text-white" : "bg-[#f4f6f3]",
+                  i === 0 ? "bg-[#3d62cf] text-white" : "bg-[#f4f6f3]",
                 )}
               >
                 <p
                   className={cn(
                     "text-[11px] font-medium",
-                    i === 0 ? "text-[#b9d3c4]" : "text-[#475569]",
+                    i === 0 ? "text-[#c9d6f7]" : "text-[#475569]",
                   )}
                 >
                   {t(
@@ -82,7 +82,7 @@ export function HeroDashboardPreview() {
                 <p
                   className={cn(
                     "mt-0.5 text-[11px]",
-                    i === 0 ? "text-[#b9d3c4]" : "text-[#64748b]",
+                    i === 0 ? "text-[#c9d6f7]" : "text-[#64748b]",
                   )}
                 >
                   {t(
@@ -98,7 +98,7 @@ export function HeroDashboardPreview() {
               <p className="font-heading text-[13px] font-semibold text-[#1a1c1a]">
                 {heroDemo.monthlyRevenue}
               </p>
-              <p className="font-heading text-[13px] font-bold text-[#1a4331]">
+              <p className="font-heading text-[13px] font-bold text-[#3d62cf]">
                 {heroDemo.demoRevenue}
               </p>
             </div>
@@ -108,7 +108,7 @@ export function HeroDashboardPreview() {
                   key={index}
                   className={cn(
                     "min-h-1 flex-1 rounded-[5px]",
-                    index === HIGHLIGHT ? "bg-[#1a4331]" : "bg-[#d3e6da]",
+                    index === HIGHLIGHT ? "bg-[#3d62cf]" : "bg-[#d3e6da]",
                   )}
                   style={{ height: `${height}%` }}
                 />
@@ -147,8 +147,8 @@ export function HeroDashboardPreview() {
         </div>
       </div>
 
-      <div className="absolute right-3 bottom-0 flex items-center gap-3 rounded-2xl bg-white py-3 pr-5 pl-3 shadow-[0_16px_40px_-12px_rgba(0,45,28,0.3),0_0_0_1px_rgba(0,45,28,0.06)] lg:-bottom-14 lg:-left-10 lg:right-auto">
-        <span className="flex size-9 items-center justify-center rounded-full bg-[#1a4331] text-white">
+      <div className="absolute right-3 bottom-0 flex items-center gap-3 rounded-2xl bg-white py-3 pr-5 pl-3 shadow-[0_16px_40px_-12px_rgba(19,35,58,0.3),0_0_0_1px_rgba(19,35,58,0.06)] lg:-bottom-14 lg:-left-10 lg:right-auto">
+        <span className="flex size-9 items-center justify-center rounded-full bg-[#3d62cf] text-white">
           <CheckIcon className="size-5" strokeWidth={2.5} />
         </span>
         <span className="leading-tight">

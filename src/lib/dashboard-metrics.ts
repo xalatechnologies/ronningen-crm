@@ -120,6 +120,24 @@ export function buildMonthlyInvoicedByEventYear(
   }));
 }
 
+export type RollingMonth = { year: number; month: number; amount: number };
+
+/**
+ * The last `count` calendar months ending with the month of `now`, oldest first (e.g. Dec 2025 … Nov 2026),
+ * read from the per-year series. A year missing from the series counts as 0.
+ */
+export function buildRollingMonths(
+  series: readonly DashboardMonthlySeries[],
+  now = new Date(),
+  count = 12,
+): RollingMonth[] {
+  const byYear = new Map(series.map((s) => [s.year, s.months]));
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1);
+    return { year: d.getFullYear(), month: d.getMonth(), amount: byYear.get(d.getFullYear())?.[d.getMonth()] ?? 0 };
+  });
+}
+
 export function countOverdueUnpaidBookings(
   rows: (MoneyBooking & { remaining_amount: number; event_date: string })[],
   today = startOfToday(),

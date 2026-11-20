@@ -1,6 +1,7 @@
 "use client";
 
 import { AppHeader } from "@/components/layout/app-header";
+import { SkipLink } from "@/components/layout/skip-link";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { NotificationAckDialog } from "@/components/notifications/notification-ack-dialog";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -28,12 +29,13 @@ export function ProtectedLayout({
           <UserNotificationListener />
           <NotificationAckDialog />
           <div className="flex min-h-svh bg-background text-foreground">
+            <SkipLink />
             <AppSidebar className="sticky top-0 hidden h-svh shrink-0 md:flex" />
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">
               <AppHeader>
                 <NotificationBell />
               </AppHeader>
-            <main className="app-main flex min-h-0 min-w-0 flex-1 flex-col text-foreground antialiased">
+            <main id="main-content" tabIndex={-1} className="app-main flex min-h-0 min-w-0 flex-1 flex-col text-foreground antialiased outline-none">
               <div className="app-page-inner main-content">{children}</div>
             </main>
           </div>

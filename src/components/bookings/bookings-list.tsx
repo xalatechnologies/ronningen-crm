@@ -9,6 +9,7 @@ import {
   BookingsMonthCalendarToolbar,
   useBookingsMonthCalendarNavigation,
 } from "@/components/bookings/bookings-month-calendar";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { BookingDetailSheet } from "@/components/bookings/booking-detail-sheet";
 import { BookingListContractAction } from "@/components/bookings/booking-list-contract-action";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
@@ -167,67 +168,17 @@ function BookingsFiltersSection({
       <div className="flex min-w-0 flex-col gap-4">
         <div className="min-w-0 w-full">
             <p className={filterEyebrowClass}>{t("common.fields.status")}</p>
-            <div
-              className="grid min-w-0 w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3"
-              role="group"
-              aria-label={t("bookings.filterStatusAria")}
-            >
-              {(
-                [
-                  ["all", t("common.actions.all"), filterCounts.all, null],
-                  ["confirmed", statusLabel("confirmed", t), filterCounts.confirmed, "emerald"],
-                  ["pending", statusLabel("pending", t), filterCounts.pending, "amber"],
-                  ["cancelled", statusLabel("cancelled", t), filterCounts.cancelled, "rose"],
-                ] as const
-              ).map(([key, label, count, tone]) => {
-                const active = filter === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setFilter(key)}
-                    className={cn(
-                      "flex min-h-12 w-full min-w-0 items-center justify-between gap-2 rounded-xl px-4 py-3 text-left transition-colors sm:gap-3 md:min-h-[3.25rem] md:py-3.5",
-                      active
-                        ? "bg-success !text-white [&_svg]:!text-white"
-                        : "bg-card text-foreground ring-1 ring-foreground/20 hover:bg-muted hover:ring-foreground/35",
-                    )}
-                  >
-                    <span className="flex min-w-0 items-center gap-2">
-                      {tone ? (
-                        <span
-                          className={cn(
-                            "size-2 shrink-0 rounded-full",
-                            tone === "emerald" && "bg-emerald-500",
-                            tone === "amber" && "bg-amber-500",
-                            tone === "rose" && "bg-red-500",
-                          )}
-                          aria-hidden
-                        />
-                      ) : null}
-                      <span
-                        className={cn(
-                          "truncate font-heading text-app-sm font-semibold sm:text-app-base",
-                          active ? "!text-white" : undefined,
-                        )}
-                      >
-                        {label}
-                      </span>
-                    </span>
-                    <span
-                      className={cn(
-                        "bookings-list-filter-count inline-flex shrink-0 min-w-[1.75rem] items-center justify-center rounded-full px-2 py-0.5 text-app-sm font-bold tabular-nums",
-                        active
-                          ? "bg-white/20 !text-white"
-                          : "bg-muted text-foreground",
-                      )}
-                    >
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <SegmentedFilter
+              ariaLabel={t("bookings.filterStatusAria")}
+              value={filter}
+              onChange={setFilter}
+              options={[
+                { key: "all", label: t("common.actions.all"), count: filterCounts.all },
+                { key: "confirmed", label: statusLabel("confirmed", t), count: filterCounts.confirmed, dot: "bg-emerald-500" },
+                { key: "pending", label: statusLabel("pending", t), count: filterCounts.pending, dot: "bg-amber-500" },
+                { key: "cancelled", label: statusLabel("cancelled", t), count: filterCounts.cancelled, dot: "bg-red-500" },
+              ]}
+            />
           </div>
 
         <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
