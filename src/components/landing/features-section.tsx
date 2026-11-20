@@ -34,19 +34,19 @@ export function FeaturesSection() {
       <div className={cn(LANDING_CONTAINER, "flex flex-col gap-10 lg:gap-12")}>
         <h2
           id="landing-features-title"
-          className="max-w-[26ch] text-[clamp(30px,5vw,52px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#0c1f16]"
+          className="max-w-[26ch] text-[clamp(30px,5vw,52px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#13233a]"
         >
           {t("landing.sections.features")}
         </h2>
 
         <div className="grid gap-4 lg:grid-cols-12">
-          <article className="flex flex-col justify-between gap-8 rounded-2xl bg-[#1a4331] p-6 md:p-8 lg:col-span-5">
+          <article className="flex flex-col justify-between gap-8 rounded-2xl bg-[#3d62cf] p-6 md:p-8 lg:col-span-5">
             <div className="flex flex-col gap-4">
-              <ContractIcon className="size-7 text-[#85b098]" aria-hidden />
+              <ContractIcon className="size-7 text-[#93acff]" aria-hidden />
               <h3 className="font-heading text-2xl font-semibold tracking-tight text-white">
                 {contract.title}
               </h3>
-              <p className="max-w-[40ch] text-base leading-relaxed text-[#d6e6dc]">
+              <p className="max-w-[40ch] text-base leading-relaxed text-[#eef2fd]">
                 {contract.text}
               </p>
             </div>
@@ -58,13 +58,13 @@ export function FeaturesSection() {
                     key={step.label}
                     className={cn(
                       "flex items-center gap-3 rounded-xl px-3 py-2.5",
-                      last ? "bg-[#e8f5ee]" : "bg-white/10",
+                      last ? "bg-[#eef2fd]" : "bg-white/10",
                     )}
                   >
                     <span
                       className={cn(
                         "flex size-9 shrink-0 items-center justify-center rounded-lg",
-                        last ? "bg-[#1a4331] text-white" : "bg-white/10 text-[#85b098]",
+                        last ? "bg-[#3d62cf] text-white" : "bg-white/10 text-[#93acff]",
                       )}
                     >
                       <step.Icon className="size-[18px]" />
@@ -72,16 +72,16 @@ export function FeaturesSection() {
                     <span
                       className={cn(
                         "flex-1 text-sm font-semibold",
-                        last ? "text-[#0c1f16]" : "text-white",
+                        last ? "text-[#13233a]" : "text-white",
                       )}
                     >
                       {step.label}
                     </span>
-                    <span className={cn("text-xs", last ? "text-[#475569]" : "text-[#b9d3c4]")}>
+                    <span className={cn("text-xs", last ? "text-[#475569]" : "text-[#c9d6f7]")}>
                       {step.meta}
                     </span>
                     <CheckIcon
-                      className={cn("size-4 shrink-0", last ? "text-[#1a4331]" : "text-[#85b098]")}
+                      className={cn("size-4 shrink-0", last ? "text-[#3d62cf]" : "text-[#93acff]")}
                     />
                   </li>
                 );
@@ -97,10 +97,10 @@ export function FeaturesSection() {
                   key={title}
                   className="flex flex-col gap-3 rounded-2xl bg-[#eef2f0] p-5 md:p-6"
                 >
-                  <span className="flex size-10 items-center justify-center rounded-xl bg-[#1a4331] text-white">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-[#3d62cf] text-white">
                     <Icon className="size-5" aria-hidden />
                   </span>
-                  <h3 className="font-heading text-lg font-semibold tracking-tight text-[#0c1f16]">
+                  <h3 className="font-heading text-lg font-semibold tracking-tight text-[#13233a]">
                     {title}
                   </h3>
                   <p className="text-[15px] leading-relaxed text-[#475569]">

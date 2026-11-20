@@ -42,13 +42,13 @@ function Phone({
     <div
       aria-hidden
       className={cn(
-        "relative flex aspect-[9/18.5] w-[17rem] shrink-0 flex-col overflow-hidden rounded-[2.4rem] border-[7px] border-[#0c1f16] bg-[#fafaf6] shadow-[0_30px_60px_-20px_rgba(12,31,22,0.45)]",
+        "relative flex aspect-[9/18.5] w-[17rem] shrink-0 flex-col overflow-hidden rounded-[2.4rem] border-[7px] border-[#13233a] bg-[#fafaf6] shadow-[0_30px_60px_-20px_rgba(19,35,58,0.45)]",
         className,
       )}
     >
       <div className="flex h-12 shrink-0 items-end gap-2 border-b border-black/[0.06] px-4 pb-2">
-        <span className="flex size-6 items-center justify-center rounded-md bg-[#0c1f16] text-[9px] font-bold text-white">E</span>
-        <span className="truncate text-[12px] font-semibold text-[#0c1f16]">{mock.venue}</span>
+        <span className="flex size-6 items-center justify-center rounded-md bg-[#13233a] text-[9px] font-bold text-white">E</span>
+        <span className="truncate text-[12px] font-semibold text-[#13233a]">{mock.venue}</span>
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3.5">{children}</div>
       <div className="flex h-12 shrink-0 items-center justify-around border-t border-black/[0.08] bg-white/80 px-1">
@@ -57,10 +57,10 @@ function Phone({
           const active = i === activeTab;
           return (
             <span key={label} className="flex flex-col items-center gap-0.5">
-              <span className={cn("flex h-5 w-9 items-center justify-center rounded-full", active && "bg-[#1a4331]/20 text-[#1a4331]", !active && "text-[#6b726d]")}>
+              <span className={cn("flex h-5 w-9 items-center justify-center rounded-full", active && "bg-[#3d62cf]/20 text-[#3d62cf]", !active && "text-[#6b726d]")}>
                 <Icon className="size-3.5" strokeWidth={active ? 2.4 : 1.9} />
               </span>
-              <span className={cn("text-[7px] font-semibold", active ? "text-[#0c1f16]" : "text-[#6b726d]")}>{label}</span>
+              <span className={cn("text-[7px] font-semibold", active ? "text-[#13233a]" : "text-[#6b726d]")}>{label}</span>
             </span>
           );
         })}
@@ -77,7 +77,7 @@ function OverviewScreen({ mock }: { mock: Mock }) {
   ];
   return (
     <>
-      <div className="flex flex-col gap-1.5 rounded-2xl bg-[#1a4331] p-3.5 text-white">
+      <div className="flex flex-col gap-1.5 rounded-2xl bg-[#3d62cf] p-3.5 text-white">
         <span className="text-[9px] font-semibold text-white/70">{mock.greeting}</span>
         <span className="flex items-baseline gap-1.5">
           <span className="font-heading text-[2.4rem] font-bold leading-none tabular-nums">{mock.countdown}</span>
@@ -87,16 +87,16 @@ function OverviewScreen({ mock }: { mock: Mock }) {
       <ul className="flex flex-col divide-y divide-black/[0.06] overflow-hidden rounded-xl bg-white ring-1 ring-black/[0.06]">
         {steps.map(({ Icon, title, body, done, attention }) => (
           <li key={title} className="flex items-center gap-2.5 px-2.5 py-2.5">
-            <span className={cn("relative flex size-8 shrink-0 items-center justify-center rounded-full", attention ? "bg-[#1a4331] text-white" : "bg-[#1a4331]/12 text-[#1a4331]")}>
+            <span className={cn("relative flex size-8 shrink-0 items-center justify-center rounded-full", attention ? "bg-[#3d62cf] text-white" : "bg-[#3d62cf]/12 text-[#3d62cf]")}>
               <Icon className="size-3.5" />
               {done ? (
-                <span className="absolute -bottom-0.5 -right-0.5 flex size-3.5 items-center justify-center rounded-full bg-[#1a4331] text-white ring-2 ring-white">
+                <span className="absolute -bottom-0.5 -right-0.5 flex size-3.5 items-center justify-center rounded-full bg-[#3d62cf] text-white ring-2 ring-white">
                   <CheckIcon className="size-2" strokeWidth={4} />
                 </span>
               ) : null}
             </span>
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="truncate text-[10px] font-semibold text-[#0c1f16]">{title}</span>
+              <span className="truncate text-[10px] font-semibold text-[#13233a]">{title}</span>
               <span className="line-clamp-2 text-[8.5px] leading-snug text-[#5b635e]">{body}</span>
             </span>
             <ChevronRightIcon className="size-3 shrink-0 text-[#8a918c]" />
@@ -110,22 +110,22 @@ function OverviewScreen({ mock }: { mock: Mock }) {
 function WishlistScreen({ mock }: { mock: Mock }) {
   return (
     <>
-      <span className="px-0.5 font-heading text-[15px] font-bold text-[#0c1f16]">{mock.wishTitle}</span>
+      <span className="px-0.5 font-heading text-[15px] font-bold text-[#13233a]">{mock.wishTitle}</span>
       <ul className="flex flex-col gap-2">
         {mock.wishItems.map((item) => {
           const quoted = Boolean(item.price);
           return (
             <li key={item.name} className="flex flex-col gap-1.5 rounded-xl bg-white p-3 ring-1 ring-black/[0.06]">
               <span className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-semibold text-[#0c1f16]">{item.name}</span>
-                <span className={cn("rounded-full px-2 py-0.5 text-[8px] font-bold", quoted ? "bg-[#1a4331] text-white" : "bg-black/[0.06] text-[#5b635e]")}>{item.chip}</span>
+                <span className="text-[11px] font-semibold text-[#13233a]">{item.name}</span>
+                <span className={cn("rounded-full px-2 py-0.5 text-[8px] font-bold", quoted ? "bg-[#3d62cf] text-white" : "bg-black/[0.06] text-[#5b635e]")}>{item.chip}</span>
               </span>
-              {quoted ? <span className="font-heading text-[13px] font-bold tabular-nums text-[#0c1f16]">{item.price}</span> : null}
+              {quoted ? <span className="font-heading text-[13px] font-bold tabular-nums text-[#13233a]">{item.price}</span> : null}
             </li>
           );
         })}
       </ul>
-      <div className="mt-auto flex items-center justify-between rounded-xl bg-[#1a4331] px-3 py-2.5 text-white">
+      <div className="mt-auto flex items-center justify-between rounded-xl bg-[#3d62cf] px-3 py-2.5 text-white">
         <span className="text-[9px] font-semibold text-white/80">{mock.wishTotal}</span>
         <span className="font-heading text-[13px] font-bold tabular-nums">NOK 22 950</span>
       </div>
@@ -136,20 +136,20 @@ function WishlistScreen({ mock }: { mock: Mock }) {
 function ScheduleScreen({ mock }: { mock: Mock }) {
   return (
     <>
-      <span className="px-0.5 font-heading text-[15px] font-bold text-[#0c1f16]">{mock.scheduleTitle}</span>
-      <div className="flex items-center gap-1.5 rounded-xl bg-[#1a4331]/10 px-2.5 py-2 text-[9px] font-semibold text-[#1a4331]">
+      <span className="px-0.5 font-heading text-[15px] font-bold text-[#13233a]">{mock.scheduleTitle}</span>
+      <div className="flex items-center gap-1.5 rounded-xl bg-[#3d62cf]/10 px-2.5 py-2 text-[9px] font-semibold text-[#3d62cf]">
         <CheckIcon className="size-3" strokeWidth={3} />
         {mock.shared}
       </div>
       <ol className="flex flex-col">
         {mock.scheduleItems.map((item, i) => (
           <li key={item.time} className="grid grid-cols-[2rem_0.75rem_1fr] gap-x-2">
-            <span className="pt-2.5 font-heading text-[11px] font-bold tabular-nums text-[#0c1f16]">{item.time}</span>
+            <span className="pt-2.5 font-heading text-[11px] font-bold tabular-nums text-[#13233a]">{item.time}</span>
             <span className="relative flex justify-center">
               <span className={cn("absolute w-px bg-black/15", i === 0 ? "top-3.5" : "top-0", i === mock.scheduleItems.length - 1 ? "h-3.5" : "bottom-0")} />
-              <span className="relative mt-3 size-2 rounded-full bg-[#1a4331] ring-[3px] ring-[#fafaf6]" />
+              <span className="relative mt-3 size-2 rounded-full bg-[#3d62cf] ring-[3px] ring-[#fafaf6]" />
             </span>
-            <span className="mb-2 rounded-xl bg-white px-2.5 py-2 text-[10px] font-semibold text-[#0c1f16] ring-1 ring-black/[0.06]">{item.title}</span>
+            <span className="mb-2 rounded-xl bg-white px-2.5 py-2 text-[10px] font-semibold text-[#13233a] ring-1 ring-black/[0.06]">{item.title}</span>
           </li>
         ))}
       </ol>
@@ -170,10 +170,10 @@ export function PortalSection() {
       <div className={cn(LANDING_CONTAINER, "grid items-center gap-12 lg:grid-cols-12 lg:gap-8")}>
         <div className="flex flex-col gap-8 lg:col-span-5">
           <div className="flex flex-col gap-4">
-            <span className="w-fit rounded-full bg-[#1a4331] px-3 py-1 text-[13px] font-semibold text-white">{portal.eyebrow}</span>
+            <span className="w-fit rounded-full bg-[#3d62cf] px-3 py-1 text-[13px] font-semibold text-white">{portal.eyebrow}</span>
             <h2
               id="landing-portal-title"
-              className="text-[clamp(30px,4.4vw,48px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#0c1f16]"
+              className="text-[clamp(30px,4.4vw,48px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#13233a]"
             >
               {t("landing.portal.title")}
             </h2>
@@ -185,11 +185,11 @@ export function PortalSection() {
               const Icon = FEATURE_ICONS[index]!;
               return (
                 <li key={title} className="flex gap-4">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#1a4331] text-white">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#3d62cf] text-white">
                     <Icon className="size-5" aria-hidden />
                   </span>
                   <div className="flex flex-col gap-0.5">
-                    <h3 className="font-heading text-lg font-semibold tracking-tight text-[#0c1f16]">{title}</h3>
+                    <h3 className="font-heading text-lg font-semibold tracking-tight text-[#13233a]">{title}</h3>
                     <p className="text-[15px] leading-relaxed text-[#475569]">{text}</p>
                   </div>
                 </li>
@@ -199,11 +199,11 @@ export function PortalSection() {
 
           <div className="flex flex-col gap-2 text-[14px] text-[#475569]">
             <p className="flex items-start gap-2.5">
-              <ShieldCheckIcon className="mt-0.5 size-4 shrink-0 text-[#1a4331]" aria-hidden />
+              <ShieldCheckIcon className="mt-0.5 size-4 shrink-0 text-[#3d62cf]" aria-hidden />
               {portal.control}
             </p>
             <p className="flex items-start gap-2.5">
-              <SmartphoneIcon className="mt-0.5 size-4 shrink-0 text-[#1a4331]" aria-hidden />
+              <SmartphoneIcon className="mt-0.5 size-4 shrink-0 text-[#3d62cf]" aria-hidden />
               {portal.app}
             </p>
           </div>
@@ -224,15 +224,15 @@ export function PortalSection() {
         </div>
 
         <div className="flex flex-col gap-5 lg:col-span-12">
-          <h3 className="font-heading text-xl font-semibold tracking-tight text-[#0c1f16]">{portal.stepsTitle}</h3>
+          <h3 className="font-heading text-xl font-semibold tracking-tight text-[#13233a]">{portal.stepsTitle}</h3>
           <ol className="grid gap-4 md:grid-cols-3">
             {portal.steps.map(({ title, text }, i) => (
               <li key={title} className="flex gap-4 rounded-2xl bg-white p-5 ring-1 ring-black/[0.05]">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#1a4331] font-heading text-base font-bold text-white">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#3d62cf] font-heading text-base font-bold text-white">
                   {i + 1}
                 </span>
                 <div className="flex flex-col gap-1">
-                  <h4 className="font-heading text-base font-semibold text-[#0c1f16]">{title}</h4>
+                  <h4 className="font-heading text-base font-semibold text-[#13233a]">{title}</h4>
                   <p className="text-[15px] leading-relaxed text-[#475569]">{text}</p>
                 </div>
               </li>

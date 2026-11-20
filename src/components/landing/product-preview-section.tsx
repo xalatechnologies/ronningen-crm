@@ -31,7 +31,7 @@ const CHART_MONTHS = [
 ] as const;
 
 const STATUS_TONE: Record<string, string> = {
-  confirmed: "bg-[#e8f5ee] text-[#1a4331]",
+  confirmed: "bg-[#eef2fd] text-[#3d62cf]",
   partial: "bg-[#fdf3dc] text-[#7a5410]",
   inquiry: "bg-[#eef2f0] text-[#475569]",
 };
@@ -74,7 +74,7 @@ export function ProductPreviewSection() {
           <div className="flex flex-col gap-5">
             <h2
               id="landing-preview-title"
-              className="max-w-[20ch] text-[clamp(30px,5vw,52px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#0c1f16]"
+              className="max-w-[20ch] text-[clamp(30px,5vw,52px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#13233a]"
             >
               {t("landing.sections.productPreview")}
             </h2>
@@ -103,7 +103,7 @@ export function ProductPreviewSection() {
                   className={cn(
                     "relative flex min-h-11 items-center gap-2 overflow-hidden rounded-full px-4 text-[15px] font-semibold transition-colors",
                     on
-                      ? "bg-[#1a4331] text-white"
+                      ? "bg-[#3d62cf] text-white"
                       : "text-[#334155] hover:bg-white/70",
                   )}
                 >
@@ -112,7 +112,7 @@ export function ProductPreviewSection() {
                   {on && !paused ? (
                     <span
                       aria-hidden
-                      className="absolute inset-x-4 bottom-1 h-0.5 origin-left rounded-full bg-[#85b098] motion-reduce:hidden"
+                      className="absolute inset-x-4 bottom-1 h-0.5 origin-left rounded-full bg-[#93acff] motion-reduce:hidden"
                       style={{ animation: `hiw-progress ${TAB_MS}ms linear forwards` }}
                     />
                   ) : null}
@@ -128,7 +128,7 @@ export function ProductPreviewSection() {
                 className="flex items-start gap-3 text-base text-[#1a1c1a] md:text-lg"
               >
                 <Check
-                  className="mt-1 size-5 shrink-0 text-[#1a4331]"
+                  className="mt-1 size-5 shrink-0 text-[#3d62cf]"
                   aria-hidden
                 />
                 <span>{bullet}</span>
@@ -138,10 +138,10 @@ export function ProductPreviewSection() {
         </div>
 
         <div
-          className="overflow-hidden rounded-3xl bg-[#e8f5ee] p-4 sm:p-8 lg:p-10"
+          className="overflow-hidden rounded-3xl bg-[#eef2fd] p-4 sm:p-8 lg:p-10"
           aria-hidden
         >
-          <div className="min-h-[340px] rounded-2xl bg-white p-5 shadow-[0_24px_64px_-28px_rgba(0,45,28,0.35)] md:p-7">
+          <div className="min-h-[340px] rounded-2xl bg-white p-5 shadow-[0_24px_64px_-28px_rgba(19,35,58,0.35)] md:p-7">
             {active === 0 ? (
               <div className="grid gap-6 sm:grid-cols-[1fr_1fr]">
                 <div className="grid grid-cols-7 gap-1.5 text-center text-[13px]">
@@ -152,7 +152,7 @@ export function ProductPreviewSection() {
                         key={day}
                         className={cn(
                           "flex aspect-square items-center justify-center rounded-lg",
-                          state === "confirmed" && "bg-[#1a4331] font-bold text-white",
+                          state === "confirmed" && "bg-[#3d62cf] font-bold text-white",
                           state === "partial" && "bg-[#fdf3dc] font-bold text-[#7a5410]",
                           !state && "text-[#475569]",
                           day === 1 && "col-start-1",
@@ -198,13 +198,13 @@ export function ProductPreviewSection() {
                       key={kpi.label}
                       className={cn(
                         "rounded-xl px-3.5 py-3",
-                        i === 0 ? "bg-[#1a4331] text-white" : "bg-[#f4f6f3]",
+                        i === 0 ? "bg-[#3d62cf] text-white" : "bg-[#f4f6f3]",
                       )}
                     >
                       <p
                         className={cn(
                           "text-xs font-medium",
-                          i === 0 ? "text-[#b9d3c4]" : "text-[#475569]",
+                          i === 0 ? "text-[#c9d6f7]" : "text-[#475569]",
                         )}
                       >
                         {kpi.label}
@@ -218,10 +218,10 @@ export function ProductPreviewSection() {
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between text-sm font-semibold">
                     <span>Betalt denne måneden</span>
-                    <span className="text-[#1a4331]">78 %</span>
+                    <span className="text-[#3d62cf]">78 %</span>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-[#e8f5ee]">
-                    <div className="h-full w-[78%] rounded-full bg-[#1a4331]" />
+                  <div className="h-3 overflow-hidden rounded-full bg-[#eef2fd]">
+                    <div className="h-full w-[78%] rounded-full bg-[#3d62cf]" />
                   </div>
                 </div>
               </div>
@@ -233,7 +233,7 @@ export function ProductPreviewSection() {
                   <p className="font-heading text-base font-semibold">
                     {demo.monthlyRevenue}
                   </p>
-                  <p className="font-heading text-base font-bold text-[#1a4331]">
+                  <p className="font-heading text-base font-bold text-[#3d62cf]">
                     {demo.demoRevenue}
                   </p>
                 </div>
@@ -243,7 +243,7 @@ export function ProductPreviewSection() {
                       key={i}
                       className={cn(
                         "flex-1 rounded-md",
-                        i === 5 ? "bg-[#1a4331]" : "bg-[#d3e6da]",
+                        i === 5 ? "bg-[#3d62cf]" : "bg-[#d3e6da]",
                       )}
                       style={{ height: `${h}%` }}
                     />

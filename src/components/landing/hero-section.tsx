@@ -43,7 +43,7 @@ export function HeroSection() {
           <div className="flex flex-col gap-5 md:gap-6">
             <h1
               id="landing-hero-title"
-              className="max-w-[20ch] text-[clamp(38px,8vw,64px)] leading-[1.04] font-bold tracking-[-0.035em] text-[#0c1f16] lg:text-[clamp(44px,4.6vw,72px)]"
+              className="max-w-[20ch] text-[clamp(38px,8vw,64px)] leading-[1.04] font-bold tracking-[-0.035em] text-[#13233a] lg:text-[clamp(44px,4.6vw,72px)]"
             >
               {t("landing.hero.headline")}
             </h1>

@@ -28,7 +28,7 @@ export function AdminSidebar({
         <div className="flex items-center gap-3 md:gap-3.5">
           <Link
             href="/admin"
-            className="relative flex size-12 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/20 [--brand-tile:#0c1f16] dark:[--brand-tile:#1a4331] md:size-14"
+            className="relative flex size-12 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/20 [--brand-tile:#13233a] dark:[--brand-tile:#3d62cf] md:size-14"
             aria-label={t("adminNav.overviewAria", { appName: APP_NAME })}
           >
             <AppBrandLogo

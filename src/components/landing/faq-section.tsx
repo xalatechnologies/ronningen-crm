@@ -29,7 +29,7 @@ export function FaqSection() {
         <div className="flex flex-col gap-5 lg:sticky lg:top-28 lg:self-start">
           <h2
             id="landing-faq-title"
-            className="max-w-[14ch] text-[clamp(30px,5vw,52px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#0c1f16]"
+            className="max-w-[14ch] text-[clamp(30px,5vw,52px)] leading-[1.06] font-bold tracking-[-0.03em] text-[#13233a]"
           >
             {t("landing.sections.faq")}
           </h2>
@@ -43,13 +43,13 @@ export function FaqSection() {
             <details
               key={item.question}
               name="landing-faq"
-              className="group rounded-2xl bg-[#eef2f0] transition-colors open:bg-[#e8f5ee]"
+              className="group rounded-2xl bg-[#eef2f0] transition-colors open:bg-[#eef2fd]"
               open={index === 0}
             >
-              <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-heading text-base font-semibold text-[#0c1f16] marker:content-none md:px-7 md:text-lg [&::-webkit-details-marker]:hidden">
+              <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-heading text-base font-semibold text-[#13233a] marker:content-none md:px-7 md:text-lg [&::-webkit-details-marker]:hidden">
                 <span>{item.question}</span>
                 <Plus
-                  className="size-5 shrink-0 text-[#1a4331] transition-transform duration-200 group-open:rotate-45"
+                  className="size-5 shrink-0 text-[#3d62cf] transition-transform duration-200 group-open:rotate-45"
                   aria-hidden
                 />
               </summary>

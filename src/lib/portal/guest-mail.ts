@@ -61,7 +61,7 @@ export async function sendGuestInviteEmail(input: {
       <tr><td style="padding:28px;font-size:16px;line-height:1.6;">
         <p style="margin:0 0 6px;">${escapeHtml(t("portal.guestMail.hello", { name: safeName(input.guestName) }))}</p>
         <p style="margin:0 0 20px;">${escapeHtml(intro)}</p>
-        <p style="margin:0 0 24px;"><a href="${url}" style="display:inline-block;background:#1a4331;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:10px;font-weight:700;">${escapeHtml(cta)}</a></p>
+        <p style="margin:0 0 24px;"><a href="${url}" style="display:inline-block;background:#3d62cf;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:10px;font-weight:700;">${escapeHtml(cta)}</a></p>
         <p style="margin:0;font-size:12px;color:#57534e;">${escapeHtml(footer)}</p>
       </td></tr>
     </table>
@@ -123,7 +123,7 @@ export async function sendGuestMessageEmail(input: {
       <tr><td style="padding:28px;font-size:16px;line-height:1.6;">
         <p style="margin:0 0 16px;">${escapeHtml(t("portal.guestMail.hello", { name: safeName(input.guestName) }))}</p>
         ${paragraphs}
-        <p style="margin:8px 0 24px;"><a href="${url}" style="display:inline-block;background:#1a4331;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:10px;font-weight:700;">${escapeHtml(cta)}</a></p>
+        <p style="margin:8px 0 24px;"><a href="${url}" style="display:inline-block;background:#3d62cf;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:10px;font-weight:700;">${escapeHtml(cta)}</a></p>
         <p style="margin:0;font-size:12px;color:#57534e;">${escapeHtml(footer)}</p>
       </td></tr>
     </table>

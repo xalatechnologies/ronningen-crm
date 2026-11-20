@@ -970,7 +970,7 @@ export function FinanceSection({
               )}
             </div>
 
-            <div className="flex flex-col justify-between rounded-2xl bg-[#1a4331] p-6 text-white">
+            <div className="flex flex-col justify-between rounded-2xl bg-[#3d62cf] p-6 text-white">
               <div className="mb-3 flex items-start justify-between">
                 <span className="finance-kpi-label text-white/80">
                   {t("finance.kpiResult")}

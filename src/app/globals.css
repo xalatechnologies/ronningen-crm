@@ -1598,3 +1598,33 @@
     transform: scaleX(1);
   }
 }
+
+
+/**
+ * Product visual language (docs/design/visual-language.md), global rules.
+ * Reduced motion: drop decorative movement, keep instant state feedback.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/** Forced colours: keep a visible focus ring and control borders in the user's colours. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="switch"] {
+    border: 1px solid ButtonText;
+  }
+}

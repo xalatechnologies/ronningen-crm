@@ -592,7 +592,7 @@ export function PricingSection({
                   key={pkg.id}
                   className={cn(
                     "relative flex h-full flex-col rounded-2xl p-6 sm:p-7",
-                    isPopular ? "bg-[#1a4331] text-white" : "bg-card ring-1 ring-foreground/15",
+                    isPopular ? "bg-[#3d62cf] text-white" : "bg-card ring-1 ring-foreground/15",
                     !pkg.active && "opacity-70",
                   )}
                 >
@@ -600,7 +600,7 @@ export function PricingSection({
                     <h3
                       className={cn(
                         "pricing-package-tier-label min-w-0 break-words font-heading font-bold",
-                        isPopular ? "text-[#d6e6dc]" : "text-foreground",
+                        isPopular ? "text-[#eef2fd]" : "text-foreground",
                       )}
                     >
                       {pkg.name}
@@ -637,7 +637,7 @@ export function PricingSection({
                     <p
                       className={cn(
                         "pricing-package-body mt-2 leading-relaxed",
-                        isPopular ? "text-[#d6e6dc]" : "text-muted-foreground",
+                        isPopular ? "text-[#eef2fd]" : "text-muted-foreground",
                       )}
                     >
                       {tagline}
@@ -657,7 +657,7 @@ export function PricingSection({
                               <CheckCircle2
                                 className={cn(
                                   "mt-0.5 size-5 shrink-0",
-                                  isPopular ? "text-[#85b098]" : "text-success",
+                                  isPopular ? "text-[#93acff]" : "text-success",
                                 )}
                                 aria-hidden
                               />
@@ -670,7 +670,7 @@ export function PricingSection({
                             type="button"
                             className={cn(
                               "mt-3 text-app-sm font-semibold underline-offset-4 hover:underline",
-                              isPopular ? "text-[#b9d3c4]" : "text-success",
+                              isPopular ? "text-[#c9d6f7]" : "text-success",
                             )}
                             onClick={() =>
                               setExpandedIds((prev) => {
@@ -691,7 +691,7 @@ export function PricingSection({
                       <p
                         className={cn(
                           "pricing-package-body leading-relaxed",
-                          isPopular ? "text-[#b9d3c4]" : "text-muted-foreground",
+                          isPopular ? "text-[#c9d6f7]" : "text-muted-foreground",
                         )}
                       >
                         {t("pricing.emptyFeaturesHint")}

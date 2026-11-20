@@ -4,13 +4,6 @@ import type { DashboardHomeData } from "@/components/dashboard/types";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { buttonVariants } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -19,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTranslation } from "@/i18n/client";
-import { defaultCalendarYearOptions } from "@/lib/calendar/year-range";
+import { buildRollingMonths } from "@/lib/dashboard-metrics";
 import { statusLabel } from "@/lib/navigation/nav-labels";
 import { APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
@@ -35,7 +28,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 const MONTH_KEYS = [
   "jan",
@@ -134,43 +127,32 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
     return t("dashboard.percentDelta", { sign, percent: rounded });
   }
 
-  const chartYearOptions = useMemo(() => {
-    const fromData = data.monthlyByYear.map((s) => s.year);
-    if (fromData.length > 0) return fromData;
-    return defaultCalendarYearOptions();
-  }, [data.monthlyByYear]);
-
-  const [chartYear, setChartYear] = useState(() => {
-    const y = new Date().getFullYear();
-    return chartYearOptions.includes(y) ? y : chartYearOptions[chartYearOptions.length - 1] ?? y;
-  });
-
-  const chartMonthAmounts = useMemo(() => {
-    const hit = data.monthlyByYear.find((s) => s.year === chartYear);
-    if (hit) return [...hit.months];
-    return Array.from({ length: 12 }, () => 0);
-  }, [data.monthlyByYear, chartYear]);
+  // The chart always shows the last 12 months in a row (crosses year boundaries), so there is no year picker.
+  const rollingMonths = useMemo(() => buildRollingMonths(data.monthlyByYear), [data.monthlyByYear]);
+  const rangeLabel = useMemo(() => {
+    const first = rollingMonths[0];
+    const last = rollingMonths[rollingMonths.length - 1];
+    if (!first || !last) return "";
+    return `${monthLabels[first.month]} ${first.year} – ${monthLabels[last.month]} ${last.year}`;
+  }, [rollingMonths, monthLabels]);
 
   const chartBars = useMemo(() => {
-    const max = Math.max(0, ...chartMonthAmounts);
+    const max = Math.max(0, ...rollingMonths.map((m) => m.amount));
     const scaleMax = max > 0 ? max : 1;
-    const now = new Date();
-    const highlightMonth =
-      chartYear === now.getFullYear() ? now.getMonth() : -1;
-    return chartMonthAmounts.map((amount, i) => {
-      const rawPct = (amount / scaleMax) * 100;
-      const hasValue = amount > 0;
-      const heightPct = hasValue ? Math.max(14, rawPct) : 0;
+    return rollingMonths.map((m, i) => {
+      const hasValue = m.amount > 0;
       return {
-        key: `m-${i}`,
-        label: monthLabels[i] ?? "",
-        amount,
+        key: `m-${m.year}-${m.month}`,
+        label: monthLabels[m.month] ?? "",
+        // Year shown under the first bar and under every January, so the year change is easy to see.
+        yearLabel: i === 0 || m.month === 0 ? String(m.year) : "",
+        amount: m.amount,
         hasValue,
-        heightPct,
-        highlight: i === highlightMonth,
+        heightPct: hasValue ? Math.max(14, (m.amount / scaleMax) * 100) : 0,
+        highlight: i === rollingMonths.length - 1,
       };
     });
-  }, [chartMonthAmounts, chartYear, monthLabels]);
+  }, [rollingMonths, monthLabels]);
 
   const { kpis } = data;
   const paidShareLabel =
@@ -209,7 +191,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
     100,
     Math.max(0, Math.round(kpis.paidShareOfInvoicedPct ?? 0)),
   );
-  const chartMax = Math.max(0, ...chartMonthAmounts);
+  const chartMax = Math.max(0, ...rollingMonths.map((m) => m.amount));
 
   return (
     <div className="mx-auto flex w-full flex-col gap-6 pb-8 lg:gap-8">
@@ -229,18 +211,18 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
 
       <section aria-label={t("dashboard.kpiAria")}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className={cn(tile, "bg-[#1a4331] text-white ring-0")}>
+          <div className={cn(tile, "bg-[#3d62cf] text-white ring-0")}>
             <div className="flex items-center justify-between gap-3">
-              <span className={cn(label, "text-[#b9d3c4]")}>
+              <span className={cn(label, "text-[#c9d6f7]")}>
                 {t("dashboard.totalInvoiced")}
               </span>
-              <Wallet className="size-5 text-[#85b098]" aria-hidden />
+              <Wallet className="size-5 text-[#93acff]" aria-hidden />
             </div>
             <div className="flex flex-col gap-3">
               <p className={cn(value, "text-white")}>
                 {formatCurrency(kpis.totalInvoicedNok)}
               </p>
-              <p className="text-[13px] leading-snug text-[#b9d3c4]">
+              <p className="text-[13px] leading-snug text-[#c9d6f7]">
                 {t("dashboard.kpiBookingsScopeAllYears")}
               </p>
               <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-xs font-semibold text-white">
@@ -329,33 +311,6 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                 {t("dashboard.revenueSubtitle")}
               </p>
             </div>
-            <Select
-              value={String(chartYear)}
-              onValueChange={(v) => setChartYear(Number(v))}
-            >
-              <SelectTrigger
-                aria-label={t("dashboard.selectYearAria")}
-                className="h-10 min-w-[7.5rem] rounded-xl border-0 bg-muted px-4 font-heading text-app-base font-semibold shadow-none focus-visible:ring-2 focus-visible:ring-success/40"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent
-                align="end"
-                side="bottom"
-                alignItemWithTrigger={false}
-                className="min-w-[var(--anchor-width)] max-h-72"
-              >
-                {chartYearOptions.map((y) => (
-                  <SelectItem
-                    key={y}
-                    value={String(y)}
-                    className="py-2.5 font-heading text-app-base font-semibold tabular-nums"
-                  >
-                    {y}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="px-4 pt-5 pb-6 md:px-8 md:pb-8">
@@ -364,7 +319,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
               aria-hidden
             >
               <span className="text-app-sm font-semibold text-foreground">
-                {t("dashboard.revenuePerMonth", { year: chartYear })}
+                {t("dashboard.revenuePerMonth", { range: rangeLabel })}
               </span>
               <span className="text-app-xs tabular-nums text-muted-foreground">
                 {t("dashboard.highest", {
@@ -375,7 +330,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
             <div
               className="flex h-64 w-full items-stretch gap-1.5 md:h-72 md:gap-2.5"
               role="img"
-              aria-label={t("dashboard.chartAria", { year: chartYear })}
+              aria-label={t("dashboard.chartAria", { range: rangeLabel })}
             >
               {chartBars.map((bar) => (
                 <div
@@ -427,6 +382,7 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                   )}
                 >
                   {bar.label}
+                  {bar.yearLabel ? <span className="block text-[9px] font-normal tabular-nums normal-case opacity-70 md:text-[10px]">{bar.yearLabel}</span> : null}
                 </span>
               ))}
             </div>

@@ -100,7 +100,7 @@ export function AppSidebar({ className }: { className?: string }) {
           <Link
             href="/app/dashboard"
             className={cn(
-              "relative flex size-14 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/20 [--brand-tile:#0c1f16] dark:[--brand-tile:#1a4331] md:size-16",
+              "relative flex size-14 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/20 [--brand-tile:#13233a] dark:[--brand-tile:#3d62cf] md:size-16",
             )}
             aria-label={t("navigation.goToDashboardAria", { appName: APP_NAME })}
             onMouseEnter={() => prefetchRoute("/app/dashboard")}

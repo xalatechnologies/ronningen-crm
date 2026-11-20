@@ -162,7 +162,7 @@ export function LoginForm() {
   const demo = useMemo(() => getDictionary(locale).landing.heroDemo, [locale]);
 
   const inputClass =
-    "h-12 rounded-xl border-0 bg-[#f1f4f2] px-4 text-app-base shadow-none focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-[#1a4331]/60";
+    "h-12 rounded-xl border-0 bg-[#f1f4f2] px-4 text-app-base shadow-none focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-[#3d62cf]/60";
 
   return (
     <main className="relative grid min-h-[min(100dvh,100svh)] flex-1 lg:grid-cols-[1.05fr_1fr]">
@@ -180,7 +180,7 @@ export function LoginForm() {
       ) : null}
 
       <aside
-        className="relative hidden flex-col justify-between gap-12 overflow-hidden bg-[#0c1f16] p-12 text-white lg:flex xl:p-16"
+        className="relative hidden flex-col justify-between gap-12 overflow-hidden bg-[#13233a] p-12 text-white lg:flex xl:p-16"
       >
         <Link
           href="/"
@@ -202,13 +202,13 @@ export function LoginForm() {
                   key={stat.labelKey}
                   className={cn(
                     "rounded-xl px-3 py-2.5",
-                    i === 0 ? "bg-[#1a4331] text-white" : "bg-[#f4f6f3]",
+                    i === 0 ? "bg-[#3d62cf] text-white" : "bg-[#f4f6f3]",
                   )}
                 >
                   <p
                     className={cn(
                       "text-[10px] font-medium",
-                      i === 0 ? "text-[#b9d3c4]" : "text-[#475569]",
+                      i === 0 ? "text-[#c9d6f7]" : "text-[#475569]",
                     )}
                   >
                     {t(
@@ -227,7 +227,7 @@ export function LoginForm() {
                   key={i}
                   className={cn(
                     "flex-1 rounded-[4px]",
-                    i === 5 ? "bg-[#1a4331]" : "bg-[#d3e6da]",
+                    i === 5 ? "bg-[#3d62cf]" : "bg-[#d3e6da]",
                   )}
                   style={{ height: `${h}%` }}
                 />
@@ -236,7 +236,7 @@ export function LoginForm() {
           </div>
         </div>
 
-        <p className="max-w-[40ch] text-sm leading-relaxed text-[#b9d3c4]">
+        <p className="max-w-[40ch] text-sm leading-relaxed text-[#c9d6f7]">
           {t("auth.pages.loginTagline", { appName: APP_NAME })}
         </p>
       </aside>
@@ -247,7 +247,7 @@ export function LoginForm() {
             <Link href="/" aria-label={APP_NAME} className="w-fit lg:hidden">
               <BrandLockup />
             </Link>
-            <h1 className="text-[clamp(30px,4vw,40px)] leading-[1.1] font-bold tracking-[-0.03em] text-[#0c1f16]">
+            <h1 className="text-[clamp(30px,4vw,40px)] leading-[1.1] font-bold tracking-[-0.03em] text-[#13233a]">
               {t("auth.login")}
             </h1>
             <p className="text-app-base leading-relaxed text-muted-foreground lg:hidden">
@@ -270,10 +270,10 @@ export function LoginForm() {
 
           {showDevLogin ? (
             <div
-              className="rounded-xl bg-[#e8f5ee] px-4 py-3 text-app-sm md:text-app-base"
+              className="rounded-xl bg-[#eef2fd] px-4 py-3 text-app-sm md:text-app-base"
               aria-live="polite"
             >
-              <p className="font-semibold text-[#1a4331]">
+              <p className="font-semibold text-[#3d62cf]">
                 {t("auth.platformAdminDev")}
               </p>
               <p className="mt-1 text-[#334155]">
@@ -300,13 +300,13 @@ export function LoginForm() {
               {savedEmails.length > 0 ? (
                 <ul className="flex flex-col gap-2">
                   {savedEmails.filter(({ email }) => pickedEmail === null || email === pickedEmail).map(({ email }) => (
-                    <li key={email} className="flex items-center gap-1 rounded-xl bg-[#e8f5ee] pr-1 ring-1 ring-[#1a4331]/15">
+                    <li key={email} className="flex items-center gap-1 rounded-xl bg-[#eef2fd] pr-1 ring-1 ring-[#3d62cf]/15">
                       <button
                         type="button"
                         onClick={() => pickSavedEmail(email)}
-                        className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl px-3 text-left text-app-base font-medium text-[#0c1f16] transition-colors hover:bg-[#1a4331]/8"
+                        className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl px-3 text-left text-app-base font-medium text-[#13233a] transition-colors hover:bg-[#3d62cf]/8"
                       >
-                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#1a4331] text-app-sm font-semibold uppercase text-white">
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#3d62cf] text-app-sm font-semibold uppercase text-white">
                           {email.charAt(0)}
                         </span>
                         <span className="truncate">{email}</span>
@@ -315,7 +315,7 @@ export function LoginForm() {
                         <button
                           type="button"
                           onClick={() => setPickedEmail(null)}
-                          className="mr-1 shrink-0 rounded-full px-3 py-2 text-app-sm font-semibold text-[#1a4331] hover:bg-[#1a4331]/10"
+                          className="mr-1 shrink-0 rounded-full px-3 py-2 text-app-sm font-semibold text-[#3d62cf] hover:bg-[#3d62cf]/10"
                         >
                           {t("auth.switchAccount")}
                         </button>
@@ -324,7 +324,7 @@ export function LoginForm() {
                         type="button"
                         onClick={() => forgetSavedEmail(email)}
                         aria-label={`× ${email}`}
-                        className="flex size-9 shrink-0 items-center justify-center rounded-full text-[#55605a] hover:bg-[#1a4331]/10"
+                        className="flex size-9 shrink-0 items-center justify-center rounded-full text-[#55605a] hover:bg-[#3d62cf]/10"
                       >
                         <X className="size-4" aria-hidden />
                       </button>
@@ -372,7 +372,7 @@ export function LoginForm() {
                   </Label>
                   <Link
                     href="/auth/forgot-password"
-                    className="text-app-sm font-semibold text-[#1a4331] transition-colors hover:text-[#0c1f16] hover:underline"
+                    className="text-app-sm font-semibold text-[#3d62cf] transition-colors hover:text-[#13233a] hover:underline"
                   >
                     {t("auth.forgotPassword")}
                   </Link>
@@ -398,7 +398,7 @@ export function LoginForm() {
                     aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                     aria-pressed={showPassword}
                     title={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
-                    className="absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-[#475569] transition-colors hover:bg-black/5 hover:text-[#0c1f16] focus-visible:ring-2 focus-visible:ring-[#1a4331]/60 focus-visible:outline-none"
+                    className="absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-[#475569] transition-colors hover:bg-black/5 hover:text-[#13233a] focus-visible:ring-2 focus-visible:ring-[#3d62cf]/60 focus-visible:outline-none"
                   >
                     {showPassword ? <EyeOff className="size-5" aria-hidden /> : <Eye className="size-5" aria-hidden />}
                   </button>
@@ -414,7 +414,7 @@ export function LoginForm() {
                   type="checkbox"
                   checked={remember}
                   onChange={(e) => setRemember(e.target.checked)}
-                  className="size-4 rounded accent-[#1a4331]"
+                  className="size-4 rounded accent-[#3d62cf]"
                 />
                 {t("auth.rememberMe")}
               </label>
@@ -441,7 +441,7 @@ export function LoginForm() {
                   setFormError(null);
                   setMode("code");
                 }}
-                className="self-center text-app-sm font-semibold text-[#1a4331] transition-colors hover:text-[#0c1f16] hover:underline"
+                className="self-center text-app-sm font-semibold text-[#3d62cf] transition-colors hover:text-[#13233a] hover:underline"
               >
                 {t("auth.loginWithCode")}
               </button>
@@ -464,7 +464,7 @@ export function LoginForm() {
 
           <Link
             href="/auth/register"
-            className="self-center font-heading text-app-base font-semibold text-[#0c1f16] underline decoration-[#85b098] underline-offset-4 transition-colors hover:text-[#1a4331]"
+            className="self-center font-heading text-app-base font-semibold text-[#13233a] underline decoration-[#93acff] underline-offset-4 transition-colors hover:text-[#3d62cf]"
           >
             {t("auth.createAccount")}
           </Link>

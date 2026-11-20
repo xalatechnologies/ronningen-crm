@@ -53,7 +53,7 @@ export function AdminContextSwitch({
               "flex min-h-10 flex-1 items-center justify-center rounded-lg px-2 py-1.5 text-center text-app-xs transition-colors outline-none select-none md:min-h-11 md:text-app-sm",
               "focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
               isActive
-                ? "bg-white font-bold !text-[#1a4331] shadow-sm"
+                ? "bg-white font-bold !text-[#3d62cf] shadow-sm"
                 : "font-medium text-white/80 hover:bg-white/10 hover:text-white",
             )}
           >

@@ -15,10 +15,10 @@ export function BrandMark({ className }: { className?: string }) {
       aria-label={APP_NAME}
       className={cn("size-full", className)}
     >
-      <rect width="48" height="48" rx="12" style={{ fill: "var(--brand-tile, #1a4331)" }} />
+      <rect width="48" height="48" rx="12" style={{ fill: "var(--brand-tile, #3d62cf)" }} />
       <rect x="13" y="12" width="6" height="24" rx="3" fill="#ffffff" />
       <rect x="13" y="12" width="22" height="6" rx="3" fill="#ffffff" />
-      <rect x="19" y="21" width="10" height="6" rx="3" fill="#85b098" />
+      <rect x="19" y="21" width="10" height="6" rx="3" fill="#93acff" />
       <rect x="13" y="30" width="22" height="6" rx="3" fill="#ffffff" />
     </svg>
   );
@@ -48,14 +48,14 @@ export function BrandLockup({
       <span
         className={cn(
           "font-heading text-[19px] leading-none tracking-[-0.03em]",
-          light ? "text-[#0c1f16]" : "text-white",
+          light ? "text-[#13233a]" : "text-white",
         )}
       >
         <span className="font-extrabold">{first}</span>{" "}
         <span
           className={cn(
             "font-medium",
-            light ? "text-[#1a4331]" : "text-[#b9d3c4]",
+            light ? "text-[#3d62cf]" : "text-[#c9d6f7]",
           )}
         >
           {rest.join(" ")}

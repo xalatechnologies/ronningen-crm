@@ -23,7 +23,7 @@ function Field({ label, value, className }: { label: string; value: string; clas
 function ScreenTitle({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className="mb-5 border-b border-foreground/10 pb-4">
-      <p className="font-heading text-xl font-semibold text-[#0c1f16]">{title}</p>
+      <p className="font-heading text-xl font-semibold text-[#13233a]">{title}</p>
       {hint ? <p className="mt-0.5 text-sm text-[#64748b]">{hint}</p> : null}
     </div>
   );
@@ -60,22 +60,22 @@ function PackageScreen() {
             key={p.name}
             className={cn(
               "flex items-center gap-3 rounded-xl border px-4 py-3",
-              i === 0 ? "border-[#1a4331] bg-[#e8f5ee]" : "border-foreground/15",
+              i === 0 ? "border-[#3d62cf] bg-[#eef2fd]" : "border-foreground/15",
             )}
           >
             <span
               className={cn(
                 "flex size-5 shrink-0 items-center justify-center rounded-full border",
-                i === 0 ? "border-[#1a4331] bg-[#1a4331] text-white" : "border-foreground/30",
+                i === 0 ? "border-[#3d62cf] bg-[#3d62cf] text-white" : "border-foreground/30",
               )}
             >
               {i === 0 ? <CheckIcon className="size-3" /> : null}
             </span>
             <span className="min-w-0 flex-1 leading-tight">
-              <span className="block text-[15px] font-semibold text-[#0c1f16]">{p.name}</span>
+              <span className="block text-[15px] font-semibold text-[#13233a]">{p.name}</span>
               <span className="block truncate text-xs text-[#64748b]">{p.detail}</span>
             </span>
-            <span className="font-heading text-[15px] font-bold text-[#1a4331]">{p.price}</span>
+            <span className="font-heading text-[15px] font-bold text-[#3d62cf]">{p.price}</span>
           </li>
         ))}
       </ul>
@@ -95,12 +95,12 @@ function PaymentScreen() {
       <ul className="divide-y divide-foreground/10">
         {rows.map((r) => (
           <li key={r.label} className="flex items-center gap-3 py-3.5 text-[15px]">
-            <span className="min-w-0 flex-1 font-medium text-[#0c1f16]">{r.label}</span>
+            <span className="min-w-0 flex-1 font-medium text-[#13233a]">{r.label}</span>
             <span className="font-semibold tabular-nums">{r.amount}</span>
             <span
               className={cn(
                 "rounded-full px-2.5 py-0.5 text-xs font-medium",
-                r.paid ? "bg-[#e8f5ee] text-[#1a4331]" : "bg-[#fdf3dc] text-[#7a5410]",
+                r.paid ? "bg-[#eef2fd] text-[#3d62cf]" : "bg-[#fdf3dc] text-[#7a5410]",
               )}
             >
               {r.status}
@@ -110,7 +110,7 @@ function PaymentScreen() {
       </ul>
       <div className="mt-2 flex items-center justify-between rounded-xl bg-[#eef2f0] px-4 py-3">
         <span className="text-sm text-[#475569]">{t("landing.heroStats.outstanding")}</span>
-        <span className="font-heading text-lg font-bold text-[#1a4331]">kr 14 500</span>
+        <span className="font-heading text-lg font-bold text-[#3d62cf]">kr 14 500</span>
       </div>
     </>
   );
@@ -128,9 +128,9 @@ function ReportScreen() {
         {demo.stats.map((s, i) => (
           <div
             key={s.labelKey}
-            className={cn("rounded-xl px-3 py-2.5", i === 0 ? "bg-[#1a4331] text-white" : "bg-[#eef2f0]")}
+            className={cn("rounded-xl px-3 py-2.5", i === 0 ? "bg-[#3d62cf] text-white" : "bg-[#eef2f0]")}
           >
-            <p className={cn("text-[11px] font-medium", i === 0 ? "text-[#b9d3c4]" : "text-[#475569]")}>
+            <p className={cn("text-[11px] font-medium", i === 0 ? "text-[#c9d6f7]" : "text-[#475569]")}>
               {t(`landing.heroStats.${s.labelKey}` as "landing.heroStats.revenue")}
             </p>
             <p className="mt-0.5 font-heading text-[15px] font-bold whitespace-nowrap">{s.value}</p>
@@ -141,7 +141,7 @@ function ReportScreen() {
         {BARS.map((h, i) => (
           <div
             key={i}
-            className={cn("flex-1 rounded-[4px]", i === 5 ? "bg-[#1a4331]" : "bg-[#d3e6da]")}
+            className={cn("flex-1 rounded-[4px]", i === 5 ? "bg-[#3d62cf]" : "bg-[#d3e6da]")}
             style={{ height: `${h}%` }}
           />
         ))}
