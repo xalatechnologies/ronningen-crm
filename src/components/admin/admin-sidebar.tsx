@@ -16,7 +16,6 @@ export function AdminSidebar({
   supportOpenCount?: number;
 }) {
   const { t } = useTranslation();
-  const copyrightYear = new Date().getFullYear();
 
   return (
     <aside
@@ -56,13 +55,7 @@ export function AdminSidebar({
       </nav>
 
       <footer className="shrink-0 border-t border-sidebar-border px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)] md:py-5">
-        <AdminContextSwitch active="platform" className="mb-3" />
-        <p
-          className="text-app-xs leading-snug text-white/55"
-          suppressHydrationWarning
-        >
-          © {copyrightYear} {APP_NAME}
-        </p>
+        <AdminContextSwitch active="platform" />
       </footer>
     </aside>
   );
