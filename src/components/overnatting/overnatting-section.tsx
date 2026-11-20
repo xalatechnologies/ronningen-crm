@@ -71,7 +71,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { enGB } from "date-fns/locale/en-GB";
 import { nb } from "date-fns/locale/nb";
-import { BedDouble, Building2, Calendar, Plus, RotateCcw, Users, ArrowDownRight, ArrowUpRight, TrendingUp, Wallet } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  BedDouble,
+  Building2,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Percent,
+  Plus,
+  RotateCcw,
+  Trash2,
+  Users,
+  Wallet,
+} from "lucide-react";
 import Link from "next/link";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -123,6 +138,32 @@ function matchesAccommodationDateRange(
   if (fromYmd) return end > fromYmd;
   if (toYmd) return start <= toYmd;
   return true;
+}
+
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  confirmed: "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200",
+  tentative: "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
+  cancelled: "bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-200",
+};
+
+const STATUS_DOT_CLASS: Record<string, string> = {
+  confirmed: "bg-emerald-500",
+  tentative: "bg-amber-500",
+  cancelled: "bg-red-500",
+};
+
+function ReservationStatusBadge({ status, label }: { status: string; label: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
+        STATUS_BADGE_CLASS[status],
+      )}
+    >
+      <span className={cn("size-1.5 rounded-full", STATUS_DOT_CLASS[status])} aria-hidden />
+      {label}
+    </span>
+  );
 }
 
 const dialogSectionTitleClass = "text-xs font-semibold text-muted-foreground";
@@ -583,329 +624,321 @@ export function OvernattingSection({
     quickStats.monthOverMonthPct != null && quickStats.monthOverMonthPct >= 0;
 
   return (
-    <div className="overnatting-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
-      <div className="flex min-w-0 flex-col gap-6">
-        <div>
-          <AppPageHeader
-            className="mb-0 gap-3 md:gap-4"
-            surface="default"
-            title={t("overnatting.title")}
-            actionsClassName="justify-end"
-            actions={
-              <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-end">
-                {canManage ? (
-                  <Link
-                    href="/app/overnatting/new"
+    <div className="overnatting-page-workspace mx-auto flex w-full flex-col gap-6 pb-24 md:pb-8">
+      <AppPageHeader
+        className="mb-0 gap-3 md:gap-4"
+        surface="default"
+        title={t("overnatting.title")}
+        actionsClassName="justify-end"
+        actions={
+          <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-end">
+            {canManage ? (
+              <Link
+                href="/app/overnatting/new"
+                className={cn(
+                  buttonVariants({ variant: "success", size: "cta" }),
+                  "inline-flex w-full items-center justify-center gap-2 rounded-xl shadow-none sm:w-auto",
+                )}
+              >
+                <Plus className="size-5" aria-hidden />
+                {t("overnatting.new")}
+              </Link>
+            ) : null}
+            {!loadError ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="cta"
+                className={cn("w-full gap-2 sm:w-auto", outlineBtnClass)}
+                aria-expanded={calendarOpen}
+                onClick={() => setCalendarOpen((v) => !v)}
+              >
+                <Calendar className="size-5 shrink-0" aria-hidden />
+                {calendarOpen ? t("overnatting.hideCalendar") : t("overnatting.showCalendar")}
+              </Button>
+            ) : null}
+          </div>
+        }
+      />
+
+      {loadError ? (
+        <div role="alert">
+          <div className="rounded-xl bg-destructive/10 px-4 py-3 text-destructive">
+            {t("overnatting.loadError", { error: loadError })}
+          </div>
+        </div>
+      ) : null}
+
+      {!loadError ? (
+        <section
+          className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4"
+          aria-label={quickStats.monthLabel}
+        >
+          <div className="col-span-2 flex min-w-0 flex-col gap-3 rounded-2xl bg-success p-4 text-white lg:col-span-1 lg:p-5">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-9 items-center justify-center rounded-xl bg-white/15">
+                <Wallet className="size-[18px]" aria-hidden />
+              </span>
+              <p className="text-app-sm font-semibold text-white/90">
+                {t("overnatting.monthlyRevenue")}
+                <span className="font-normal text-white/65"> · {quickStats.monthLabel}</span>
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="break-words text-app-3xl font-black leading-none tracking-tight tabular-nums">
+                {formatCurrency(quickStats.currentMonthRevenue)}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-app-xs">
+                {quickStats.monthOverMonthPct != null ? (
+                  <span
                     className={cn(
-                      buttonVariants({ variant: "success", size: "cta" }),
-                      "inline-flex w-full items-center justify-center gap-2 rounded-xl shadow-none sm:w-auto",
+                      "inline-flex items-center gap-1 font-bold",
+                      trendPositive ? "text-emerald-200" : "text-rose-200",
                     )}
                   >
-                    <Plus className="size-5" aria-hidden />
-                    {t("overnatting.new")}
-                  </Link>
-                ) : null}
-                {canManage ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="cta"
-                    className={cn("w-full gap-2 sm:w-auto", outlineBtnClass)}
-                    onClick={openNewUnit}
-                  >
-                    <BedDouble className="size-5" aria-hidden />
-                    {t("overnatting.newUnit")}
-                  </Button>
-                ) : null}
-                {!loadError ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="cta"
-                    className={cn("w-full gap-2 sm:w-auto", outlineBtnClass)}
-                    aria-expanded={calendarOpen}
-                    onClick={() => setCalendarOpen((v) => !v)}
-                  >
-                    <Calendar className="size-5 shrink-0" aria-hidden />
-                    {calendarOpen ? t("overnatting.hideCalendar") : t("overnatting.showCalendar")}
-                  </Button>
-                ) : null}
+                    {trendPositive ? (
+                      <ArrowUpRight className="size-4 shrink-0" aria-hidden />
+                    ) : (
+                      <ArrowDownRight className="size-4 shrink-0" aria-hidden />
+                    )}
+                    {t("overnatting.percentFromPrevMonth", {
+                      sign: trendPositive ? "+" : "",
+                      percent: quickStats.monthOverMonthPct
+                        .toFixed(1)
+                        .replace(".", locale === "nb" ? "," : "."),
+                    })}
+                  </span>
+                ) : (
+                  <span className="font-medium text-white/75">{t("overnatting.noComparison")}</span>
+                )}
+                <span className="text-white/70">
+                  {t("overnatting.prevMonth")}: {formatCurrency(quickStats.prevMonthRevenue)}
+                </span>
               </div>
-            }
+            </div>
+          </div>
+
+          <div className={cn("flex min-w-0 flex-col gap-3 p-4 lg:p-5", cardClass)}>
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-9 items-center justify-center rounded-xl bg-muted text-rn-text-heading">
+                <Percent className="size-[18px]" aria-hidden />
+              </span>
+              <p className="text-app-sm font-semibold text-muted-foreground">
+                {t("overnatting.occupancyRate")}
+              </p>
+            </div>
+            <div>
+              <p className="text-app-2xl font-extrabold leading-none tabular-nums text-rn-text-heading">
+                {quickStats.occupancyPct}%
+              </p>
+              <div
+                className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={quickStats.occupancyPct}
+                aria-label={t("overnatting.occupancyRate")}
+              >
+                <div
+                  className="h-full rounded-full bg-success transition-[width]"
+                  style={{ width: `${Math.min(100, Math.max(0, quickStats.occupancyPct))}%` }}
+                />
+              </div>
+              <p className="mt-2 line-clamp-2 text-app-xs leading-snug text-muted-foreground">
+                {t("overnatting.occupancyDescription")}
+              </p>
+            </div>
+          </div>
+
+          <div className={cn("flex min-w-0 flex-col gap-3 p-4 lg:p-5", cardClass)}>
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-9 items-center justify-center rounded-xl bg-muted text-rn-text-heading">
+                <Users className="size-[18px]" aria-hidden />
+              </span>
+              <p className="text-app-sm font-semibold text-muted-foreground">
+                {t("overnatting.avgGuests")}
+              </p>
+            </div>
+            <div>
+              <p className="text-app-2xl font-extrabold leading-none tabular-nums text-rn-text-heading">
+                {quickStats.avgGuestsActive ?? "—"}
+              </p>
+              <p className="mt-3 text-app-xs text-muted-foreground">
+                {t("overnatting.perReservation")}
+              </p>
+            </div>
+          </div>
+
+          <div className={cn("col-span-2 flex min-w-0 flex-col gap-3 p-4 lg:col-span-1 lg:p-5", cardClass)}>
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-9 items-center justify-center rounded-xl bg-muted text-rn-text-heading">
+                <BedDouble className="size-[18px]" aria-hidden />
+              </span>
+              <p className="text-app-sm font-semibold text-muted-foreground">
+                {t("overnatting.units")}
+              </p>
+            </div>
+            <div>
+              <p className="text-app-2xl font-extrabold leading-none tabular-nums text-rn-text-heading">
+                {activeUnitCount}
+                <span className="text-app-lg font-semibold text-muted-foreground">
+                  {" "}
+                  / {sortedUnits.length}
+                </span>
+              </p>
+              <p className="mt-3 text-app-xs text-muted-foreground">
+                {sortedUnits.length === 1
+                  ? t("overnatting.unitSingular")
+                  : t("overnatting.unitPlural")}{" "}
+                {t("overnatting.unitsAvailableSuffix")}
+              </p>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {!loadError && calendarOpen ? (
+        <div className={cn("px-4 py-4 sm:px-6", cardClass)}>
+          <div
+            className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2"
+            role="toolbar"
+            aria-label={t("overnatting.availabilityLegend")}
+          >
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="text-xs font-semibold text-muted-foreground">
+                {t("overnatting.availability")}
+              </span>
+              {loadingRes ? (
+                <span className="text-app-xs font-medium text-muted-foreground">
+                  {t("overnatting.updating")}
+                </span>
+              ) : null}
+            </div>
+            <div className="flex min-w-0 max-sm:basis-full flex-wrap items-center justify-end gap-2 sm:shrink-0">
+              <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-app-xs font-medium text-rn-text-body">
+                <span
+                  className="size-2.5 shrink-0 rounded-full bg-emerald-500/90 ring-2 ring-emerald-500/25 shadow-sm dark:bg-emerald-400"
+                  aria-hidden
+                />
+                {statusLabel("confirmed", t)}
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-app-xs font-medium text-rn-text-body">
+                <span
+                  className="size-2.5 shrink-0 rounded-full bg-amber-500/90 ring-2 ring-amber-500/25 shadow-sm dark:bg-amber-400"
+                  aria-hidden
+                />
+                {statusLabel("tentative", t)}
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-app-xs font-medium text-rn-text-body">
+                <span
+                  className="size-2.5 shrink-0 rounded-full bg-rose-500/90 ring-2 ring-rose-500/25 shadow-sm dark:bg-rose-400"
+                  aria-hidden
+                />
+                {t("overnatting.cancelledEmpty")}
+              </span>
+            </div>
+          </div>
+          <AccommodationMonthCalendar
+            reservations={reservations}
+            monthYm={monthYm}
+            onMonthChange={setMonthYm}
+            canManage={canManage}
+            onSelectReservation={openEditRes}
+            hasUnits={sortedUnits.length > 0}
           />
         </div>
+      ) : null}
 
-        {loadError ? (
-          <div role="alert">
-            <div className="rounded-xl bg-destructive/10 px-4 py-3 text-destructive">
-              {t("overnatting.loadError", { error: loadError })}
-            </div>
-          </div>
-        ) : null}
-
-        {!loadError && calendarOpen ? (
-          <div className={cn("px-4 py-4 sm:px-6", cardClass)}>
-            <div
-              className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2"
-              role="toolbar"
-              aria-label={t("overnatting.availabilityLegend")}
-            >
-              <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-                <span className="text-xs font-semibold text-muted-foreground">
-                  {t("overnatting.availability")}
-                </span>
-                {loadingRes ? (
-                  <span className="text-app-xs font-medium text-muted-foreground">
-                    {t("overnatting.updating")}
-                  </span>
-                ) : null}
-              </div>
-              <div className="flex min-w-0 max-sm:basis-full flex-wrap items-center justify-end gap-2 sm:shrink-0">
-                <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-app-xs font-medium text-rn-text-body">
-                  <span
-                    className="size-2.5 shrink-0 rounded-full bg-emerald-500/90 ring-2 ring-emerald-500/25 shadow-sm dark:bg-emerald-400"
-                    aria-hidden
-                  />
-                  {statusLabel("confirmed", t)}
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-app-xs font-medium text-rn-text-body">
-                  <span
-                    className="size-2.5 shrink-0 rounded-full bg-amber-500/90 ring-2 ring-amber-500/25 shadow-sm dark:bg-amber-400"
-                    aria-hidden
-                  />
-                  {statusLabel("tentative", t)}
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-app-xs font-medium text-rn-text-body">
-                  <span
-                    className="size-2.5 shrink-0 rounded-full bg-rose-500/90 ring-2 ring-rose-500/25 shadow-sm dark:bg-rose-400"
-                    aria-hidden
-                  />
-                  {t("overnatting.cancelledEmpty")}
-                </span>
-              </div>
-            </div>
-            <AccommodationMonthCalendar
-              reservations={reservations}
-              monthYm={monthYm}
-              onMonthChange={setMonthYm}
-              canManage={canManage}
-              onSelectReservation={openEditRes}
-              hasUnits={sortedUnits.length > 0}
-            />
-          </div>
-        ) : null}
-
-        {!loadError && sortedUnits.length > 0 ? (
-          <div className={cn("px-4 py-6 sm:px-6 lg:px-8", cardClass)}>
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground">
-                  {t("overnatting.title")}
-                </p>
-                <h3 className="mt-1 font-heading text-app-lg font-bold tracking-tight text-rn-text-heading md:text-app-xl">
-                  {t("overnatting.units")}
-                </h3>
-                <p className="mt-1 max-w-xl text-app-sm leading-snug text-muted-foreground">
-                  {sortedUnits.length}{" "}
-                  {sortedUnits.length === 1
-                    ? t("overnatting.unitSingular")
-                    : t("overnatting.unitPlural")}{" "}
-                  {t("overnatting.unitsAvailableSuffix")}
-                  {canManage ? t("overnatting.manageUnitsHint") : null}
-                </p>
-              </div>
-            </div>
-
-            <ul
-              className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-              aria-label={t("overnatting.unitsListAria")}
-            >
-              {sortedUnits.map((u) => (
-                <li key={u.id}>
-                  <div
-                    className={cn(
-                      "flex h-full flex-col rounded-2xl p-5 transition-colors",
-                      u.active
-                        ? "bg-muted/70 ring-1 ring-foreground/20 hover:bg-muted hover:ring-foreground/35"
-                        : "border border-dashed border-foreground/35 bg-muted/40 opacity-85",
-                    )}
-                  >
-                    <div className="flex min-w-0 flex-1 gap-3">
-                      <div
-                        className={cn(
-                          "flex size-11 shrink-0 items-center justify-center rounded-xl bg-card ring-1 ring-foreground/15",
-                          !u.active && "grayscale-[0.35]",
-                        )}
-                        aria-hidden
-                      >
-                        <BedDouble className="size-5 text-rn-text-heading" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2 gap-y-1">
-                          <span className="font-heading text-app-base font-bold leading-tight text-rn-text-heading">
-                            {u.name}
-                          </span>
-                          <span
-                            className={cn(
-                              "inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold",
-                              u.active
-                                ? "bg-success/15 text-success"
-                                : "bg-muted text-muted-foreground",
-                            )}
-                          >
-                            {u.active ? t("statuses.active") : t("statuses.inactive")}
-                          </span>
-                        </div>
-                        <div className="mt-2.5 flex flex-col gap-1.5 text-app-xs text-muted-foreground">
-                          <span className="inline-flex items-center gap-1.5">
-                            <Users
-                              className="size-3.5 shrink-0 text-rn-text-body/80"
-                              aria-hidden
-                            />
-                            <span>
-                              {t("overnatting.maxGuests", { count: u.maxGuests })}
-                            </span>
-                          </span>
-                          {u.propertyName ? (
-                            <span className="inline-flex items-center gap-1.5">
-                              <Building2
-                                className="size-3.5 shrink-0 text-rn-text-body/80"
-                                aria-hidden
-                              />
-                              <span className="min-w-0 truncate text-foreground/85">
-                                {u.propertyName}
-                              </span>
-                            </span>
-                          ) : null}
-                        </div>
-                        {u.notes?.trim() ? (
-                          <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-muted-foreground italic">
-                            {u.notes.trim()}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                    {canManage ? (
-                      <div className="mt-4 flex flex-wrap gap-2 border-t border-foreground/10 pt-3 sm:mt-5 sm:justify-end">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className={outlineBtnClass}
-                          onClick={() => openEditUnit(u)}
-                        >
-                          {t("common.actions.edit")}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          className="rounded-xl font-semibold shadow-none"
-                          onClick={() => setDeleteUnitTarget(u)}
-                        >
-                          {t("common.actions.delete")}
-                        </Button>
-                      </div>
-                    ) : null}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-
-        {!loadError ? (
-          <div className={cn("px-4 py-6 sm:px-6", cardClass)}>
-            <h2 className="font-heading text-app-lg font-bold capitalize text-rn-text-heading md:text-app-xl">
-              {t("overnatting.reservationsMonth", { month: monthLabel })}
-            </h2>
-
-            <section
-              className="overnatting-list-filters mt-4"
-              aria-label={t("overnatting.filterReservationsAria")}
-            >
-              <div className="flex min-w-0 flex-col gap-4">
-                <div className="min-w-0 w-full">
-                    <p className={filterEyebrowClass}>{t("common.fields.status")}</p>
-                    <div
-                      className="grid min-w-0 w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3"
-                      role="group"
-                      aria-label={t("overnatting.filterStatusAria")}
+      {!loadError ? (
+        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_21rem] xl:items-start">
+          <section className={cn("min-w-0", cardClass)} aria-labelledby={`${rid}-res-title`}>
+            <div className="flex flex-col gap-4 border-b border-foreground/8 px-4 py-4 sm:px-6 sm:py-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2
+                  id={`${rid}-res-title`}
+                  className="font-heading text-app-lg font-bold capitalize text-rn-text-heading md:text-app-xl"
+                >
+                  {t("overnatting.reservationsMonth", { month: monthLabel })}
+                </h2>
+                <div className="flex items-center gap-1.5">
+                  {monthYm !== ymNow() ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className={cn("h-9", outlineBtnClass)}
+                      onClick={() => setMonthYm(ymNow())}
                     >
-                      {(
-                        [
-                          ["all", t("common.actions.all"), filterCounts.all, null],
-                          [
-                            "confirmed",
-                            statusLabel("confirmed", t),
-                            filterCounts.confirmed,
-                            "emerald",
-                          ],
-                          [
-                            "tentative",
-                            statusLabel("tentative", t),
-                            filterCounts.tentative,
-                            "amber",
-                          ],
-                          [
-                            "cancelled",
-                            statusLabel("cancelled", t),
-                            filterCounts.cancelled,
-                            "rose",
-                          ],
-                        ] as const
-                      ).map(([key, label, count, tone]) => {
-                        const active = statusFilter === key;
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => setStatusFilter(key)}
-                            className={cn(
-                              "flex min-h-12 w-full min-w-0 items-center justify-between gap-2 rounded-xl px-4 py-3 text-left transition-colors sm:gap-3 md:min-h-[3.25rem] md:py-3.5",
-                              active
-                                ? "bg-success !text-white [&_svg]:!text-white"
-                                : "bg-card text-foreground ring-1 ring-foreground/20 hover:bg-muted hover:ring-foreground/35",
-                            )}
-                          >
-                            <span className="flex min-w-0 items-center gap-2">
-                              {tone ? (
-                                <span
-                                  className={cn(
-                                    "size-2 shrink-0 rounded-full",
-                                    tone === "emerald" && "bg-emerald-500",
-                                    tone === "amber" && "bg-amber-500",
-                                    tone === "rose" && "bg-red-500",
-                                  )}
-                                  aria-hidden
-                                />
-                              ) : null}
-                              <span
-                                className={cn(
-                                  "truncate font-heading text-app-sm font-semibold sm:text-app-base",
-                                  active ? "!text-white" : undefined,
-                                )}
-                              >
-                                {label}
-                              </span>
-                            </span>
-                            <span
-                              className={cn(
-                                "overnatting-list-filter-count inline-flex shrink-0 min-w-[1.75rem] items-center justify-center rounded-full px-2 py-0.5 text-app-sm font-bold tabular-nums",
-                                active
-                                  ? "bg-white/20 !text-white"
-                                  : "bg-muted text-foreground",
-                              )}
-                            >
-                              {count}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                      {t("calendar.today")}
+                    </Button>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className={cn("size-9", outlineBtnClass)}
+                    aria-label={t("calendar.prevMonth")}
+                    onClick={() => setMonthYm(ymAdd(monthYm, -1))}
+                  >
+                    <ChevronLeft className="size-4" aria-hidden />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className={cn("size-9", outlineBtnClass)}
+                    aria-label={t("calendar.nextMonth")}
+                    onClick={() => setMonthYm(ymAdd(monthYm, 1))}
+                  >
+                    <ChevronRight className="size-4" aria-hidden />
+                  </Button>
+                </div>
+              </div>
 
-                <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
+              <section
+                className="overnatting-list-filters flex min-w-0 flex-col gap-3"
+                aria-label={t("overnatting.filterReservationsAria")}
+              >
+                <div className="max-w-full overflow-x-auto">
+                  <div
+                    className="inline-flex gap-1 rounded-xl bg-muted p-1"
+                    role="group"
+                    aria-label={t("overnatting.filterStatusAria")}
+                  >
+                    {(
+                      [
+                        ["all", t("common.actions.all"), filterCounts.all, null],
+                        ["confirmed", statusLabel("confirmed", t), filterCounts.confirmed, "bg-emerald-500"],
+                        ["tentative", statusLabel("tentative", t), filterCounts.tentative, "bg-amber-500"],
+                        ["cancelled", statusLabel("cancelled", t), filterCounts.cancelled, "bg-red-500"],
+                      ] as const
+                    ).map(([key, label, count, dot]) => {
+                      const active = statusFilter === key;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => setStatusFilter(key)}
+                          className={cn(
+                            "inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-3.5 transition-colors",
+                            active
+                              ? "bg-card text-foreground shadow-sm ring-1 ring-foreground/10"
+                              : "text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          {dot ? <span className={cn("size-2 rounded-full", dot)} aria-hidden /> : null}
+                          <span className="text-app-sm font-semibold">{label}</span>
+                          <span className="overnatting-list-filter-count text-app-xs font-bold tabular-nums opacity-70">
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto] lg:items-end">
                   <div className="min-w-0">
                     <Label htmlFor={`${rid}-res-unit`} className={filterEyebrowClass}>
                       {t("overnatting.tableUnit")}
@@ -946,227 +979,280 @@ export function OvernattingSection({
                       className={filterFieldClass}
                     />
                   </div>
-                  <div className="flex min-w-0 sm:col-span-2 lg:col-span-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={!hasActiveFilters}
-                      className="h-11 w-full gap-2 rounded-xl border border-foreground/30 bg-card px-4 font-heading text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15 sm:h-12 sm:text-app-base"
-                      onClick={resetFilters}
-                    >
-                      <RotateCcw className="size-4 shrink-0" aria-hidden />
-                      {t("overnatting.resetFilters")}
-                    </Button>
-                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={!hasActiveFilters}
+                    className="h-11 gap-2 rounded-xl px-4 font-heading text-app-sm font-semibold sm:col-span-2 sm:h-12 lg:col-span-1"
+                    onClick={resetFilters}
+                  >
+                    <RotateCcw className="size-4 shrink-0" aria-hidden />
+                    {t("overnatting.resetFilters")}
+                  </Button>
                 </div>
-              </div>
-            </section>
+              </section>
+            </div>
 
-            <div className="mt-4 overflow-x-auto">
-              <Table className="min-w-[720px]">
-                <TableHeader>
-                  <TableRow className="border-0 bg-muted/60 hover:bg-muted/60">
-                    <TableHead>{t("overnatting.tableCustomer")}</TableHead>
-                    <TableHead>{t("overnatting.tableUnit")}</TableHead>
-                    <TableHead>{t("overnatting.tableArrival")}</TableHead>
-                    <TableHead>{t("overnatting.tableDeparture")}</TableHead>
-                    <TableHead>{t("overnatting.tableGuests")}</TableHead>
-                    <TableHead>{t("common.fields.status")}</TableHead>
-                    {canManage ? (
-                      <TableHead className="text-right">{t("overnatting.tableActions")}</TableHead>
-                    ) : null}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredReservations.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={canManage ? 7 : 6}
-                        className="text-rn-text-body"
-                      >
-                        {resInMonth.length === 0
-                          ? t("overnatting.emptyMonth")
-                          : hasActiveFilters
-                            ? t("overnatting.emptyFiltered")
-                            : t("overnatting.emptyMonth")}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredReservations.map((r) => (
-                      <TableRow key={r.id}>
-                        <TableCell className={APP_TABLE_CELL_PRIMARY}>
-                          {r.customerName === UNKNOWN_CUSTOMER
-                            ? t("overnatting.unknownCustomer")
-                            : r.customerName}
-                        </TableCell>
-                        <TableCell className={APP_TABLE_CELL_BODY}>{r.unitName}</TableCell>
-                        <TableCell className={APP_TABLE_CELL_DATE}>
-                          {formatAppDateFromParts(r.checkInDate, r.checkInTime, locale)}
-                        </TableCell>
-                        <TableCell className={APP_TABLE_CELL_DATE}>
-                          {formatAppDateFromParts(r.checkOutDate, r.checkOutTime, locale)}
-                        </TableCell>
-                        <TableCell className={cn(APP_TABLE_CELL_BODY, "tabular-nums")}>
-                          {r.guestCount}
-                        </TableCell>
-                        <TableCell className={APP_TABLE_CELL_BODY}>
-                          <span
-                            className={cn(
-                              "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
-                              r.status === "confirmed" &&
-                                "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200",
-                              r.status === "tentative" &&
-                                "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
-                              r.status === "cancelled" &&
-                                "bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-200",
-                            )}
-                          >
-                            {statusLabel(r.status, t)}
-                          </span>
-                        </TableCell>
+            {filteredReservations.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+                <span className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                  <Calendar className="size-6" aria-hidden />
+                </span>
+                <p className="max-w-sm text-app-sm text-rn-text-body">
+                  {resInMonth.length > 0 && hasActiveFilters
+                    ? t("overnatting.emptyFiltered")
+                    : t("overnatting.emptyMonth")}
+                </p>
+                {canManage && !(resInMonth.length > 0 && hasActiveFilters) ? (
+                  <Link
+                    href="/app/overnatting/new"
+                    className={cn(
+                      buttonVariants({ variant: "success", size: "cta" }),
+                      "inline-flex items-center gap-2 rounded-xl shadow-none",
+                    )}
+                  >
+                    <Plus className="size-4" aria-hidden />
+                    {t("overnatting.new")}
+                  </Link>
+                ) : null}
+              </div>
+            ) : (
+              <>
+                <div className="hidden overflow-x-auto md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-0 bg-muted/50 hover:bg-muted/50">
+                        <TableHead className="pl-6">{t("overnatting.tableCustomer")}</TableHead>
+                        <TableHead>{t("overnatting.tableUnit")}</TableHead>
+                        <TableHead>{t("overnatting.tableArrival")}</TableHead>
+                        <TableHead>{t("overnatting.tableDeparture")}</TableHead>
+                        <TableHead>{t("overnatting.tableGuests")}</TableHead>
+                        <TableHead>{t("common.fields.status")}</TableHead>
                         {canManage ? (
-                          <TableCell className="text-right">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className={outlineBtnClass}
-                              onClick={() => openEditRes(r)}
-                            >
-                              {t("common.actions.edit")}
-                            </Button>
-                          </TableCell>
+                          <TableHead className="pr-6 text-right">{t("overnatting.tableActions")}</TableHead>
                         ) : null}
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        ) : null}
-      </div>
-
-      {!loadError ? (
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-8">
-          <div className="flex min-w-0 flex-col justify-between rounded-2xl bg-success p-7 text-white md:p-9">
-            <div className="min-w-0">
-              <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-white/12 md:size-14">
-                <TrendingUp className="size-6 md:size-7" aria-hidden />
-              </div>
-              <h2 className="font-heading text-app-xl font-bold leading-snug text-white md:text-app-2xl">
-                {t("overnatting.monthlyRevenue")}
-              </h2>
-              <p className="mt-3 text-app-sm leading-relaxed text-white/90 md:text-app-base">
-                {t("overnatting.revenueDescription", {
-                  month: quickStats.monthLabel,
-                  prevMonth: quickStats.prevMonthLabel,
-                })}
-              </p>
-            </div>
-            <div className="mt-10 min-w-0">
-              <div className="break-words text-app-3xl font-black leading-none tracking-tight md:text-app-3xl">
-                {formatCurrency(quickStats.currentMonthRevenue)}
-              </div>
-              {quickStats.monthOverMonthPct != null ? (
-                <div
-                  className={cn(
-                    "mt-4 flex items-center gap-2 text-app-sm font-bold md:text-app-base",
-                    trendPositive ? "text-emerald-200" : "text-rose-200",
-                  )}
-                >
-                  {trendPositive ? (
-                    <ArrowUpRight className="size-4 shrink-0 md:size-5" aria-hidden />
-                  ) : (
-                    <ArrowDownRight className="size-4 shrink-0 md:size-5" aria-hidden />
-                  )}
-                  <span>
-                    {t("overnatting.percentFromPrevMonth", {
-                      sign: trendPositive ? "+" : "",
-                      percent: quickStats.monthOverMonthPct
-                        .toFixed(1)
-                        .replace(".", locale === "nb" ? "," : "."),
-                    })}
-                  </span>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredReservations.map((r) => (
+                        <TableRow key={r.id}>
+                          <TableCell className={cn(APP_TABLE_CELL_PRIMARY, "pl-6")}>
+                            <span className="flex items-center gap-3">
+                              <span
+                                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success/10 text-app-xs font-bold text-success dark:bg-white/10 dark:text-white"
+                                aria-hidden
+                              >
+                                {r.customerName === UNKNOWN_CUSTOMER
+                                  ? "?"
+                                  : r.customerName.trim().charAt(0).toUpperCase()}
+                              </span>
+                              <span className="min-w-0 truncate">
+                                {r.customerName === UNKNOWN_CUSTOMER
+                                  ? t("overnatting.unknownCustomer")
+                                  : r.customerName}
+                              </span>
+                            </span>
+                          </TableCell>
+                          <TableCell className={APP_TABLE_CELL_BODY}>{r.unitName}</TableCell>
+                          <TableCell className={APP_TABLE_CELL_DATE}>
+                            {formatAppDateFromParts(r.checkInDate, r.checkInTime, locale)}
+                          </TableCell>
+                          <TableCell className={APP_TABLE_CELL_DATE}>
+                            {formatAppDateFromParts(r.checkOutDate, r.checkOutTime, locale)}
+                          </TableCell>
+                          <TableCell className={cn(APP_TABLE_CELL_BODY, "tabular-nums")}>
+                            {r.guestCount}
+                          </TableCell>
+                          <TableCell className={APP_TABLE_CELL_BODY}>
+                            <ReservationStatusBadge status={r.status} label={statusLabel(r.status, t)} />
+                          </TableCell>
+                          {canManage ? (
+                            <TableCell className="pr-6 text-right">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className={outlineBtnClass}
+                                onClick={() => openEditRes(r)}
+                              >
+                                {t("common.actions.edit")}
+                              </Button>
+                            </TableCell>
+                          ) : null}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
-              ) : (
-                <p className="mt-4 text-app-sm font-medium text-white/75 md:text-app-base">
-                  {t("overnatting.noComparison")}
-                </p>
-              )}
-              <p className="mt-3 text-app-sm text-white/70">
-                {t("overnatting.prevMonth")}: {formatCurrency(quickStats.prevMonthRevenue)}
-              </p>
-            </div>
-          </div>
 
-          <div
-            className={cn(
-              "flex flex-col gap-8 md:col-span-2 md:flex-row md:gap-10",
-              "rounded-2xl bg-card p-7 ring-1 ring-foreground/8 md:p-9",
+                <ul className="divide-y divide-foreground/8 md:hidden">
+                  {filteredReservations.map((r) => (
+                    <li key={r.id} className="flex flex-col gap-3 px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-heading text-app-base font-bold text-rn-text-heading">
+                            {r.customerName === UNKNOWN_CUSTOMER
+                              ? t("overnatting.unknownCustomer")
+                              : r.customerName}
+                          </p>
+                          <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-app-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1">
+                              <BedDouble className="size-3.5" aria-hidden />
+                              {r.unitName}
+                            </span>
+                            <span className="inline-flex items-center gap-1 tabular-nums">
+                              <Users className="size-3.5" aria-hidden />
+                              {r.guestCount}
+                            </span>
+                          </p>
+                        </div>
+                        <ReservationStatusBadge status={r.status} label={statusLabel(r.status, t)} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 rounded-xl bg-muted/50 px-3 py-2.5 text-app-xs">
+                        <div>
+                          <p className="font-semibold text-muted-foreground">{t("overnatting.tableArrival")}</p>
+                          <p className="mt-0.5 text-app-sm font-medium text-foreground">
+                            {formatAppDateFromParts(r.checkInDate, r.checkInTime, locale)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-muted-foreground">{t("overnatting.tableDeparture")}</p>
+                          <p className="mt-0.5 text-app-sm font-medium text-foreground">
+                            {formatAppDateFromParts(r.checkOutDate, r.checkOutTime, locale)}
+                          </p>
+                        </div>
+                      </div>
+                      {canManage ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className={cn("w-full", outlineBtnClass)}
+                          onClick={() => openEditRes(r)}
+                        >
+                          {t("common.actions.edit")}
+                        </Button>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
-          >
-            <div className="min-w-0 flex-1">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="rounded-xl bg-muted/50 p-5 md:p-6">
-                  <p className="mb-3 text-app-sm font-semibold text-muted-foreground">
-                    {t("overnatting.occupancyRate")}
-                  </p>
-                  <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
-                    {quickStats.occupancyPct}%
-                  </p>
-                  <p className="mt-3 text-app-base leading-snug text-muted-foreground md:text-app-lg">
-                    {t("overnatting.occupancyDescription")}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-muted/50 p-5 md:p-6">
-                  <p className="mb-3 text-app-sm font-semibold text-muted-foreground">
-                    {t("overnatting.avgGuests")}
-                  </p>
-                  <p className="dashboard-kpi-value font-extrabold text-rn-text-heading tabular-nums md:text-app-3xl">
-                    {quickStats.avgGuestsActive ?? "—"}
-                  </p>
-                  <p className="mt-3 text-app-base text-muted-foreground md:text-app-lg">
-                    {t("overnatting.perReservation")}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex w-full flex-col justify-between rounded-xl bg-muted/50 p-6 md:w-[38%] md:max-w-[340px] md:p-8">
-              <div>
-                <p className="text-app-sm font-semibold text-success dark:!text-white">
-                  {quickStats.monthLabel}
-                </p>
-                <p className="mt-3 dashboard-kpi-value text-success dark:!text-white md:text-app-3xl">
-                  {formatCurrency(quickStats.currentMonthRevenue)}
+          </section>
+
+          <aside className={cn("min-w-0 xl:sticky xl:top-20", cardClass)} aria-labelledby={`${rid}-units-title`}>
+            <div className="flex items-start justify-between gap-3 border-b border-foreground/8 px-4 py-4 sm:px-5">
+              <div className="min-w-0">
+                <h2
+                  id={`${rid}-units-title`}
+                  className="font-heading text-app-lg font-bold text-rn-text-heading"
+                >
+                  {t("overnatting.units")}
+                </h2>
+                <p className="mt-0.5 text-app-xs leading-snug text-muted-foreground">
+                  {sortedUnits.length}{" "}
+                  {sortedUnits.length === 1
+                    ? t("overnatting.unitSingular")
+                    : t("overnatting.unitPlural")}{" "}
+                  {t("overnatting.unitsAvailableSuffix")}
                 </p>
               </div>
-              <div className="mt-8 space-y-3 border-t border-foreground/10 pt-5">
-                <div className="flex justify-between text-app-base md:text-app-lg">
-                  <span className="font-medium text-rn-text-body">
-                    {t("overnatting.prevMonth")}
-                  </span>
-                  <span className="font-bold tabular-nums text-rn-text-heading">
-                    {formatCurrency(quickStats.prevMonthRevenue)}
-                  </span>
-                </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-success transition-[width]"
-                    style={{
-                      width: (() => {
-                        const { currentMonthRevenue: c, prevMonthRevenue: p } =
-                          quickStats;
-                        if (c + p === 0) return "0%";
-                        const max = Math.max(c, p, 1);
-                        return `${Math.min(100, Math.round((c / max) * 100))}%`;
-                      })(),
-                    }}
-                  />
-                </div>
-              </div>
+              {canManage ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={cn("shrink-0 gap-1.5", outlineBtnClass)}
+                  onClick={openNewUnit}
+                >
+                  <Plus className="size-4" aria-hidden />
+                  {t("overnatting.newUnit")}
+                </Button>
+              ) : null}
             </div>
-          </div>
+
+            {sortedUnits.length === 0 ? (
+              <p className="px-5 py-8 text-center text-app-sm text-muted-foreground">
+                {t("overnatting.calendarEmptyUnits")}
+              </p>
+            ) : (
+              <ul className="divide-y divide-foreground/8" aria-label={t("overnatting.unitsListAria")}>
+                {sortedUnits.map((u) => (
+                  <li
+                    key={u.id}
+                    className={cn("flex items-start gap-3 px-4 py-3.5 sm:px-5", !u.active && "opacity-70")}
+                  >
+                    <span
+                      className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-rn-text-heading"
+                      aria-hidden
+                    >
+                      <BedDouble className="size-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                        <span className="truncate font-heading text-app-base font-bold leading-tight text-rn-text-heading">
+                          {u.name}
+                        </span>
+                        {u.active ? (
+                          <span
+                            className="size-2 shrink-0 rounded-full bg-success"
+                            title={t("statuses.active")}
+                            role="img"
+                            aria-label={t("statuses.active")}
+                          />
+                        ) : (
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                            {t("statuses.inactive")}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-app-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <Users className="size-3.5 shrink-0" aria-hidden />
+                          {t("overnatting.maxGuests", { count: u.maxGuests })}
+                        </span>
+                        {u.propertyName ? (
+                          <span className="inline-flex min-w-0 items-center gap-1">
+                            <Building2 className="size-3.5 shrink-0" aria-hidden />
+                            <span className="truncate">{u.propertyName}</span>
+                          </span>
+                        ) : null}
+                      </p>
+                      {u.notes?.trim() ? (
+                        <p className="mt-1 line-clamp-1 text-[11px] italic text-muted-foreground">
+                          {u.notes.trim()}
+                        </p>
+                      ) : null}
+                    </div>
+                    {canManage ? (
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-9 rounded-lg text-muted-foreground hover:text-foreground"
+                          aria-label={`${t("common.actions.edit")}: ${u.name}`}
+                          onClick={() => openEditUnit(u)}
+                        >
+                          <Pencil className="size-4" aria-hidden />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-9 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          aria-label={`${t("common.actions.delete")}: ${u.name}`}
+                          onClick={() => setDeleteUnitTarget(u)}
+                        >
+                          <Trash2 className="size-4" aria-hidden />
+                        </Button>
+                      </div>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </aside>
         </div>
       ) : null}
 

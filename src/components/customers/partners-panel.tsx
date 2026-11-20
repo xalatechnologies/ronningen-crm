@@ -37,6 +37,8 @@ import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+
+import { CustomerAvatar } from "./customer-avatar";
 import { useEffect, useMemo, useState } from "react";
 import { useForm, Controller, type Resolver, type UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
@@ -390,43 +392,52 @@ export function PartnersPanel({
         </div>
         ) : (
           <>
-            <div className="app-table overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left text-app-base">
+            <div className="app-table hidden overflow-x-auto md:block">
+              <table className="w-full text-left text-app-base">
                 <thead>
-                  <tr className="border-0 bg-muted/60">
-                    <th className={partnersTableHeadClass}>{t("common.fields.name")}</th>
+                  <tr className="border-0 bg-muted/50">
+                    <th className={cn(partnersTableHeadClass, "pl-6")}>{t("common.fields.name")}</th>
                     <th className={partnersTableHeadClass}>{t("customers.table.category")}</th>
                     <th className={partnersTableHeadClass}>{t("common.fields.phone")}</th>
                     <th className={partnersTableHeadClass}>{t("common.fields.email")}</th>
-                    <th className={cn(partnersTableHeadClass, "w-12 text-right")}>
+                    <th className={cn(partnersTableHeadClass, "w-12 pr-6 text-right")}>
                       <span className="sr-only">{t("customers.open")}</span>
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-rn-border-strong/50">
+                <tbody className="divide-y divide-foreground/6">
                   {pageRows.map((p) => {
                     const active = selectedId === p.id;
                     return (
                       <tr
                         key={p.id}
+                        tabIndex={0}
                         className={cn(
-                          "cursor-pointer transition-colors hover:bg-muted/50",
+                          "group cursor-pointer transition-colors outline-none hover:bg-muted/50 focus-visible:bg-muted/50",
                           active && "bg-muted/60",
                         )}
                         onClick={() => openEdit(p)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") openEdit(p);
+                        }}
                       >
-                        <td
-                          className={cn(
-                            "customers-partners-row-name px-6 py-5 font-heading font-semibold md:px-8 md:py-6",
-                            active ? "text-success" : "text-foreground",
-                          )}
-                        >
-                          {p.name}
+                        <td className="py-3.5 pl-6 pr-4">
+                          <span className="flex items-center gap-3">
+                            <CustomerAvatar name={p.name} />
+                            <span
+                              className={cn(
+                                "customers-partners-row-name min-w-0 truncate font-heading font-semibold",
+                                active ? "text-success" : "text-foreground",
+                              )}
+                            >
+                              {p.name}
+                            </span>
+                          </span>
                         </td>
-                        <td className="px-6 py-5 md:px-8 md:py-6">
+                        <td className="px-4 py-3.5">
                           <span
                             className={cn(
-                              "customers-partners-category-pill inline-flex rounded-full px-2.5 py-1 font-semibold md:px-3",
+                              "customers-partners-category-pill inline-flex rounded-full px-2.5 py-1 font-semibold",
                               active
                                 ? "bg-success/15 text-success"
                                 : "bg-muted text-rn-text-body",
@@ -435,19 +446,17 @@ export function PartnersPanel({
                             {partnerCategoryLabel(p.category, t)}
                           </span>
                         </td>
-                        <td className="customers-partners-row-meta px-6 py-5 md:px-8 md:py-6">
+                        <td className="customers-partners-row-meta px-4 py-3.5">
                           {p.phone ?? "—"}
                         </td>
-                        <td className="customers-partners-row-meta px-6 py-5 md:px-8 md:py-6">
+                        <td className="customers-partners-row-meta px-4 py-3.5">
                           {p.email ?? "—"}
                         </td>
-                        <td className="px-6 py-5 text-right md:px-8 md:py-6">
-                          <div className="flex items-center justify-end">
-                            <ChevronRight
-                              className="size-6 shrink-0 text-muted-foreground md:size-7"
-                              aria-hidden
-                            />
-                          </div>
+                        <td className="py-3.5 pl-2 pr-6 text-right">
+                          <ChevronRight
+                            className="ml-auto size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                            aria-hidden
+                          />
                         </td>
                       </tr>
                     );
@@ -456,8 +465,34 @@ export function PartnersPanel({
               </table>
             </div>
 
+            <ul className="divide-y divide-foreground/8 md:hidden">
+              {pageRows.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => openEdit(p)}
+                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-muted/60"
+                  >
+                    <CustomerAvatar name={p.name} />
+                    <span className="min-w-0 flex-1">
+                      <span className="customers-partners-row-name block truncate font-semibold text-foreground">
+                        {p.name}
+                      </span>
+                      <span className="customers-partners-row-meta block truncate text-muted-foreground">
+                        {p.phone ?? p.email ?? "—"}
+                      </span>
+                    </span>
+                    <span className="customers-partners-category-pill shrink-0 rounded-full bg-muted px-2.5 py-1 font-semibold text-rn-text-body">
+                      {partnerCategoryLabel(p.category, t)}
+                    </span>
+                    <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+                  </button>
+                </li>
+              ))}
+            </ul>
+
             {filtered.length > 0 ? (
-              <div className="flex flex-col gap-3 border-t border-foreground/8 bg-muted/40 px-6 py-5 font-medium text-rn-footer-text sm:flex-row sm:items-center sm:justify-between md:px-8 md:py-6">
+              <div className="flex flex-col gap-3 border-t border-foreground/8 px-4 py-4 text-app-sm font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <span>
                   {filtered.length <= TENANT_LIST_PAGE_SIZE
                     ? t("customers.footer.showingCount", {
@@ -482,7 +517,7 @@ export function PartnersPanel({
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11 gap-1 rounded-xl border border-foreground/30 bg-card px-4 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
+                    className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
                     disabled={currentPage <= 1}
                     onClick={() =>
                       setPartnersPage((p) => Math.max(1, p - 1))
@@ -500,7 +535,7 @@ export function PartnersPanel({
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11 gap-1 rounded-xl border border-foreground/30 bg-card px-4 text-base font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
+                    className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
                     disabled={currentPage >= totalPages}
                     onClick={() =>
                       setPartnersPage((p) => Math.min(totalPages, p + 1))

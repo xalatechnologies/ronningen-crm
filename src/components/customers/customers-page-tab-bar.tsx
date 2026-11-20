@@ -51,11 +51,11 @@ export function CustomersPageTabBar({
             aria-controls={`tabpanel-${tab.id}`}
             onClick={() => onTabChange(tab.id)}
             className={cn(
-              "inline-flex min-h-11 items-center justify-center rounded-lg px-5 py-2.5 text-app-sm font-semibold transition-colors outline-none select-none md:min-h-12 md:px-6 md:text-app-base",
+              "inline-flex h-10 items-center justify-center rounded-lg px-4 text-app-sm font-semibold transition-colors outline-none select-none md:px-5",
               "focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2",
               active
-                ? "bg-success !text-white"
-                : "text-rn-text-body hover:bg-card",
+                ? "bg-card text-foreground shadow-sm ring-1 ring-foreground/10"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {label}
