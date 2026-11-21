@@ -15,6 +15,7 @@ import { ViewSwitch } from "@/components/ui/view-switch";
 import { statusDotClass, statusTextClass } from "@/components/ui/status-badge";
 import { BookingDetailSheet } from "@/components/bookings/booking-detail-sheet";
 import { BookingListContractAction } from "@/components/bookings/booking-list-contract-action";
+import { BookingListPortalAction } from "@/components/bookings/booking-list-portal-action";
 import { BookingStatusBadge } from "@/components/bookings/booking-status-badge";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
@@ -753,10 +754,16 @@ export function BookingsList({
                         status={row.status}
                       />
                     </div>
-                    <div className="col-span-6 mt-3 flex items-center justify-end sm:col-span-2 sm:mt-0">
+                    <div className="col-span-6 mt-3 flex flex-col items-end justify-center gap-2 sm:col-span-2 sm:mt-0">
                       <BookingListContractAction
                         bookingId={row.id}
                         contract={row.contract}
+                      />
+                      <BookingListPortalAction
+                        bookingId={row.id}
+                        customer={row.customer}
+                        state={row.portalState}
+                        cancelled={Boolean(row.dimmed)}
                       />
                     </div>
                   </div>

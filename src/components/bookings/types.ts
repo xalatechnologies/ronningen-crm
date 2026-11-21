@@ -1,3 +1,4 @@
+import type { PortalInviteState } from "@/lib/portal/rules";
 import type { BookingPaymentStatus } from "@/constants/booking-payment-status";
 import type { ContractStatus } from "@/lib/contracts/types";
 
@@ -45,6 +46,8 @@ export type BookingListRow = {
   paymentStatus: BookingPaymentStatus;
   propertyId: string | null;
   contract: BookingListContract | null;
+  /** Customer portal invitation: undefined = portal switched off for the organization, "none" = not invited yet. */
+  portalState?: PortalInviteState | "none";
 };
 
 export type BookingsQuickStats = {

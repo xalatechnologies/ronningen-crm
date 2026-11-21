@@ -123,17 +123,19 @@ export function buildMonthlyInvoicedByEventYear(
 export type RollingMonth = { year: number; month: number; amount: number };
 
 /**
- * The last `count` calendar months ending with the month of `now`, oldest first (e.g. Dec 2025 … Nov 2026),
- * read from the per-year series. A year missing from the series counts as 0.
+ * `count` calendar months, oldest first, read from the per-year series. The window ends `monthsAhead` months
+ * after the month of `now` (0 = ends with the current month, e.g. Dec 2025 … Nov 2026). A year missing from
+ * the series counts as 0.
  */
 export function buildRollingMonths(
   series: readonly DashboardMonthlySeries[],
   now = new Date(),
   count = 12,
+  monthsAhead = 0,
 ): RollingMonth[] {
   const byYear = new Map(series.map((s) => [s.year, s.months]));
   return Array.from({ length: count }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1);
+    const d = new Date(now.getFullYear(), now.getMonth() + monthsAhead - (count - 1 - i), 1);
     return { year: d.getFullYear(), month: d.getMonth(), amount: byYear.get(d.getFullYear())?.[d.getMonth()] ?? 0 };
   });
 }
@@ -148,4 +150,10 @@ export function countOverdueUnpaidBookings(
     if (Number(r.remaining_amount) <= 0) return false;
     return r.event_date < todayYmd;
   }).length;
+}
+
+/** The twelve months of one calendar year (Jan … Dec) from the per-year series; a missing year counts as 0. */
+export function buildCalendarYearMonths(series: readonly DashboardMonthlySeries[], year: number): RollingMonth[] {
+  const months = series.find((s) => s.year === year)?.months;
+  return Array.from({ length: 12 }, (_, month) => ({ year, month, amount: months?.[month] ?? 0 }));
 }

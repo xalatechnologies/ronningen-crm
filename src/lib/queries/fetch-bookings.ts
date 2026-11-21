@@ -10,6 +10,7 @@ import { sortBookingsByUpcomingFirst } from "@/lib/bookings/list-sort";
 import type { ContractStatus } from "@/lib/contracts/types";
 import { CONTRACT_STATUSES } from "@/lib/contracts/types";
 import type { TenantSupabaseClient } from "@/lib/queries/types";
+import { portalInviteStatesByBooking, type PortalInviteListRow } from "@/lib/portal/rules";
 import { canManageBookings } from "@/lib/role-access";
 import type { UserRole } from "@/constants/roles";
 
@@ -158,6 +159,26 @@ async function loadContractsByBookingId(
   return byBooking;
 }
 
+/** Portal invitation state per booking, or null when the organization has not switched the portal on. */
+async function loadPortalStatesByBookingId(
+  supabase: TenantSupabaseClient,
+  orgId: string,
+): Promise<ReturnType<typeof portalInviteStatesByBooking> | null> {
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("portal_enabled" as "id")
+    .eq("id", orgId)
+    .maybeSingle();
+  if (!(org as unknown as { portal_enabled?: boolean } | null)?.portal_enabled) return null;
+
+  const { data } = await supabase
+    .from("portal_accounts" as never)
+    .select("booking_id, accepted_at, revoked_at, expires_at, created_at")
+    .eq("organization_id", orgId)
+    .is("revoked_at", null);
+  return portalInviteStatesByBooking((data ?? []) as unknown as PortalInviteListRow[]);
+}
+
 export async function fetchBookingsPageData(
   supabase: TenantSupabaseClient,
   orgId: string,
@@ -179,6 +200,8 @@ export async function fetchBookingsPageData(
     orgId,
     (rawList ?? []).map((row) => (row as { id: string }).id),
   );
+
+  const portalStates = await loadPortalStatesByBookingId(supabase, orgId);
 
   const bookings: BookingListRow[] = (rawList ?? []).map((row) => {
     const r = row as unknown as RawBooking;
@@ -237,6 +260,7 @@ export async function fetchBookingsPageData(
       ),
       propertyId: r.property_id,
       contract: contractsByBooking.get(r.id) ?? null,
+      portalState: portalStates ? (portalStates.get(r.id) ?? "none") : undefined,
     };
   });
 
