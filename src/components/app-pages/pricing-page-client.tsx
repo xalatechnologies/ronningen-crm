@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 
 const PricingSection = dynamic(
   () =>
-    import("@/components/pricing/pricing-section").then((m) => ({
+    import("@/features/pricing/components/pricing-section").then((m) => ({
       default: m.PricingSection,
     })),
   { loading: () => <AppPageSkeleton variant="table" /> },

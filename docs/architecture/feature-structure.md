@@ -46,5 +46,6 @@ src/
 | Finance | Moved to `src/features/finance`: lib (3 files, tested), data (tested), form, filters, KPIs, section. Form is lazy-loaded. |
 | Assets (Inventar) | Moved to `src/features/assets`: lib (stats, filter, presentation, CSV; tested), data (create, update, delete; tested), form (lazy), KPI summary, section. |
 | Customers (Kunder and Partnere) | Moved to `src/features/customers`: lib (stats, search, partner categories, initials; tested), data (customer and partner writes, always scoped to the organization; tested), side panel lazy-loaded, new-customer dialog and partner fields split out. `src/lib/customers/*` (identity, merge, delete) stays shared. |
-| Pricing, Bookings, Inquiries, Invoices, Overnatting, Reports | Still in `src/components/<name>/`. Next in order: Pricing. |
-| Supabase calls inside components | Finance, Assets and Customers writes moved to `data/`. Others still call Supabase in the component (backlog per feature). |
+| Pricing (Priser) | Moved to `src/features/pricing`: lib (package tiers and popular pick, description builder; tested), data (create, update, delete for packages and services; tested), package grid, service list, catalog dialog with lazy form. The writes filter by id only and rely on Row Level Security (unchanged). |
+| Bookings, Inquiries, Invoices, Overnatting, Reports | Still in `src/components/<name>/`. Next in order: Overnatting, Invoices. |
+| Supabase calls inside components | Finance, Assets, Customers and Pricing writes moved to `data/`. Others still call Supabase in the component (backlog per feature). |

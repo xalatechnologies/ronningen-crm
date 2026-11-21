@@ -38,7 +38,6 @@
   "components/portal/seating-view.tsx": 2,
   "components/portal/sheet-style.ts": 1,
   "components/portal/wishlist-view.tsx": 3,
-  "components/pricing/pricing-section.tsx": 6,
   "components/pwa/install-provider.tsx": 1,
   "i18n/dictionaries/parts/admin.ts": 2,
   "lib/contracts/mail.ts": 8,
