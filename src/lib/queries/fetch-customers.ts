@@ -1,4 +1,4 @@
-import type { CustomerBookingListItem } from "@/components/customers/types";
+import type { CustomerBookingListItem } from "@/features/customers/types";
 import type { TenantSupabaseClient } from "@/lib/queries/types";
 
 type RawBooking = {

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   customersPageTabLabel,
   parseCustomersPageTab,
-} from "@/components/customers/tabs";
+} from "@/features/customers/lib/tabs";
 
 describe("parseCustomersPageTab", () => {
   it("defaults to customers", () => {

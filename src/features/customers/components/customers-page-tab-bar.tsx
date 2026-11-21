@@ -3,7 +3,7 @@
 import {
   CUSTOMERS_PAGE_TABS,
   type CustomersPageTabId,
-} from "@/components/customers/tabs";
+} from "@/features/customers/lib/tabs";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 

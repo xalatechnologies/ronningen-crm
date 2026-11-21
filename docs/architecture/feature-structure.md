@@ -13,6 +13,7 @@ src/
     components/           Screens and parts of that feature (section, filters, kpis, forms, dialogs)
     data/                 Database writes for the feature (create / update / delete). No React.
     lib/                  Pure functions (maths, formatting, csv, category rules). No React, no Supabase.
+    hooks/                React hooks of the feature (for example the tab state)
     types.ts              Types shared inside the feature
   lib/queries/            Page reads (fetch-*.ts) used by React Query hooks
   hooks/, providers/      App-wide hooks and providers
@@ -44,5 +45,6 @@ src/
 |---|---|
 | Finance | Moved to `src/features/finance`: lib (3 files, tested), data (tested), form, filters, KPIs, section. Form is lazy-loaded. |
 | Assets (Inventar) | Moved to `src/features/assets`: lib (stats, filter, presentation, CSV; tested), data (create, update, delete; tested), form (lazy), KPI summary, section. |
-| Customers, Pricing, Bookings, Inquiries, Invoices, Overnatting, Reports | Still in `src/components/<name>/`. Next in order: Customers, Pricing. |
-| Supabase calls inside components | Finance and Assets writes moved to `data/`. Others still call Supabase in the component (backlog per feature). |
+| Customers (Kunder and Partnere) | Moved to `src/features/customers`: lib (stats, search, partner categories, initials; tested), data (customer and partner writes, always scoped to the organization; tested), side panel lazy-loaded, new-customer dialog and partner fields split out. `src/lib/customers/*` (identity, merge, delete) stays shared. |
+| Pricing, Bookings, Inquiries, Invoices, Overnatting, Reports | Still in `src/components/<name>/`. Next in order: Pricing. |
+| Supabase calls inside components | Finance, Assets and Customers writes moved to `data/`. Others still call Supabase in the component (backlog per feature). |
