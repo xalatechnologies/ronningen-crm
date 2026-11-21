@@ -56,6 +56,7 @@ export function HeroFilm() {
   return (
     <div
       role="group"
+      className="min-w-0"
       aria-roledescription="carousel"
       aria-label={copy.ariaLabel}
       onPointerEnter={() => setHovered(true)}

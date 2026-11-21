@@ -70,7 +70,7 @@ export function ProductPreviewSection() {
           "grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] lg:items-center lg:gap-20",
         )}
       >
-        <div className="flex flex-col gap-8">
+        <div className="flex min-w-0 flex-col gap-8">
           <div className="flex flex-col gap-5">
             <h2
               id="landing-preview-title"
@@ -85,7 +85,7 @@ export function ProductPreviewSection() {
 
           <div
             role="group"
-            className="inline-flex w-fit max-w-full gap-1 rounded-full bg-[#eef2f0] p-1"
+            className="inline-flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-[#eef2f0] p-1 [scrollbar-width:none]"
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
             onFocus={() => setPaused(true)}
@@ -101,7 +101,7 @@ export function ProductPreviewSection() {
                   aria-pressed={on}
                   onClick={() => setActive(index)}
                   className={cn(
-                    "relative flex min-h-11 items-center gap-2 overflow-hidden rounded-full px-4 text-[15px] font-semibold transition-colors",
+                    "relative flex min-h-11 shrink-0 items-center gap-2 overflow-hidden rounded-full px-4 text-[15px] font-semibold transition-colors",
                     on
                       ? "bg-[#3d62cf] text-white"
                       : "text-[#334155] hover:bg-white/70",
