@@ -12,7 +12,6 @@
   "components/dashboard/dashboard-home.tsx": 4,
   "features/finance/components/finance-section.tsx": 1,
   "components/landing/audience-section.tsx": 6,
-  "components/landing/benefits-pricing-section.tsx": 16,
   "components/landing/faq-section.tsx": 6,
   "components/landing/features-section.tsx": 16,
   "components/landing/final-cta-section.tsx": 7,

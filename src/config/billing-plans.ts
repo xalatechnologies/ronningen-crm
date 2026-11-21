@@ -43,7 +43,7 @@ export function billingPlanFeatureLabel(key: BillingPlanFeatureKey, t: Translato
 export const BILLING_PLANS = {
   standard: {
     id: "standard",
-    name: "Standard",
+    name: "Komplett",
     displayPriceNok: 750,
     trialDays: 30,
     priceEnvKey: "STRIPE_PRICE_STANDARD",
