@@ -1,4 +1,4 @@
-import { NewAccommodationReservationForm } from "@/components/overnatting/new-accommodation-reservation-form";
+import { NewAccommodationReservationForm } from "@/features/overnatting/components/new-accommodation-reservation-form";
 import { canManageBookings } from "@/lib/role-access";
 import { resolveServerOrganizationContext } from "@/lib/organizations/organization-context";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";

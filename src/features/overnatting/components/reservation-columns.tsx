@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
-import { UNKNOWN_CUSTOMER, type AccommodationReservationRow } from "@/components/overnatting/types";
+import { UNKNOWN_CUSTOMER, type AccommodationReservationRow } from "@/features/overnatting/types";
 import type { Locale } from "@/i18n/config";
 import type { Translator } from "@/i18n/types";
 import { formatAppDateFromParts } from "@/lib/format-datetime";

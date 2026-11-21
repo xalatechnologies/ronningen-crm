@@ -1,4 +1,4 @@
-import type { AccommodationReservationRow } from "@/components/overnatting/types";
+import type { AccommodationReservationRow } from "@/features/overnatting/types";
 import { pctDelta } from "@/lib/dashboard-metrics";
 import {
   aggregateAccommodation,

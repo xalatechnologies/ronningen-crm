@@ -1,6 +1,6 @@
 "use client";
 
-import type { AccommodationReservationRow } from "@/components/overnatting/types";
+import type { AccommodationReservationRow } from "@/features/overnatting/types";
 import { Button } from "@/components/ui/button";
 import { useCalendarWeekdays } from "@/hooks/use-calendar-weekdays";
 import { useTranslation } from "@/i18n/client";

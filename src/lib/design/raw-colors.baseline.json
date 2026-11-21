@@ -26,7 +26,7 @@
   "components/landing/product-preview-section.tsx": 32,
   "components/layout/admin-context-switch.tsx": 1,
   "components/layout/app-sidebar.tsx": 2,
-  "components/overnatting/overnatting-section.tsx": 1,
+  "features/overnatting/components/overnatting-section.tsx": 1,
   "components/portal/add-fab.tsx": 1,
   "components/portal/celebration-popup.tsx": 7,
   "components/portal/guest-rsvp-form.tsx": 2,

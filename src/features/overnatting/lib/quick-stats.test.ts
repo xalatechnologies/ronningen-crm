@@ -1,4 +1,4 @@
-import type { AccommodationReservationRow } from "@/components/overnatting/types";
+import type { AccommodationReservationRow } from "@/features/overnatting/types";
 import { describe, expect, it } from "vitest";
 
 import { computeAccommodationQuickStats } from "./quick-stats";
