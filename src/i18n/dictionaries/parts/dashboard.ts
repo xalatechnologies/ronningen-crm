@@ -24,6 +24,8 @@ export const dashboardNb = {
     "Fakturert beløp per måned etter arrangementsdato (aktive bookinger)",
   revenuePerMonth: "Fakturert per måned · {range}",
   highest: "Høyeste: {amount}",
+  chartPeriodAria: "Velg periode for diagrammet",
+  chartPeriodRolling: "12 mnd",
   chartAria:
     "Stolpediagram for fakturert omsetning per arrangementsmåned, {range}. Beløp vises over hver stolpe.",
   selectYearAria: "Velg år for diagrammet",

@@ -32,3 +32,21 @@ export function portalInviteState(
 export function shouldAutoInvite(org: { portal_enabled: boolean; portal_auto_invite: boolean }): boolean {
   return org.portal_enabled && org.portal_auto_invite;
 }
+
+export type PortalInviteListRow = Pick<PortalAccountRow, "booking_id" | "accepted_at" | "revoked_at" | "expires_at"> & {
+  created_at: string;
+};
+
+/** Newest non-revoked invitation per booking, as its state. A booking with no such invitation is not in the result. */
+export function portalInviteStatesByBooking(
+  rows: readonly PortalInviteListRow[],
+  now: Date = new Date(),
+): Map<string, PortalInviteState> {
+  const newest = new Map<string, PortalInviteListRow>();
+  for (const row of rows) {
+    if (row.revoked_at) continue;
+    const current = newest.get(row.booking_id);
+    if (!current || row.created_at > current.created_at) newest.set(row.booking_id, row);
+  }
+  return new Map([...newest].map(([bookingId, row]) => [bookingId, portalInviteState(row, now)]));
+}

@@ -12,9 +12,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTranslation } from "@/i18n/client";
-import { buildRollingMonths } from "@/lib/dashboard-metrics";
+import { buildCalendarYearMonths, buildRollingMonths } from "@/lib/dashboard-metrics";
 import { statusLabel } from "@/lib/navigation/nav-labels";
 import { APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { cn } from "@/lib/utils";
 import {
   AlertCircle,
@@ -28,7 +29,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 const MONTH_KEYS = [
   "jan",
@@ -89,6 +90,9 @@ function DashboardUpcomingStatusBadge({
   );
 }
 
+/** Months shown after the current month in the revenue chart (the 3 before it are shown too). */
+const CHART_MONTHS_AHEAD = 8;
+
 const tableHeadClass = APP_TABLE_HEAD_CELL;
 const tableCellClass = "px-6 py-5 md:px-8 md:py-6";
 
@@ -127,8 +131,29 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
     return t("dashboard.percentDelta", { sign, percent: rounded });
   }
 
-  // The chart always shows the last 12 months in a row (crosses year boundaries), so there is no year picker.
-  const rollingMonths = useMemo(() => buildRollingMonths(data.monthlyByYear), [data.monthlyByYear]);
+  // The chart shows 12 months in a row (crosses year boundaries): the current month, the 3 before it and the 8 after
+  // it, because bookings are mostly in the future. There is no year picker.
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth();
+  const [period, setPeriod] = useState<string>("rolling");
+  const periodOptions = useMemo(
+    () => [
+      { key: "rolling", label: t("dashboard.chartPeriodRolling") },
+      ...data.monthlyByYear
+        .filter((s) => s.year === currentYear || s.months.some((amount) => amount > 0))
+        .map((s) => s.year)
+        .sort((a, b) => a - b)
+        .map((year) => ({ key: String(year), label: String(year) })),
+    ],
+    [data.monthlyByYear, t, currentYear],
+  );
+  const rollingMonths = useMemo(
+    () =>
+      period === "rolling"
+        ? buildRollingMonths(data.monthlyByYear, new Date(), 12, CHART_MONTHS_AHEAD)
+        : buildCalendarYearMonths(data.monthlyByYear, Number(period)),
+    [data.monthlyByYear, period],
+  );
   const rangeLabel = useMemo(() => {
     const first = rollingMonths[0];
     const last = rollingMonths[rollingMonths.length - 1];
@@ -149,10 +174,10 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
         amount: m.amount,
         hasValue,
         heightPct: hasValue ? Math.max(14, (m.amount / scaleMax) * 100) : 0,
-        highlight: i === rollingMonths.length - 1,
+        highlight: m.year === currentYear && m.month === currentMonth,
       };
     });
-  }, [rollingMonths, monthLabels]);
+  }, [rollingMonths, monthLabels, currentYear, currentMonth]);
 
   const { kpis } = data;
   const paidShareLabel =
@@ -311,6 +336,12 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
                 {t("dashboard.revenueSubtitle")}
               </p>
             </div>
+            <SegmentedFilter
+              options={periodOptions}
+              value={period}
+              onChange={setPeriod}
+              ariaLabel={t("dashboard.chartPeriodAria")}
+            />
           </div>
 
           <div className="px-4 pt-5 pb-6 md:px-8 md:pb-8">

@@ -677,6 +677,8 @@ export const en = {
       "Invoiced amount per month by event date (active bookings)",
     revenuePerMonth: "Invoiced per month · {range}",
     highest: "Highest: {amount}",
+    chartPeriodAria: "Choose the chart period",
+    chartPeriodRolling: "12 mo",
     chartAria:
       "Bar chart of invoiced revenue per event month, {range}. Amount shown above each bar.",
     selectYearAria: "Select year for chart",
