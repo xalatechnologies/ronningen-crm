@@ -14,6 +14,9 @@ export const landingNb = {
     secondaryCta: "Se funksjoner",
     trust:
       "30 dagers gratis prøveperiode. Kort registreres ved oppstart, første trekk etter prøven.",
+    filmHeadline: "Fra første henvendelse til kundeportalen.",
+    filmSubheadline:
+      "{appName} følger hver booking hele veien: fra forespørsel og avtale til betaling, og en egen portal der kunden ser dagsplan, sender meldinger og deler ønsker. Uten rotete regneark.",
   },
   heroStats: {
     revenue: "Omsetning",
@@ -260,6 +263,65 @@ export const landingNb = {
       { event: "Konfirmasjon", date: "22. jun", statusKey: "partial" },
       { event: "Møte", date: "5. jul", statusKey: "inquiry" },
     ],
+  },
+  heroFilm: {
+    ariaLabel: "Produktfilm: slik følger Event Manager en booking fra forespørsel til kundeportal",
+    demo: "Demo",
+    pause: "Pause filmen",
+    play: "Spill av filmen",
+    steps: [
+      {
+        key: "overview",
+        label: "Oversikt",
+        windowTitle: "Oversikt",
+        title: "Hele driften på ett dashbord",
+        text: "Omsetning, kommende bookinger og utestående beløp samlet på ett sted.",
+      },
+      {
+        key: "inquiry",
+        label: "Forespørsel",
+        windowTitle: "Forespørsler",
+        title: "Fra forespørsel til booking",
+        text: "Godkjenn med ett klikk. Dato, kunde og pris følger med inn i bookingen.",
+      },
+      {
+        key: "payment",
+        label: "Betaling",
+        windowTitle: "Reservasjoner",
+        title: "Avtale og betaling samlet",
+        text: "Leieavtale og innbetalinger ligger på bookingen, så du alltid ser hva som gjenstår.",
+      },
+      {
+        key: "portal",
+        label: "Kundeportal",
+        windowTitle: "Kundeportal",
+        title: "Kunden får sin egen portal",
+        text: "Invitasjonen sendes fra bookingen. Kunden ser dagsplanen, skriver meldinger og deler ønsker.",
+      },
+    ],
+    sample: {
+      org: "Rønningen Selskapslokale",
+      customer: "Kari Nordmann",
+      phone: "412 34 567",
+      firstName: "Kari",
+      eventType: "Bryllup",
+      audience: "Privat",
+      date: "14. juni",
+      fullDate: "14. juni 2026",
+      inquiryNew: "Ny",
+      inquiryConverted: "Konvertert",
+      created: "Reservasjon opprettet",
+      others: [
+        { name: "Per Hansen", event: "Konfirmasjon", status: "Kontaktet" },
+        { name: "Anne Olsen", event: "Møte", status: "Ny" },
+        { name: "Ola Berg", event: "Dåp", status: "Kontaktet" },
+      ],
+      bookings: [
+        { name: "Marte Lunde", date: "8. aug", audience: "Bedrift", event: "Sommerfest", guests: 38, total: 12000, paid: 1, status: "confirmed" },
+        { name: "Jonas Berge", date: "21. jun", audience: "Privat", event: "Bursdag", guests: 55, total: 18500, paid: 0, status: "confirmed" },
+        { name: "Ingrid Vik", date: "5. sep", audience: "Privat", event: "Dåp", guests: 30, total: 9800, paid: 0.5, status: "pending" },
+      ],
+    },
   },
   portal: {
     eyebrow: "Kundeportal",

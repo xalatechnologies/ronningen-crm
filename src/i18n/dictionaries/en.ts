@@ -402,6 +402,9 @@ export const en = {
       secondaryCta: "See features",
       trust:
         "30-day free trial. Card required at signup; first charge after the trial.",
+      filmHeadline: "From first inquiry to the customer portal.",
+      filmSubheadline:
+        "{appName} follows every booking all the way: from inquiry and contract to payment, and a portal where the customer sees the day plan, sends messages and shares wishes. No messy spreadsheets.",
     },
     heroStats: {
       revenue: "Revenue",
@@ -602,6 +605,65 @@ export const en = {
         { event: "Confirmation", date: "22 Jun", statusKey: "partial" },
         { event: "Meeting", date: "5 Jul", statusKey: "inquiry" },
       ],
+    },
+    heroFilm: {
+      ariaLabel: "Product film: how Event Manager follows a booking from inquiry to customer portal",
+      demo: "Demo",
+      pause: "Pause the film",
+      play: "Play the film",
+      steps: [
+        {
+          key: "overview",
+          label: "Overview",
+          windowTitle: "Overview",
+          title: "Your whole operation on one dashboard",
+          text: "Revenue, upcoming bookings and outstanding amounts in one place.",
+        },
+        {
+          key: "inquiry",
+          label: "Inquiry",
+          windowTitle: "Inquiries",
+          title: "From inquiry to booking",
+          text: "Approve with one click. Date, customer and price carry over into the booking.",
+        },
+        {
+          key: "payment",
+          label: "Payment",
+          windowTitle: "Bookings",
+          title: "Contract and payment together",
+          text: "The rental contract and payments live on the booking, so you always see what is left.",
+        },
+        {
+          key: "portal",
+          label: "Customer portal",
+          windowTitle: "Customer portal",
+          title: "Your customer gets their own portal",
+          text: "The invitation is sent from the booking. The customer sees the day plan, writes messages and shares wishes.",
+        },
+      ],
+      sample: {
+        org: "Rønningen Selskapslokale",
+        customer: "Kari Nordmann",
+        phone: "412 34 567",
+        firstName: "Kari",
+        eventType: "Wedding",
+        audience: "Private",
+        date: "14 June",
+        fullDate: "14 June 2026",
+        inquiryNew: "New",
+        inquiryConverted: "Converted",
+        created: "Booking created",
+        others: [
+          { name: "Per Hansen", event: "Confirmation", status: "Contacted" },
+          { name: "Anne Olsen", event: "Meeting", status: "New" },
+          { name: "Ola Berg", event: "Christening", status: "Contacted" },
+        ],
+        bookings: [
+          { name: "Marte Lunde", date: "8 Aug", audience: "Company", event: "Summer party", guests: 38, total: 12000, paid: 1, status: "confirmed" },
+          { name: "Jonas Berge", date: "21 Jun", audience: "Private", event: "Birthday", guests: 55, total: 18500, paid: 0, status: "confirmed" },
+          { name: "Ingrid Vik", date: "5 Sep", audience: "Private", event: "Christening", guests: 30, total: 9800, paid: 0.5, status: "pending" },
+        ],
+      },
     },
     portal: {
       eyebrow: "Customer portal",

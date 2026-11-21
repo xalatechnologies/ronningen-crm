@@ -1849,6 +1849,112 @@
   color: var(--rn-primary-light);
 }
 
+/* Hero product film (landing): short entrance animations. `both` keeps the finished state under reduced motion. */
+@keyframes film-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes film-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes film-fade-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@keyframes film-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes film-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes film-press {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: scale(0.94);
+  }
+}
+@keyframes film-cursor {
+  0% {
+    opacity: 0;
+    transform: translate(90px, 46px);
+  }
+  15% {
+    opacity: 1;
+  }
+  55%,
+  75% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+}
+
+.film-scene {
+  animation: film-rise 400ms ease-out both;
+}
+.film-rise {
+  animation: film-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.film-pop {
+  animation: film-pop 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.film-fade-out {
+  animation: film-fade-out 200ms ease-out forwards;
+}
+.film-grow-y {
+  transform-origin: bottom;
+  animation: film-grow-y 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.film-grow-x {
+  transform-origin: left;
+  animation: film-grow-x 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.film-press {
+  animation: film-press 300ms ease-in-out both;
+}
+.film-cursor {
+  animation: film-cursor 2000ms ease-in-out both;
+}
+.film-cursor-late {
+  animation: film-cursor 1600ms ease-in-out both;
+}
+.film-progress {
+  animation-name: film-grow-x;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
 @keyframes hiw-progress {
   from {
     transform: scaleX(0);

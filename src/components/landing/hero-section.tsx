@@ -1,6 +1,6 @@
 "use client";
 
-import { HeroDashboardPreview } from "@/components/landing/hero-dashboard-preview";
+import { HeroFilm } from "@/components/landing/hero-film/hero-film";
 import { LANDING_ROUTES } from "@/components/landing/landing-content";
 import {
   LANDING_CONTAINER,
@@ -36,7 +36,7 @@ export function HeroSection() {
       <div
         className={cn(
           LANDING_CONTAINER,
-          "grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center lg:gap-20",
+          "grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-16",
         )}
       >
         <div className="flex flex-col gap-8 md:gap-10">
@@ -45,10 +45,10 @@ export function HeroSection() {
               id="landing-hero-title"
               className="max-w-[20ch] text-[clamp(38px,8vw,64px)] leading-[1.04] font-bold tracking-[-0.035em] text-[#13233a] lg:text-[clamp(44px,4.6vw,72px)]"
             >
-              {t("landing.hero.headline")}
+              {t("landing.hero.filmHeadline")}
             </h1>
             <p className="landing-subhead max-w-[48ch] leading-relaxed">
-              {t("landing.hero.subheadline", { appName: APP_NAME })}
+              {t("landing.hero.filmSubheadline", { appName: APP_NAME })}
             </p>
           </div>
 
@@ -66,7 +66,7 @@ export function HeroSection() {
           </p>
         </div>
 
-        <HeroDashboardPreview />
+        <HeroFilm />
       </div>
     </section>
   );
