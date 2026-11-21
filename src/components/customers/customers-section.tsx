@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { ListPagination } from "@/components/ui/list-pagination";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +26,7 @@ import { useCustomersPageTab } from "@/components/customers/use-customers-page-t
 import { useTranslation } from "@/i18n/client";
 import type { TranslationKey } from "@/i18n/types";
 import { RN_PAGE_SEARCH_ACTIONS } from "@/lib/rn-ui";
-import { APP_DATA_AMOUNT, APP_DATA_BODY, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
+import { APP_DATA_AMOUNT, APP_DATA_BODY, APP_DATA_PRIMARY } from "@/lib/table-typography";
 import { cn } from "@/lib/utils";
 import { deleteCustomerWithClient } from "@/lib/customers/delete-customer";
 import { createCustomerAtomic } from "@/lib/reservations/atomic-create";
@@ -33,12 +34,13 @@ import { requireOrganizationId } from "@/lib/organizations/require-organization-
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { CustomerAvatar } from "./customer-avatar";
 import { CustomerDrawerBody } from "./customer-drawer-body";
 import { PartnersPanel } from "./partners-panel";
@@ -50,7 +52,6 @@ import type {
 
 import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
-const customersTableHeadClass = cn("customers-table-head", APP_TABLE_HEAD_CELL);
 
 const TAB_TITLE_KEYS = {
   customers: "customers.title",
@@ -277,6 +278,75 @@ export function CustomersSection({
     ? stats.get(selected.id) ?? { count: 0, spent: 0, outstanding: 0 }
     : null;
 
+  const customerColumns = useMemo<DataTableColumn<CustomerRow>[]>(
+    () => [
+    {
+      id: "name",
+      header: t("common.fields.name"),
+      cell: (c) => (
+        <span className="flex items-center gap-3">
+          <CustomerAvatar name={c.name} />
+          <span
+            className={cn(
+              "customers-row-name min-w-0 truncate",
+              APP_DATA_PRIMARY,
+              selectedId === c.id ? "text-success" : "",
+            )}
+          >
+            {c.name}
+          </span>
+        </span>
+      ),
+    },
+    {
+      id: "phone",
+      header: t("common.fields.phone"),
+      className: cn("customers-row-meta", APP_DATA_BODY),
+      cell: (c) => c.phone ?? "—",
+    },
+    {
+      id: "email",
+      header: t("common.fields.email"),
+      className: cn("customers-row-meta", APP_DATA_BODY),
+      cell: (c) => c.email ?? "—",
+    },
+    {
+      id: "bookings",
+      header: t("customers.table.bookings"),
+      cell: (c) => <BookingCountBadge count={(stats.get(c.id) ?? { count: 0 }).count} />,
+    },
+    {
+      id: "spent",
+      header: t("customers.table.totalSpent"),
+      align: "right",
+      className: cn("customers-row-metric tabular-nums", APP_DATA_AMOUNT),
+      cell: (c) => {
+        const spent = (stats.get(c.id) ?? { spent: 0 }).spent;
+        return (
+          <span className={spent > 0 ? "font-bold text-success" : "font-medium text-muted-foreground"}>
+            {formatCurrency(spent)}
+          </span>
+        );
+      },
+    },
+    {
+      id: "open",
+      header: t("customers.open"),
+      srOnlyHeader: true,
+      align: "right",
+      headClassName: "w-12",
+      className: "pl-2",
+      cell: () => (
+        <ChevronRight
+          className="ml-auto size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+          aria-hidden
+        />
+      ),
+    },
+  ],
+    [t, formatCurrency, selectedId, stats],
+  );
+
   return (
     <div className="customers-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
       {loadError ? (
@@ -361,90 +431,17 @@ export function CustomersSection({
               </div>
             ) : (
               <>
-                <div className="app-table hidden overflow-x-auto md:block">
-                  <table className="w-full text-left text-app-base">
-                    <thead>
-                      <tr className="border-0 bg-muted/50">
-                        <th className={cn(customersTableHeadClass, "pl-6")}>{t("common.fields.name")}</th>
-                        <th className={customersTableHeadClass}>{t("common.fields.phone")}</th>
-                        <th className={customersTableHeadClass}>{t("common.fields.email")}</th>
-                        <th className={customersTableHeadClass}>{t("customers.table.bookings")}</th>
-                        <th className={cn(customersTableHeadClass, "text-right")}>
-                          {t("customers.table.totalSpent")}
-                        </th>
-                        <th className={cn(customersTableHeadClass, "w-12 pr-6 text-right")}>
-                          <span className="sr-only">{t("customers.open")}</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-foreground/6">
-                      {pageRows.map((c) => {
-                        const st = stats.get(c.id) ?? { count: 0, spent: 0, outstanding: 0 };
-                        const isActive = selectedId === c.id;
-                        return (
-                          <tr
-                            key={c.id}
-                            tabIndex={0}
-                            className={cn(
-                              "group cursor-pointer transition-colors outline-none hover:bg-muted/50 focus-visible:bg-muted/50",
-                              isActive && "bg-muted/60",
-                            )}
-                            onClick={() => setSelectedId(c.id)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") setSelectedId(c.id);
-                            }}
-                          >
-                            <td className="py-3.5 pl-6 pr-4">
-                              <span className="flex items-center gap-3">
-                                <CustomerAvatar name={c.name} />
-                                <span
-                                  className={cn(
-                                    "customers-row-name min-w-0 truncate",
-                                    APP_DATA_PRIMARY,
-                                    isActive ? "text-success" : "",
-                                  )}
-                                >
-                                  {c.name}
-                                </span>
-                              </span>
-                            </td>
-                            <td className={cn("customers-row-meta px-4 py-3.5", APP_DATA_BODY)}>
-                              {c.phone ?? "—"}
-                            </td>
-                            <td className={cn("customers-row-meta px-4 py-3.5", APP_DATA_BODY)}>
-                              {c.email ?? "—"}
-                            </td>
-                            <td className="px-4 py-3.5">
-                              <BookingCountBadge count={st.count} />
-                            </td>
-                            <td
-                              className={cn(
-                                "customers-row-metric px-4 py-3.5 text-right tabular-nums",
-                                APP_DATA_AMOUNT,
-                                st.spent > 0 ? "font-bold text-success" : "font-medium text-muted-foreground",
-                              )}
-                            >
-                              {formatCurrency(st.spent)}
-                            </td>
-                            <td className="py-3.5 pl-2 pr-6 text-right">
-                              <ChevronRight
-                                className="ml-auto size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-                                aria-hidden
-                              />
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                <ul className="divide-y divide-foreground/8 md:hidden">
-                  {pageRows.map((c) => {
+                <DataTable
+                  rows={pageRows}
+                  getRowKey={(c) => c.id}
+                  columns={customerColumns}
+                  onRowClick={(c) => setSelectedId(c.id)}
+                  rowActionLabel={(c) => `${t("customers.open")}: ${c.name}`}
+                  rowClassName={(c) => (selectedId === c.id ? "bg-muted/60" : undefined)}
+                  renderMobileItem={(c) => {
                     const st = stats.get(c.id) ?? { count: 0, spent: 0, outstanding: 0 };
                     return (
-                      <li key={c.id}>
-                        <button
+                      <button
                           type="button"
                           onClick={() => setSelectedId(c.id)}
                           className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-muted/60"
@@ -471,14 +468,13 @@ export function CustomersSection({
                           </span>
                           <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
                         </button>
-                      </li>
                     );
-                  })}
-                </ul>
+                  }}
+                />
 
                 {filtered.length > 0 ? (
-                  <div className="flex flex-col gap-3 border-t border-foreground/8 px-4 py-4 text-app-sm font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                    <span>
+                  <ListPagination
+  summary={<>
                       {filtered.length <= TENANT_LIST_PAGE_SIZE
                         ? t("customers.footer.showingCount", {
                             count: filtered.length,
@@ -496,44 +492,11 @@ export function CustomersSection({
                             ),
                             total: filtered.length,
                           })}
-                    </span>
-                    {filtered.length > TENANT_LIST_PAGE_SIZE ? (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
-                        disabled={currentPage <= 1}
-                        onClick={() =>
-                          setCustomersPage((p) => Math.max(1, p - 1))
-                        }
-                      >
-                        <ChevronLeft className="size-5" aria-hidden />
-                        {t("customers.footer.prev")}
-                      </Button>
-                      <span className="flex items-center px-2 tabular-nums">
-                        {t("customers.footer.pageOf", {
-                          current: currentPage,
-                          total: totalPages,
-                        })}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
-                        disabled={currentPage >= totalPages}
-                        onClick={() =>
-                          setCustomersPage((p) =>
-                            Math.min(totalPages, p + 1),
-                          )
-                        }
-                      >
-                        {t("common.actions.next")}
-                        <ChevronRight className="size-5" aria-hidden />
-                      </Button>
-                    </div>
-                    ) : null}
-                  </div>
+                    </>}
+  page={currentPage}
+  totalPages={totalPages}
+  onPageChange={setCustomersPage}
+/>
                 ) : null}
               </>
             )}

@@ -123,6 +123,13 @@ export const commonNb = {
     prevPage: "Forrige side",
     nextPage: "Neste side",
     pageOf: "Side {current} / {total}",
+    prev: "Forrige",
+    next: "Neste",
+  },
+  view: {
+    list: "Liste",
+    calendar: "Kalender",
+    switchAria: "Bytt visning",
   },
   saving: "Lagrer…",
   deleting: "Sletter…",

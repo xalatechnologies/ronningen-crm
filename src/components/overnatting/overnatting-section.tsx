@@ -2,9 +2,10 @@
 
 import { useTranslation } from "@/i18n/client";
 import { AccommodationMonthCalendar } from "@/components/overnatting/accommodation-month-calendar";
-import type {
-  AccommodationReservationRow,
-  AccommodationUnitRow,
+import {
+  UNKNOWN_CUSTOMER,
+  type AccommodationReservationRow,
+  type AccommodationUnitRow,
 } from "@/components/overnatting/types";
 import { statusLabel } from "@/lib/navigation/nav-labels";
 import type { AccommodationReservationStatus } from "@/lib/validations";
@@ -31,17 +32,11 @@ import {
 } from "@/components/ui/form-select";
 import { PropertySelectField } from "@/components/properties/property-select-field";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
+import { DataTable } from "@/components/ui/data-table";
+import { ReservationStatusBadge, buildReservationColumns } from "@/components/overnatting/reservation-columns";
 import { StatCard } from "@/components/ui/stat-card";
-import { StatusBadge, statusDotClass, type StatusTone } from "@/components/ui/status-badge";
+import { statusDotClass } from "@/components/ui/status-badge";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   ACCOMMODATION_RESERVATION_STATUSES,
   accommodationReservationEditSchema,
@@ -60,12 +55,7 @@ import {
   ymAdd,
 } from "@/lib/overnatting-month";
 import { computeAccommodationQuickStats } from "@/lib/overnatting/quick-stats";
-import { RN_MODAL_FOOTER, RN_MODAL_MAX_HEIGHT, RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
-import {
-  APP_TABLE_CELL_BODY,
-  APP_TABLE_CELL_DATE,
-  APP_TABLE_CELL_PRIMARY,
-} from "@/lib/table-typography";
+import { RN_MODAL_FOOTER, RN_MODAL_MAX_HEIGHT, RN_MODAL_SCROLL_BODY, RN_OUTLINE_BUTTON } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
@@ -108,8 +98,7 @@ const cardClass = "overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8"
 const filterFieldClass =
   "h-11 min-h-11 w-full rounded-xl border border-foreground/25 text-app-sm shadow-none sm:h-12 sm:min-h-12 sm:text-app-base";
 
-const outlineBtnClass =
-  "rounded-xl border border-foreground/30 bg-card font-semibold shadow-none hover:bg-muted";
+const outlineBtnClass = RN_OUTLINE_BUTTON;
 
 type AccommodationStatusFilter = "all" | "tentative" | "confirmed" | "cancelled";
 
@@ -143,16 +132,6 @@ function matchesAccommodationDateRange(
   return true;
 }
 
-const RESERVATION_TONE: Record<string, StatusTone> = {
-  confirmed: "success",
-  tentative: "warning",
-  cancelled: "danger",
-};
-
-function ReservationStatusBadge({ status, label }: { status: string; label: string }) {
-  return <StatusBadge tone={RESERVATION_TONE[status] ?? "neutral"}>{label}</StatusBadge>;
-}
-
 const dialogSectionTitleClass = "text-xs font-semibold text-muted-foreground";
 
 function ymNow(): string {
@@ -178,7 +157,6 @@ type RawRes = {
   accommodation_units: { name: string } | null;
 };
 
-const UNKNOWN_CUSTOMER = "__unknown__";
 
 function mapReservations(data: unknown): AccommodationReservationRow[] {
   return (
@@ -463,7 +441,8 @@ export function OvernattingSection({
     }
   }
 
-  function openEditRes(r: AccommodationReservationRow) {
+  const openEditRes = useCallback(
+    (r: AccommodationReservationRow) => {
     setEditingRes(r);
     editResForm.reset({
       unitId: r.unitId,
@@ -477,7 +456,10 @@ export function OvernattingSection({
       totalPrice: r.totalPrice ?? undefined,
     });
     setEditResOpen(true);
-  }
+      },
+    [editResForm],
+  );
+
 
   async function onSaveEditRes(data: AccommodationReservationEditInput) {
     if (!supabase || !canManage || !editingRes) return;
@@ -609,6 +591,11 @@ export function OvernattingSection({
 
   const trendPositive =
     quickStats.monthOverMonthPct != null && quickStats.monthOverMonthPct >= 0;
+
+  const reservationColumns = useMemo(
+    () => buildReservationColumns({ t, locale, canManage, onEdit: openEditRes }),
+    [t, locale, canManage, openEditRes],
+  );
 
   return (
     <div className="overnatting-page-workspace mx-auto flex w-full flex-col gap-6 pb-24 md:pb-8">
@@ -937,76 +924,12 @@ export function OvernattingSection({
               </div>
             ) : (
               <>
-                <div className="hidden overflow-x-auto md:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-0 bg-muted/50 hover:bg-muted/50">
-                        <TableHead className="pl-6">{t("overnatting.tableCustomer")}</TableHead>
-                        <TableHead>{t("overnatting.tableUnit")}</TableHead>
-                        <TableHead>{t("overnatting.tableArrival")}</TableHead>
-                        <TableHead>{t("overnatting.tableDeparture")}</TableHead>
-                        <TableHead>{t("overnatting.tableGuests")}</TableHead>
-                        <TableHead>{t("common.fields.status")}</TableHead>
-                        {canManage ? (
-                          <TableHead className="pr-6 text-right">{t("overnatting.tableActions")}</TableHead>
-                        ) : null}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredReservations.map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell className={cn(APP_TABLE_CELL_PRIMARY, "pl-6")}>
-                            <span className="flex items-center gap-3">
-                              <span
-                                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success/10 text-app-xs font-bold text-success dark:bg-white/10 dark:text-white"
-                                aria-hidden
-                              >
-                                {r.customerName === UNKNOWN_CUSTOMER
-                                  ? "?"
-                                  : r.customerName.trim().charAt(0).toUpperCase()}
-                              </span>
-                              <span className="min-w-0 truncate">
-                                {r.customerName === UNKNOWN_CUSTOMER
-                                  ? t("overnatting.unknownCustomer")
-                                  : r.customerName}
-                              </span>
-                            </span>
-                          </TableCell>
-                          <TableCell className={APP_TABLE_CELL_BODY}>{r.unitName}</TableCell>
-                          <TableCell className={APP_TABLE_CELL_DATE}>
-                            {formatAppDateFromParts(r.checkInDate, r.checkInTime, locale)}
-                          </TableCell>
-                          <TableCell className={APP_TABLE_CELL_DATE}>
-                            {formatAppDateFromParts(r.checkOutDate, r.checkOutTime, locale)}
-                          </TableCell>
-                          <TableCell className={cn(APP_TABLE_CELL_BODY, "tabular-nums")}>
-                            {r.guestCount}
-                          </TableCell>
-                          <TableCell className={APP_TABLE_CELL_BODY}>
-                            <ReservationStatusBadge status={r.status} label={statusLabel(r.status, t)} />
-                          </TableCell>
-                          {canManage ? (
-                            <TableCell className="pr-6 text-right">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className={outlineBtnClass}
-                                onClick={() => openEditRes(r)}
-                              >
-                                {t("common.actions.edit")}
-                              </Button>
-                            </TableCell>
-                          ) : null}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                <ul className="divide-y divide-foreground/8 md:hidden">
-                  {filteredReservations.map((r) => (
-                    <li key={r.id} className="flex flex-col gap-3 px-4 py-4">
+                <DataTable
+                  rows={filteredReservations}
+                  getRowKey={(r) => r.id}
+                  columns={reservationColumns}
+                  renderMobileItem={(r) => (
+                    <div className="flex flex-col gap-3 px-4 py-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="truncate font-heading text-app-base font-bold text-rn-text-heading">
@@ -1052,9 +975,9 @@ export function OvernattingSection({
                           {t("common.actions.edit")}
                         </Button>
                       ) : null}
-                    </li>
-                  ))}
-                </ul>
+                    </div>
+                  )}
+                />
               </>
             )}
           </section>

@@ -115,6 +115,12 @@
 
   /* Layout */
   --sidebar-width: 240px;
+
+  /* Sidebar current item: frosted pill plus a bar on the start edge (see .sidebar-nav-item in globals.css) */
+  --panel-fg: var(--sidebar-foreground);
+  --panel-glass: rgba(255, 255, 255, 0.07);
+  --panel-glass-border: rgba(255, 255, 255, 0.16);
+  --shadow-nav-current: inset 0 0 0 1px var(--panel-glass-border), inset 3px 0 0 var(--panel-fg);
 }
 
 [data-theme="dark"] {
@@ -218,4 +224,10 @@
   --status-neutral-border: #2a3a50;
   --status-neutral-text: #d4dce4;
   --status-neutral-solid: #97a6b8;
+
+  /* Sidebar current item: the dark rail needs a slightly stronger glass */
+  --panel-fg: var(--sidebar-foreground);
+  --panel-glass: rgba(255, 255, 255, 0.1);
+  --panel-glass-border: rgba(255, 255, 255, 0.2);
+  --shadow-nav-current: inset 0 0 0 1px var(--panel-glass-border), inset 3px 0 0 var(--panel-fg);
 }
