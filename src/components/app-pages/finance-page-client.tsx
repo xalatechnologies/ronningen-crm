@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 
 const FinanceSection = dynamic(
   () =>
-    import("@/components/finance/finance-section").then((m) => ({
+    import("@/features/finance/components/finance-section").then((m) => ({
       default: m.FinanceSection,
     })),
   { loading: () => <AppPageSkeleton variant="kpi" /> },
