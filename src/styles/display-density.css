@@ -20,10 +20,10 @@
   /** `none` = use full width of main column (only outer `app-main` gutters apply). */
   --app-content-max-width: none;
   --app-card-padding: 16px;
-  --app-page-padding: 8px;
-  --app-page-padding-mobile: 6px;
-  --app-page-padding-tablet: 8px;
-  --app-page-padding-desktop: 8px;
+  --app-page-padding: 24px;
+  --app-page-padding-mobile: 12px;
+  --app-page-padding-tablet: 20px;
+  --app-page-padding-desktop: 24px;
   --app-control-height: 44px;
   --app-radius: 8px;
   --app-sidebar-width: 260px;
@@ -47,10 +47,10 @@ html[data-density="compact"] {
   --app-font-scale: 0.96;
   --app-spacing-scale: 0.82;
   --app-card-padding: 14px;
-  --app-page-padding: 8px;
-  --app-page-padding-mobile: 6px;
-  --app-page-padding-tablet: 8px;
-  --app-page-padding-desktop: 8px;
+  --app-page-padding: 16px;
+  --app-page-padding-mobile: 10px;
+  --app-page-padding-tablet: 14px;
+  --app-page-padding-desktop: 16px;
   --app-control-height: 36px;
   --app-radius: 4px;
   --app-sidebar-width: 240px;
@@ -65,10 +65,10 @@ html[data-density="comfortable"] {
   --app-font-scale: 1;
   --app-spacing-scale: 0.9;
   --app-card-padding: 15px;
-  --app-page-padding: 12px;
-  --app-page-padding-mobile: 10px;
-  --app-page-padding-tablet: 12px;
-  --app-page-padding-desktop: 12px;
+  --app-page-padding: 20px;
+  --app-page-padding-mobile: 12px;
+  --app-page-padding-tablet: 16px;
+  --app-page-padding-desktop: 20px;
   --app-control-height: 40px;
   --app-radius: 6px;
   --app-sidebar-width: 240px;
