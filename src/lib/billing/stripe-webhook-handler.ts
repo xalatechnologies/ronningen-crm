@@ -6,7 +6,13 @@ import type Stripe from "stripe";
 
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import type { Json } from "@/types/database.types";
-import { getBillingMode, isStripeLivemodeExpected } from "@/lib/billing/billing-env";
+import {
+  getBillingMode,
+  isStripeLivemodeExpected,
+  resolveStripePriceId,
+  resolveStripeProductId,
+} from "@/lib/billing/billing-env";
+import { isEventManagerSubscription } from "@/lib/billing/stripe-product-filter";
 import {
   markOrganizationCanceled,
   markOrganizationPastDue,
@@ -167,6 +173,14 @@ async function handleSubscriptionEvent(
   }
 }
 
+/** True when the subscription belongs to another product on the same Stripe account (for example Digilist). */
+function isForeignSubscription(subscription: Pick<Stripe.Subscription, "items">): boolean {
+  return !isEventManagerSubscription(subscription, {
+    productId: resolveStripeProductId(),
+    priceId: resolveStripePriceId(),
+  });
+}
+
 async function processStripeEvent(
   stripe: Stripe,
   event: Stripe.Event,
@@ -174,28 +188,43 @@ async function processStripeEvent(
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      const organizationId = await resolveOrganizationIdForWebhook({
-        metadata: session.metadata,
-        clientReferenceId: session.client_reference_id,
-        stripeCustomerId: resolveStripeCustomerId(session.customer),
-      });
+      // A one-off payment checkout belongs to another product on this Stripe account.
+      if (session.mode && session.mode !== "subscription") {
+        return { outcome: "ignored" };
+      }
       const subscriptionId =
         typeof session.subscription === "string"
           ? session.subscription
           : session.subscription?.id;
 
-      if (!organizationId || !subscriptionId) {
+      let subscription: Stripe.Subscription | null = null;
+      if (subscriptionId) {
+        subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+          expand: ["items.data.price.product"],
+        });
+        if (isForeignSubscription(subscription)) {
+          return { outcome: "ignored" };
+        }
+      }
+
+      const organizationId = await resolveOrganizationIdForWebhook({
+        metadata: session.metadata,
+        clientReferenceId: session.client_reference_id,
+        stripeCustomerId: resolveStripeCustomerId(session.customer),
+      });
+
+      if (!organizationId || !subscription) {
         return { outcome: "unresolved" };
       }
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
-        expand: ["items.data.price.product"],
-      });
       await handleSubscriptionEvent(subscription, organizationId);
       return { outcome: "handled" };
     }
     case "customer.subscription.created":
     case "customer.subscription.updated": {
       const subscription = event.data.object as Stripe.Subscription;
+      if (isForeignSubscription(subscription)) {
+        return { outcome: "ignored" };
+      }
       const organizationId = await resolveOrganizationIdForWebhook({
         metadata: subscription.metadata,
         stripeCustomerId: resolveStripeCustomerId(subscription.customer),
@@ -208,6 +237,9 @@ async function processStripeEvent(
     }
     case "customer.subscription.deleted": {
       const subscription = event.data.object as Stripe.Subscription;
+      if (isForeignSubscription(subscription)) {
+        return { outcome: "ignored" };
+      }
       const organizationId = await resolveOrganizationIdForWebhook({
         metadata: subscription.metadata,
         stripeCustomerId: resolveStripeCustomerId(subscription.customer),
@@ -229,6 +261,9 @@ async function processStripeEvent(
       const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
         expand: ["items.data.price.product"],
       });
+      if (isForeignSubscription(subscription)) {
+        return { outcome: "ignored" };
+      }
       const organizationId = await resolveOrganizationIdForWebhook({
         metadata: subscription.metadata,
         stripeCustomerId: resolveStripeCustomerId(subscription.customer),
