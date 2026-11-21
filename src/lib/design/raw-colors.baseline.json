@@ -10,7 +10,7 @@
   "components/admin/organization-detail/organization-detail.css": 1,
   "components/brand/brand-logo.tsx": 8,
   "components/dashboard/dashboard-home.tsx": 4,
-  "components/finance/finance-section.tsx": 1,
+  "features/finance/components/finance-section.tsx": 1,
   "components/landing/audience-section.tsx": 6,
   "components/landing/benefits-pricing-section.tsx": 16,
   "components/landing/faq-section.tsx": 6,

@@ -1,4 +1,4 @@
-import type { TransactionListItem } from "@/components/finance/types";
+import type { TransactionListItem } from "@/features/finance/types";
 import {
   fetchAllRowsInDateRange,
   rollingYearBounds,
