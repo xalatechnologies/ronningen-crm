@@ -39,3 +39,6 @@ export type AccommodationReservationRow = {
   notes: string | null;
   totalPrice: number | null;
 };
+
+/** Marker for a reservation whose customer record could not be read. */
+export const UNKNOWN_CUSTOMER = "__unknown__";

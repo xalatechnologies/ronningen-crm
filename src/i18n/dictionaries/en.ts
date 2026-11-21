@@ -147,6 +147,13 @@ export const en = {
       prevPage: "Previous page",
       nextPage: "Next page",
       pageOf: "Page {current} / {total}",
+      prev: "Previous",
+      next: "Next",
+    },
+    view: {
+      list: "List",
+      calendar: "Calendar",
+      switchAria: "Switch view",
     },
     saving: "Saving…",
     deleting: "Deleting…",

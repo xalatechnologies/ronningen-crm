@@ -77,3 +77,7 @@ export const RN_MODAL_SCROLL_BODY =
 /** Pinned modal/sheet footer — safe-area padding on notched devices. */
 export const RN_MODAL_FOOTER =
   "shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))]";
+
+/** Secondary outline button used in list toolbars and table rows. */
+export const RN_OUTLINE_BUTTON =
+  "rounded-xl border border-foreground/30 bg-card font-semibold shadow-none hover:bg-muted";

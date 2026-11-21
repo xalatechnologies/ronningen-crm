@@ -117,8 +117,19 @@ Not remapped: `violet` (used for the inkasso status), `fuchsia`, `purple`. Chart
 | Status tokens `--status-{success,warning,danger,info,neutral}-{bg,border,text,solid}` for light and dark | `src/styles/tokens.css`, mapped to Tailwind as `bg-status-*-bg`, `text-status-*-text`, `border-status-*-border`, `bg-status-*-solid` in `globals.css` | All new status UI |
 | `StatusBadge`, `statusDotClass`, `statusTextClass` | `src/components/ui/status-badge.tsx` | Status pills, dots, bars. Used by booking list, Overnatting, filters |
 | `StatCard` | `src/components/ui/stat-card.tsx` | Summary cards (Overnatting, Kunder) |
+| `DataTable` | `src/components/ui/data-table.tsx` (tests next to it) | Table scaffolding: header, rows, hover, keyboard activation, optional phone list. Cells and handlers stay in the page. Used by Finans, Inventar, Kunder, Partnere, Overnatting reservations. Not used (custom row layouts): Reservasjoner, Forespørsler, Fakturaer |
+| `ListPagination` | `src/components/ui/list-pagination.tsx` | Footer for paged lists (summary + Forrige / Side x / y / Neste). Page state and slicing stay in each page. Used by Kunder, Partnere, Forespørsler, Reservasjoner, Fakturaer, Finans, Inventar |
 | `ViewSwitch` | `src/components/ui/view-switch.tsx` | List / Calendar switch (Reservasjoner, Forespørsler) |
 | `SegmentedFilter` (now takes `tone`) | `src/components/ui/segmented-filter.tsx` | Status filters |
 | Raw-colour guard | `src/lib/design/raw-colors.test.ts` + `raw-colors.baseline.json` | Fails when a file gets MORE raw hex / rgb values than its baseline. Lower the baseline after cleaning up: `UPDATE_COLOR_BASELINE=1 npx vitest run src/lib/design` |
 
 Migrated so far: booking status badge, Overnatting (badges, dots, summary cards), booking list paid bar, invoice and booking filters, admin support badge, portal wish chip. Still on the old palette-scale classes (`bg-emerald-50` and similar, which work through the scale override): about 30 other files. The guard baseline lists the raw hex values still in the landing page, login and a few components.
+
+## Sidebar current item and later shared pieces, 2026-11-21
+
+| Piece | Where | Use |
+|---|---|---|
+| Current sidebar item (frosted pill plus 3px start bar) | `.sidebar-nav-item[aria-current="page"]` in `globals.css`; tokens `--panel-fg`, `--panel-glass`, `--panel-glass-border`, `--shadow-nav-current` (light and dark) in `tokens.css` | Staff sidebar, mobile menu, platform admin sidebar. Add the class `sidebar-nav-item` and `aria-current="page"` to any new rail item |
+| `usePagedList` | `src/lib/use-paged-list.ts` | Page state with reset on filter change (Fakturaer) |
+| `RN_OUTLINE_BUTTON` | `src/lib/rn-ui.ts` | Shared outline button class |
+| `cn()` knows `text-app-*` | `src/lib/utils.ts` | A colour class no longer drops a font size. Measured on 14 pages; only intended 1-2px changes |

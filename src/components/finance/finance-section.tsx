@@ -1,5 +1,6 @@
 "use client";
 
+import { ListPagination } from "@/components/ui/list-pagination";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import {
@@ -17,22 +18,14 @@ import { PriceInput } from "@/components/ui/price-input";
 import { Label } from "@/components/ui/label";
 import {
   FormSelect,
-  FormSelectField,
   toIdNameOptions,
 } from "@/components/ui/form-select";
 import { PropertySelectField } from "@/components/properties/property-select-field";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatusBadge, statusTextClass } from "@/components/ui/status-badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { RN_MODAL_FOOTER, RN_MODAL_MAX_HEIGHT, RN_MODAL_SCROLL_BODY } from "@/lib/rn-ui";
-import { APP_DATA_BODY, APP_DATA_DATE, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
+import { APP_DATA_BODY, APP_DATA_DATE, APP_DATA_PRIMARY } from "@/lib/table-typography";
 import {
   transactionFormSchema,
   type TransactionFormInput,
@@ -47,8 +40,6 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   Building2,
-  ChevronLeft,
-  ChevronRight,
   Download,
   Filter,
   Pencil,
@@ -71,8 +62,6 @@ import { toast } from "sonner";
 
 import type { TransactionListItem } from "./types";
 
-const financeTableHeadClass = cn("finance-table-head", APP_TABLE_HEAD_CELL);
-const financeTableCellClass = "px-4 py-3.5 sm:px-6";
 
 const txDialogFieldLabel = "text-[13px] font-semibold text-foreground md:text-sm";
 
@@ -735,6 +724,111 @@ export function FinanceSection({
     }
   }
 
+  const financeColumns = useMemo<DataTableColumn<TransactionListItem>[]>(
+    () => [
+    {
+      id: "date",
+      header: t("finance.tableDate"),
+      className: cn(APP_DATA_DATE, "finance-row-date"),
+      cell: (r) => formatDisplayDate(r.transaction_date, formatDate),
+    },
+    {
+      id: "description",
+      header: t("finance.tableDescription"),
+      className: cn(APP_DATA_PRIMARY, "finance-row-desc max-w-[240px]"),
+      cell: (r) => <span className="line-clamp-2">{r.description?.trim() || "—"}</span>,
+    },
+    {
+      id: "venue",
+      header: t("finance.tableVenue"),
+      className: cn(APP_DATA_BODY, "finance-row-meta"),
+      cell: (r) => r.propertyName ?? "—",
+    },
+    {
+      id: "category",
+      header: t("finance.tableCategory"),
+      cell: (r) => (
+        <span
+          className={cn(
+            "finance-category-pill inline-flex rounded-full px-3 py-1 font-semibold",
+            categoryPillClass(r.category),
+          )}
+        >
+          {r.category}
+        </span>
+      ),
+    },
+    {
+      id: "type",
+      header: t("finance.tableType"),
+      cell: (r) => {
+        const inc = rowIsIncome(r.type);
+        return (
+          <StatusBadge tone={inc ? "success" : "danger"}>
+            {inc ? t("finance.income") : t("finance.expense")}
+          </StatusBadge>
+        );
+      },
+    },
+    {
+      id: "amount",
+      header: t("finance.tableAmount"),
+      align: "right",
+      className: "finance-row-amount font-bold tabular-nums",
+      cell: (r) => {
+        const inc = rowIsIncome(r.type);
+        return (
+          <span className={statusTextClass(inc ? "success" : "danger")}>
+            {inc ? "+" : "−"}
+            {formatCurrency(Number(r.amount))}
+          </span>
+        );
+      },
+    },
+    ...(canManageTransactions
+      ? [
+          {
+            id: "actions",
+            header: t("finance.editOrDelete"),
+            srOnlyHeader: true,
+            align: "right" as const,
+            headClassName: "min-w-24 px-3",
+            className: "min-w-24 px-2 sm:px-3",
+            cell: (r: TransactionListItem) => (
+              <div className="flex items-center justify-end gap-0.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="size-10 shrink-0 rounded-lg text-muted-foreground hover:text-foreground"
+                  aria-label={t("finance.editTransactionAria", {
+                    date: formatDisplayDate(r.transaction_date, formatDate),
+                  })}
+                  onClick={() => setEditRow(r)}
+                >
+                  <Pencil className="size-4" aria-hidden />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="size-10 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  aria-label={t("finance.deleteTransactionAria", {
+                    date: formatDisplayDate(r.transaction_date, formatDate),
+                  })}
+                  onClick={() => setDeleteTarget(r)}
+                >
+                  <Trash2 className="size-4" aria-hidden />
+                </Button>
+              </div>
+            ),
+          },
+        ]
+      : []),
+  ],
+    [t, formatCurrency, formatDate, canManageTransactions],
+  );
+
   return (
     <div className="mx-auto flex w-full flex-col pb-24 md:pb-8">
       <div className="finance-page-workspace flex w-full flex-col">
@@ -1001,108 +1095,14 @@ export function FinanceSection({
                 </div>
               ) : (
                 <>
-                  <div className="hidden md:block">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-0 bg-muted/50 hover:bg-muted/50">
-                          <TableHead className={financeTableHeadClass}>{t("finance.tableDate")}</TableHead>
-                          <TableHead className={financeTableHeadClass}>{t("finance.tableDescription")}</TableHead>
-                          <TableHead className={financeTableHeadClass}>{t("finance.tableVenue")}</TableHead>
-                          <TableHead className={financeTableHeadClass}>{t("finance.tableCategory")}</TableHead>
-                          <TableHead className={financeTableHeadClass}>{t("finance.tableType")}</TableHead>
-                          <TableHead className={cn(financeTableHeadClass, "text-right")}>
-                            {t("finance.tableAmount")}
-                          </TableHead>
-                          {canManageTransactions ? (
-                            <TableHead className="min-w-24 px-3 py-2.5 text-right">
-                              <span className="sr-only">{t("finance.editOrDelete")}</span>
-                            </TableHead>
-                          ) : null}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {pageRows.map((r) => {
-                          const inc = rowIsIncome(r.type);
-                          return (
-                            <TableRow key={r.id} className="border-foreground/6 hover:bg-muted/50">
-                              <TableCell className={cn(financeTableCellClass, APP_DATA_DATE, "finance-row-date")}>
-                                {formatDisplayDate(r.transaction_date, formatDate)}
-                              </TableCell>
-                              <TableCell
-                                className={cn(financeTableCellClass, APP_DATA_PRIMARY, "finance-row-desc max-w-[240px]")}
-                              >
-                                <span className="line-clamp-2">{r.description?.trim() || "—"}</span>
-                              </TableCell>
-                              <TableCell className={cn(financeTableCellClass, APP_DATA_BODY, "finance-row-meta")}>
-                                {r.propertyName ?? "—"}
-                              </TableCell>
-                              <TableCell className={financeTableCellClass}>
-                                <span
-                                  className={cn(
-                                    "finance-category-pill inline-flex rounded-full px-3 py-1 font-semibold",
-                                    categoryPillClass(r.category),
-                                  )}
-                                >
-                                  {r.category}
-                                </span>
-                              </TableCell>
-                              <TableCell className={financeTableCellClass}>
-                                <StatusBadge tone={inc ? "success" : "danger"}>
-                                  {inc ? t("finance.income") : t("finance.expense")}
-                                </StatusBadge>
-                              </TableCell>
-                              <TableCell
-                                className={cn(
-                                  financeTableCellClass,
-                                  "finance-row-amount text-right font-bold tabular-nums",
-                                  statusTextClass(inc ? "success" : "danger"),
-                                )}
-                              >
-                                {inc ? "+" : "−"}
-                                {formatCurrency(Number(r.amount))}
-                              </TableCell>
-                              {canManageTransactions ? (
-                                <TableCell className="min-w-24 px-2 py-3.5 text-right sm:px-3">
-                                  <div className="flex items-center justify-end gap-0.5">
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon-sm"
-                                      className="size-10 shrink-0 rounded-lg text-muted-foreground hover:text-foreground"
-                                      aria-label={t("finance.editTransactionAria", {
-                                        date: formatDisplayDate(r.transaction_date, formatDate),
-                                      })}
-                                      onClick={() => setEditRow(r)}
-                                    >
-                                      <Pencil className="size-4" aria-hidden />
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon-sm"
-                                      className="size-10 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                                      aria-label={t("finance.deleteTransactionAria", {
-                                        date: formatDisplayDate(r.transaction_date, formatDate),
-                                      })}
-                                      onClick={() => setDeleteTarget(r)}
-                                    >
-                                      <Trash2 className="size-4" aria-hidden />
-                                    </Button>
-                                  </div>
-                                </TableCell>
-                              ) : null}
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  <ul className="divide-y divide-foreground/8 md:hidden">
-                    {pageRows.map((r) => {
+                  <DataTable
+                    rows={pageRows}
+                    getRowKey={(r) => r.id}
+                    columns={financeColumns}
+                    renderMobileItem={(r) => {
                       const inc = rowIsIncome(r.type);
                       return (
-                        <li key={r.id} className="flex flex-col gap-2.5 px-4 py-3.5">
+                        <div className="flex flex-col gap-2.5 px-4 py-3.5">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <p className="break-words font-heading font-semibold text-foreground">
@@ -1161,48 +1161,28 @@ export function FinanceSection({
                               </div>
                             ) : null}
                           </div>
-                        </li>
+                        </div>
                       );
-                    })}
-                  </ul>
+                    }}
+                  />
                 </>
               )}
 
               {filtered.length > 0 ? (
-                <div className="finance-page-footer flex flex-col gap-3 border-t border-foreground/8 px-4 py-4 text-app-sm font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                  <span>
+                <ListPagination
+  className="finance-page-footer"
+  summary={<>
                     {t("finance.footerShowing", {
                       from: pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0,
                       to: Math.min(currentPage * PAGE_SIZE, filtered.length),
                       total: filtered.length,
                     })}
-                  </span>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
-                      disabled={currentPage <= 1}
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    >
-                      <ChevronLeft className="size-4" aria-hidden />
-                      {t("finance.footerPrev")}
-                    </Button>
-                    <span className="flex items-center px-2 tabular-nums">
-                      {t("finance.footerPageOf", { current: currentPage, total: totalPages })}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
-                      disabled={currentPage >= totalPages}
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    >
-                      {t("common.actions.next")}
-                      <ChevronRight className="size-4" aria-hidden />
-                    </Button>
-                  </div>
-                </div>
+                  </>}
+  page={currentPage}
+  totalPages={totalPages}
+  onPageChange={setPage}
+  alwaysShowControls
+/>
               ) : null}
             </div>
       </div>

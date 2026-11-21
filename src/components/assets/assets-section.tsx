@@ -1,5 +1,6 @@
 "use client";
 
+import { ListPagination } from "@/components/ui/list-pagination";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { usePageSearch } from "@/providers/page-search-provider";
@@ -17,22 +18,14 @@ import { PriceInput } from "@/components/ui/price-input";
 import { Label } from "@/components/ui/label";
 import {
   FormSelect,
-  FormSelectField,
   toIdNameOptions,
 } from "@/components/ui/form-select";
 import { PropertySelectField } from "@/components/properties/property-select-field";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatusBadge, statusTextClass, type StatusTone } from "@/components/ui/status-badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { APP_DATA_BODY, APP_DATA_PRIMARY, APP_TABLE_HEAD_CELL } from "@/lib/table-typography";
+import { APP_DATA_BODY, APP_DATA_PRIMARY } from "@/lib/table-typography";
 import {
   type AssetStatusBucket,
   assetInsuranceBucket,
@@ -50,8 +43,6 @@ import {
   Armchair,
   Box,
   Building2,
-  ChevronLeft,
-  ChevronRight,
   Coffee,
   Download,
   Package,
@@ -79,9 +70,6 @@ import { toast } from "sonner";
 
 import type { AssetListItem } from "./types";
 
-const assetsTableHeadClass = cn("assets-table-head", APP_TABLE_HEAD_CELL);
-const assetsTableCellClass = "px-4 py-3.5 sm:px-6";
-
 export type AssetsSectionProps = {
   assets: AssetListItem[];
   properties: { id: string; name: string }[];
@@ -92,14 +80,14 @@ export type AssetsSectionProps = {
 
 const PAGE_SIZE = 20;
 
-const STATUS_FILTER_IDS = ["all", "operational", "maintenance", "replace"] as const;
+type StatusFilterId = "all" | "operational" | "maintenance" | "replace";
 
 const CONDITION_PRESET_VALUES = ASSET_CONDITION_PRESET_VALUES;
 
 const INSURANCE_PRESET_VALUES = ASSET_INSURANCE_PRESET_VALUES;
 
 function statusFilterLabel(
-  id: (typeof STATUS_FILTER_IDS)[number],
+  id: StatusFilterId,
   t: Translator,
 ): string {
   return t(`assets.status.${id}`);
@@ -699,6 +687,103 @@ export function AssetsSection({
     }
   }
 
+  const assetColumns = useMemo<DataTableColumn<AssetListItem>[]>(
+    () => [
+    {
+      id: "name",
+      header: t("common.fields.name"),
+      cell: (a) => {
+        const Icon = assetIconForName(a.name);
+        return (
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-rn-text-heading">
+              <Icon className="size-5" aria-hidden />
+            </div>
+            <span className={cn("assets-row-name", APP_DATA_PRIMARY)}>{a.name}</span>
+          </div>
+        );
+      },
+    },
+    {
+      id: "venue",
+      header: t("finance.filterVenue"),
+      className: cn(APP_DATA_BODY, "assets-row-meta"),
+      cell: (a) => a.propertyName ?? "—",
+    },
+    {
+      id: "quantity",
+      header: t("assets.tableQuantity"),
+      align: "center",
+      className: cn(APP_DATA_BODY, "assets-row-qty tabular-nums"),
+      cell: (a) => a.quantity,
+    },
+    {
+      id: "value",
+      header: t("assets.tableValue"),
+      align: "right",
+      className: "assets-row-value font-semibold tabular-nums",
+      cell: (a) => formatCurrency(Number(a.value)),
+    },
+    {
+      id: "condition",
+      header: t("assets.tableCondition"),
+      cell: (a) => (
+        <StatusBadge tone={conditionTone(a.condition)} className="assets-condition-pill">
+          {a.condition?.trim() || t("assets.conditionNotSet")}
+        </StatusBadge>
+      ),
+    },
+    {
+      id: "insurance",
+      header: t("assets.tableInsurance"),
+      cell: (a) => {
+        const ins = insurancePresentation(a.insurance_status, t);
+        return (
+          <StatusBadge tone={INSURANCE_TONE[ins.tone]} className="assets-insurance-pill">
+            {ins.safeLabel}
+          </StatusBadge>
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: t("assets.editOrDelete"),
+      srOnlyHeader: true,
+      align: "right",
+      stopRowClick: true,
+      headClassName: "min-w-24 px-3",
+      className: "min-w-24 px-2 sm:px-3",
+      cell: (a) => (
+        <div className="flex items-center justify-end gap-0.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            disabled={!canEdit}
+            className="size-10 shrink-0 rounded-lg text-muted-foreground hover:text-foreground disabled:opacity-40"
+            aria-label={t("assets.editAria", { name: a.name })}
+            onClick={() => setDialog({ open: true, row: a })}
+          >
+            <Pencil className="size-4" aria-hidden />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            disabled={!canEdit}
+            className="size-10 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
+            aria-label={t("assets.deleteAria", { name: a.name })}
+            onClick={() => setDeleteTarget({ id: a.id, name: a.name })}
+          >
+            <Trash2 className="size-4" aria-hidden />
+          </Button>
+        </div>
+      ),
+    },
+  ],
+    [t, formatCurrency, canEdit],
+  );
+
   return (
     <div className="assets-page-workspace mx-auto flex w-full flex-col gap-8 pb-24 md:pb-8">
       <div className="flex min-w-0 flex-col gap-6">
@@ -872,102 +957,16 @@ export function AssetsSection({
             </p>
           </div>
         ) : (
-          <>
-            <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-0 bg-muted/50 hover:bg-muted/50">
-                    <TableHead className={assetsTableHeadClass}>{t("common.fields.name")}</TableHead>
-                    <TableHead className={assetsTableHeadClass}>{t("finance.filterVenue")}</TableHead>
-                    <TableHead className={cn(assetsTableHeadClass, "text-center")}>
-                      {t("assets.tableQuantity")}
-                    </TableHead>
-                    <TableHead className={cn(assetsTableHeadClass, "text-right")}>{t("assets.tableValue")}</TableHead>
-                    <TableHead className={assetsTableHeadClass}>{t("assets.tableCondition")}</TableHead>
-                    <TableHead className={assetsTableHeadClass}>{t("assets.tableInsurance")}</TableHead>
-                    <TableHead className="min-w-24 px-3 py-2.5 text-right">
-                      <span className="sr-only">{t("assets.editOrDelete")}</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pageRows.map((a) => {
-                    const Icon = assetIconForName(a.name);
-                    const ins = insurancePresentation(a.insurance_status, t);
-                    return (
-                      <TableRow
-                        key={a.id}
-                        onClick={() => {
-                          if (canEdit) setDialog({ open: true, row: a });
-                        }}
-                        className={cn("border-foreground/6 hover:bg-muted/50", canEdit && "cursor-pointer")}
-                      >
-                        <TableCell className={assetsTableCellClass}>
-                          <div className="flex items-center gap-3">
-                            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-rn-text-heading">
-                              <Icon className="size-5" aria-hidden />
-                            </div>
-                            <span className={cn("assets-row-name", APP_DATA_PRIMARY)}>{a.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className={cn(assetsTableCellClass, APP_DATA_BODY, "assets-row-meta")}>
-                          {a.propertyName ?? "—"}
-                        </TableCell>
-                        <TableCell className={cn(assetsTableCellClass, APP_DATA_BODY, "assets-row-qty text-center tabular-nums")}>
-                          {a.quantity}
-                        </TableCell>
-                        <TableCell className={cn(assetsTableCellClass, "assets-row-value text-right font-semibold tabular-nums")}>
-                          {formatCurrency(Number(a.value))}
-                        </TableCell>
-                        <TableCell className={assetsTableCellClass}>
-                          <StatusBadge tone={conditionTone(a.condition)} className="assets-condition-pill">
-                            {a.condition?.trim() || t("assets.conditionNotSet")}
-                          </StatusBadge>
-                        </TableCell>
-                        <TableCell className={assetsTableCellClass}>
-                          <StatusBadge tone={INSURANCE_TONE[ins.tone]} className="assets-insurance-pill">
-                            {ins.safeLabel}
-                          </StatusBadge>
-                        </TableCell>
-                        <TableCell className="min-w-24 px-2 py-3.5 text-right sm:px-3" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-end gap-0.5">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              disabled={!canEdit}
-                              className="size-10 shrink-0 rounded-lg text-muted-foreground hover:text-foreground disabled:opacity-40"
-                              aria-label={t("assets.editAria", { name: a.name })}
-                              onClick={() => setDialog({ open: true, row: a })}
-                            >
-                              <Pencil className="size-4" aria-hidden />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              disabled={!canEdit}
-                              className="size-10 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
-                              aria-label={t("assets.deleteAria", { name: a.name })}
-                              onClick={() => setDeleteTarget({ id: a.id, name: a.name })}
-                            >
-                              <Trash2 className="size-4" aria-hidden />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-
-            <ul className="divide-y divide-foreground/8 md:hidden">
-              {pageRows.map((a) => {
-                const Icon = assetIconForName(a.name);
-                const ins = insurancePresentation(a.insurance_status, t);
-                return (
-                  <li key={a.id} className="flex flex-col gap-2.5 px-4 py-3.5">
+          <DataTable
+            rows={pageRows}
+            getRowKey={(a) => a.id}
+            columns={assetColumns}
+            onRowClick={canEdit ? (a) => setDialog({ open: true, row: a }) : undefined}
+            renderMobileItem={(a) => {
+              const Icon = assetIconForName(a.name);
+              const ins = insurancePresentation(a.insurance_status, t);
+              return (
+                <div className="flex flex-col gap-2.5 px-4 py-3.5">
                     <div className="flex items-start gap-3">
                       <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-rn-text-heading">
                         <Icon className="size-5" aria-hidden />
@@ -1009,16 +1008,16 @@ export function AssetsSection({
                       </StatusBadge>
                       <StatusBadge tone={INSURANCE_TONE[ins.tone]}>{ins.safeLabel}</StatusBadge>
                     </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
+                  </div>
+              );
+            }}
+          />
         )}
 
         {filtered.length > 0 ? (
-          <div className="assets-page-footer flex flex-col gap-3 border-t border-foreground/8 px-4 py-4 text-app-sm font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <span>
+          <ListPagination
+  className="assets-page-footer"
+  summary={<>
               {t("assets.footerShowing", {
                 from: pageRows.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0,
                 to: Math.min(currentPage * PAGE_SIZE, filtered.length),
@@ -1027,36 +1026,12 @@ export function AssetsSection({
               {statusFilter !== "all"
                 ? ` · ${statusFilterLabel(statusFilter, t)}`
                 : null}
-            </span>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="assets-toolbar-btn h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
-                disabled={currentPage <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                <ChevronLeft className="size-5" aria-hidden />
-                {t("assets.footerPrev")}
-              </Button>
-              <span className="flex items-center px-2 tabular-nums">
-                {t("assets.footerPageOf", {
-                  current: currentPage,
-                  total: totalPages,
-                })}
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                className="assets-toolbar-btn h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
-                disabled={currentPage >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              >
-                {t("common.actions.next")}
-                <ChevronRight className="size-5" aria-hidden />
-              </Button>
-            </div>
-          </div>
+            </>}
+  page={currentPage}
+  totalPages={totalPages}
+  onPageChange={setPage}
+  alwaysShowControls
+/>
         ) : null}
         </div>
       </div>

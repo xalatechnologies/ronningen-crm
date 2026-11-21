@@ -165,9 +165,10 @@ export function AppSidebar({ className }: { className?: string }) {
               className={cn(
                 "flex min-h-[max(2.75rem,var(--app-tap-target-min))] items-center gap-[length:var(--spacing-app-gap)] rounded-xl py-[length:calc(var(--app-card-padding)*0.55)] pl-3 pr-[length:calc(var(--app-card-padding)*0.55)] transition-all outline-none select-none md:gap-[length:var(--spacing-app-gap)] md:py-[length:calc(var(--app-card-padding)*0.65)] md:pl-[length:calc(var(--app-card-padding)*0.45)] md:pr-[length:calc(var(--app-card-padding)*0.65)]",
                 RN_TEXT_NAV_LINK,
+                "sidebar-nav-item",
                 "focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
                 active
-                  ? "bg-white/15 font-semibold text-white"
+                  ? "text-white"
                   : "font-medium text-white/80 hover:bg-white/10 hover:text-white",
                 pending && !active && "bg-white/10 opacity-80",
               )}

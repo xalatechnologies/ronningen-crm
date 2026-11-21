@@ -76,8 +76,9 @@ export function AdminNavLinks({
                 onClick={onNavigate}
                 className={cn(
                   navLinkClassName,
+                  "sidebar-nav-item",
                   active
-                    ? "bg-white/15 font-semibold text-white"
+                    ? "text-white"
                     : "font-medium text-white/80 hover:bg-white/10 hover:text-white",
                 )}
                 aria-current={active ? "page" : undefined}

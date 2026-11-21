@@ -579,6 +579,20 @@
     }
   }
 
+  /**
+   * Current item in every sidebar (staff app, mobile menu, platform admin): a frosted pill with a bar on the start edge.
+   * The state is aria-current="page"; weight and the bar say it, never colour alone.
+   * `--tw-shadow` keeps the bar when a Tailwind focus ring is added on top.
+   */
+  .sidebar-nav-item[aria-current="page"],
+  .sidebar-nav-item[aria-current="page"]:hover {
+    background: var(--panel-glass);
+    color: var(--panel-fg);
+    font-weight: 600;
+    --tw-shadow: var(--shadow-nav-current);
+    box-shadow: var(--shadow-nav-current);
+  }
+
   .app-kpi {
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: calc(28px * var(--app-type-scale));

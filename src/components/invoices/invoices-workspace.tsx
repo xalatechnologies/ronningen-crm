@@ -22,8 +22,6 @@ import { useSupabase } from "@/providers/supabase-provider";
 import {
   AlertTriangle,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   ExternalLink,
   FileText,
   Scale,
@@ -31,7 +29,9 @@ import {
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ListPagination } from "@/components/ui/list-pagination";
 import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
+import { usePagedList } from "@/lib/use-paged-list";
 
 const invoicesTableHeadClass = cn("invoices-table-head", APP_TABLE_HEAD_CELL);
 const invoicesTableCellClass = "px-4 py-4 align-top sm:px-6";
@@ -235,16 +235,12 @@ export function InvoicesWorkspace({
   const hasSearchQuery = searchQuery.trim() !== "";
 
   // Page resets to 1 whenever the filter or the search text changes.
-  const pageKey = `${filter}|${searchQuery}`;
-  const [pageState, setPageState] = useState({ key: pageKey, page: 1 });
-  const totalPages = Math.max(1, Math.ceil(filtered.length / TENANT_LIST_PAGE_SIZE));
-  const currentPage = Math.min(pageState.key === pageKey ? pageState.page : 1, totalPages);
-  const pageRows = filtered.slice(
-    (currentPage - 1) * TENANT_LIST_PAGE_SIZE,
-    currentPage * TENANT_LIST_PAGE_SIZE,
-  );
-  const goToPage = (next: number) =>
-    setPageState({ key: pageKey, page: Math.min(Math.max(1, next), totalPages) });
+  const {
+    page: currentPage,
+    totalPages,
+    pageItems: pageRows,
+    goToPage,
+  } = usePagedList(filtered, TENANT_LIST_PAGE_SIZE, `${filter}|${searchQuery}`);
 
   async function confirmMarkPaid() {
     if (!markPaidConfirmRow) return;
@@ -520,42 +516,16 @@ export function InvoicesWorkspace({
         </ul>
 
         {filtered.length > 0 ? (
-          <div className="flex flex-col gap-3 border-t border-foreground/8 px-4 py-4 text-app-sm font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <span>
-              {t("customers.footer.showingRange", {
-                from: (currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1,
-                to: Math.min(currentPage * TENANT_LIST_PAGE_SIZE, filtered.length),
-                total: filtered.length,
-              })}
-            </span>
-            {filtered.length > TENANT_LIST_PAGE_SIZE ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
-                  disabled={currentPage <= 1}
-                  onClick={() => goToPage(currentPage - 1)}
-                >
-                  <ChevronLeft className="size-4" aria-hidden />
-                  {t("customers.footer.prev")}
-                </Button>
-                <span className="flex items-center px-2 tabular-nums">
-                  {t("common.pagination.pageOf", { current: currentPage, total: totalPages })}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 gap-1 rounded-xl border border-foreground/30 bg-card px-3.5 text-app-sm font-semibold shadow-none hover:bg-muted disabled:border-foreground/15"
-                  disabled={currentPage >= totalPages}
-                  onClick={() => goToPage(currentPage + 1)}
-                >
-                  {t("common.actions.next")}
-                  <ChevronRight className="size-4" aria-hidden />
-                </Button>
-              </div>
-            ) : null}
-          </div>
+          <ListPagination
+            summary={t("customers.footer.showingRange", {
+              from: (currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1,
+              to: Math.min(currentPage * TENANT_LIST_PAGE_SIZE, filtered.length),
+              total: filtered.length,
+            })}
+            page={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+          />
         ) : null}
         </>
       )}

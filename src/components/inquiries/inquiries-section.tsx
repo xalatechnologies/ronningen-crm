@@ -1,5 +1,6 @@
 "use client";
 
+import { ListPagination } from "@/components/ui/list-pagination";
 import { InquiryDetailSheet } from "@/components/inquiries/inquiry-detail-sheet";
 import { InquiriesFollowUpMonthCalendar } from "@/components/inquiries/inquiries-follow-up-calendar";
 import {
@@ -34,7 +35,6 @@ import { cn } from "@/lib/utils";
 import { isBefore } from "date-fns";
 import {
   AlarmClock,
-  ChevronLeft,
   ChevronRight,
   FileText,
   Inbox,
@@ -284,9 +284,9 @@ export function InquiriesSection({
                     <ViewSwitch
                       value={showCalendarView ? "calendar" : "list"}
                       onChange={(next) => setShowCalendarView(next === "calendar")}
-                      listLabel={t("bookings.list")}
-                      calendarLabel={t("bookings.calendar")}
-                      ariaLabel={t("bookings.switchViewAria")}
+                      listLabel={t("common.view.list")}
+                      calendarLabel={t("common.view.calendar")}
+                      ariaLabel={t("common.view.switchAria")}
                     />
                   ) : null}
                   {canManageInquiries ? (
@@ -594,8 +594,9 @@ export function InquiriesSection({
               ))}
             </div>
             {filtered.length > TENANT_LIST_PAGE_SIZE ? (
-              <div className="flex flex-col items-stretch justify-between gap-4 border-t border-foreground/8 px-4 py-4 sm:flex-row sm:items-center sm:px-6">
-                <span className="inquiries-list-footer-caption font-medium text-rn-footer-text">
+              <ListPagination
+  summaryClassName="inquiries-list-footer-caption"
+  summary={<>
                   {t("inquiries.footer.showingRange", {
                     from: (currentPage - 1) * TENANT_LIST_PAGE_SIZE + 1,
                     to: Math.min(
@@ -605,40 +606,11 @@ export function InquiriesSection({
                     filtered: filtered.length,
                     extra: footerExtra,
                   })}
-                </span>
-                <div className="flex items-center justify-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon-sm"
-                    className="size-10 rounded-xl border border-foreground/30 bg-card shadow-none hover:border-foreground/50 hover:bg-muted disabled:border-foreground/15"
-                    disabled={currentPage <= 1}
-                    aria-label={t("common.pagination.prevPage")}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  >
-                    <ChevronLeft className="size-[18px]" />
-                  </Button>
-                    <span className="min-w-[5.5rem] text-center text-app-sm font-semibold tabular-nums text-muted-foreground md:text-app-base">
-                    {t("common.pagination.pageOf", {
-                      current: currentPage,
-                      total: totalPages,
-                    })}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon-sm"
-                    className="size-10 rounded-xl border border-foreground/30 bg-card shadow-none hover:border-foreground/50 hover:bg-muted disabled:border-foreground/15"
-                    disabled={currentPage >= totalPages}
-                    aria-label={t("common.pagination.nextPage")}
-                    onClick={() =>
-                      setPage((p) => Math.min(totalPages, p + 1))
-                    }
-                  >
-                    <ChevronRight className="size-[18px]" />
-                  </Button>
-                </div>
-              </div>
+                </>}
+  page={currentPage}
+  totalPages={totalPages}
+  onPageChange={setPage}
+/>
             ) : null}
           </div>
         ) : null}
