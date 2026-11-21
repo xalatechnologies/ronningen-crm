@@ -72,7 +72,7 @@ Not yet added: skip link in the portal shell and auth pages.
 | Staff: Settings | Screenshot-checked at desktop width after the shared table change; look consistent. Phone view and difficult states not reviewed. |
 | Staff: Calendar, Notifications, Onboarding | Not reviewed against the standard. |
 | Platform admin | Footer copyright removed; rest not reviewed. Has uncommitted work from earlier. |
-| Auth pages, landing page | Not reviewed. |
+| Auth pages, landing page | Auth not reviewed. Landing hero redesigned (Nov 2026): an auto-playing product film (`src/components/landing/hero-film/`) follows one booking from dashboard to inquiry, payment and customer portal. It is built from the real app components and classes (sidebar, StatCard, StatusBadge, booking list rows, the wedding-themed portal) drawn at desktop size and scaled down, so it looks like the product; labels come from the app dictionary. Design tokens only (no raw colours), CSS keyframes (`film-*` in `globals.css`), no animation library; pauses on hover, focus or the pause button; reduced motion shows finished scenes without autoplay. The three phones in the Kundeportal section use the real wedding portal design (real `ScheduleTimeline`, `WishStatusChip`, portal classes) drawn at phone size and scaled into the frame (`portal-phones.tsx`). Other landing sections not reviewed. |
 
 ## Next steps (suggested order)
 
