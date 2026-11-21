@@ -1,4 +1,4 @@
-export function CustomerAvatar({ name }: { name: string }) {
+export function InitialsAvatar({ name }: { name: string }) {
   const initials = name
     .trim()
     .split(/\s+/)

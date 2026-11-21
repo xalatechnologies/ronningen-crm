@@ -16,7 +16,7 @@ import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { StatCard } from "@/components/ui/stat-card";
 import { ViewSwitch } from "@/components/ui/view-switch";
 import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
-import { CustomerAvatar } from "@/components/customers/customer-avatar";
+import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { usePageSearch } from "@/providers/page-search-provider";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/i18n/client";
@@ -503,7 +503,7 @@ export function InquiriesSection({
                   aria-label={t("inquiries.openAria", { name: row.customerName })}
                 >
                   <div className="flex min-w-0 items-start gap-3 md:col-span-3">
-                    <CustomerAvatar name={row.customerName} />
+                    <InitialsAvatar name={row.customerName} />
                     <div className="min-w-0">
                     <h4 className={inquiriesTableCellPrimaryClass}>
                       {row.customerName}

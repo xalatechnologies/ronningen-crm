@@ -1,36 +1,18 @@
 "use client";
 
 import { ListPagination } from "@/components/ui/list-pagination";
-import type { PartnerRow } from "@/components/customers/types";
-import { CustomersPageSearchToolbar } from "@/components/customers/customers-page-search-toolbar";
+import type { PartnerRow } from "@/features/customers/types";
+import { CustomersPageSearchToolbar } from "@/features/customers/components/customers-page-search-toolbar";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { usePageSearch } from "@/providers/page-search-provider";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useOrganizationPermissions } from "@/hooks/use-organization-permissions";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { AutocompleteField } from "@/components/ui/autocomplete-field";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  PARTNER_CATEGORY_PRESETS,
-  partnerFormSchema,
-  type PartnerFormInput,
-} from "@/lib/validations";
+import { partnerFormSchema, type PartnerFormInput } from "@/lib/validations";
 import { useTranslation } from "@/i18n/client";
-import type { Translator } from "@/i18n/types";
-import {
-  RN_PAGE_SEARCH_ACTIONS,
-} from "@/lib/rn-ui";
+import { RN_PAGE_SEARCH_ACTIONS } from "@/lib/rn-ui";
 import { cn } from "@/lib/utils";
 import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
@@ -38,132 +20,18 @@ import { useSupabase } from "@/providers/supabase-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronRight, X } from "lucide-react";
 
+import { createPartner, deletePartner, toPartnerPayload, updatePartner } from "@/features/customers/data/partners";
+import { filterPartners, partnerCategoryLabel } from "@/features/customers/lib/partner-categories";
+import { PartnerFields } from "@/features/customers/components/partner-fields";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { CustomerAvatar } from "./customer-avatar";
+import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { useEffect, useMemo, useState } from "react";
-import { useForm, Controller, type Resolver, type UseFormReturn } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
 import { TENANT_LIST_PAGE_SIZE } from "@/lib/list-pagination";
 
 
-const fieldClass =
-  "h-12 w-full rounded-xl border border-foreground/25 bg-background px-4 text-base shadow-none outline-none transition-colors hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
-
-function partnerCategoryLabel(category: string, t: Translator): string {
-  const preset = PARTNER_CATEGORY_PRESETS.find((p) => p.value === category);
-  if (preset) {
-    return t(`customers.partnerCategories.${preset.value}`);
-  }
-  return category;
-}
-
-function partnerLabelToCategoryLocalized(input: string, t: Translator): string {
-  const trimmed = input.trim();
-  for (const preset of PARTNER_CATEGORY_PRESETS) {
-    const translated = t(`customers.partnerCategories.${preset.value}`);
-    if (
-      translated.toLowerCase() === trimmed.toLowerCase() ||
-      preset.label.toLowerCase() === trimmed.toLowerCase()
-    ) {
-      return preset.value;
-    }
-  }
-  return trimmed;
-}
-
-function partnerCategorySuggestions(t: Translator): string[] {
-  return PARTNER_CATEGORY_PRESETS.map((p) =>
-    t(`customers.partnerCategories.${p.value}`),
-  );
-}
-
-function PartnerFields({
-  form,
-  idPrefix,
-}: {
-  form: UseFormReturn<PartnerFormInput>;
-  idPrefix: string;
-}) {
-  const { t } = useTranslation();
-  const { register, control, formState } = form;
-  const err = formState.errors;
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-cat`}>{t("common.category")}</Label>
-        <Controller
-          name="category"
-          control={control}
-          render={({ field, fieldState }) => (
-            <AutocompleteField
-              id={`${idPrefix}-cat`}
-              value={partnerCategoryLabel(field.value ?? "", t)}
-              onValueChange={(value) =>
-                field.onChange(partnerLabelToCategoryLocalized(value, t))
-              }
-              suggestions={partnerCategorySuggestions(t)}
-              placeholder={t("customers.partnerForm.categoryPlaceholder")}
-              aria-label={t("customers.partnerForm.categoryAria")}
-              aria-invalid={fieldState.invalid}
-              inputClassName={fieldClass}
-            />
-          )}
-        />
-        <p className="text-xs text-muted-foreground">
-          {t("customers.partnerForm.categoryHint")}
-        </p>
-        {err.category ? (
-          <p className="text-xs text-destructive">{err.category.message}</p>
-        ) : null}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-name`}>{t("customers.partnerForm.nameCompany")}</Label>
-        <Input id={`${idPrefix}-name`} {...register("name")} className={fieldClass} />
-        {err.name ? (
-          <p className="text-xs text-destructive">{err.name.message}</p>
-        ) : null}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-phone`}>{t("common.fields.phone")}</Label>
-        <Input
-          id={`${idPrefix}-phone`}
-          {...register("phone")}
-          className={fieldClass}
-          inputMode="tel"
-        />
-        {err.phone ? (
-          <p className="text-xs text-destructive">{err.phone.message}</p>
-        ) : null}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-email`}>{t("common.fields.email")}</Label>
-        <Input
-          id={`${idPrefix}-email`}
-          type="email"
-          {...register("email")}
-          className={fieldClass}
-        />
-        {err.email ? (
-          <p className="text-xs text-destructive">{err.email.message}</p>
-        ) : null}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-notes`}>{t("common.fields.notes")}</Label>
-        <Textarea
-          id={`${idPrefix}-notes`}
-          {...register("notes")}
-          rows={4}
-          className={cn(fieldClass, "min-h-24 py-3")}
-          placeholder={t("customers.partnerForm.notesPlaceholder")}
-        />
-        {err.notes ? (
-          <p className="text-xs text-destructive">{err.notes.message}</p>
-        ) : null}
-      </div>
-    </div>
-  );
-}
 
 export function PartnersPanel({
   partners,
@@ -225,21 +93,7 @@ export function PartnersPanel({
     [partners, selectedId],
   );
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return partners;
-    return partners.filter((p) => {
-      const hay = [
-        p.name,
-        p.email ?? "",
-        p.phone ?? "",
-        partnerCategoryLabel(p.category, t),
-      ]
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(q);
-    });
-  }, [partners, query, t]);
+  const filtered = useMemo(() => filterPartners(partners, query, t), [partners, query, t]);
 
   const pagination = useMemo(() => {
     const totalPages = Math.max(
@@ -279,14 +133,7 @@ export function PartnersPanel({
       return;
     }
 
-    const { error } = await supabase.from("partners").insert({
-      category: partnerLabelToCategoryLocalized(data.category, t),
-      name: data.name,
-      phone: data.phone.trim() || null,
-      email: data.email.trim() || null,
-      notes: data.notes?.trim() || null,
-      organization_id: orgId,
-    });
+    const { error } = await createPartner(supabase, orgId, toPartnerPayload(data, t));
 
     if (error) {
       toast.error(t("customers.toasts.partnerCreateFailed"), {
@@ -303,17 +150,12 @@ export function PartnersPanel({
 
   async function onSavePartner(data: PartnerFormInput) {
     if (!selectedId || !currentOrganizationId) return;
-    const { error } = await supabase
-      .from("partners")
-      .update({
-        category: partnerLabelToCategoryLocalized(data.category, t),
-        name: data.name,
-        phone: data.phone.trim() || null,
-        email: data.email.trim() || null,
-        notes: data.notes?.trim() || null,
-      })
-      .eq("id", selectedId)
-      .eq("organization_id", currentOrganizationId);
+    const { error } = await updatePartner(
+      supabase,
+      currentOrganizationId,
+      selectedId,
+      toPartnerPayload(data, t),
+    );
 
     if (error) {
       toast.error(t("common.toasts.saveFailed"), { description: error.message });
@@ -328,11 +170,7 @@ export function PartnersPanel({
     if (!currentOrganizationId) return;
     setDeleteBusyId(id);
     try {
-      const { error } = await supabase
-        .from("partners")
-        .delete()
-        .eq("id", id)
-        .eq("organization_id", currentOrganizationId);
+      const { error } = await deletePartner(supabase, currentOrganizationId, id);
       if (error) {
         toast.error(t("common.toasts.deleteFailed"), { description: error.message });
         return;
@@ -368,7 +206,7 @@ export function PartnersPanel({
       header: t("common.fields.name"),
       cell: (p) => (
         <span className="flex items-center gap-3">
-          <CustomerAvatar name={p.name} />
+          <InitialsAvatar name={p.name} />
           <span
             className={cn(
               "customers-partners-row-name min-w-0 truncate font-heading font-semibold",
@@ -468,7 +306,7 @@ export function PartnersPanel({
                     onClick={() => openEdit(p)}
                     className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-muted/60"
                   >
-                    <CustomerAvatar name={p.name} />
+                    <InitialsAvatar name={p.name} />
                     <span className="min-w-0 flex-1">
                       <span className="customers-partners-row-name block truncate font-semibold text-foreground">
                         {p.name}

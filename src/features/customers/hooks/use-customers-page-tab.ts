@@ -3,7 +3,7 @@
 import {
   parseCustomersPageTab,
   type CustomersPageTabId,
-} from "@/components/customers/tabs";
+} from "@/features/customers/lib/tabs";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 

@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 
 const CustomersSection = dynamic(
   () =>
-    import("@/components/customers/customers-section").then((m) => ({
+    import("@/features/customers/components/customers-section").then((m) => ({
       default: m.CustomersSection,
     })),
   { loading: () => <AppPageSkeleton variant="table" /> },

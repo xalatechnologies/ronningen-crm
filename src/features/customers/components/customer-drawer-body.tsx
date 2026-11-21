@@ -37,16 +37,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 
-import type { CustomerBookingListItem, CustomerRow } from "./types";
-
-function customerInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (
-    (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-  );
-}
+import { toCustomerProfilePayload, updateCustomerNotes, updateCustomerProfile } from "@/features/customers/data/customers";
+import { customerInitials } from "@/features/customers/lib/customer-initials";
+import type { CustomerBookingListItem, CustomerRow } from "@/features/customers/types";
 
 function bookingIconForType(eventType: string) {
   const t = eventType.toLowerCase();
@@ -102,11 +95,7 @@ export function CustomerDrawerBody({
     async (customerId: string, notes: string) => {
       if (!currentOrganizationId) return;
       const value = notes.trim() || null;
-      const { error } = await supabase
-        .from("customers")
-        .update({ notes: value })
-        .eq("id", customerId)
-        .eq("organization_id", currentOrganizationId);
+      const { error } = await updateCustomerNotes(supabase, currentOrganizationId, customerId, value);
       if (error) {
         toast.error(t("customers.drawer.noteSaveFailed"), {
           description: error.message,
@@ -136,15 +125,12 @@ export function CustomerDrawerBody({
   async function onSaveProfile(data: CustomerUpsertFormInput) {
     if (!currentOrganizationId) return;
     setSavingProfile(true);
-    const { error } = await supabase
-      .from("customers")
-      .update({
-        name: data.name.trim(),
-        phone: data.phone.trim() || null,
-        email: data.email.trim() || null,
-      })
-      .eq("id", customer.id)
-      .eq("organization_id", currentOrganizationId);
+    const { error } = await updateCustomerProfile(
+      supabase,
+      currentOrganizationId,
+      customer.id,
+      toCustomerProfilePayload(data),
+    );
 
     setSavingProfile(false);
 
