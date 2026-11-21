@@ -1,5 +1,9 @@
 "use client";
 
+import { getBillingPlan } from "@/config/billing-plans";
+import { SetupProgressCard } from "@/features/settings/components/setup-progress-card";
+import type { SetupProgress } from "@/features/settings/lib/setup-progress";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useOrganizationPermissions } from "@/hooks/use-organization-permissions";
 import { useTranslation } from "@/i18n/client";
@@ -18,9 +22,21 @@ import Link from "next/link";
 type SettingsHubProps = {
   propertyCount: number;
   teamCount: number;
+  /** Setup checklist for owners and admins; null for everyone else. */
+  setup: SetupProgress | null;
 };
 
-export function SettingsHub({ propertyCount, teamCount }: SettingsHubProps) {
+/** Which setup steps a settings section covers. A section is "complete" when all its steps are done. */
+const SECTION_SETUP_STEPS: Record<string, readonly string[]> = {
+  organization: ["organization"],
+  lokaler: ["lokaler"],
+  team: ["team"],
+  billing: ["billing"],
+  integrations: ["calendar"],
+  contracts: ["contract", "portal"],
+};
+
+export function SettingsHub({ propertyCount, teamCount, setup }: SettingsHubProps) {
   const { t } = useTranslation();
   const { currentOrganization, loading } = useCurrentOrganization();
   const { role } = useOrganizationPermissions();
@@ -51,6 +67,8 @@ export function SettingsHub({ propertyCount, teamCount }: SettingsHubProps) {
         )}
       </div>
 
+      {setup ? <SetupProgressCard progress={setup} /> : null}
+
       <dl className="grid gap-3 sm:grid-cols-3">
         <div className={cn("px-4 py-3", RN_CARD_SHELL)}>
           <dt className="text-sm text-muted-foreground">{t("settings.venues")}</dt>
@@ -67,7 +85,9 @@ export function SettingsHub({ propertyCount, teamCount }: SettingsHubProps) {
         <div className={cn("px-4 py-3", RN_CARD_SHELL)}>
           <dt className="text-sm text-muted-foreground">{t("settings.plan")}</dt>
           <dd className="mt-1 font-heading text-lg font-bold capitalize">
-            {currentOrganization?.subscriptionPlan ?? "—"}
+            {currentOrganization
+              ? (getBillingPlan(currentOrganization.subscriptionPlan)?.name ?? currentOrganization.subscriptionPlan)
+              : "—"}
           </dd>
         </div>
       </dl>
@@ -86,10 +106,19 @@ export function SettingsHub({ propertyCount, teamCount }: SettingsHubProps) {
                 <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border-0 bg-success/12 ring-1 ring-success/20 text-success dark:!text-white">
                   <Icon className="size-6" aria-hidden />
                 </div>
-                <ChevronRight
-                  className="size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
-                  aria-hidden
-                />
+                <div className="flex items-center gap-2">
+                  {setup && SECTION_SETUP_STEPS[id] ? (
+                    <StatusBadge tone={SECTION_SETUP_STEPS[id].every((step) => setup.items.find((i) => i.id === step)?.done) ? "success" : "warning"}>
+                      {SECTION_SETUP_STEPS[id].every((step) => setup.items.find((i) => i.id === step)?.done)
+                        ? t("settings.progress.statusDone")
+                        : t("settings.progress.statusMissing")}
+                    </StatusBadge>
+                  ) : null}
+                  <ChevronRight
+                    className="size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
+                    aria-hidden
+                  />
+                </div>
               </div>
               <div>
                 <h2 className="font-heading text-lg font-bold text-rn-text-heading">
