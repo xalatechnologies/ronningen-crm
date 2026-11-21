@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 
 const OvernattingSection = dynamic(
   () =>
-    import("@/components/overnatting/overnatting-section").then((m) => ({
+    import("@/features/overnatting/components/overnatting-section").then((m) => ({
       default: m.OvernattingSection,
     })),
   { loading: () => <AppPageSkeleton variant="calendar" /> },

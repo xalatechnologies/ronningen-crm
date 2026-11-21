@@ -3,8 +3,8 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { DataTable } from "@/components/ui/data-table";
-import { buildReservationColumns } from "@/components/overnatting/reservation-columns";
-import { UNKNOWN_CUSTOMER, type AccommodationReservationRow } from "@/components/overnatting/types";
+import { buildReservationColumns } from "@/features/overnatting/components/reservation-columns";
+import { UNKNOWN_CUSTOMER, type AccommodationReservationRow } from "@/features/overnatting/types";
 import type { Translator } from "@/i18n/types";
 
 const t = ((key: string) => key) as unknown as Translator;

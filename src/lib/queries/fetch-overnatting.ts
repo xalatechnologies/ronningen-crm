@@ -1,7 +1,7 @@
 import type {
   AccommodationReservationRow,
   AccommodationUnitRow,
-} from "@/components/overnatting/types";
+} from "@/features/overnatting/types";
 import {
   dayBeforeYmd,
   monthEndExclusiveYm,
