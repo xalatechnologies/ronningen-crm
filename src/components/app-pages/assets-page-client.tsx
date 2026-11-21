@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 
 const AssetsSection = dynamic(
   () =>
-    import("@/components/assets/assets-section").then((m) => ({
+    import("@/features/assets/components/assets-section").then((m) => ({
       default: m.AssetsSection,
     })),
   { loading: () => <AppPageSkeleton variant="table" /> },

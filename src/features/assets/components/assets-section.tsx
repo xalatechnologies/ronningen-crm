@@ -5,70 +5,35 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { usePageSearch } from "@/providers/page-search-provider";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { PriceInput } from "@/components/ui/price-input";
-import { Label } from "@/components/ui/label";
-import {
-  FormSelect,
-  toIdNameOptions,
-} from "@/components/ui/form-select";
-import { PropertySelectField } from "@/components/properties/property-select-field";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { FormSelect, toIdNameOptions } from "@/components/ui/form-select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
-import { StatCard } from "@/components/ui/stat-card";
-import { StatusBadge, statusTextClass, type StatusTone } from "@/components/ui/status-badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { APP_DATA_BODY, APP_DATA_PRIMARY } from "@/lib/table-typography";
-import {
-  type AssetStatusBucket,
-  assetInsuranceBucket,
-  assetRowInsuranceIsCovered,
-  assetStatusBucket,
-} from "@/lib/asset-status-bucket";
-import { assetFormSchema, type AssetFormInput, ASSET_CONDITION_PRESET_VALUES, ASSET_INSURANCE_PRESET_VALUES } from "@/lib/validations";
+import { type AssetStatusBucket } from "@/lib/asset-status-bucket";
 import { cn } from "@/lib/utils";
-import { requireOrganizationId } from "@/lib/organizations/require-organization-id";
-import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSupabase } from "@/providers/supabase-provider";
-import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import {
-  Armchair,
-  Box,
-  Building2,
-  Coffee,
-  Download,
-  Package,
-  ShieldAlert,
-  ShieldCheck,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Snowflake,
-  Trash2,
-  Wind,
-} from "lucide-react";
+import { Armchair, Box, Building2, Coffee, Download, Package, Pencil, Plus, RotateCcw, Snowflake, Trash2, Wind } from "lucide-react";
 import { useTenantDataInvalidation } from "@/hooks/use-tenant-data-invalidation";
 import { useTranslation } from "@/i18n/client";
-import type { Translator } from "@/i18n/types";
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useState,
-} from "react";
-import { useForm, type Resolver } from "react-hook-form";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import type { AssetListItem } from "./types";
+import dynamic from "next/dynamic";
+
+import { AssetsKpiSummary } from "@/features/assets/components/assets-kpi-summary";
+import { deleteAsset } from "@/features/assets/data/assets";
+import { downloadAssetsCsv } from "@/features/assets/lib/assets-csv";
+import { computeAssetsStats, filterAssets } from "@/features/assets/lib/assets-stats";
+import { INSURANCE_TONE, conditionTone, insurancePresentation, statusFilterLabel } from "@/features/assets/lib/asset-presentation";
+import type { AssetListItem } from "@/features/assets/types";
+
+// The form (react-hook-form, zod) is only needed once a dialog opens.
+const AssetForm = dynamic(() =>
+  import("@/features/assets/components/asset-form").then((m) => ({ default: m.AssetForm })),
+);
 
 export type AssetsSectionProps = {
   assets: AssetListItem[];
@@ -80,109 +45,14 @@ export type AssetsSectionProps = {
 
 const PAGE_SIZE = 20;
 
-type StatusFilterId = "all" | "operational" | "maintenance" | "replace";
 
-const CONDITION_PRESET_VALUES = ASSET_CONDITION_PRESET_VALUES;
 
-const INSURANCE_PRESET_VALUES = ASSET_INSURANCE_PRESET_VALUES;
 
-function statusFilterLabel(
-  id: StatusFilterId,
-  t: Translator,
-): string {
-  return t(`assets.status.${id}`);
-}
 
-function conditionPresetOptions(t: Translator) {
-  return (
-    Object.entries(CONDITION_PRESET_VALUES) as Array<
-      [keyof typeof CONDITION_PRESET_VALUES, string]
-    >
-  ).map(([key, value]) => ({
-    value,
-    label: t(`assets.conditions.${key}`),
-  }));
-}
 
-function insurancePresetOptions(t: Translator) {
-  return (
-    Object.entries(INSURANCE_PRESET_VALUES) as Array<
-      [keyof typeof INSURANCE_PRESET_VALUES, string]
-    >
-  ).map(([key, value]) => ({
-    value,
-    label: t(`assets.insurance.${key}`),
-  }));
-}
 
 const ICONS = [Package, Armchair, Wind, Coffee, Snowflake, Box] as const;
 
-type AssetsInventoryStats = {
-  totalValue: number;
-  totalUnits: number;
-  rowCount: number;
-  counts: { operational: number; maintenance: number; replace: number };
-  insuredValue: number;
-  uninsuredValue: number;
-};
-
-function AssetsKpiSummary({
-  stats,
-  filteredStats,
-  filteredCount,
-  hasActiveFilters,
-  formatCurrency,
-  t,
-}: {
-  stats: AssetsInventoryStats;
-  filteredStats: { totalValue: number; totalUnits: number };
-  filteredCount: number;
-  hasActiveFilters: boolean;
-  formatCurrency: (value: number) => string;
-  t: Translator;
-}) {
-  const entriesLabel =
-    stats.rowCount === 1
-      ? t("assets.registrationWord")
-      : t("assets.registrationsWord");
-  const unitsLabel =
-    stats.totalUnits === 1 ? t("assets.unitWord") : t("assets.unitsWord");
-
-  return (
-    <section
-      className="assets-kpi-summary grid grid-cols-1 gap-3 sm:grid-cols-3 lg:gap-4"
-      aria-label={t("assets.kpiAria")}
-    >
-      <StatCard
-        variant="brand"
-        icon={Package}
-        label={t("assets.kpiTotal")}
-        value={formatCurrency(stats.totalValue)}
-        caption={`${stats.rowCount} ${entriesLabel} · ${stats.totalUnits} ${unitsLabel}`}
-      >
-        {hasActiveFilters ? (
-          <p className="assets-filter-hint mt-3 border-t border-white/20 pt-3 text-app-xs text-white/85">
-            <span className="font-semibold text-white">{t("assets.filteredLabel")}</span>{" "}
-            {formatCurrency(filteredStats.totalValue)} · {filteredStats.totalUnits} {t("assets.unitsWord")} (
-            {filteredCount} {filteredCount === 1 ? t("assets.lineWord") : t("assets.linesWord")})
-          </p>
-        ) : null}
-      </StatCard>
-      <StatCard
-        icon={ShieldCheck}
-        label={t("assets.insuredValue")}
-        value={formatCurrency(stats.insuredValue)}
-        valueClassName={statusTextClass("success")}
-      />
-      <StatCard
-        icon={ShieldAlert}
-        label={t("assets.uninsuredValue")}
-        value={formatCurrency(stats.uninsuredValue)}
-        valueClassName={stats.uninsuredValue > 0 ? statusTextClass("warning") : undefined}
-      />
-    </section>
-  );
-}
 
 function assetIconForName(name: string) {
   let h = 0;
@@ -190,373 +60,11 @@ function assetIconForName(name: string) {
   return ICONS[h % ICONS.length]!;
 }
 
-function insurancePresentation(
-  status: string | null,
-  t: Translator,
-): {
-  safeLabel: string;
-  tone: "ok" | "warn" | "bad";
-} {
-  const bucket = assetInsuranceBucket(status);
-  if (bucket === "covered") {
-    return { safeLabel: t("assets.insurance.covered"), tone: "ok" };
-  }
-  if (bucket === "excluded") {
-    return { safeLabel: t("assets.insurance.excluded"), tone: "bad" };
-  }
-  if (bucket === "unknown") {
-    return { safeLabel: t("assets.insurance.unknown"), tone: "warn" };
-  }
-  const raw = (status ?? "").replaceAll("\u00a0", " ").trim();
-  return { safeLabel: raw || t("assets.insurance.unknown"), tone: "warn" };
-}
 
-function downloadAssetsCsv(rows: AssetListItem[], t: Translator) {
-  const headers = [
-    t("assets.csv.name"),
-    t("assets.csv.venue"),
-    t("assets.csv.quantity"),
-    t("assets.csv.value"),
-    t("assets.csv.condition"),
-    t("assets.csv.insurance"),
-  ];
-  const lines = rows.map((a) =>
-    [
-      a.name,
-      a.propertyName ?? "",
-      String(a.quantity),
-      String(a.value),
-      a.condition ?? "",
-      a.insurance_status ?? "",
-    ].map(csvEscape).join(","),
-  );
-  const csv = [headers.join(","), ...lines].join("\n");
-  const blob = new Blob([`\ufeff${csv}`], {
-    type: "text/csv;charset=utf-8;",
-  });
-  const url = URL.createObjectURL(blob);
-  const el = document.createElement("a");
-  el.href = url;
-  el.download = t("assets.csv.filename", {
-    date: new Date().toISOString().slice(0, 10),
-  });
-  el.click();
-  URL.revokeObjectURL(url);
-}
 
-function csvEscape(s: string) {
-  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
 
-function conditionTone(condition: string | null): StatusTone {
-  const b = assetStatusBucket(condition);
-  if (b === "operational") return "success";
-  if (b === "maintenance") return "warning";
-  return "danger";
-}
 
-const INSURANCE_TONE: Record<"ok" | "warn" | "bad", StatusTone> = {
-  ok: "success",
-  warn: "warning",
-  bad: "danger",
-};
 
-function AssetFormFields({
-  properties,
-  row,
-  suggestedPropertyId,
-  onClose,
-}: {
-  properties: { id: string; name: string }[];
-  row: AssetListItem | null;
-  /** Når ny rad: forhåndsvelg lokale fra aktiv liste-filter. */
-  suggestedPropertyId?: string;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation();
-  const supabase = useSupabase();
-  const { currentOrganizationId } = useCurrentOrganization();
-  const { invalidateAssets } = useTenantDataInvalidation();
-  const isEdit = row != null;
-
-  const defaultProperty =
-    row?.property_id ??
-    (suggestedPropertyId &&
-    properties.some((p) => p.id === suggestedPropertyId)
-      ? suggestedPropertyId
-      : properties[0]?.id) ??
-    "";
-
-  const form = useForm<AssetFormInput>({
-    resolver: zodResolver(assetFormSchema) as Resolver<AssetFormInput>,
-    defaultValues: {
-      propertyId: defaultProperty,
-      name: row?.name ?? "",
-      quantity: row?.quantity ?? 1,
-      value: row?.value ?? 0,
-      condition: row?.condition ?? CONDITION_PRESET_VALUES.good,
-      insuranceStatus: row?.insurance_status ?? INSURANCE_PRESET_VALUES.unknown,
-    },
-  });
-
-  const idProperty = useId();
-  const idName = useId();
-  const idQty = useId();
-  const idValue = useId();
-  const idCondition = useId();
-  const idInsurance = useId();
-
-  const conditionOptions = useMemo(() => {
-    const presets = conditionPresetOptions(t);
-    const c = row?.condition?.trim();
-    if (c && !presets.some((p) => p.value === c)) {
-      return [
-        { value: c, label: `${c} ${t("assets.savedSuffix")}` },
-        ...presets,
-      ];
-    }
-    return presets;
-  }, [row?.condition, t]);
-
-  const insuranceOptions = useMemo(() => {
-    const presets = insurancePresetOptions(t);
-    const c = row?.insurance_status?.trim();
-    if (c && !presets.some((p) => p.value === c)) {
-      return [
-        { value: c, label: `${c} ${t("assets.savedSuffix")}` },
-        ...presets,
-      ];
-    }
-    return presets;
-  }, [row?.insurance_status, t]);
-
-  const { register, control, handleSubmit, formState, setValue, watch } = form;
-  const { isSubmitting } = formState;
-  const conditionVal = watch("condition");
-  const insuranceVal = watch("insuranceStatus");
-
-  async function onSubmit(data: AssetFormInput) {
-    const payload = {
-      property_id: data.propertyId,
-      name: data.name.trim(),
-      quantity: data.quantity,
-      value: data.value,
-      condition: data.condition?.trim() || null,
-      insurance_status: data.insuranceStatus?.trim() || null,
-    };
-
-    if (isEdit && row) {
-      const { error } = await supabase
-        .from("assets")
-        .update(payload)
-        .eq("id", row.id);
-      if (error) {
-        toast.error(t("assets.toasts.updateFailed"), {
-          description: error.message,
-        });
-        return;
-      }
-      toast.success(t("assets.toasts.updated"));
-    } else {
-      let orgId: string;
-      try {
-        orgId = requireOrganizationId(currentOrganizationId);
-      } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : t("common.toasts.noActiveOrg"),
-        );
-        return;
-      }
-
-      const { error } = await supabase.from("assets").insert({
-        ...payload,
-        organization_id: orgId,
-      });
-      if (error) {
-        toast.error(t("assets.toasts.createFailed"), {
-          description: error.message,
-        });
-        return;
-      }
-      toast.success(t("assets.toasts.created"));
-    }
-    onClose();
-    invalidateAssets();
-  }
-
-  const title = isEdit ? t("assets.editTitle") : t("assets.newTitle");
-
-  return (
-    <>
-      <DialogHeader className="space-y-0 border-b border-foreground/10 pb-5 pr-10 text-left sm:pr-12">
-        <DialogTitle className="font-heading text-xl font-bold text-rn-text-heading sm:text-2xl">
-          {title}
-        </DialogTitle>
-        <DialogDescription className="sr-only">
-          {isEdit ? t("assets.editFormAria") : t("assets.newFormAria")}
-        </DialogDescription>
-      </DialogHeader>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-6 pt-6"
-      >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label
-              htmlFor={idProperty}
-              className="text-sm font-semibold text-foreground"
-            >
-              {t("finance.filterVenue")}
-            </Label>
-            <PropertySelectField
-              name="propertyId"
-              control={control}
-              id={idProperty}
-              properties={properties}
-            />
-            {formState.errors.propertyId ? (
-              <p className="text-sm text-destructive" role="alert">
-                {formState.errors.propertyId.message}
-              </p>
-            ) : null}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor={idName} className="text-sm font-semibold text-foreground">
-              {t("common.fields.name")}
-            </Label>
-            <Input
-              id={idName}
-              aria-invalid={!!formState.errors.name}
-              className="h-12 rounded-xl border border-foreground/25 bg-background px-4 text-base shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 aria-invalid:border-destructive"
-              {...register("name")}
-            />
-            {formState.errors.name ? (
-              <p className="text-sm text-destructive" role="alert">
-                {formState.errors.name.message}
-              </p>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor={idQty} className="text-sm font-semibold text-foreground">
-                {t("assets.tableQuantity")}
-              </Label>
-              <Input
-                id={idQty}
-                aria-invalid={!!formState.errors.quantity}
-                className="h-12 rounded-xl border border-foreground/25 bg-background px-4 text-base tabular-nums shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 aria-invalid:border-destructive"
-                type="number"
-                min={0}
-                step={1}
-                inputMode="numeric"
-                {...register("quantity", {
-                  setValueAs: (v) => {
-                    if (v === "" || v == null) return 0;
-                    const n = Number(v);
-                    return Number.isFinite(n) ? n : 0;
-                  },
-                })}
-              />
-              {formState.errors.quantity ? (
-                <p className="text-sm text-destructive" role="alert">
-                  {formState.errors.quantity.message}
-                </p>
-              ) : null}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor={idValue} className="text-sm font-semibold text-foreground">
-                {t("assets.tableValue")}{" "}
-                <span className="font-normal text-muted-foreground">(NOK)</span>
-              </Label>
-              <PriceInput
-                id={idValue}
-                aria-invalid={!!formState.errors.value}
-                className="h-12 rounded-xl border border-foreground/25 bg-background px-4 text-base shadow-none hover:border-foreground/40 focus-visible:border-success focus-visible:ring-3 focus-visible:ring-success/20 aria-invalid:border-destructive"
-                {...register("value", {
-                  setValueAs: (v) => {
-                    if (v === "" || v == null) return 0;
-                    const n = Number(v);
-                    return Number.isFinite(n) ? n : 0;
-                  },
-                })}
-              />
-              {formState.errors.value ? (
-                <p className="text-sm text-destructive" role="alert">
-                  {formState.errors.value.message}
-                </p>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label
-                htmlFor={idCondition}
-                className="text-sm font-semibold text-foreground"
-              >
-                {t("assets.tableCondition")}
-              </Label>
-              <FormSelect
-                id={idCondition}
-                aria-label={t("assets.conditionAria")}
-                value={conditionVal ?? ""}
-                onValueChange={(v) => setValue("condition", v)}
-                options={conditionOptions}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor={idInsurance}
-                className="text-sm font-semibold text-foreground"
-              >
-                {t("assets.tableInsurance")}
-              </Label>
-              <FormSelect
-                id={idInsurance}
-                aria-label={t("assets.insuranceAria")}
-                value={insuranceVal ?? ""}
-                onValueChange={(v) => setValue("insuranceStatus", v)}
-                options={insuranceOptions}
-              />
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter className="-mx-6 -mb-6 mt-2 gap-3 border-t border-foreground/10 bg-card px-6 py-4 sm:-mx-6 sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            size="cta"
-            className="rounded-xl border border-foreground/30 bg-card shadow-none hover:bg-muted"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            {t("common.actions.cancel")}
-          </Button>
-          <Button
-            type="submit"
-            variant="success"
-            size="cta"
-            disabled={isSubmitting}
-            className="disabled:opacity-60"
-          >
-            {isSubmitting
-              ? t("common.saving")
-              : isEdit
-                ? t("common.actions.save")
-                : t("assets.createItem")}
-          </Button>
-        </DialogFooter>
-      </form>
-    </>
-  );
-}
 
 export function AssetsSection({
   assets,
@@ -584,22 +92,10 @@ export function AssetsSection({
   } | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return assets.filter((a) => {
-      if (propertyId && a.property_id !== propertyId) return false;
-      if (statusFilter !== "all" && assetStatusBucket(a.condition) !== statusFilter) {
-        return false;
-      }
-      if (q) {
-        const hay =
-          `${a.name} ${a.propertyName ?? ""} ${a.condition ?? ""} ${a.insurance_status ?? ""}`
-            .toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      return true;
-    });
-  }, [assets, query, propertyId, statusFilter]);
+  const filtered = useMemo(
+    () => filterAssets(assets, { propertyId, statusFilter, query }),
+    [assets, propertyId, statusFilter, query],
+  );
 
   const hasActiveFilters = Boolean(
     query.trim() || propertyId || statusFilter !== "all",
@@ -628,33 +124,7 @@ export function AssetsSection({
 
   const { totalPages, currentPage, pageRows } = pagination;
 
-  const stats = useMemo(() => {
-    let totalValue = 0;
-    let totalUnits = 0;
-    let insuredValue = 0;
-    let uninsuredValue = 0;
-    const counts = { operational: 0, maintenance: 0, replace: 0 };
-    for (const a of assets) {
-      const v = Number(a.value);
-      const q = Number(a.quantity);
-      totalValue += v;
-      totalUnits += q;
-      counts[assetStatusBucket(a.condition)] += 1;
-      if (assetRowInsuranceIsCovered(a.insurance_status)) {
-        insuredValue += v;
-      } else {
-        uninsuredValue += v;
-      }
-    }
-    return {
-      totalValue,
-      totalUnits,
-      counts,
-      insuredValue,
-      uninsuredValue,
-      rowCount: assets.length,
-    };
-  }, [assets]);
+  const stats = useMemo(() => computeAssetsStats(assets), [assets]);
 
   const resetFilters = useCallback(() => {
     setPropertyId("");
@@ -671,10 +141,7 @@ export function AssetsSection({
     if (!deleteTarget) return;
     setDeleteBusy(true);
     try {
-      const { error } = await supabase
-        .from("assets")
-        .delete()
-        .eq("id", deleteTarget.id);
+      const { error } = await deleteAsset(supabase, deleteTarget.id);
       if (error) {
         toast.error(t("assets.toasts.deleteFailed"), { description: error.message });
         return;
@@ -1049,7 +516,7 @@ export function AssetsSection({
         >
           {dialog.open ? (
             properties.length > 0 ? (
-              <AssetFormFields
+              <AssetForm
                 key={dialog.row?.id ?? "new"}
                 properties={properties}
                 row={dialog.row}

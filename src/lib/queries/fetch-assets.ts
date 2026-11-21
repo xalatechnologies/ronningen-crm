@@ -1,4 +1,4 @@
-import type { AssetListItem } from "@/components/assets/types";
+import type { AssetListItem } from "@/features/assets/types";
 import type { TenantSupabaseClient } from "@/lib/queries/types";
 import { canManageAssets } from "@/lib/role-access";
 import type { UserRole } from "@/constants/roles";

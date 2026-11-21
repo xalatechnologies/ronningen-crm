@@ -43,5 +43,6 @@ src/
 | Feature | Status |
 |---|---|
 | Finance | Moved to `src/features/finance`: lib (3 files, tested), data (tested), form, filters, KPIs, section. Form is lazy-loaded. |
-| Inventory, Customers, Pricing, Bookings, Inquiries, Invoices, Overnatting, Reports | Still in `src/components/<name>/`. Next in order: Inventory, Customers, Pricing. |
-| Supabase calls inside components | Finance writes moved to `data/`. Others still call Supabase in the component (backlog per feature). |
+| Assets (Inventar) | Moved to `src/features/assets`: lib (stats, filter, presentation, CSV; tested), data (create, update, delete; tested), form (lazy), KPI summary, section. |
+| Customers, Pricing, Bookings, Inquiries, Invoices, Overnatting, Reports | Still in `src/components/<name>/`. Next in order: Customers, Pricing. |
+| Supabase calls inside components | Finance and Assets writes moved to `data/`. Others still call Supabase in the component (backlog per feature). |
