@@ -72,7 +72,7 @@ Not yet added: skip link in the portal shell and auth pages.
 | Staff: Settings | Screenshot-checked at desktop width after the shared table change; look consistent. Phone view and difficult states not reviewed. |
 | Staff: Calendar, Notifications, Onboarding | Not reviewed against the standard. |
 | Platform admin | Footer copyright removed; rest not reviewed. Has uncommitted work from earlier. |
-| Auth pages, landing page | Not reviewed. |
+| Auth pages, landing page | Auth not reviewed. Landing pricing section rebuilt (Nov 2026): the single plan "Komplett" with eight grouped "what you get" cards and a price card; the price comes from `BILLING_PLANS` and the section uses design tokens only. Other landing sections not reviewed. |
 
 ## Next steps (suggested order)
 
