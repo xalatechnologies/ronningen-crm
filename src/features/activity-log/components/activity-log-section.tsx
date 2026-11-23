@@ -4,26 +4,32 @@ import Link from "next/link";
 import { AuditEntryDetails } from "@/components/audit/audit-entry-details";
 import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
+import type { UserRole } from "@/constants/roles";
 import { ActivityFilterBar } from "@/features/activity-log/components/activity-filters";
 import { ACTIVITY_PAGE_SIZE, activityHref, entryRange, type ActivityFilters } from "@/features/activity-log/lib/activity-query";
 import { groupByDay } from "@/features/activity-log/lib/group-by-day";
 import { getServerTranslation } from "@/i18n/server";
 import {
-  AUDIT_TABLE_LABEL_KEYS,
   describeAuditEntry,
   type AuditDescription,
   type AuditEntryInput,
 } from "@/lib/audit/describe-audit-entry";
-import { formatAuditClock, formatAuditDay } from "@/lib/audit/format-audit-time";
+import { formatAuditClock, formatAuditDay, formatAuditTimestamp } from "@/lib/audit/format-audit-time";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
+import { roleLabel } from "@/lib/navigation/nav-labels";
 import { cn } from "@/lib/utils";
 
 export type ActivityLogRow = {
   id: number;
   createdAtIso: string;
-  actorName: string | null;
+  /** Who did it; null for the system (a database job, not a person). */
+  actor: { name: string; email: string | null; role: UserRole | null } | null;
   rowId: string;
   entry: AuditEntryInput;
+  /** Name or reference of the thing that was touched, when it has one. */
+  subject: string | null;
+  /** The booking this row hangs under (payment installments). */
+  booking: { id: string; reference: string | null } | null;
 };
 
 type Props = ActivityFilters & {
@@ -87,28 +93,52 @@ export async function ActivityLogSection({ rows, page, totalPages, total, table,
               <ul className={cn(RN_CARD_SHELL, "divide-y divide-foreground/10 overflow-hidden")}>
                 {group.items.map((row) => {
                   const description = describeAuditEntry(row.entry, locale);
-                  const tableLabel = description.table ? t(AUDIT_TABLE_LABEL_KEYS[description.table]) : row.entry.table_name;
-                  const who = row.actorName ?? t("appPages.settings.activity.system");
+                                    const who = row.actor?.name ?? t("appPages.settings.activity.system");
+                  const object = description.table
+                    ? t(`appPages.settings.activity.objects.${description.table}`)
+                    : row.entry.table_name;
+                  const meta = [row.actor?.email, row.actor?.role ? roleLabel(row.actor.role, t) : null].filter(Boolean).join(" · ");
                   return (
                     <li key={row.id} className="flex items-start gap-3.5 px-5 py-4 md:px-6">
-                      {row.actorName ? (
-                        <InitialsAvatar name={row.actorName} />
+                      {row.actor ? (
+                        <InitialsAvatar name={row.actor.name} />
                       ) : (
                         <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground" aria-hidden>
                           <Cog className="size-4" />
                         </span>
                       )}
                       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                          <span className="font-semibold text-foreground">{who}</span>
-                          <StatusBadge tone={KIND_TONE[description.kind]} dot={false}>
+                        <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-foreground">
+                          <span className="font-semibold">{who}</span>
+                          <span>{t(`appPages.settings.activity.verbs.${description.kind}`)}</span>
+                          <span>{object}</span>
+                          {row.subject ? <span className="font-semibold">«{row.subject}»</span> : null}
+                          <StatusBadge tone={KIND_TONE[description.kind]} dot={false} className="ml-1">
                             {t(`appPages.settings.activity.kinds.${description.kind}`)}
                           </StatusBadge>
-                          <span className="text-app-sm text-muted-foreground">{tableLabel}</span>
                         </p>
-                        <AuditEntryDetails description={description} fieldLabels={fieldLabels} rowId={row.rowId} t={t} />
+                        {meta ? <p className="text-app-xs text-muted-foreground">{meta}</p> : null}
+                        {row.booking ? (
+                          <p className="text-app-sm text-muted-foreground">
+                            {row.booking.reference
+                              ? t("appPages.settings.activity.onBooking", { reference: row.booking.reference })
+                              : t("appPages.settings.activity.onBookingUnknown")}{" "}
+                            ·{" "}
+                            <Link
+                              href={`/app/bookings/${encodeURIComponent(row.booking.id)}`}
+                              className="rounded-sm font-semibold text-success underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 dark:!text-white"
+                            >
+                              {t("appPages.settings.activity.openBooking")}
+                            </Link>
+                          </p>
+                        ) : null}
+                        <AuditEntryDetails description={description} fieldLabels={fieldLabels} rowId={row.rowId} t={t} subject={row.subject} />
                       </div>
-                      <time dateTime={row.createdAtIso} className="shrink-0 pt-0.5 text-app-sm tabular-nums text-muted-foreground">
+                      <time
+                        dateTime={row.createdAtIso}
+                        title={formatAuditTimestamp(row.createdAtIso, locale)}
+                        className="shrink-0 pt-0.5 text-app-sm tabular-nums text-muted-foreground"
+                      >
                         {formatAuditClock(row.createdAtIso, locale)}
                       </time>
                     </li>

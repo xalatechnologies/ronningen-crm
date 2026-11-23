@@ -21,23 +21,29 @@ const rows: ActivityLogRow[] = [
   {
     id: 3,
     createdAtIso: "2026-11-23T08:15:00Z",
-    actorName: "Eva Eier",
+    actor: { name: "Eva Eier", email: "eva@x.no", role: "owner" },
     rowId: "b1",
     entry: { table_name: "bookings", op: "INSERT", changed_fields: null, old_data: null, new_data: { booking_reference: "RN-1" } },
+    subject: "RN-1",
+    booking: null,
   },
   {
     id: 2,
     createdAtIso: "2026-11-22T12:00:00Z",
-    actorName: null,
+    actor: null,
     rowId: "c1",
     entry: { table_name: "customers", op: "UPDATE", changed_fields: ["phone"], old_data: null, new_data: null },
+    subject: null,
+    booking: null,
   },
   {
     id: 1,
     createdAtIso: "2026-11-14T10:47:00Z",
-    actorName: "Eva Eier",
+    actor: { name: "Eva Eier", email: null, role: null },
     rowId: "i1",
-    entry: { table_name: "booking_payment_installments", op: "DELETE", changed_fields: null, old_data: { due_date: "2026-11-21" }, new_data: null },
+    entry: { table_name: "booking_payment_installments", op: "DELETE", changed_fields: null, old_data: { label: "Depositum", amount_nok: 5000, due_date: "2026-11-21" }, new_data: null },
+    subject: "Depositum",
+    booking: { id: "b1", reference: "RN-1" },
   },
 ];
 
@@ -56,6 +62,23 @@ describe("ActivityLogSection", () => {
     expect(screen.getByText("Slettet")).toBeTruthy();
     expect(screen.getByText("09:15")).toBeTruthy();
     expect(screen.getByText("Viser 1–3 av 3 · Side 1 av 1")).toBeTruthy();
+  });
+
+  it("reads as a sentence: who, what they did, to what, with the person's role and the booking", async () => {
+    render(await ActivityLogSection({ ...base, rows }));
+    expect(screen.getByText("slettet")).toBeTruthy();
+    expect(screen.getByText("en delbetaling")).toBeTruthy();
+    expect(screen.getByText("«Depositum»")).toBeTruthy();
+    expect(screen.getByText("en reservasjon")).toBeTruthy();
+    expect(screen.getByText("eva@x.no · Hovedeier")).toBeTruthy();
+    expect(screen.getByText(/Reservasjon RN-1/)).toBeTruthy();
+    // The label equals the subject in the headline, so it is not repeated in the details.
+    expect(screen.queryByText("Betegnelse:")).toBeNull();
+    expect(screen.getByText("Beløp:")).toBeTruthy();
+    expect(screen.getAllByRole("link", { name: "Åpne reservasjon" }).map((a) => a.getAttribute("href"))).toEqual([
+      "/app/bookings/b1",
+      "/app/bookings/b1",
+    ]);
   });
 
   it("shows the empty state without filters and a reset link with filters", async () => {

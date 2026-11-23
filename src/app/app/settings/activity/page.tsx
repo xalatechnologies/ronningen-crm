@@ -6,6 +6,8 @@ import {
   activityHref,
   parseActivityQuery,
 } from "@/features/activity-log/lib/activity-query";
+import { loadActivityContext } from "@/features/activity-log/data/activity-context";
+import { entryBookingId, entryMemberUserId, entrySubject } from "@/features/activity-log/lib/entry-references";
 import { getServerTranslation } from "@/i18n/server";
 import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
 import { canManageMembers } from "@/lib/organizations/organization-permissions";
@@ -67,43 +69,44 @@ export default async function ActivitySettingsPage({
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / ACTIVITY_PAGE_SIZE));
   const page = Math.min(requestedPage, totalPages);
 
-  const actorIds = [
+  const entries = (logRows ?? []).map((r) => ({
+    row: r,
+    entry: {
+      table_name: r.table_name,
+      op: r.op,
+      changed_fields: r.changed_fields,
+      old_data: r.old_data,
+      new_data: r.new_data,
+    },
+  }));
+
+  const userIds = [
     ...new Set(
-      (logRows ?? [])
-        .map((r) => r.actor_user_id)
-        .filter((id): id is string => id !== null),
+      entries.flatMap(({ row, entry }) => [row.actor_user_id, entryMemberUserId(entry)]).filter((id): id is string => id !== null),
     ),
   ];
-  const { data: profileRows } =
-    actorIds.length > 0
-      ? await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", actorIds)
-      : { data: [] as { id: string; full_name: string | null; email: string | null }[] };
+  const bookingIds = [...new Set(entries.map(({ entry }) => entryBookingId(entry)).filter((id): id is string => id !== null))];
+  const context = await loadActivityContext(supabase, organizationId, userIds, bookingIds);
 
-  const profileById = new Map(
-    (profileRows ?? []).map((p) => [p.id, p] as const),
-  );
-
-  const rows: ActivityLogRow[] = (logRows ?? []).map((r) => {
-    const profile = r.actor_user_id ? profileById.get(r.actor_user_id) : null;
+  const rows: ActivityLogRow[] = entries.map(({ row, entry }) => {
+    const actor = row.actor_user_id ? context.people.get(row.actor_user_id) : null;
+    const memberUserId = entryMemberUserId(entry);
+    const memberPerson = memberUserId ? context.people.get(memberUserId) : null;
+    const bookingId = entryBookingId(entry);
     return {
-      id: r.id,
-      createdAtIso: r.created_at,
-      actorName: r.actor_user_id
-        ? profile?.full_name?.trim() ||
-          profile?.email ||
-          t("appPages.settings.activity.unknownUser")
+      id: row.id,
+      createdAtIso: row.created_at,
+      actor: row.actor_user_id
+        ? {
+            name: actor?.name || actor?.email || t("appPages.settings.activity.unknownUser"),
+            email: actor?.name ? actor.email : null,
+            role: actor?.role ?? null,
+          }
         : null,
-      rowId: r.row_id,
-      entry: {
-        table_name: r.table_name,
-        op: r.op,
-        changed_fields: r.changed_fields,
-        old_data: r.old_data,
-        new_data: r.new_data,
-      },
+      rowId: row.row_id,
+      entry,
+      subject: memberPerson ? memberPerson.name || memberPerson.email : entrySubject(entry),
+      booking: bookingId ? { id: bookingId, reference: context.bookingReferences.get(bookingId) ?? null } : null,
     } satisfies ActivityLogRow;
   });
 

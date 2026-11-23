@@ -8,6 +8,8 @@ type Props = {
   fieldLabels: Record<string, string>;
   rowId: string;
   t: Translator;
+  /** Already shown in the headline; a detail line with the same value is left out. */
+  subject?: string | null;
 };
 
 export function auditFieldLabel(
@@ -18,9 +20,10 @@ export function auditFieldLabel(
 }
 
 /** Human-readable detail lines for one audit entry (shared by table and cards). */
-export function AuditEntryDetails({ description, fieldLabels, rowId, t }: Props) {
+export function AuditEntryDetails({ description, fieldLabels, rowId, t, subject = null }: Props) {
   const label = (key: string) => auditFieldLabel(key, fieldLabels);
-  const { kind, changes, changedFieldKeys, summary, redacted } = description;
+  const { kind, changes, changedFieldKeys, redacted } = description;
+  const summary = description.summary.filter((item) => item.value !== subject);
 
   let body: React.ReactNode;
   if (kind === "changed" && redacted) {

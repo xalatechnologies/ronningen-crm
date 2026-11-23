@@ -135,3 +135,27 @@ describe("formatAuditValue", () => {
     expect(formatAuditValue("notes", "a".repeat(200), "en").length).toBeLessThanOrEqual(80);
   });
 });
+
+describe("describeAuditEntry summaries use the real columns", () => {
+  it("shows label, amount and due date for a payment installment", () => {
+    const d = describeAuditEntry(
+      {
+        ...base,
+        table_name: "booking_payment_installments",
+        op: "INSERT",
+        new_data: { label: "Depositum", amount_nok: 5000, due_date: "2026-11-21", booking_id: "b1" },
+      },
+      "nb",
+    );
+    expect(d.summary.map((i) => i.fieldKey)).toEqual(["label", "amount_nok", "due_date"]);
+    expect(d.summary[1]?.value).toMatch(/5[\s ]?000/);
+  });
+
+  it("shows the transaction description and date", () => {
+    const d = describeAuditEntry(
+      { ...base, table_name: "transactions", op: "DELETE", old_data: { type: "income", amount: 100, description: "Leie", transaction_date: "2026-11-01" } },
+      "nb",
+    );
+    expect(d.summary.map((i) => i.fieldKey)).toEqual(["type", "amount", "description", "transaction_date"]);
+  });
+});
