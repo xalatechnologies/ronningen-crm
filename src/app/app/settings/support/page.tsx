@@ -1,4 +1,4 @@
-import { OrgSupportPanel } from "@/components/support/org-support-panel";
+import { SupportInbox } from "@/features/support/components/support-inbox";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { getServerTranslation } from "@/i18n/server";
 import { fetchOrgSupportOverview } from "@/lib/support/queries";
@@ -24,7 +24,7 @@ export default async function SupportSettingsPage() {
         title={t("appPages.settings.support.title")}
         description={t("appPages.settings.support.description")}
       />
-      <OrgSupportPanel data={data} />
+      <SupportInbox data={data} nowIso={new Date().toISOString()} />
     </div>
   );
 }

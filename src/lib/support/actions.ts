@@ -9,11 +9,19 @@ import {
   type SupportTicketCategory,
 } from "@/lib/support/labels";
 import { getServerT } from "@/lib/i18n/server-messages";
+import { validateTicketText, type TicketTextError } from "@/features/support/lib/ticket-input";
 import { requireOrgMember } from "@/lib/support/require-org-member";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const SUPPORT_PATH = "/app/settings/support";
 const ADMIN_LAYOUT_PATH = "/admin";
+
+const TEXT_ERROR_KEYS = {
+  subject_min: "serverErrors.admin.subjectMinLength",
+  subject_max: "serverErrors.admin.subjectMaxLength",
+  body_min: "serverErrors.admin.messageMinLength",
+  body_max: "serverErrors.admin.messageMaxLength",
+} as const satisfies Record<TicketTextError, string>;
 
 function revalidateSupportSurfaces() {
   revalidatePath(SUPPORT_PATH);
@@ -31,12 +39,8 @@ export async function createOrgSupportTicket(input: {
   const subject = input.subject.trim();
   const body = input.body.trim();
 
-  if (subject.length < 3) {
-    return { ok: false as const, error: t("serverErrors.admin.subjectMinLength") };
-  }
-  if (body.length < 3) {
-    return { ok: false as const, error: t("serverErrors.admin.messageMinLength") };
-  }
+  const textError = validateTicketText({ subject, body });
+  if (textError) return { ok: false as const, error: t(TEXT_ERROR_KEYS[textError]) };
   if (!isSupportTicketCategory(input.category)) {
     return { ok: false as const, error: "Ugyldig kategori." };
   }
@@ -84,9 +88,8 @@ export async function replyToOrgSupportTicket(input: {
   const t = await getServerT();
   const body = input.body.trim();
 
-  if (body.length < 3) {
-    return { ok: false as const, error: t("serverErrors.admin.messageMinLength") };
-  }
+  const textError = validateTicketText({ body });
+  if (textError) return { ok: false as const, error: t(TEXT_ERROR_KEYS[textError]) };
 
   const supabase = await createServerSupabaseClient();
   const { data: ticket, error: fetchError } = await supabase
