@@ -1,4 +1,4 @@
-import { PropertiesSection } from "@/components/properties/properties-section";
+import { PropertiesSection } from "@/features/properties/components/properties-section";
 import type { PropertyListRow } from "@/components/properties/types";
 import { TenantSetupBanner } from "@/components/settings/tenant-setup-banner";
 import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
