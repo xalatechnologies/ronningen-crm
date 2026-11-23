@@ -18,7 +18,7 @@ export function PlanCard({ plan }: { plan: BillingPlan }) {
         <p className="text-app-xs font-semibold text-muted-foreground">{t("billing.includedInPlan")}</p>
         <h2 className="mt-1 font-heading text-xl font-semibold text-foreground">{plan.name}</h2>
         <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
-          {formatCurrency(SAAS_MONTHLY_PRICE_NOK)}{" "}
+          {formatCurrency(SAAS_MONTHLY_PRICE_NOK)}
           <span className="text-base font-medium text-muted-foreground">{t("billing.perMonth")}</span>
         </p>
         <p className="mt-2 text-app-sm leading-relaxed text-muted-foreground">

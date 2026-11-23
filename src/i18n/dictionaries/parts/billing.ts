@@ -57,7 +57,7 @@ export const billingNb = {
   activeHint:
     "Abonnementet er aktivt. Bruk Stripe-portalen for å oppdatere betalingskort eller se fakturaer.",
   includedInPlan: "Inkludert i planen",
-  perMonth: "kr/mnd",
+  perMonth: "/mnd",
   trialNote:
     "{days} dagers gratis prøveperiode ved oppstart. Første trekk skjer når prøven er over.",
   exemptBadge: "Plattformoperatør — ingen fakturering",
@@ -168,7 +168,7 @@ export const billingEn = {
   activeHint:
     "Subscription is active. Use the Stripe portal to update payment card or view invoices.",
   includedInPlan: "Included in plan",
-  perMonth: "NOK/month",
+  perMonth: "/month",
   trialNote:
     "{days}-day free trial on signup. First charge when the trial ends.",
   exemptBadge: "Platform operator — no billing",
