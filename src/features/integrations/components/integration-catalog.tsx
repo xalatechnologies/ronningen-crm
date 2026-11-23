@@ -2,7 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
 import { StatusBadge } from "@/components/ui/status-badge";
-import { groupIntegrations, type IntegrationDefinition } from "@/features/integrations/lib/catalog";
+import { INTEGRATIONS, groupIntegrations, type IntegrationDefinition } from "@/features/integrations/lib/catalog";
 import { getServerTranslation } from "@/i18n/server";
 import type { TranslationKey, Translator } from "@/i18n/types";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
@@ -40,10 +40,24 @@ function IntegrationCard({ item, t }: { item: IntegrationDefinition; t: Translat
   );
 }
 
-/** Every integration we offer or plan, grouped by category. Each card says clearly whether it can be used yet. */
-export async function IntegrationCatalog({ items }: { items?: readonly IntegrationDefinition[] }) {
+/** Integrations that can be used now, as cards that open their settings. Renders nothing when there are none. */
+export async function AvailableIntegrations({ items = INTEGRATIONS }: { items?: readonly IntegrationDefinition[] }) {
   const { t } = await getServerTranslation();
-  const groups = groupIntegrations(items);
+  const available = items.filter((item) => item.status === "available");
+  if (available.length === 0) return null;
+  return (
+    <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {available.map((item) => (
+        <IntegrationCard key={item.id} item={item} t={t} />
+      ))}
+    </ul>
+  );
+}
+
+/** Integrations we are still building, grouped by category, each marked "Coming soon". */
+export async function IntegrationCatalog({ items = INTEGRATIONS }: { items?: readonly IntegrationDefinition[] }) {
+  const { t } = await getServerTranslation();
+  const groups = groupIntegrations(items.filter((item) => item.status === "coming_soon"));
 
   return (
     <section aria-labelledby="integration-catalog-title" className="flex flex-col gap-6">

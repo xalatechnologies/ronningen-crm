@@ -45,7 +45,7 @@ export const INTEGRATIONS: readonly IntegrationDefinition[] = [
   { id: "poweroffice", name: "PowerOffice Go", category: "accounting", status: "coming_soon", icon: Landmark },
   { id: "visma", name: "Visma eAccounting", category: "accounting", status: "coming_soon", icon: Calculator },
   { id: "vipps", name: "Vipps", category: "payments", status: "coming_soon", icon: Smartphone },
-  { id: "stripe", name: "Stripe", category: "payments", status: "coming_soon", icon: CreditCard },
+  { id: "stripe", name: "Stripe", category: "payments", status: "available", icon: CreditCard, href: "/app/settings/billing" },
   { id: "nets", name: "Nets Easy", category: "payments", status: "coming_soon", icon: CreditCard },
   { id: "google-calendar", name: "Google Calendar", category: "calendar", status: "coming_soon", icon: CalendarDays },
   { id: "outlook", name: "Microsoft 365 Outlook", category: "calendar", status: "coming_soon", icon: CalendarClock },

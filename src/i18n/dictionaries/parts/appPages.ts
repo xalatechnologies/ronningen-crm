@@ -183,7 +183,7 @@ export const appPagesNb = {
         poweroffice: "Før bookinger og betalinger rett inn i regnskapet.",
         visma: "Overfør fakturagrunnlag og kunder til regnskapet.",
         vipps: "La kundene betale depositum og faktura med Vipps.",
-        stripe: "Ta imot kortbetaling fra kundene dine på fakturaer.",
+        stripe: "Abonnement og betaling for Event Manager administreres via Stripe.",
         nets: "Kortbetaling og betalingslenker fra Nets.",
         "google-calendar": "Toveis synkronisering av bookinger med Google Kalender.",
         outlook: "Toveis synkronisering med Outlook og Microsoft 365.",

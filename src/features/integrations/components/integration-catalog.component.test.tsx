@@ -2,7 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { Plug } from "lucide-react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { IntegrationCatalog } from "@/features/integrations/components/integration-catalog";
+import { AvailableIntegrations, IntegrationCatalog } from "@/features/integrations/components/integration-catalog";
 import { INTEGRATIONS, type IntegrationDefinition } from "@/features/integrations/lib/catalog";
 import { getDictionary } from "@/i18n/dictionaries";
 import { createTranslator } from "@/i18n/translate";
@@ -21,8 +21,22 @@ describe("IntegrationCatalog", () => {
     }
     expect(screen.getByRole("heading", { name: "Fiken" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Zapier" })).toBeTruthy();
-    expect(screen.getAllByText("Kommer snart").length).toBe(INTEGRATIONS.length + 1); // each card plus the section title
+    const comingSoon = INTEGRATIONS.filter((i) => i.status === "coming_soon").length;
+    expect(screen.getAllByText("Kommer snart").length).toBe(comingSoon + 1); // each card plus the section title
+    expect(screen.queryByRole("heading", { name: "Stripe" })).toBeNull(); // Stripe is available, so it is not listed here
     expect(screen.queryByRole("link", { name: /Åpne/ })).toBeNull();
+  });
+
+  it("lists Stripe as available and opens the billing page", async () => {
+    render(await AvailableIntegrations({}));
+    expect(screen.getByRole("heading", { name: "Stripe" })).toBeTruthy();
+    expect(screen.getByText("Tilgjengelig")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Åpne/ }).getAttribute("href")).toBe("/app/settings/billing");
+  });
+
+  it("shows nothing when no integration is available", async () => {
+    const none: IntegrationDefinition[] = [{ id: "fiken", name: "Fiken", category: "accounting", status: "coming_soon", icon: Plug }];
+    expect(await AvailableIntegrations({ items: none })).toBeNull();
   });
 
   it("turns a launched integration into an available card with an Open link", async () => {
@@ -30,7 +44,7 @@ describe("IntegrationCatalog", () => {
       { id: "fiken", name: "Fiken", category: "accounting", status: "available", icon: Plug, href: "/app/settings/integrations/fiken" },
       { id: "vipps", name: "Vipps", category: "payments", status: "coming_soon", icon: Plug },
     ];
-    render(await IntegrationCatalog({ items: launched }));
+    render(await AvailableIntegrations({ items: launched }));
     expect(screen.getByText("Tilgjengelig")).toBeTruthy();
     expect(screen.getByRole("link", { name: /Åpne/ }).getAttribute("href")).toBe("/app/settings/integrations/fiken");
   });

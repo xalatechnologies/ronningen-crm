@@ -1000,7 +1000,7 @@ export const en = {
           poweroffice: "Post bookings and payments straight into the accounts.",
           visma: "Transfer invoice data and customers to the accounts.",
           vipps: "Let customers pay deposits and invoices with Vipps.",
-          stripe: "Accept card payments from your customers on invoices.",
+          stripe: "The Event Manager subscription and payments are managed through Stripe.",
           nets: "Card payments and payment links from Nets.",
           "google-calendar": "Two-way sync of bookings with Google Calendar.",
           outlook: "Two-way sync with Outlook and Microsoft 365.",

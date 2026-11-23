@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { CalendarFeedPanel } from "@/components/settings/calendar-feed-panel";
-import { IntegrationCatalog } from "@/features/integrations/components/integration-catalog";
+import { AvailableIntegrations, IntegrationCatalog } from "@/features/integrations/components/integration-catalog";
 import { getServerTranslation } from "@/i18n/server";
 import { fetchCalendarFeedForOrg } from "@/lib/calendar/get-feed";
 import { requireOrgAdminSettingsAccess } from "@/lib/settings/require-settings-access";
@@ -66,6 +66,7 @@ export default async function IntegrationsSettingsPage() {
           initialFeed={feed}
           origin={origin}
         />
+        <AvailableIntegrations />
       </section>
       <IntegrationCatalog />
     </div>
