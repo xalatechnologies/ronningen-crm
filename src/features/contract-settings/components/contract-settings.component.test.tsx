@@ -106,6 +106,7 @@ describe("PortalSettingsCard", () => {
 });
 
 describe("TemplateEditor", () => {
+  const openRaw = () => fireEvent.click(screen.getByRole("tab", { name: "Ren tekst" }));
   const initial = { legalTerms: "Vilkår", paymentTerms: "Betal", acceptanceDeclaration: "Jeg godtar", closingLine: null, signerName: null, signaturePath: null };
   const props = { organizationId: "org-1", templateId: "t1", versionNumber: 6, initial };
 
@@ -118,6 +119,7 @@ describe("TemplateEditor", () => {
   it("saves a new version with all fields and shows the new version number", async () => {
     saveVersion.mockResolvedValue({ ok: true, versionNumber: 7 });
     render(<TemplateEditor {...props} />);
+    openRaw();
     fireEvent.change(screen.getByLabelText("Vilkår og betingelser"), { target: { value: "Nye vilkår" } });
     expect(screen.getByRole("region", { name: "Du har ulagrede endringer" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Lagre ny versjon" }));
@@ -139,6 +141,7 @@ describe("TemplateEditor", () => {
 
   it("does not save empty terms and says why", () => {
     render(<TemplateEditor {...props} />);
+    openRaw();
     fireEvent.change(screen.getByLabelText("Vilkår og betingelser"), { target: { value: "  " } });
     fireEvent.click(screen.getByRole("button", { name: "Lagre ny versjon" }));
     expect(saveVersion).not.toHaveBeenCalled();
@@ -147,17 +150,80 @@ describe("TemplateEditor", () => {
 
   it("discards edits", () => {
     render(<TemplateEditor {...props} />);
+    openRaw();
     const terms = screen.getByLabelText("Vilkår og betingelser") as HTMLTextAreaElement;
     fireEvent.change(terms, { target: { value: "Endret" } });
     fireEvent.click(screen.getByRole("button", { name: "Forkast" }));
-    expect(terms.value).toBe("Vilkår");
+    expect((screen.getByLabelText("Vilkår og betingelser") as HTMLTextAreaElement).value).toBe("Vilkår");
   });
 
   it("explains a save conflict in plain words", async () => {
     saveVersion.mockResolvedValue({ ok: false, error: "template_conflict" });
     render(<TemplateEditor {...props} />);
+    openRaw();
     fireEvent.change(screen.getByLabelText("Vilkår og betingelser"), { target: { value: "X" } });
     fireEvent.click(screen.getByRole("button", { name: "Lagre ny versjon" }));
     await waitFor(() => expect(toastError).toHaveBeenCalledWith("Noen andre lagret samtidig. Last siden på nytt og prøv igjen."));
+  });
+
+  describe("terms as sections", () => {
+    const TERMS = "4. Betingelser\n• Reservasjon er gyldig.\n\n6. Husregler\nFølgende regler gjelder:\n\nTider og støy\n• Lukk vinduer kl. 01:00.";
+    const withTerms = { ...props, initial: { ...initial, legalTerms: TERMS } };
+
+    it("shows the terms as sections with headings and titled blocks", () => {
+      render(<TemplateEditor {...withTerms} />);
+      expect((screen.getByLabelText("Overskrift 1") as HTMLInputElement).value).toBe("4. Betingelser");
+      expect((screen.getByLabelText("Overskrift 2") as HTMLInputElement).value).toBe("6. Husregler");
+      expect((screen.getByLabelText("Undertittel (valgfri) (2.1)") as HTMLInputElement).value).toBe("Tider og støy");
+      expect((screen.getByLabelText("Punkter, ett per linje (2.1)") as HTMLTextAreaElement).value).toBe("• Lukk vinduer kl. 01:00.");
+      expect(screen.queryByRole("region", { name: "Du har ulagrede endringer" })).toBeNull();
+    });
+
+    it("saves the edited section back in the same text format", async () => {
+      saveVersion.mockResolvedValue({ ok: true, versionNumber: 7 });
+      render(<TemplateEditor {...withTerms} />);
+      fireEvent.change(screen.getByLabelText("Punkter, ett per linje (2.1)"), { target: { value: "• Lukk vinduer kl. 01:00.\n• Lokalet forlates kl. 02:30." } });
+      fireEvent.click(screen.getByRole("button", { name: "Lagre ny versjon" }));
+      await waitFor(() =>
+        expect(saveVersion).toHaveBeenCalledWith(
+          expect.objectContaining({ legalTerms: "4. Betingelser\n• Reservasjon er gyldig.\n\n6. Husregler\nFølgende regler gjelder:\n\nTider og støy\n• Lukk vinduer kl. 01:00.\n• Lokalet forlates kl. 02:30." }),
+        ),
+      );
+    });
+
+    it("adds a numbered section and a titled block", () => {
+      render(<TemplateEditor {...withTerms} />);
+      fireEvent.click(screen.getAllByRole("button", { name: "Legg til seksjon" }).at(-1)!);
+      expect((screen.getByLabelText("Overskrift 3") as HTMLInputElement).value).toBe("7. Ny seksjon");
+      fireEvent.click(screen.getAllByRole("button", { name: "Legg til undertittel" }).at(-1)!);
+      expect(screen.getByLabelText("Undertittel (valgfri) (3.1)")).toBeTruthy();
+    });
+
+    it("moves and removes sections", () => {
+      render(<TemplateEditor {...withTerms} />);
+      fireEvent.click(screen.getByRole("button", { name: "Flytt seksjon 2 opp" }));
+      expect((screen.getByLabelText("Overskrift 1") as HTMLInputElement).value).toBe("6. Husregler");
+      fireEvent.click(screen.getByRole("button", { name: "Fjern seksjon 1" }));
+      expect((screen.getByLabelText("Overskrift 1") as HTMLInputElement).value).toBe("4. Betingelser");
+      expect(screen.queryByLabelText("Overskrift 2")).toBeNull();
+    });
+
+    it("keeps the plain-text tab and the sections in step, and previews like the contract", () => {
+      render(<TemplateEditor {...withTerms} />);
+      openRaw();
+      fireEvent.change(screen.getByLabelText("Vilkår og betingelser"), { target: { value: "1. Nytt\n• Punkt" } });
+      fireEvent.click(screen.getByRole("tab", { name: "Seksjoner" }));
+      expect((screen.getByLabelText("Overskrift 1") as HTMLInputElement).value).toBe("1. Nytt");
+      fireEvent.click(screen.getByRole("tab", { name: "Forhåndsvisning" }));
+      expect(screen.getByRole("heading", { name: "1. Nytt" })).toBeTruthy();
+      expect(screen.getByText("• Punkt")).toBeTruthy();
+    });
+
+    it("does not lose a line break typed at the end of a block", () => {
+      render(<TemplateEditor {...withTerms} />);
+      const lines = screen.getByLabelText("Punkter, ett per linje (2.1)") as HTMLTextAreaElement;
+      fireEvent.change(lines, { target: { value: "• Lukk vinduer kl. 01:00.\n" } });
+      expect((screen.getByLabelText("Punkter, ett per linje (2.1)") as HTMLTextAreaElement).value).toBe("• Lukk vinduer kl. 01:00.\n");
+    });
   });
 });

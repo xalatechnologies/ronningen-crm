@@ -1,3 +1,4 @@
+import { ContractTermsView } from "@/components/contracts/contract-terms-view";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { lineItemsTotalNok } from "@/lib/contracts/overrides";
@@ -15,9 +16,7 @@ import {
   packageHeadline,
   packageInclusions,
   primaryPackageLine,
-  splitContractTermLines,
   summarizeContractExtra,
-  emphasizeWifiPassword,
   type ContractFactRow,
 } from "@/lib/contracts/layout";
 import {
@@ -291,38 +290,7 @@ export function ContractDocumentView(props: {
           />
         </section>
       ) : legalTerms ? (
-        <section className="space-y-1">
-          {splitContractTermLines(legalTerms).map((line, index) => {
-            if (!line.text.trim()) {
-              return <div key={`gap-${index}`} className="h-2" />;
-            }
-            if (line.kind === "section") {
-              return (
-                <h3 key={`sec-${index}`} className="font-heading pt-4 text-base font-bold">
-                  {line.text.trim()}
-                </h3>
-              );
-            }
-            if (line.kind === "subtitle") {
-              return (
-                <p key={`sub-${index}`} className="pt-3 font-semibold">
-                  {line.text.trim()}
-                </p>
-              );
-            }
-            return (
-              <p key={`body-${index}`} className="leading-relaxed">
-                {emphasizeWifiPassword(line.text).map((part, partIndex) =>
-                  part.bold ? (
-                    <strong key={partIndex}>{part.text}</strong>
-                  ) : (
-                    <span key={partIndex}>{part.text}</span>
-                  ),
-                )}
-              </p>
-            );
-          })}
-        </section>
+        <ContractTermsView text={legalTerms} />
       ) : null}
 
       {doc.terms.specialTerms.trim() ? (

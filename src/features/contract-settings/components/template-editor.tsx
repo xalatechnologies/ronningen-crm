@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Textarea } from "@/components/ui/textarea";
+import { TermsEditor } from "@/features/contract-settings/components/terms-editor";
 import { SignatureField } from "@/features/contract-settings/components/signature-field";
 import {
-  LEGAL_TERMS_MAX,
   templateFieldsEqual,
   templateFieldsError,
   toTemplateFields,
@@ -104,24 +104,7 @@ export function TemplateEditor({ organizationId, templateId, versionNumber, init
         </StatusBadge>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="template-legal-terms" className={LABEL}>
-          {t("contracts.template.sectionTerms")}
-        </Label>
-        <Textarea
-          id="template-legal-terms"
-          rows={16}
-          maxLength={LEGAL_TERMS_MAX}
-          value={fields.legalTerms}
-          aria-invalid={termsError ? true : undefined}
-          aria-describedby="template-legal-terms-meta"
-          onChange={(e) => set({ legalTerms: e.target.value })}
-        />
-        <div id="template-legal-terms-meta" className="flex justify-between gap-3 text-app-xs">
-          <span role={termsError ? "alert" : undefined} className="text-destructive">{termsError}</span>
-          <span className="tabular-nums text-muted-foreground">{t("contracts.template.charCount", { count: fields.legalTerms.length, max: LEGAL_TERMS_MAX })}</span>
-        </div>
-      </div>
+      <TermsEditor value={fields.legalTerms} onChange={(legalTerms) => set({ legalTerms })} error={termsError} />
 
       <div className="grid gap-5 border-t border-foreground/10 pt-6">
         <p className="font-heading text-base font-semibold text-foreground">{t("contracts.template.sectionPayment")}</p>
