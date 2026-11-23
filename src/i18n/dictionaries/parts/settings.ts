@@ -245,7 +245,7 @@ export const settingsNb = {
     calendarFeed: {
       title: "Kalender-feed for bookinger",
       description:
-        "Del bookingene til {org} med Digilist, Google Calendar, Apple Calendar og andre iCal-verktøy — kun lesing, ingen innlogging. Kansellerte reservasjoner tas ikke med i feeden.",
+        "Vis bookingene til {org} i din egen kalender: Google Calendar, Apple Calendar, Outlook eller et annet verktøy som støtter iCal-lenker. Kun lesing, ingen innlogging. Kansellerte reservasjoner tas ikke med.",
       emptyDescription:
         "Ingen feed opprettet ennå. Aktiver feeden for å få en unik, hemmelig URL du kan lime inn i eksterne verktøy.",
       enable: "Aktiver kalender-feed",
@@ -271,6 +271,28 @@ export const settingsNb = {
       createdAt: "Opprettet",
       rotatedAt: "Rotert",
       lastAccessedAt: "Sist hentet",
+      statusActive: "Aktiv",
+      statusOff: "Ikke aktivert",
+      never: "Aldri",
+      rotateTitle: "Rotere token?",
+      disableTitle: "Deaktivere feeden?",
+      howTitle: "Slik legger du feeden til i kalenderen din",
+      howNote:
+        "Kalenderappene henter oppdateringer selv. Google Kalender kan bruke opptil et døgn på å vise nye bookinger.",
+      how: {
+        google: {
+          title: "Google Kalender",
+          steps: "Andre kalendere → Fra URL → lim inn lenken → Legg til kalender.",
+        },
+        apple: {
+          title: "Apple Kalender",
+          steps: "Arkiv → Nytt kalenderabonnement → lim inn lenken → Abonner.",
+        },
+        outlook: {
+          title: "Outlook",
+          steps: "Legg til kalender → Abonner fra nett → lim inn lenken → Importer.",
+        },
+      },
       securityWarningTitle: "Behandle URL-en som et passord",
       securityWarningBody:
         "Alle med denne URL-en kan lese bookingene dine. Del kun med systemer du stoler på. Roter token hvis den kommer på avveie.",

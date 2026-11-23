@@ -975,7 +975,44 @@ export const en = {
       integrations: {
         title: "Integrations",
         description:
-          "Share bookings with external tools via a secure, tokenized calendar feed.",
+          "Connect Event Manager to accounting, payments, calendars and other tools.",
+        availableTitle: "Available now",
+        comingSoonTitle: "Coming soon",
+        comingSoonDescription:
+          "We are building these integrations. Tell us which ones you need most and we will prioritise them.",
+        comingSoon: "Coming soon",
+        available: "Available",
+        open: "Open",
+        requestTitle: "Missing an integration?",
+        requestBody: "Tell us which tool you use and we will look into it.",
+        requestLink: "Contact support",
+        categories: {
+          accounting: "Accounting",
+          payments: "Payments",
+          calendar: "Calendar",
+          communication: "Communication",
+          signing: "Signing",
+          automation: "Automation and developers",
+        },
+        catalog: {
+          fiken: "Send invoices and vouchers to your accounts automatically.",
+          tripletex: "Sync invoices, customers and payments.",
+          poweroffice: "Post bookings and payments straight into the accounts.",
+          visma: "Transfer invoice data and customers to the accounts.",
+          vipps: "Let customers pay deposits and invoices with Vipps.",
+          stripe: "The Event Manager subscription and payments are managed through Stripe.",
+          nets: "Card payments and payment links from Nets.",
+          "google-calendar": "Two-way sync of bookings with Google Calendar.",
+          outlook: "Two-way sync with Outlook and Microsoft 365.",
+          sms: "Send reminders and confirmations to customers by SMS.",
+          mailchimp: "Keep your customer list up to date in Mailchimp for campaigns.",
+          bankid: "Let the customer sign the rental agreement with BankID.",
+          scrive: "Digital signing of agreements with Scrive.",
+          zapier: "Connect Event Manager to thousands of apps without code.",
+          make: "Build your own automations with Make.",
+          webhooks: "Get notified in your own systems when something happens.",
+          api: "Read and write data in Event Manager from your own systems.",
+        },
       },
     },
   },
@@ -2048,7 +2085,7 @@ export const en = {
       calendarFeed: {
         title: "Bookings calendar feed",
         description:
-          "Share {org}'s bookings with Digilist, Google Calendar, Apple Calendar and other iCal tools — read-only, no sign-in required. Cancelled reservations are excluded from the feed.",
+          "Show {org}'s bookings in your own calendar: Google Calendar, Apple Calendar, Outlook or any other tool that supports iCal links. Read-only, no sign-in required. Cancelled reservations are not included.",
         emptyDescription:
           "No feed created yet. Enable the feed to get a unique, secret URL you can paste into external tools.",
         enable: "Enable calendar feed",
@@ -2074,6 +2111,28 @@ export const en = {
         createdAt: "Created",
         rotatedAt: "Rotated",
         lastAccessedAt: "Last accessed",
+        statusActive: "Active",
+        statusOff: "Not enabled",
+        never: "Never",
+        rotateTitle: "Rotate token?",
+        disableTitle: "Disable the feed?",
+        howTitle: "How to add the feed to your calendar",
+        howNote:
+          "Calendar apps fetch updates on their own. Google Calendar can take up to a day to show new bookings.",
+        how: {
+          google: {
+            title: "Google Calendar",
+            steps: "Other calendars → From URL → paste the link → Add calendar.",
+          },
+          apple: {
+            title: "Apple Calendar",
+            steps: "File → New Calendar Subscription → paste the link → Subscribe.",
+          },
+          outlook: {
+            title: "Outlook",
+            steps: "Add calendar → Subscribe from web → paste the link → Import.",
+          },
+        },
         securityWarningTitle: "Treat the URL like a password",
         securityWarningBody:
           "Anyone with this URL can read your bookings. Share only with trusted systems. Rotate the token if it leaks.",
