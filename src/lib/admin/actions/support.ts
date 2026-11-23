@@ -10,6 +10,7 @@ import {
 } from "@/lib/admin/support-labels";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { adminRoutes } from "@/config/admin-routes";
+import { validateTicketText } from "@/features/support/lib/ticket-input";
 import { getServerTranslation } from "@/i18n/server";
 import { notifySupportTicketReply } from "@/lib/notifications/actions/org-events";
 
@@ -21,8 +22,12 @@ export async function createSupportTicket(input: {
   const adminUser = await requirePlatformAdmin();
   const subject = input.subject.trim();
 
-  if (subject.length < 3) {
+  const subjectError = validateTicketText({ subject, body: "xxx" });
+  if (subjectError === "subject_min") {
     return { ok: false as const, error: t("serverErrors.admin.subjectMinLength") };
+  }
+  if (subjectError === "subject_max") {
+    return { ok: false as const, error: t("serverErrors.admin.subjectMaxLength") };
   }
 
   const admin = createSupabaseAdminClient();
@@ -63,8 +68,12 @@ export async function addSupportNote(input: {
   const body = input.body.trim();
   const isInternal = input.isInternal ?? false;
 
-  if (body.length < 3) {
+  const bodyError = validateTicketText({ body });
+  if (bodyError === "body_min") {
     return { ok: false as const, error: t("serverErrors.admin.noteMinLength") };
+  }
+  if (bodyError === "body_max") {
+    return { ok: false as const, error: t("serverErrors.admin.messageMaxLength") };
   }
 
   const admin = createSupabaseAdminClient();
