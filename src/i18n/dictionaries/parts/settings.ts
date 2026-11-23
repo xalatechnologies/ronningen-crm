@@ -100,6 +100,10 @@ export const settingsNb = {
     inviteEmailBody: "{inviter} har invitert deg til {org} som {role}.",
     inviteEmailCta: "Godta invitasjon",
     inviteEmailFooter: "Lenken er personlig og gjelder i {days} dager.",
+    membersTitle: "Medlemmer",
+    roleFor: "Rolle for {name}",
+    removeAria: "Fjern {name} fra teamet",
+    inviteCopyFailed: "Kunne ikke kopiere lenken",
     memberFallback: "Medlemmet",
     rolesGuideTitle: "Roller og tilganger",
     rolesGuideDescription:

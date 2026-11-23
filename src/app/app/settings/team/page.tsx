@@ -1,7 +1,6 @@
-import {
-  TeamMembersSection,
-  type TeamMemberRow,
-} from "@/components/settings/team-members-section";
+import { AppPageHeader } from "@/components/layout/app-page-header";
+import { TeamMembersSection } from "@/features/team/components/team-members-section";
+import type { TeamMemberRow } from "@/features/team/lib/member-rules";
 import { getServerTranslation } from "@/i18n/server";
 import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
 import { listPendingInvitations } from "@/lib/organizations/invitations/queries";
@@ -77,12 +76,13 @@ export default async function TeamSettingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="app-title">{t("appPages.settings.team.title")}</h1>
-        <p className="mt-2 text-app-base text-muted-foreground">
-          {t("appPages.settings.team.description")}
-        </p>
-      </div>
+      <AppPageHeader
+        surface="card"
+        compact
+        className="mb-0"
+        title={t("appPages.settings.team.title")}
+        description={t("appPages.settings.team.description")}
+      />
       <TeamMembersSection members={members} invitations={invitations} />
     </div>
   );
