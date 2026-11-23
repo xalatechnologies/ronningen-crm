@@ -865,6 +865,7 @@ export const portalNb = {
     enable: "Slå på kundeportalen",
     autoInvite: "Send invitasjon automatisk når avtalen er signert",
     guestInvites: "Tillat kunder å sende invitasjoner til sine gjester",
+    dependsOn: "Slå på kundeportalen for å endre disse valgene.",
   },
 } as const;
 
@@ -1735,5 +1736,6 @@ export const portalEn = {
     enable: "Switch on the customer portal",
     autoInvite: "Send the invitation automatically when the agreement is signed",
     guestInvites: "Allow customers to send invitations to their guests",
+    dependsOn: "Switch on the customer portal to change these options.",
   },
 } as const;
