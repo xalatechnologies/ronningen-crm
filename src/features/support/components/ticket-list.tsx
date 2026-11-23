@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n/client";
 import { statusDotClass } from "@/components/ui/status-badge";
 import { TICKET_TONE } from "@/features/support/components/ticket-status";
-import { formatRelativeTime, lastMessage, previewText } from "@/features/support/lib/ticket-view";
+import { lastMessage, previewText } from "@/features/support/lib/ticket-view";
+import { formatRelativeTime } from "@/lib/dates/conversation-time";
 import type { OrgSupportTicket } from "@/lib/support/types";
 
 type Props = {

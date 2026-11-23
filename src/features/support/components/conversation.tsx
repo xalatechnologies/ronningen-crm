@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { TicketStatusBadge } from "@/features/support/components/ticket-status";
 import { BODY_MAX, validateTicketText } from "@/features/support/lib/ticket-input";
-import { formatRelativeTime, groupMessagesByDay } from "@/features/support/lib/ticket-view";
+import { formatRelativeTime, groupByDay } from "@/lib/dates/conversation-time";
 import { useTranslation } from "@/i18n/client";
 import { replyToOrgSupportTicket } from "@/lib/support/actions";
 import type { OrgSupportTicket } from "@/lib/support/types";
@@ -23,7 +23,7 @@ export function Conversation({ ticket, now, onBack, onUpdated }: Props) {
   const [busy, setBusy] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const canReply = ticket.status !== "resolved";
-  const days = groupMessagesByDay(ticket.messages, now);
+  const days = groupByDay(ticket.messages, now);
   const invalid = validateTicketText({ body }) !== null;
   const messageCount = ticket.messages.length;
 
@@ -74,7 +74,7 @@ export function Conversation({ ticket, now, onBack, onUpdated }: Props) {
                 ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Oslo" }).format(new Date(day.isoOfFirst))
                 : t(day.label === "today" ? "support.inbox.today" : "support.inbox.yesterday")}
             </p>
-            {day.messages.map((message) => {
+            {day.items.map((message) => {
               const mine = !message.isFromPlatform;
               const author = message.isFromPlatform ? t("support.panel.platformSupport") : (message.authorName ?? t("support.panel.you"));
               return (
