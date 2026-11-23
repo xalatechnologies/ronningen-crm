@@ -1,40 +1,25 @@
-import { CheckCircle2, ChevronRight, Inbox } from "lucide-react";
+import { CalendarCheck, MessageCircle, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AppPageHeader } from "@/components/layout/app-page-header";
+import { PortalInboxView } from "@/features/portal-inbox/components/portal-inbox-view";
 import { getServerTranslation } from "@/i18n/server";
-import type { TranslationKey } from "@/i18n/types";
 import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
 import { isAdmin } from "@/lib/organizations/organization-permissions";
 import { requireServerOrganizationId } from "@/lib/organizations/require-server-organization-id";
 import { listPortalInbox } from "@/lib/portal/inbox";
-import { filterInbox, INBOX_FILTERS, inboxCounts, parseInboxFilter, type InboxRow } from "@/lib/portal/inbox-rules";
+import { parseInboxFilter } from "@/lib/portal/inbox-rules";
+import { todayInOslo } from "@/lib/portal/rsvp-rules";
 import { canManageBookings } from "@/lib/role-access";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
-
-const FILTER_LABEL: Record<(typeof INBOX_FILTERS)[number], TranslationKey> = {
-  attention: "portal.inbox.filterAttention",
-  active: "portal.inbox.filterActive",
-  invited: "portal.inbox.filterInvited",
-  all: "portal.inbox.filterAll",
-};
-
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
 
 export default async function PortalInboxPage({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
   const { role } = await getCachedServerOrganizationContext();
   if (!canManageBookings(role)) redirect("/app/bookings");
-  const { t, formatDate } = await getServerTranslation();
+  const { t } = await getServerTranslation();
   const filter = parseInboxFilter((await searchParams).filter);
 
   const supabase = await createServerSupabaseClient();
@@ -45,14 +30,37 @@ export default async function PortalInboxPage({ searchParams }: { searchParams: 
   const header = <AppPageHeader surface="card" compact className="mb-0" title={t("portal.inbox.title")} description={t("portal.inbox.lead")} />;
 
   if (!enabled) {
+    const steps = [
+      { Icon: Settings2, text: t("portal.inbox.offStep1") },
+      { Icon: CalendarCheck, text: t("portal.inbox.offStep2") },
+      { Icon: MessageCircle, text: t("portal.inbox.offStep3") },
+    ];
     return (
       <div className="flex flex-col gap-6">
         {header}
-        <section className="flex flex-col items-start gap-3 rounded-2xl bg-card p-6 ring-1 ring-foreground/8">
-          <h2 className="font-heading text-lg font-semibold">{t("portal.inbox.offTitle")}</h2>
-          <p className="text-muted-foreground">{t("portal.inbox.offBody")}</p>
+        <section className="flex flex-col gap-6 rounded-2xl bg-card p-6 ring-1 ring-foreground/8 md:p-8">
+          <div className="flex flex-col gap-2">
+            <h2 className="font-heading text-xl font-bold text-rn-text-heading">{t("portal.inbox.offTitle")}</h2>
+            <p className="max-w-xl text-muted-foreground">{t("portal.inbox.offBody")}</p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <h3 className="text-app-xs font-bold tracking-wide text-muted-foreground uppercase">{t("portal.inbox.offStepsTitle")}</h3>
+            <ol className="grid gap-3 md:grid-cols-3">
+              {steps.map(({ Icon, text }, i) => (
+                <li key={text} className="flex items-start gap-3 rounded-xl bg-muted/50 p-4">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-success/10 text-success">
+                    <Icon className="size-[18px]" aria-hidden />
+                  </span>
+                  <span className="flex flex-col gap-0.5">
+                    <span className="text-app-xs font-bold text-success">{i + 1}</span>
+                    <span className="text-app-base font-medium text-foreground">{text}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
           {isAdmin(role) ? (
-            <Link href="/app/settings/kontrakter" className="inline-flex min-h-11 items-center rounded-xl bg-primary px-4 text-app-sm font-semibold !text-primary-foreground">
+            <Link href="/app/settings/kontrakter" className="inline-flex min-h-11 w-fit items-center rounded-xl bg-success px-5 text-app-sm font-semibold text-white">
               {t("portal.inbox.offCta")}
             </Link>
           ) : null}
@@ -61,145 +69,12 @@ export default async function PortalInboxPage({ searchParams }: { searchParams: 
     );
   }
 
-  const all = await listPortalInbox(supabase, orgId);
-  const counts = inboxCounts(all);
-  const rows = filterInbox(all, filter);
+  const rows = await listPortalInbox(supabase, orgId);
 
   return (
     <div className="flex flex-col gap-6">
       {header}
-      <nav aria-label={t("portal.inbox.title")} className="flex flex-wrap gap-2">
-        {INBOX_FILTERS.map((id) => (
-          <Link
-            key={id}
-            href={id === "attention" ? "/app/portal" : `/app/portal?filter=${id}`}
-            aria-current={filter === id ? "page" : undefined}
-            className={cn(
-              "inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-app-sm font-semibold ring-1 transition-colors",
-              filter === id ? "bg-primary !text-primary-foreground ring-primary" : "bg-card text-foreground ring-foreground/12 hover:bg-muted/60",
-            )}
-          >
-            {t(FILTER_LABEL[id])}
-            <span className={cn("rounded-full px-2 py-0.5 text-app-xs tabular-nums", filter === id ? "bg-primary-foreground/20" : "bg-muted")}>{counts[id]}</span>
-          </Link>
-        ))}
-      </nav>
-
-      {rows.length === 0 ? (
-        <EmptyInbox
-          icon={filter === "attention" && all.length > 0 ? CheckCircle2 : Inbox}
-          title={filter === "attention" && all.length > 0 ? t("portal.inbox.emptyAttentionTitle") : null}
-          text={all.length === 0 ? t("portal.inbox.emptyAll") : filter === "attention" ? t("portal.inbox.emptyAttention") : t("portal.inbox.emptyFiltered")}
-          cta={
-            filter === "attention" && counts.active > 0
-              ? { href: "/app/portal?filter=active", label: t("portal.inbox.emptyAttentionCta", { count: counts.active }) }
-              : null
-          }
-        />
-      ) : (
-        <section className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/8">
-          <div className="hidden items-center gap-4 border-b border-foreground/8 bg-muted/40 px-5 py-2.5 text-app-xs font-semibold uppercase tracking-wide text-muted-foreground sm:flex">
-            <span className="w-11 shrink-0" aria-hidden />
-            <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.4fr)] gap-6">
-              <span>{t("portal.inbox.colCustomer")}</span>
-              <span>{t("portal.inbox.colEvent")}</span>
-              <span className="text-right">{t("portal.inbox.colStatus")}</span>
-            </span>
-            <span className="w-5 shrink-0" aria-hidden />
-          </div>
-          <ul className="divide-y divide-foreground/8">
-            {rows.map((row) => (
-              <InboxItem key={row.bookingId} row={row} t={t} formatDate={formatDate} />
-            ))}
-          </ul>
-        </section>
-      )}
+      <PortalInboxView rows={rows} initialFilter={filter} today={todayInOslo()} />
     </div>
-  );
-}
-
-function EmptyInbox({
-  icon: Icon,
-  title,
-  text,
-  cta,
-}: {
-  icon: typeof Inbox;
-  title: string | null;
-  text: string;
-  cta: { href: string; label: string } | null;
-}) {
-  return (
-    <section className="flex flex-col items-center gap-3 rounded-2xl bg-card px-6 py-12 text-center ring-1 ring-foreground/8 lg:py-16">
-      <span className="flex size-14 items-center justify-center rounded-full bg-accent text-primary">
-        <Icon className="size-7" aria-hidden />
-      </span>
-      {title ? <h2 className="font-heading text-lg font-semibold">{title}</h2> : null}
-      <p className="max-w-md text-muted-foreground">{text}</p>
-      {cta ? (
-        <Link href={cta.href} className="mt-2 inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-app-sm font-semibold !text-primary-foreground">
-          {cta.label}
-        </Link>
-      ) : null}
-    </section>
-  );
-}
-
-function InboxItem({
-  row,
-  t,
-  formatDate,
-}: {
-  row: InboxRow;
-  t: Awaited<ReturnType<typeof getServerTranslation>>["t"];
-  formatDate: (value: string) => string;
-}) {
-  const chips: { label: string; tone: "alert" | "quiet" }[] = [];
-  if (row.unread > 0) chips.push({ label: t("portal.staffPage.unread", { count: row.unread }), tone: "alert" });
-  if (row.wishesWaiting > 0) chips.push({ label: t("portal.staffWishes.pending", { count: row.wishesWaiting }), tone: "alert" });
-  if (row.planWaiting) chips.push({ label: t("portal.staffSchedule.pendingBadge"), tone: "alert" });
-  if (chips.length === 0) {
-    chips.push({
-      label: t(row.state === "active" ? "portal.inbox.stateActive" : row.state === "invited" ? "portal.inbox.stateInvited" : "portal.inbox.stateExpired"),
-      tone: "quiet",
-    });
-  }
-  const meta = [row.eventDate ? formatDate(row.eventDate) : t("portal.inbox.noDate"), row.eventType, row.reference].filter(Boolean).join(" · ");
-  return (
-    <li>
-      <Link
-        href={`/app/bookings/${row.bookingId}/portal${row.tab === "messages" ? "" : `?tab=${row.tab}`}`}
-        className="flex min-h-20 items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/50 active:bg-muted sm:px-5"
-      >
-        <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent font-heading font-semibold text-primary">
-          {initials(row.customerName)}
-        </span>
-        <span className="grid min-w-0 flex-1 gap-1.5 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.4fr)] sm:items-center sm:gap-6">
-          <span className="flex min-w-0 flex-col">
-            <span className="truncate font-semibold">{row.customerName}</span>
-            <span className="truncate text-app-sm text-muted-foreground sm:hidden">{meta}</span>
-            <span className="hidden truncate text-app-sm text-muted-foreground sm:block">{row.reference}</span>
-          </span>
-          <span className="hidden min-w-0 flex-col sm:flex">
-            <span className="truncate text-app-sm font-medium">{row.eventDate ? formatDate(row.eventDate) : t("portal.inbox.noDate")}</span>
-            <span className="truncate text-app-sm text-muted-foreground">{row.eventType}</span>
-          </span>
-          <span className="flex flex-wrap gap-1.5 sm:justify-end">
-            {chips.map((chip) => (
-              <span
-                key={chip.label}
-                className={cn(
-                  "rounded-full px-2.5 py-0.5 text-app-xs font-semibold",
-                  chip.tone === "alert" ? "bg-success text-white" : "bg-muted text-muted-foreground",
-                )}
-              >
-                {chip.label}
-              </span>
-            ))}
-          </span>
-        </span>
-        <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-      </Link>
-    </li>
   );
 }
