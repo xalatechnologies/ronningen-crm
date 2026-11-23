@@ -24,3 +24,10 @@ describe("PlanCard", () => {
     expect(screen.getByText("Komplett")).toBeTruthy();
   });
 });
+
+describe("PlanCard features", () => {
+  it("lists the customer portal", () => {
+    render(<PlanCard plan={BILLING_PLANS.standard} />);
+    expect(screen.getByText("Kundeportal")).toBeTruthy();
+  });
+});
