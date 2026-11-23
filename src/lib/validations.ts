@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidBankAccount, isValidOrgNumber, isValidPostalCode } from "@/lib/organizations/identifiers";
 
 import {
   BOOKING_PAYMENT_STATUS_VALUES,
@@ -269,18 +270,21 @@ export function createOrganizationProfileFormSchema(msg: ValidationMessages) {
       .pipe(z.string().min(2, msg.nameMin2).max(200)),
     legalName: z.string().max(200),
     tagline: z.string().max(200),
-    orgNumber: z.string().max(20),
+    orgNumber: z.string().max(20).refine(isValidOrgNumber, msg.orgNumberInvalid),
     addressLine1: z.string().max(200),
     addressLine2: z.string().max(200),
-    postalCode: z.string().max(12),
+    postalCode: z.string().max(12).refine(isValidPostalCode, msg.postalCodeInvalid),
     city: z.string().max(100),
     contactEmail: z.union([
       z.literal(""),
       z.string().email(msg.invalidEmail),
     ]),
-    contactPhone: z.string().max(30),
-    logoUrl: z.union([z.literal(""), z.string().url(msg.urlInvalid)]),
-    bankAccount: z.string().max(200),
+    contactPhone: z.union([z.literal(""), createPhoneWhenPresentSchema(msg).max(30)]),
+    logoUrl: z.union([
+      z.literal(""),
+      z.string().max(2000).url(msg.urlInvalid).refine((url) => url.startsWith("https://"), msg.logoUrlHttps),
+    ]),
+    bankAccount: z.string().max(200).refine(isValidBankAccount, msg.bankAccountInvalid),
     paymentInstructions: z.string().max(2000, msg.max2000),
   });
 }

@@ -7,6 +7,7 @@ export type BillingPlanFeatureKey =
   | "bookings"
   | "inquiries"
   | "customers"
+  | "portal"
   | "pricing"
   | "finance"
   | "invoices"
@@ -28,6 +29,7 @@ const PLAN_FEATURE_KEYS: Record<BillingPlanFeatureKey, TranslationKey> = {
   bookings: "billing.planFeatures.bookings",
   inquiries: "billing.planFeatures.inquiries",
   customers: "billing.planFeatures.customers",
+  portal: "billing.planFeatures.portal",
   pricing: "billing.planFeatures.pricing",
   finance: "billing.planFeatures.finance",
   invoices: "billing.planFeatures.invoices",
@@ -52,6 +54,7 @@ export const BILLING_PLANS = {
       "bookings",
       "inquiries",
       "customers",
+      "portal",
       "pricing",
       "finance",
       "invoices",

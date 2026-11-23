@@ -1,5 +1,5 @@
-import { BillingAccessBanner } from "@/components/organizations/billing-access-banner";
-import { BillingSettingsPanel } from "@/components/organizations/billing-settings-panel";
+import { BillingAccessBanner } from "@/features/billing/components/billing-access-banner";
+import { BillingSettingsPanel } from "@/features/billing/components/billing-settings-panel";
 import {
   getStripeModeLabel,
   isBillingEnabled,

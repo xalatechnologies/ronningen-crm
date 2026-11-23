@@ -42,8 +42,10 @@ export const serverErrorsNb = {
     newOwnerMustBeMember:
       "Ny eier må allerede være medlem av organisasjonen.",
     subjectMinLength: "Emne må være minst 3 tegn.",
+    subjectMaxLength: "Emnet kan være maks 200 tegn.",
     noteMinLength: "Notat må være minst 3 tegn.",
     messageMinLength: "Melding må være minst 3 tegn.",
+    messageMaxLength: "Meldingen kan være maks 5000 tegn.",
     noOpenInvoice: "Ingen åpen faktura funnet.",
     supabaseServiceRoleMissing:
       "SUPABASE_SERVICE_ROLE_KEY mangler. Sett den i .env.local og start `npm run dev` på nytt.",
@@ -61,6 +63,7 @@ export const serverErrorsNb = {
     noStripeSubscription: "Ingen Stripe-abonnement funnet ennå.",
     noStripeSubscriptionShort: "Ingen Stripe-abonnement.",
     noStripeCustomerShort: "Ingen Stripe-kunde.",
+    invoicesFailed: "Kunne ikke hente fakturaer fra Stripe. Prøv igjen om litt.",
     mustBeOwner: "Kun eier eller administrator kan fullføre oppsettet.",
     orgNameTaken: "Navnet er allerede tatt. Prøv et annet organisasjonsnavn.",
     completePayment: "Fullfør betaling",
@@ -172,8 +175,10 @@ export const serverErrorsEn = {
     newOwnerMustBeMember:
       "New owner must already be a member of the organization.",
     subjectMinLength: "Subject must be at least 3 characters.",
+    subjectMaxLength: "The subject can be at most 200 characters.",
     noteMinLength: "Note must be at least 3 characters.",
     messageMinLength: "Message must be at least 3 characters.",
+    messageMaxLength: "The message can be at most 5000 characters.",
     noOpenInvoice: "No open invoice found.",
     supabaseServiceRoleMissing:
       "SUPABASE_SERVICE_ROLE_KEY is missing. Set it in .env.local and restart `npm run dev`.",
@@ -191,6 +196,7 @@ export const serverErrorsEn = {
     noStripeSubscription: "No Stripe subscription found yet.",
     noStripeSubscriptionShort: "No Stripe subscription.",
     noStripeCustomerShort: "No Stripe customer.",
+    invoicesFailed: "Could not fetch invoices from Stripe. Try again shortly.",
     mustBeOwner: "Only owner or administrator can complete setup.",
     orgNameTaken: "Name is already taken. Try another organization name.",
     completePayment: "Complete payment",

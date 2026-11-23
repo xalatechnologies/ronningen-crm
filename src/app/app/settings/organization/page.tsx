@@ -1,4 +1,4 @@
-import { OrganizationProfileForm } from "@/components/settings/organization-profile-form";
+import { OrganizationProfileForm } from "@/features/organization-profile/components/organization-profile-form";
 import { TenantSetupBanner } from "@/components/settings/tenant-setup-banner";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { getServerTranslation } from "@/i18n/server";

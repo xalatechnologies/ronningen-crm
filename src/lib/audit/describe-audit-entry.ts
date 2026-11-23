@@ -80,6 +80,7 @@ const MONEY_FIELDS: readonly string[] = [
   "paid_amount",
   "remaining_amount",
   "amount",
+  "amount_nok",
   "estimated_total",
   "price",
   "value",
@@ -88,10 +89,10 @@ const IGNORED_FIELDS: readonly string[] = ["updated_at"];
 const MAX_TEXT_LENGTH = 80;
 
 const SUMMARY_FIELDS: Record<AuditTableName, readonly string[]> = {
-  bookings: ["booking_reference", "event_date", "status"],
+  bookings: ["booking_reference", "event_date", "status", "total_price"],
   customers: [],
-  transactions: ["type", "amount", "category"],
-  booking_payment_installments: ["amount", "due_date", "status"],
+  transactions: ["type", "amount", "category", "description", "transaction_date"],
+  booking_payment_installments: ["label", "amount_nok", "due_date"],
   organization_members: ["role"],
   booking_inquiries: [
     "event_type",
@@ -100,12 +101,17 @@ const SUMMARY_FIELDS: Record<AuditTableName, readonly string[]> = {
     "estimated_total",
     "status",
   ],
-  accommodation_reservations: ["check_in_date", "check_out_date", "status"],
-  accommodation_units: ["name"],
+  accommodation_reservations: [
+    "check_in_date",
+    "check_out_date",
+    "status",
+    "total_price",
+  ],
+  accommodation_units: ["name", "max_guests"],
   packages: ["name", "price"],
   services: ["name", "price"],
-  assets: ["name", "value"],
-  properties: ["name"],
+  assets: ["name", "value", "quantity"],
+  properties: ["name", "address"],
 };
 
 const BOOLEAN_LABELS: Record<Locale, { yes: string; no: string }> = {

@@ -1,9 +1,14 @@
+import { AppPageHeader } from "@/components/layout/app-page-header";
+import { ActivityLogSection, type ActivityLogRow } from "@/features/activity-log/components/activity-log-section";
 import {
-  ActivityLogSection,
-  type ActivityLogRow,
-} from "@/components/audit/activity-log-section";
+  ACTIVITY_PAGE_SIZE,
+  KIND_TO_OP,
+  activityHref,
+  parseActivityQuery,
+} from "@/features/activity-log/lib/activity-query";
+import { loadActivityContext } from "@/features/activity-log/data/activity-context";
+import { entryBookingId, entryMemberUserId, entrySubject } from "@/features/activity-log/lib/entry-references";
 import { getServerTranslation } from "@/i18n/server";
-import { isAuditTableName } from "@/lib/audit/describe-audit-entry";
 import { getCachedServerOrganizationContext } from "@/lib/organizations/cached-organization-context";
 import { canManageMembers } from "@/lib/organizations/organization-permissions";
 import { getCachedServerSupabaseClient } from "@/lib/supabase/cached-server-client";
@@ -11,14 +16,12 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-const PAGE_SIZE = 50;
-
 export default async function ActivitySettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; table?: string }>;
+  searchParams: Promise<{ page?: string; table?: string; kind?: string }>;
 }) {
-  const { page: pageParam, table: tableParam } = await searchParams;
+  const { page: requestedPage, table: tableFilter, kind: kindFilter } = parseActivityQuery(await searchParams);
   const { t } = await getServerTranslation();
   const [supabase, { organizationId, role }] = await Promise.all([
     getCachedServerSupabaseClient(),
@@ -33,11 +36,7 @@ export default async function ActivitySettingsPage({
     redirect("/app/settings");
   }
 
-  const tableFilter = isAuditTableName(tableParam) ? tableParam : null;
-  const parsedPage = Number.parseInt(pageParam ?? "1", 10);
-  const requestedPage =
-    Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
-  const from = (requestedPage - 1) * PAGE_SIZE;
+  const from = (requestedPage - 1) * ACTIVITY_PAGE_SIZE;
 
   let query = supabase
     .from("audit_log")
@@ -48,18 +47,15 @@ export default async function ActivitySettingsPage({
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
-    .range(from, from + PAGE_SIZE - 1);
+    .range(from, from + ACTIVITY_PAGE_SIZE - 1);
   if (tableFilter) query = query.eq("table_name", tableFilter);
+  if (kindFilter) query = query.eq("op", KIND_TO_OP[kindFilter]);
 
   const { data: logRows, count, error } = await query;
 
   // PostgREST rejects an offset past the last row; fall back to the first page.
   if (error?.code === "PGRST103") {
-    redirect(
-      tableFilter
-        ? `/app/settings/activity?table=${tableFilter}`
-        : "/app/settings/activity",
-    );
+    redirect(activityHref({ page: 1, table: tableFilter, kind: kindFilter }));
   }
 
   if (error) {
@@ -70,62 +66,67 @@ export default async function ActivitySettingsPage({
     );
   }
 
-  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / ACTIVITY_PAGE_SIZE));
   const page = Math.min(requestedPage, totalPages);
 
-  const actorIds = [
+  const entries = (logRows ?? []).map((r) => ({
+    row: r,
+    entry: {
+      table_name: r.table_name,
+      op: r.op,
+      changed_fields: r.changed_fields,
+      old_data: r.old_data,
+      new_data: r.new_data,
+    },
+  }));
+
+  const userIds = [
     ...new Set(
-      (logRows ?? [])
-        .map((r) => r.actor_user_id)
-        .filter((id): id is string => id !== null),
+      entries.flatMap(({ row, entry }) => [row.actor_user_id, entryMemberUserId(entry)]).filter((id): id is string => id !== null),
     ),
   ];
-  const { data: profileRows } =
-    actorIds.length > 0
-      ? await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", actorIds)
-      : { data: [] as { id: string; full_name: string | null; email: string | null }[] };
+  const bookingIds = [...new Set(entries.map(({ entry }) => entryBookingId(entry)).filter((id): id is string => id !== null))];
+  const context = await loadActivityContext(supabase, organizationId, userIds, bookingIds);
 
-  const profileById = new Map(
-    (profileRows ?? []).map((p) => [p.id, p] as const),
-  );
-
-  const rows: ActivityLogRow[] = (logRows ?? []).map((r) => {
-    const profile = r.actor_user_id ? profileById.get(r.actor_user_id) : null;
+  const rows: ActivityLogRow[] = entries.map(({ row, entry }) => {
+    const actor = row.actor_user_id ? context.people.get(row.actor_user_id) : null;
+    const memberUserId = entryMemberUserId(entry);
+    const memberPerson = memberUserId ? context.people.get(memberUserId) : null;
+    const bookingId = entryBookingId(entry);
     return {
-      id: r.id,
-      createdAtIso: r.created_at,
-      actorName: r.actor_user_id
-        ? profile?.full_name?.trim() ||
-          profile?.email ||
-          t("appPages.settings.activity.unknownUser")
+      id: row.id,
+      createdAtIso: row.created_at,
+      actor: row.actor_user_id
+        ? {
+            name: actor?.name || actor?.email || t("appPages.settings.activity.unknownUser"),
+            email: actor?.name ? actor.email : null,
+            role: actor?.role ?? null,
+          }
         : null,
-      rowId: r.row_id,
-      entry: {
-        table_name: r.table_name,
-        op: r.op,
-        changed_fields: r.changed_fields,
-        old_data: r.old_data,
-        new_data: r.new_data,
-      },
+      rowId: row.row_id,
+      entry,
+      subject: memberPerson ? memberPerson.name || memberPerson.email : entrySubject(entry),
+      booking: bookingId ? { id: bookingId, reference: context.bookingReferences.get(bookingId) ?? null } : null,
     } satisfies ActivityLogRow;
   });
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="app-title">{t("appPages.settings.activity.title")}</h1>
-        <p className="mt-2 text-app-base text-muted-foreground">
-          {t("appPages.settings.activity.description")}
-        </p>
-      </div>
+      <AppPageHeader
+        surface="card"
+        compact
+        className="mb-0"
+        title={t("appPages.settings.activity.title")}
+        description={t("appPages.settings.activity.description")}
+      />
       <ActivityLogSection
         rows={rows}
         page={page}
         totalPages={totalPages}
-        tableFilter={tableFilter}
+        total={count ?? 0}
+        table={tableFilter}
+        kind={kindFilter}
+        now={new Date()}
       />
     </div>
   );
