@@ -58,7 +58,7 @@ export function SupportInbox({ data, nowIso }: Props) {
 
   return (
     <>
-      <div className={cn(RN_CARD_SHELL, "grid overflow-hidden lg:grid-cols-[minmax(300px,380px)_minmax(0,1fr)]")}>
+      <div className={cn(RN_CARD_SHELL, "grid h-[calc(100dvh-15rem)] min-h-[32rem] overflow-hidden lg:grid-cols-[minmax(300px,380px)_minmax(0,1fr)]")}>
         <div className={cn("flex min-h-0 flex-col border-foreground/10 lg:border-r", mobileThread && "hidden lg:flex")}>
           <div className="flex items-center justify-between gap-3 border-b border-foreground/10 px-4 py-3">
             <h2 className="font-heading text-base font-semibold text-foreground">{t("support.inbox.title")}</h2>
@@ -83,7 +83,7 @@ export function SupportInbox({ data, nowIso }: Props) {
               </button>
             ))}
           </div>
-          <div className="max-h-[36rem] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {visible.length === 0 ? (
               <div className="px-4 py-10 text-center">
                 <p className="font-medium text-foreground">{t("support.inbox.emptyFilter")}</p>
@@ -95,11 +95,11 @@ export function SupportInbox({ data, nowIso }: Props) {
           </div>
         </div>
 
-        <div className={cn("min-w-0", !mobileThread && "hidden lg:block")}>
+        <div className={cn("min-h-0 min-w-0", !mobileThread && "hidden lg:block")}>
           {selected ? (
             <Conversation key={selected.id} ticket={selected} now={now} onBack={() => setMobileThread(false)} onUpdated={() => router.refresh()} />
           ) : (
-            <div className="flex h-full min-h-64 flex-col items-center justify-center px-6 py-16 text-center">
+            <div className="flex h-full flex-col items-center justify-center px-6 py-16 text-center">
               <p className="font-medium text-foreground">{t("support.inbox.selectPrompt")}</p>
               <p className="mt-1 text-app-sm text-muted-foreground">{t("support.inbox.selectPromptHint")}</p>
             </div>

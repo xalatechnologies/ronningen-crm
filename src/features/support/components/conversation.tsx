@@ -49,8 +49,8 @@ export function Conversation({ ticket, now, onBack, onUpdated }: Props) {
   }
 
   return (
-    <section aria-label={t("support.inbox.conversationAria", { subject: ticket.subject })} className="flex min-h-0 flex-col">
-      <header className="flex flex-col gap-2 border-b border-foreground/10 px-5 py-4">
+    <section aria-label={t("support.inbox.conversationAria", { subject: ticket.subject })} className="flex h-full min-h-0 flex-col">
+      <header className="flex shrink-0 flex-col gap-2 border-b border-foreground/10 px-5 py-4">
         <Button type="button" variant="ghost" size="sm" className="-ml-2 w-fit lg:hidden" onClick={onBack}>
           <ArrowLeft className="size-4" aria-hidden />
           {t("support.inbox.back")}
@@ -65,7 +65,7 @@ export function Conversation({ ticket, now, onBack, onUpdated }: Props) {
         <p className="text-app-sm text-muted-foreground">{t(`support.statusDescription.${ticket.status}`)}</p>
       </header>
 
-      <div className="flex max-h-[28rem] min-h-48 flex-col gap-5 overflow-y-auto px-5 py-5">
+      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 py-5">
         {days.length === 0 ? <p className="text-app-sm text-muted-foreground">{t("support.panel.noMessages")}</p> : null}
         {days.map((day) => (
           <div key={day.dayKey} className="flex flex-col gap-4">
@@ -118,7 +118,7 @@ export function Conversation({ ticket, now, onBack, onUpdated }: Props) {
             event.preventDefault();
             void send();
           }}
-          className="flex flex-col gap-2 border-t border-foreground/10 px-5 py-4"
+          className="flex shrink-0 flex-col gap-2 border-t border-foreground/10 px-5 py-4"
         >
           <Label htmlFor={`reply-${ticket.id}`} className="sr-only">
             {t("support.panel.yourReply")}
@@ -147,7 +147,7 @@ export function Conversation({ ticket, now, onBack, onUpdated }: Props) {
           </div>
         </form>
       ) : (
-        <p className="border-t border-foreground/10 px-5 py-4 text-app-sm text-muted-foreground">{t("support.panel.closedHint")}</p>
+        <p className="shrink-0 border-t border-foreground/10 px-5 py-4 text-app-sm text-muted-foreground">{t("support.panel.closedHint")}</p>
       )}
     </section>
   );
