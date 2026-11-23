@@ -9,6 +9,7 @@ import { AppPageHeader } from "@/components/layout/app-page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { BILLING_PLANS, getBillingPlan } from "@/config/billing-plans";
 import { BillingNotice } from "@/features/billing/components/billing-notice";
+import { InvoiceHistoryCard } from "@/features/billing/components/invoice-history-card";
 import { PlanCard } from "@/features/billing/components/plan-card";
 import { SubscriptionCard } from "@/features/billing/components/subscription-card";
 import { deriveBillingView, resolveBillingNotice } from "@/features/billing/lib/billing-view";
@@ -343,6 +344,10 @@ export function BillingSettingsPanel({
         />
         <PlanCard plan={plan} />
       </div>
+
+      {billingOn && !billingExempt && isOwner && view.hasStripeCustomer && currentOrganizationId ? (
+        <InvoiceHistoryCard organizationId={currentOrganizationId} />
+      ) : null}
     </div>
   );
 }
