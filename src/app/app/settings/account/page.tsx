@@ -1,5 +1,8 @@
-import { AccountDeleteSection } from "@/components/settings/account-delete-section";
-import { AccountSettingsForm } from "@/components/settings/account-settings-form";
+import { AccountSummary } from "@/features/account/components/account-summary";
+import { AppearanceSection } from "@/features/account/components/appearance-section";
+import { AccountDeleteSection } from "@/features/account/components/delete-section";
+import { PasswordCard } from "@/features/account/components/password-card";
+import { ProfileCard } from "@/features/account/components/profile-card";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { getAccountDeletionEligibility } from "@/lib/auth/account-deletion";
 import { getServerTranslation } from "@/i18n/server";
@@ -35,10 +38,12 @@ export default async function AccountSettingsPage() {
         title={t("appPages.settings.account.title")}
         description={t("appPages.settings.account.description")}
       />
-      <AccountSettingsForm
-        initialFullName={profile?.full_name ?? ""}
-        email={user.email ?? ""}
-      />
+      <AccountSummary name={profile?.full_name ?? ""} email={user.email ?? ""} />
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
+        <ProfileCard initialFullName={profile?.full_name ?? ""} email={user.email ?? ""} />
+        <PasswordCard email={user.email ?? ""} />
+      </div>
+      <AppearanceSection />
       <AccountDeleteSection
         email={user.email ?? ""}
         eligible={deletionEligibility.eligible}
