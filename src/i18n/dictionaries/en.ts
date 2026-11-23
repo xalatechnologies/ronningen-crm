@@ -2111,6 +2111,28 @@ export const en = {
         createdAt: "Created",
         rotatedAt: "Rotated",
         lastAccessedAt: "Last accessed",
+        statusActive: "Active",
+        statusOff: "Not enabled",
+        never: "Never",
+        rotateTitle: "Rotate token?",
+        disableTitle: "Disable the feed?",
+        howTitle: "How to add the feed to your calendar",
+        howNote:
+          "Calendar apps fetch updates on their own. Google Calendar can take up to a day to show new bookings.",
+        how: {
+          google: {
+            title: "Google Calendar",
+            steps: "Other calendars → From URL → paste the link → Add calendar.",
+          },
+          apple: {
+            title: "Apple Calendar",
+            steps: "File → New Calendar Subscription → paste the link → Subscribe.",
+          },
+          outlook: {
+            title: "Outlook",
+            steps: "Add calendar → Subscribe from web → paste the link → Import.",
+          },
+        },
         securityWarningTitle: "Treat the URL like a password",
         securityWarningBody:
           "Anyone with this URL can read your bookings. Share only with trusted systems. Rotate the token if it leaks.",
