@@ -2085,7 +2085,7 @@ export const en = {
       calendarFeed: {
         title: "Bookings calendar feed",
         description:
-          "Share {org}'s bookings with Digilist, Google Calendar, Apple Calendar and other iCal tools — read-only, no sign-in required. Cancelled reservations are excluded from the feed.",
+          "Show {org}'s bookings in your own calendar: Google Calendar, Apple Calendar, Outlook or any other tool that supports iCal links. Read-only, no sign-in required. Cancelled reservations are not included.",
         emptyDescription:
           "No feed created yet. Enable the feed to get a unique, secret URL you can paste into external tools.",
         enable: "Enable calendar feed",

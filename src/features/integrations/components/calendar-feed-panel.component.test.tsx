@@ -52,6 +52,13 @@ describe("CalendarFeedPanel", () => {
     expect(screen.getAllByText("Aldri").length).toBe(2); // rotated and last fetched
   });
 
+  it("describes the feed for any calendar tool and names no other company's product", () => {
+    render(<CalendarFeedPanel {...props} initialFeed={feed()} />);
+    const text = document.body.textContent ?? "";
+    expect(text).toContain("din egen kalender");
+    expect(text).not.toContain("Digilist");
+  });
+
   it("reveals the full address and copies it even while masked", async () => {
     render(<CalendarFeedPanel {...props} initialFeed={feed()} />);
     fireEvent.click(screen.getByRole("button", { name: "Kopier" }));

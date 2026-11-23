@@ -245,7 +245,7 @@ export const settingsNb = {
     calendarFeed: {
       title: "Kalender-feed for bookinger",
       description:
-        "Del bookingene til {org} med Digilist, Google Calendar, Apple Calendar og andre iCal-verktøy — kun lesing, ingen innlogging. Kansellerte reservasjoner tas ikke med i feeden.",
+        "Vis bookingene til {org} i din egen kalender: Google Calendar, Apple Calendar, Outlook eller et annet verktøy som støtter iCal-lenker. Kun lesing, ingen innlogging. Kansellerte reservasjoner tas ikke med.",
       emptyDescription:
         "Ingen feed opprettet ennå. Aktiver feeden for å få en unik, hemmelig URL du kan lime inn i eksterne verktøy.",
       enable: "Aktiver kalender-feed",
