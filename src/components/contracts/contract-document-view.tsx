@@ -282,8 +282,12 @@ export function ContractDocumentView(props: {
 
       {editing ? (
         <section className="space-y-2">
-          <h3 className="font-heading text-base font-bold">4. Betingelser</h3>
+          {/* The terms carry their own numbered headings, so the label is not a section number. */}
+          <label htmlFor="contract-legal-terms" className="font-heading text-base font-bold">
+            Vilkår og betingelser
+          </label>
           <Textarea
+            id="contract-legal-terms"
             rows={18}
             value={doc.terms.legalTerms}
             onChange={(e) => patch("terms", { legalTerms: e.target.value })}
