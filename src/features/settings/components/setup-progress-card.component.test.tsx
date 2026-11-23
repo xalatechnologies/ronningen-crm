@@ -25,24 +25,25 @@ const partial: SetupFacts = {
 afterEach(cleanup);
 
 describe("SetupProgressCard", () => {
-  it("shows the percentage, the open steps as links and the finished steps", () => {
+  it("shows the percentage, a next-step button, the open steps as links and the finished steps", () => {
     render(<SetupProgressCard progress={computeSetupProgress(partial)} />);
     expect(screen.getByText("63 %")).toBeTruthy();
     expect(screen.getByText("5 av 8 fullført")).toBeTruthy();
     expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("63");
 
-    const team = screen.getByRole("link", { name: /Team/ });
-    expect(team.getAttribute("href")).toBe("/app/settings/team");
+    // The first open step is offered as one button at the top.
+    const next = screen.getByRole("link", { name: /Neste steg: Team/ });
+    expect(next.getAttribute("href")).toBe("/app/settings/team");
+    // Every open step is also a row that links to its settings page.
+    expect(screen.getAllByRole("link", { name: /Team/ })).toHaveLength(2);
     expect(screen.getByRole("link", { name: /Kalenderfeed/ }).getAttribute("href")).toBe("/app/settings/integrations");
     expect(screen.getByRole("link", { name: /Kundeportal/ }).getAttribute("href")).toBe("/app/settings/kontrakter");
-    // The first open step is marked as the next step.
-    expect(within(team).getByText("Neste steg")).toBeTruthy();
-    // Finished steps are not links.
+    // Finished steps are listed in one line and are not links.
+    expect(screen.getByText(/Organisasjon · Lokaler/)).toBeTruthy();
     expect(screen.queryByRole("link", { name: /Organisasjon/ })).toBeNull();
-    expect(screen.getByText("Organisasjon")).toBeTruthy();
   });
 
-  it("shows a done message and no to-do list when everything is set up", () => {
+  it("shows one quiet line with 100 % and no links when everything is set up", () => {
     const all = computeSetupProgress({ ...partial, memberCount: 2, hasCalendarFeed: true, portalEnabled: true });
     render(<SetupProgressCard progress={all} />);
     expect(screen.getByText("100 %")).toBeTruthy();

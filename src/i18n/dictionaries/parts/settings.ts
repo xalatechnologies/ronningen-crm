@@ -5,6 +5,11 @@ export const settingsNb = {
   venues: "Lokaler",
   teamMembers: "Teammedlemmer",
   plan: "Plan",
+  groups: {
+    business: "Virksomheten",
+    agreements: "Avtaler og betaling",
+    account: "Konto og support",
+  },
   completeProfile: {
     title: "Fullfør organisasjonsprofilen",
     description:

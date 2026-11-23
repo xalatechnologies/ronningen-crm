@@ -1782,6 +1782,11 @@ export const en = {
     venues: "Venues",
     teamMembers: "Team members",
     plan: "Plan",
+    groups: {
+      business: "Your business",
+      agreements: "Agreements and billing",
+      account: "Account and support",
+    },
     completeProfile: {
       title: "Complete your organization profile",
       description:
