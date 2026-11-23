@@ -1896,6 +1896,10 @@ export const en = {
       inviteEmailBody: "{inviter} has invited you to {org} as {role}.",
       inviteEmailCta: "Accept invitation",
       inviteEmailFooter: "The link is personal and valid for {days} days.",
+      membersTitle: "Members",
+      roleFor: "Role for {name}",
+      removeAria: "Remove {name} from the team",
+      inviteCopyFailed: "Could not copy the link",
       memberFallback: "The member",
       rolesGuideTitle: "Roles and access",
       rolesGuideDescription:
