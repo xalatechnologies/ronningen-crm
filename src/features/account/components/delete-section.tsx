@@ -13,10 +13,10 @@ import type { AccountDeletionBlocker } from "@/lib/auth/account-deletion-eligibi
 import { normalizeConfirmEmail } from "@/lib/auth/account-deletion-eligibility";
 import { signOutToLogin } from "@/lib/auth/sign-out";
 import { useTranslation } from "@/i18n/client";
-import { RN_CARD_SHELL } from "@/lib/rn-ui";
-import { cn } from "@/lib/utils";
-import { useSupabase } from "@/providers/supabase-provider";
 import { AlertTriangle } from "lucide-react";
+
+import { AccountCard } from "@/features/account/components/account-card";
+import { useSupabase } from "@/providers/supabase-provider";
 
 export function AccountDeleteSection({
   email,
@@ -65,83 +65,54 @@ export function AccountDeleteSection({
 
   return (
     <>
-      <section
-        className={cn(
-          RN_CARD_SHELL,
-          "border-destructive/30 p-5 md:p-6",
-        )}
+      <AccountCard
+        id="account-danger"
+        danger
+        icon={AlertTriangle}
+        title={t("settings.deleteAccount.dangerZone")}
+        description={t("settings.deleteAccount.description")}
+        footer={
+          <div>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={!eligible}
+              onClick={() => {
+                setConfirmEmail("");
+                setError(null);
+                setOpen(true);
+              }}
+            >
+              {t("settings.deleteAccount.deleteButton")}
+            </Button>
+            {error && !open ? <p className="mt-3 text-app-sm font-medium text-destructive">{error}</p> : null}
+          </div>
+        }
       >
-        <div className="flex items-start gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-destructive/30 bg-destructive/10 text-destructive">
-            <AlertTriangle className="size-5" aria-hidden />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="font-heading text-lg font-semibold text-destructive md:text-xl">
-              {t("settings.deleteAccount.dangerZone")}
-            </h2>
-            <p className="mt-1 text-app-sm leading-relaxed text-muted-foreground">
-              {t("settings.deleteAccount.description")}
-            </p>
-          </div>
-        </div>
-
         {!eligible && blockers.length > 0 ? (
-          <div className="mt-5 space-y-3 rounded-xl bg-muted/50 ring-1 ring-foreground/10 p-4">
-            <p className="text-app-sm font-semibold text-foreground">
-              {t("settings.deleteAccount.cannotDelete")}
-            </p>
+          <div className="space-y-3 rounded-xl bg-muted/50 p-4 ring-1 ring-foreground/10">
+            <p className="text-app-sm font-semibold text-foreground">{t("settings.deleteAccount.cannotDelete")}</p>
             <ul className="list-disc space-y-2 pl-5 text-app-sm text-muted-foreground">
               {blockers.map((blocker) => (
-                <li key={`${blocker.code}-${blocker.organizationId ?? "platform"}`}>
-                  {blocker.message}
-                </li>
+                <li key={`${blocker.code}-${blocker.organizationId ?? "platform"}`}>{blocker.message}</li>
               ))}
             </ul>
             <p className="text-app-sm text-muted-foreground">
               {t("settings.deleteAccount.needHelp")}{" "}
-              <Link
-                href="/app/settings/team"
-                className="font-semibold text-success hover:underline"
-              >
+              <Link href="/app/settings/team" className="font-semibold text-success hover:underline dark:!text-white">
                 {t("settings.deleteAccount.goToTeam")}
               </Link>{" "}
               {t("settings.deleteAccount.or")}{" "}
-              <Link
-                href="/app/settings/support"
-                className="font-semibold text-success hover:underline"
-              >
+              <Link href="/app/settings/support" className="font-semibold text-success hover:underline dark:!text-white">
                 {t("settings.deleteAccount.contactSupport")}
               </Link>
               .
             </p>
           </div>
         ) : (
-          <p className="mt-5 text-app-sm leading-relaxed text-muted-foreground">
-            {t("settings.deleteAccount.eligibleDescription")}
-          </p>
+          <p className="text-app-sm leading-relaxed text-muted-foreground">{t("settings.deleteAccount.eligibleDescription")}</p>
         )}
-
-        <div className="mt-5 border-t border-foreground/10 pt-5">
-          <Button
-            type="button"
-            variant="destructive"
-            size="cta"
-            disabled={!eligible}
-            onClick={() => {
-              setConfirmEmail("");
-              setError(null);
-              setOpen(true);
-            }}
-          >
-            {t("settings.deleteAccount.deleteButton")}
-          </Button>
-          {error && !open ? (
-            <p className="mt-3 text-app-sm font-medium text-destructive">
-              {error}
-            </p>
-          ) : null}
-        </div>
-      </section>
+      </AccountCard>
 
       <ConfirmDeleteDialog
         open={open}
