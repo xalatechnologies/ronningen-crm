@@ -4,6 +4,7 @@ import {
   createBookingInquiryFormSchema,
   createLoginSchema,
   createNewBookingFormFieldsSchema,
+  createOrganizationProfileFormSchema,
   createRegisterSchema,
   defaultValidationMessages,
   todayLocalYmd,
@@ -178,6 +179,71 @@ describe("validations", () => {
           newCustomerAddress: "",
         }).success,
       ).toBe(false);
+    });
+  });
+
+  describe("createOrganizationProfileFormSchema", () => {
+    const schema = createOrganizationProfileFormSchema(msg);
+    const empty = {
+      name: "Rønningen Selskapslokale",
+      legalName: "",
+      tagline: "",
+      orgNumber: "",
+      addressLine1: "",
+      addressLine2: "",
+      postalCode: "",
+      city: "",
+      contactEmail: "",
+      contactPhone: "",
+      logoUrl: "",
+      bankAccount: "",
+      paymentInstructions: "",
+    };
+    const fieldsWithErrors = (input: object) => {
+      const result = schema.safeParse({ ...empty, ...input });
+      return result.success ? [] : [...new Set(result.error.issues.map((i) => String(i.path[0])))];
+    };
+
+    it("accepts a profile with only a name and a fully filled profile", () => {
+      expect(schema.safeParse(empty).success).toBe(true);
+      expect(
+        schema.safeParse({
+          ...empty,
+          legalName: "Eksempel AS",
+          orgNumber: "974 760 673",
+          addressLine1: "Gata 1",
+          postalCode: "3410",
+          city: "Sylling",
+          contactEmail: "post@eksempel.no",
+          contactPhone: "+47 929 77 771",
+          logoUrl: "https://eksempel.no/logo.png",
+          bankAccount: "8601.11.17947",
+        }).success,
+      ).toBe(true);
+    });
+
+    it("trims the name and needs at least two characters", () => {
+      const ok = schema.safeParse({ ...empty, name: "  Lokalet  " });
+      expect(ok.success && ok.data.name).toBe("Lokalet");
+      expect(fieldsWithErrors({ name: " a " })).toEqual(["name"]);
+    });
+
+    it("rejects an org number, bank account and postal code that fail their checks", () => {
+      expect(fieldsWithErrors({ orgNumber: "974760674" })).toEqual(["orgNumber"]);
+      expect(fieldsWithErrors({ bankAccount: "86011117948" })).toEqual(["bankAccount"]);
+      expect(fieldsWithErrors({ postalCode: "341" })).toEqual(["postalCode"]);
+    });
+
+    it("rejects a malformed email and phone number", () => {
+      expect(fieldsWithErrors({ contactEmail: "ikke-en-epost" })).toEqual(["contactEmail"]);
+      expect(fieldsWithErrors({ contactPhone: "12" })).toEqual(["contactPhone"]);
+      expect(fieldsWithErrors({ contactPhone: "abc defgh ij" })).toContain("contactPhone");
+    });
+
+    it("only allows a secure (https) logo address", () => {
+      expect(fieldsWithErrors({ logoUrl: "http://eksempel.no/logo.png" })).toEqual(["logoUrl"]);
+      expect(fieldsWithErrors({ logoUrl: "javascript:alert(1)" })).toEqual(["logoUrl"]);
+      expect(fieldsWithErrors({ logoUrl: "ikke en url" })).toEqual(["logoUrl"]);
     });
   });
 });
