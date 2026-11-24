@@ -10,6 +10,7 @@ import { LandingHeader } from "@/components/landing/landing-header";
 import { PortalSection } from "@/components/landing/portal-section";
 import { ProblemSection } from "@/components/landing/problem-section";
 import { ProductPreviewSection } from "@/components/landing/product-preview-section";
+import { Tour3dSection } from "@/components/landing/tour-3d/tour-3d-section";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function HomePage() {
         <FeaturesSection />
         <PortalSection />
         <HowItWorksSection />
+        <Tour3dSection />
         <ProductPreviewSection />
         <AudienceSection />
         <BenefitsPricingSection />

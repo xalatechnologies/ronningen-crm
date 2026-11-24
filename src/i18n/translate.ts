@@ -13,7 +13,7 @@ function resolveTranslation(
   return typeof current === "string" ? current : undefined;
 }
 
-function interpolate(template: string, params?: TranslationParams): string {
+export function interpolate(template: string, params?: TranslationParams): string {
   if (!params) return template;
   return template.replace(/\{(\w+)\}/g, (_, name: string) => {
     const value = params[name];
