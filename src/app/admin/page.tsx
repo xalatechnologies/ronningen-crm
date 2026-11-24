@@ -6,6 +6,7 @@ import { AdminLinkButton } from "@/components/admin/admin-action-button";
 import { AdminDataPanel } from "@/components/admin/admin-data-panel";
 import { AdminQueuePanel } from "@/components/admin/admin-queue-panel";
 import { AdminSubscriptionStatusPanel } from "@/components/admin/admin-subscription-status-panel";
+import { NewTenantsMonthChart } from "@/components/admin/new-tenants-month-chart";
 import { AdminTrendChart } from "@/components/admin/admin-trend-chart";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import {
@@ -277,17 +278,17 @@ export default async function AdminOverviewPage() {
               icon={CalendarCheck}
             />
             <OverviewKpiTile
-              label={t("admin.nye_leietakere_7_d")}
-              value={stats.newOrganizationsLast7Days}
+              label={t("admin.nye_leietakere_30_d")}
+              value={stats.newOrganizationsLast30Days}
               href={adminSubscriptionsHref("trialing")}
               icon={Building2}
-              goToLabel={goTo(t("admin.nye_leietakere_7_d"))}
+              goToLabel={goTo(t("admin.nye_leietakere_30_d"))}
               hint={
                 stats.suspendedCount > 0
                   ? t("admin.overview_suspended_count", {
                       count: stats.suspendedCount,
                     })
-                  : t("admin.registrert_siste_7_dager")
+                  : t("admin.registrert_siste_30_dager")
               }
             />
           </div>
@@ -319,16 +320,7 @@ export default async function AdminOverviewPage() {
               />
             </div>
             <div className="rounded-2xl bg-muted/30 p-5 ring-1 ring-foreground/10">
-              <AdminTrendChart
-                className="admin-overview-trend-chart"
-                embedded
-                title={t("admin.nye_leietakere_7_d")}
-                subtitle={t("admin.organisasjoner_registrert_per_dag")}
-                periodHint={t("admin.overview_last_7_days_total", {
-                  count: stats.newOrganizationsLast7Days,
-                })}
-                points={stats.newTenantsTrend}
-              />
+              <NewTenantsMonthChart createdAts={stats.newTenantCreatedAts} />
             </div>
           </div>
         </section>

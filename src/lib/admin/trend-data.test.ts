@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildDailyNewOrgsMonthTrend,
   alignRevenueTrendCurrentMonth,
   buildMonthlyTrend,
   countOrgsForMrrTrendAt,
@@ -164,5 +165,19 @@ describe("alignRevenueTrendCurrentMonth", () => {
     const aligned = alignRevenueTrendCurrentMonth(points, referenceDate, 4500);
 
     expect(aligned[referenceDate.getMonth()]?.value).toBe(4500);
+  });
+});
+
+describe("buildDailyNewOrgsMonthTrend", () => {
+  it("has one bar per day of the month and counts only that month", () => {
+    const points = buildDailyNewOrgsMonthTrend(
+      ["2026-02-03T10:00:00", "2026-02-03T18:00:00", "2026-02-28T09:00:00", "2026-03-01T09:00:00"],
+      2026,
+      1,
+    );
+    expect(points).toHaveLength(28);
+    expect(points[2]).toEqual({ label: "3", value: 2 });
+    expect(points[27]?.value).toBe(1);
+    expect(points.reduce((sum, p) => sum + p.value, 0)).toBe(3);
   });
 });

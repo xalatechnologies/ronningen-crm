@@ -6,7 +6,6 @@ import { adminRoutes } from "@/config/admin-routes";
 import { fetchAdminSubscriptionAnalytics } from "@/lib/admin/queries/users-billing-audit";
 import {
   alignRevenueTrendCurrentMonth,
-  buildDailyNewOrgsTrend,
   buildFailedPaymentQueue,
   buildMonthlyTrend,
   buildPeriodEndByOrg,
@@ -35,7 +34,7 @@ export type AdminOverviewStats = {
   organizationCount: number;
   userCount: number;
   suspendedCount: number;
-  newOrganizationsLast7Days: number;
+  newOrganizationsLast30Days: number;
   statusCounts: Record<string, number>;
   bookingsLast30Days: number;
   inquiriesLast30Days: number;
@@ -61,7 +60,8 @@ export type AdminOverviewStats = {
     actorName: string | null;
   }[];
   revenueTrend: TrendPoint[];
-  newTenantsTrend: TrendPoint[];
+  /** Creation timestamps of every organization; the dashboard chart pages through months. */
+  newTenantCreatedAts: string[];
 };
 
 export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
@@ -71,9 +71,6 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
   const thirtyDaysAgo = new Date(referenceDate);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const since = thirtyDaysAgo.toISOString();
-  const sevenDaysAgo = new Date(referenceDate);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const since7 = sevenDaysAgo.toISOString();
   const fourteenDaysFromNow = new Date(referenceDate);
   fourteenDaysFromNow.setDate(fourteenDaysFromNow.getDate() + 14);
   const trialCutoff = fourteenDaysFromNow.toISOString();
@@ -82,7 +79,7 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
     { count: organizationCount },
     { count: userCount },
     { count: suspendedCount },
-    { count: newOrganizationsLast7Days },
+    { count: newOrganizationsLast30Days },
     { data: orgs },
     { count: bookingsLast30Days },
     { count: inquiriesLast30Days },
@@ -101,7 +98,7 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
     admin
       .from("organizations")
       .select("id", { count: "exact", head: true })
-      .gte("created_at", since7),
+      .gte("created_at", since),
     admin
       .from("organizations")
       .select(
@@ -165,10 +162,7 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
     referenceDate,
     estimatedMrrNok,
   );
-  const newTenantsTrend = buildDailyNewOrgsTrend(
-    orgsForTrend.map((o) => ({ createdAt: o.createdAt })),
-    referenceDate,
-  );
+  const newTenantCreatedAts = orgsForTrend.map((o) => o.createdAt);
 
   const periodEndByOrg = buildPeriodEndByOrg(subscriptions ?? []);
 
@@ -222,7 +216,7 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
     organizationCount: organizationCount ?? 0,
     userCount: userCount ?? 0,
     suspendedCount: suspendedCount ?? 0,
-    newOrganizationsLast7Days: newOrganizationsLast7Days ?? 0,
+    newOrganizationsLast30Days: newOrganizationsLast30Days ?? 0,
     statusCounts,
     bookingsLast30Days: bookingsLast30Days ?? 0,
     inquiriesLast30Days: inquiriesLast30Days ?? 0,
@@ -235,6 +229,6 @@ export async function fetchAdminOverviewStats(): Promise<AdminOverviewStats> {
     suspendedOrganizations,
     recentAuditEntries,
     revenueTrend,
-    newTenantsTrend,
+    newTenantCreatedAts,
   };
 }

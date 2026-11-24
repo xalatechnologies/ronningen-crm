@@ -153,7 +153,7 @@ export function AdminTrendChart({
                   )}
                   title={`${bar.label}: ${formatTrendValue(bar.value, valueFormat)}`}
                 >
-                  {formatAxis(bar.value)}
+                  {points.length > 14 && !bar.hasValue ? "" : formatAxis(bar.value)}
                 </span>
                 <div className="relative flex min-h-[5rem] flex-1 flex-col justify-end border-b-2 border-foreground/20 sm:min-h-[6rem] md:min-h-[7rem]">
                   {bar.hasValue ? (

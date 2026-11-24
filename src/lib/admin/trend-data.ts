@@ -256,6 +256,21 @@ export function buildDailyNewOrgsTrend(
   return days;
 }
 
+/** One bar per day of the calendar month (month is 0-based), labelled with the day number. */
+export function buildDailyNewOrgsMonthTrend(
+  createdAts: string[],
+  year: number,
+  month: number,
+): TrendPoint[] {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const counts = new Array<number>(daysInMonth).fill(0);
+  for (const iso of createdAts) {
+    const d = new Date(iso);
+    if (d.getFullYear() === year && d.getMonth() === month) counts[d.getDate() - 1]! += 1;
+  }
+  return counts.map((value, i) => ({ label: String(i + 1), value }));
+}
+
 export function buildBookingRevenueTrend(
   bookings: {
     total_price: number | null;
