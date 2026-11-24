@@ -41,6 +41,7 @@ export const landingNb = {
     text: "Start med et ryddig dashboard for bookinger, kunder, betalinger, utstyr og rapporter.",
     primaryCta: "Start gratis prøveperiode",
     secondaryCta: "Logg inn",
+    contactPrompt: "Har du spørsmål? Skriv til oss:",
   },
   footer: {
     description:

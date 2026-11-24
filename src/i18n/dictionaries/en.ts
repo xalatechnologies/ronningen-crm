@@ -429,6 +429,7 @@ export const en = {
       text: "Start with a clear dashboard for bookings, customers, payments, equipment and reports.",
       primaryCta: "Start free trial",
       secondaryCta: "Sign in",
+      contactPrompt: "Questions? Write to us:",
     },
     footer: {
       description:
