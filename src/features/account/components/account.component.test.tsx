@@ -105,8 +105,9 @@ describe("PasswordCard", () => {
     const waiting = await screen.findByRole("button", { name: /Send på nytt om \d+ s/ });
     expect((waiting as HTMLButtonElement).disabled).toBe(true);
     expect(screen.getByRole("status").textContent).toContain("eva@x.no");
+    // Async advance lets React run the effect that starts the countdown interval, even on a slow runner.
     await act(async () => {
-      vi.advanceTimersByTime(61_000);
+      await vi.advanceTimersByTimeAsync(61_000);
     });
     const again = await screen.findByRole("button", { name: "Send lenken på nytt" });
     expect((again as HTMLButtonElement).disabled).toBe(false);
