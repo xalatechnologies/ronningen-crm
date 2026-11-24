@@ -18,4 +18,18 @@ describe("legal content", () => {
     const all = LEGAL_DOCUMENT_KEYS.flatMap((k) => [legalContent(k, "nb"), legalContent(k, "en")]);
     expect(JSON.stringify(all)).not.toMatch(/sk_live|password:|@(?!xala\.no)\w+\.\w+/i);
   });
+
+  it("has no unfilled [placeholder] left, and names the company with its organisation number and website", () => {
+    for (const key of LEGAL_DOCUMENT_KEYS) {
+      for (const locale of ["nb", "en"] as const) {
+        const c = legalContent(key, locale);
+        const text = [c.title, c.intro, ...c.sections.flatMap((x) => [x.heading, ...x.body])].join("\n");
+        expect(text).not.toMatch(/\[[^\]]+\]/);
+        expect(text).not.toContain("${");
+      }
+    }
+    const terms = JSON.stringify(legalContent("terms", "nb"));
+    expect(terms).toContain("Xala Technologies AS (org.nr. 920 972 454)");
+    expect(terms).toContain("xala.no");
+  });
 });
