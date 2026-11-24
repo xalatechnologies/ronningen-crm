@@ -453,7 +453,7 @@ export const en = {
       text: "Start with a clear dashboard for bookings, customers, payments, equipment and reports.",
       primaryCta: "Start free trial",
       secondaryCta: "Sign in",
-      contactPrompt: "Questions? Write to us:",
+      contactPrompt: "Questions? Write or call us:",
     },
     footer: {
       description:
@@ -465,6 +465,7 @@ export const en = {
       contact: "Contact",
       contactLinksAria: "Contact links",
       contactEmailAria: "Send an e-mail to {email}",
+      contactPhoneAria: "Call {phone}",
       legal: "Legal",
       legalLinksAria: "Legal links",
       legalTerms: "Terms of use",

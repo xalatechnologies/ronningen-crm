@@ -12,9 +12,11 @@ afterEach(cleanup);
 describe("FinalCtaSection", () => {
   it("tells visitors where to write, with a mailto link next to the sign-up buttons", () => {
     render(<FinalCtaSection />);
-    expect(screen.getByText(/Har du spørsmål\? Skriv til oss:/)).toBeTruthy();
+    expect(screen.getByText(/Har du spørsmål\? Skriv eller ring oss:/)).toBeTruthy();
     const link = screen.getByRole("link", { name: "info@xala.no" });
     expect(link.getAttribute("href")).toBe("mailto:info@xala.no");
+    const phone = screen.getByRole("link", { name: "+47 96 65 26 66" });
+    expect(phone.getAttribute("href")).toBe("tel:+4796652666");
     expect(screen.getByRole("link", { name: "Start gratis prøveperiode" })).toBeTruthy();
   });
 });
