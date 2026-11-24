@@ -57,7 +57,7 @@ export function FinalCtaSection() {
             </Link>
           </div>
           <div className="flex flex-col gap-3 border-t border-white/15 pt-6 sm:flex-row sm:items-center sm:gap-4">
-            <p className="text-lg text-[#c9d6f7]">{t("landing.finalCta.contactPrompt")}</p>
+            <p className="text-lg text-white/75">{t("landing.finalCta.contactPrompt")}</p>
             <a
               href={`mailto:${CONTACT_EMAIL}`}
               className="inline-flex h-12 w-fit items-center gap-2.5 rounded-xl border border-white/25 px-5 font-heading text-base font-semibold text-white transition-colors hover:bg-white/10"
