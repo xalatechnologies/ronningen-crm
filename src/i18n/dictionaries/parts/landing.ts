@@ -49,6 +49,9 @@ export const landingNb = {
     account: "Konto",
     productLinksAria: "Produktlenker",
     accountLinksAria: "Kontolenker",
+    contact: "Kontakt",
+    contactLinksAria: "Kontaktlenker",
+    contactEmailAria: "Send e-post til {email}",
     forIt: "For IT-avdelinger",
     rights: "Alle rettigheter reservert.",
     tagline:

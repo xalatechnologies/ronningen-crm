@@ -5,10 +5,11 @@ import {
   LANDING_CONTAINER,
   LANDING_SECTION_X,
 } from "@/components/landing/landing-layout";
-import { APP_NAME } from "@/config/app";
+import { APP_NAME, CONTACT_EMAIL } from "@/config/app";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { BrandLockup } from "@/components/brand/brand-logo";
+import { Mail } from "lucide-react";
 import Link from "next/link";
 
 const NAV_KEYS = [
@@ -24,6 +25,8 @@ const footerLinkClass =
 export function LandingFooter() {
   const { t } = useTranslation();
   const year = new Date().getFullYear();
+  // The tagline holds a {link} marker; the link itself goes where the marker is.
+  const [taglineBefore = "", taglineAfter = ""] = t("landing.footer.tagline", { link: "{link}" }).split("{link}");
 
   return (
     <footer
@@ -43,7 +46,7 @@ export function LandingFooter() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:gap-10">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-10">
             <nav className="flex flex-col gap-3" aria-label={t("landing.footer.productLinksAria")}>
               <p className="font-heading text-sm font-bold tracking-wide text-rn-text-heading uppercase">
                 {t("landing.footer.product")}
@@ -79,6 +82,24 @@ export function LandingFooter() {
                 </li>
               </ul>
             </nav>
+
+            <nav className="col-span-2 flex flex-col gap-3 sm:col-span-1" aria-label={t("landing.footer.contactLinksAria")}>
+              <p className="font-heading text-sm font-bold tracking-wide text-rn-text-heading uppercase">
+                {t("landing.footer.contact")}
+              </p>
+              <ul className="flex flex-col gap-2.5">
+                <li>
+                  <a
+                    href={`mailto:${CONTACT_EMAIL}`}
+                    aria-label={t("landing.footer.contactEmailAria", { email: CONTACT_EMAIL })}
+                    className={cn(footerLinkClass, "inline-flex items-center gap-2")}
+                  >
+                    <Mail className="size-4 shrink-0" aria-hidden />
+                    {CONTACT_EMAIL}
+                  </a>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
 
@@ -87,10 +108,7 @@ export function LandingFooter() {
             © {year} {APP_NAME}. {t("landing.footer.rights")}
           </p>
           <p className="text-rn-text-slate">
-            {t("landing.footer.tagline", { link: "" }).replace(
-              "{link}",
-              "",
-            )}
+            {taglineBefore}
             <a
               href="https://xala.no"
               target="_blank"
@@ -98,8 +116,8 @@ export function LandingFooter() {
               className="font-semibold text-rn-text-slate underline-offset-4 transition-colors hover:text-success hover:underline"
             >
               xala.no
-            </a>{" "}
-            — Xala Technologies AS.
+            </a>
+            {taglineAfter}
           </p>
         </div>
       </div>

@@ -437,6 +437,9 @@ export const en = {
       account: "Account",
       productLinksAria: "Product links",
       accountLinksAria: "Account links",
+      contact: "Contact",
+      contactLinksAria: "Contact links",
+      contactEmailAria: "Send an e-mail to {email}",
       forIt: "For IT departments",
       rights: "All rights reserved.",
       tagline:
