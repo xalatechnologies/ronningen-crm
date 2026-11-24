@@ -6,6 +6,7 @@ import {
   LANDING_SECTION_X,
 } from "@/components/landing/landing-layout";
 import { APP_NAME, CONTACT_EMAIL } from "@/config/app";
+import { LEGAL_DOCUMENTS, type LegalDocumentKey } from "@/features/legal/lib/legal-documents";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { BrandLockup } from "@/components/brand/brand-logo";
@@ -18,6 +19,12 @@ const NAV_KEYS = [
   { key: "pricing" as const, hrefKey: "pricing" as const },
   { key: "faq" as const, hrefKey: "faq" as const },
 ];
+
+const LEGAL_FOOTER_LABELS = {
+  terms: "landing.footer.legalTerms",
+  privacy: "landing.footer.legalPrivacy",
+  dpa: "landing.footer.legalDpa",
+} as const satisfies Record<LegalDocumentKey, string>;
 
 const footerLinkClass =
   "font-heading text-base font-semibold text-rn-text-slate transition-colors hover:text-success";
@@ -36,7 +43,7 @@ export function LandingFooter() {
       )}
     >
       <div className={cn(LANDING_CONTAINER, "flex flex-col gap-10 md:gap-12")}>
-        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr] lg:gap-16">
+        <div className="grid gap-10 md:grid-cols-[1fr_1.7fr] lg:gap-16">
           <div className="space-y-4">
             <Link href="/" aria-label={APP_NAME} className="inline-flex">
               <BrandLockup />
@@ -46,7 +53,7 @@ export function LandingFooter() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-10">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 sm:gap-10">
             <nav className="flex flex-col gap-3" aria-label={t("landing.footer.productLinksAria")}>
               <p className="font-heading text-sm font-bold tracking-wide text-rn-text-heading uppercase">
                 {t("landing.footer.product")}
@@ -80,6 +87,21 @@ export function LandingFooter() {
                     {t("landing.auth.register")}
                   </Link>
                 </li>
+              </ul>
+            </nav>
+
+            <nav className="flex flex-col gap-3" aria-label={t("landing.footer.legalLinksAria")}>
+              <p className="font-heading text-sm font-bold tracking-wide text-rn-text-heading uppercase">
+                {t("landing.footer.legal")}
+              </p>
+              <ul className="flex flex-col gap-2.5">
+                {LEGAL_DOCUMENTS.map((doc) => (
+                  <li key={doc.key}>
+                    <Link href={doc.path} className={footerLinkClass}>
+                      {t(LEGAL_FOOTER_LABELS[doc.key])}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </nav>
 
