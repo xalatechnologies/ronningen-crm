@@ -429,6 +429,7 @@ export const en = {
       text: "Start with a clear dashboard for bookings, customers, payments, equipment and reports.",
       primaryCta: "Start free trial",
       secondaryCta: "Sign in",
+      contactPrompt: "Questions? Write to us:",
     },
     footer: {
       description:
@@ -437,6 +438,9 @@ export const en = {
       account: "Account",
       productLinksAria: "Product links",
       accountLinksAria: "Account links",
+      contact: "Contact",
+      contactLinksAria: "Contact links",
+      contactEmailAria: "Send an e-mail to {email}",
       forIt: "For IT departments",
       rights: "All rights reserved.",
       tagline:
