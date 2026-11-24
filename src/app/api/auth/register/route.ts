@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { recordAcceptances } from "@/features/legal/data/record-acceptances";
 import { getServerTranslation } from "@/i18n/server";
 import { mapAuthErrorToNorwegian } from "@/lib/auth/auth-error-messages";
 import { normalizeEmail } from "@/lib/auth/normalize-email";
@@ -68,6 +69,16 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: t("serverErrors.auth.accountNotCreated") },
         { status: 500 },
+      );
+    }
+
+    // No account without proof of acceptance: if saving it fails, take the new account back out again.
+    const saved = await recordAcceptances(admin, created.user.id);
+    if (!saved) {
+      await admin.auth.admin.deleteUser(created.user.id);
+      return NextResponse.json(
+        { error: t("serverErrors.auth.registrationUnavailable") },
+        { status: 503 },
       );
     }
 

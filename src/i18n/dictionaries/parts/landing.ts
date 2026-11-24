@@ -53,6 +53,11 @@ export const landingNb = {
     contact: "Kontakt",
     contactLinksAria: "Kontaktlenker",
     contactEmailAria: "Send e-post til {email}",
+    legal: "Juridisk",
+    legalLinksAria: "Juridiske lenker",
+    legalTerms: "Brukervilkår",
+    legalPrivacy: "Personvern",
+    legalDpa: "Databehandleravtale",
     forIt: "For IT-avdelinger",
     rights: "Alle rettigheter reservert.",
     tagline:

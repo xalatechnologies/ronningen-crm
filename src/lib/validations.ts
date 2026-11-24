@@ -128,6 +128,10 @@ export function createRegisterSchema(msg: ValidationMessages) {
       email: createEmailField(msg),
       password: z.string().min(8, msg.passwordTooShort),
       confirmPassword: z.string(),
+      // Each agreement must be ticked; the server saves which ones, at which version, and when.
+      acceptTerms: z.boolean().refine((v) => v, { message: msg.agreementRequired }),
+      acceptPrivacy: z.boolean().refine((v) => v, { message: msg.agreementRequired }),
+      acceptDpa: z.boolean().refine((v) => v, { message: msg.agreementRequired }),
     })
     .refine((data) => data.password === data.confirmPassword, {
       path: ["confirmPassword"],

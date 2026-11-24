@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AgreementsField, type AgreementFieldName } from "@/features/legal/components/agreements-field";
 import { APP_NAME } from "@/config/app";
 import { useTranslation } from "@/i18n/client";
 import { RN_CARD_SHELL } from "@/lib/rn-ui";
@@ -16,12 +17,14 @@ import {
 } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { Check, Eye, EyeOff } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 
 export default function RegisterPage() {
   const { t, locale } = useTranslation();
   const [formError, setFormError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const registerSchema = useMemo(
     () => createRegisterSchema(validationMessagesForLocale(locale)),
     [locale],
@@ -34,8 +37,26 @@ export default function RegisterPage() {
       email: "",
       password: "",
       confirmPassword: "",
+      acceptTerms: false,
+      acceptPrivacy: false,
+      acceptDpa: false,
     },
   });
+
+  const agreementValues = {
+    acceptTerms: form.watch("acceptTerms"),
+    acceptPrivacy: form.watch("acceptPrivacy"),
+    acceptDpa: form.watch("acceptDpa"),
+  };
+  const passwordLongEnough = form.watch("password").length >= 8;
+  const agreementFields: AgreementFieldName[] = ["acceptTerms", "acceptPrivacy", "acceptDpa"];
+  const allAgreed = agreementFields.every((f) => agreementValues[f]);
+  const passwordType = showPassword ? "text" : "password";
+  const benefits = [
+    t("auth.pages.registerBenefits.trial"),
+    t("auth.pages.registerBenefits.oneplace"),
+    t("auth.pages.registerBenefits.portal"),
+  ];
 
   async function onSubmit(values: RegisterInput) {
     setFormError(null);
@@ -84,6 +105,14 @@ export default function RegisterPage() {
                 <p className="text-app-sm leading-relaxed text-muted-foreground md:text-app-base">
                   {t("auth.pages.registerTagline", { appName: APP_NAME })}
                 </p>
+                <ul className="space-y-1.5 pt-1">
+                  {benefits.map((benefit) => (
+                    <li key={benefit} className="flex items-center gap-2 text-app-sm text-foreground md:text-app-base">
+                      <Check className="size-4 shrink-0 text-success" aria-hidden />
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </CardHeader>
@@ -130,16 +159,35 @@ export default function RegisterPage() {
                 ) : null}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className={labelClass}>
-                  {t("auth.password")}
-                </Label>
+                <div className="flex items-center justify-between gap-3">
+                  <Label htmlFor="password" className={labelClass}>
+                    {t("auth.password")}
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-pressed={showPassword}
+                    className="flex items-center gap-1.5 text-app-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
+                    {showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                  </button>
+                </div>
                 <Input
                   id="password"
-                  type="password"
+                  type={passwordType}
                   autoComplete="new-password"
+                  aria-describedby="password-hint"
                   className={fieldClass}
                   {...form.register("password")}
                 />
+                <p
+                  id="password-hint"
+                  className={cn("flex items-center gap-1.5 text-app-sm", passwordLongEnough ? "text-success" : "text-muted-foreground")}
+                >
+                  <Check className={cn("size-4", passwordLongEnough ? "opacity-100" : "opacity-30")} aria-hidden />
+                  {t("auth.pages.passwordHint")}
+                </p>
                 {form.formState.errors.password ? (
                   <p className="text-app-sm text-destructive">
                     {form.formState.errors.password.message}
@@ -152,7 +200,7 @@ export default function RegisterPage() {
                 </Label>
                 <Input
                   id="confirmPassword"
-                  type="password"
+                  type={passwordType}
                   autoComplete="new-password"
                   className={fieldClass}
                   {...form.register("confirmPassword")}
@@ -163,6 +211,18 @@ export default function RegisterPage() {
                   </p>
                 ) : null}
               </div>
+              <AgreementsField
+                values={agreementValues}
+                errors={{
+                  acceptTerms: form.formState.errors.acceptTerms?.message,
+                  acceptPrivacy: form.formState.errors.acceptPrivacy?.message,
+                  acceptDpa: form.formState.errors.acceptDpa?.message,
+                }}
+                onToggle={(field, checked) => form.setValue(field, checked, { shouldValidate: form.formState.isSubmitted })}
+                onToggleAll={(checked) => {
+                  for (const field of agreementFields) form.setValue(field, checked, { shouldValidate: form.formState.isSubmitted });
+                }}
+              />
               {formError ? (
                 <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-app-sm text-destructive md:text-app-base">
                   {formError}
@@ -172,7 +232,7 @@ export default function RegisterPage() {
                   type="submit"
                   variant="success"
                   size="cta"
-                  disabled={form.formState.isSubmitting}
+                  disabled={form.formState.isSubmitting || !allAgreed}
                   className="w-full"
                 >
                 {form.formState.isSubmitting ? t("common.actions.loading") : t("auth.createAccount")}
