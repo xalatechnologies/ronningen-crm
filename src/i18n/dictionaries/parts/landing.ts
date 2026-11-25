@@ -41,7 +41,7 @@ export const landingNb = {
     text: "Start med et ryddig dashboard for bookinger, kunder, betalinger, utstyr og rapporter.",
     primaryCta: "Start gratis prøveperiode",
     secondaryCta: "Logg inn",
-    contactPrompt: "Har du spørsmål? Skriv til oss:",
+    contactPrompt: "Har du spørsmål? Skriv eller ring oss:",
   },
   footer: {
     description:
@@ -53,6 +53,7 @@ export const landingNb = {
     contact: "Kontakt",
     contactLinksAria: "Kontaktlenker",
     contactEmailAria: "Send e-post til {email}",
+    contactPhoneAria: "Ring {phone}",
     legal: "Juridisk",
     legalLinksAria: "Juridiske lenker",
     legalTerms: "Brukervilkår",

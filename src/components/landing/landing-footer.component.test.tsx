@@ -20,6 +20,13 @@ describe("LandingFooter", () => {
     expect(link.textContent).toBe("info@xala.no");
   });
 
+  it("has a phone link that dials +47 96 65 26 66", () => {
+    render(<LandingFooter />);
+    const link = screen.getByRole("link", { name: "Ring +47 96 65 26 66" });
+    expect(link.getAttribute("href")).toBe("tel:+4796652666");
+    expect(link.textContent).toBe("+47 96 65 26 66");
+  });
+
   it("writes the credit line once, with the link in place", () => {
     const { container } = render(<LandingFooter />);
     const credit = Array.from(container.querySelectorAll("p")).find((p) => p.textContent?.includes("Utviklet av"));

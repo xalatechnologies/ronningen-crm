@@ -5,12 +5,12 @@ import {
   LANDING_CONTAINER,
   LANDING_SECTION_X,
 } from "@/components/landing/landing-layout";
-import { APP_NAME, CONTACT_EMAIL } from "@/config/app";
+import { APP_NAME, CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_DISPLAY } from "@/config/app";
 import { LEGAL_DOCUMENTS, type LegalDocumentKey } from "@/features/legal/lib/legal-documents";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { BrandLockup } from "@/components/brand/brand-logo";
-import { Mail } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import Link from "next/link";
 
 const NAV_KEYS = [
@@ -118,6 +118,16 @@ export function LandingFooter() {
                   >
                     <Mail className="size-4 shrink-0" aria-hidden />
                     {CONTACT_EMAIL}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={`tel:${CONTACT_PHONE}`}
+                    aria-label={t("landing.footer.contactPhoneAria", { phone: CONTACT_PHONE_DISPLAY })}
+                    className={cn(footerLinkClass, "inline-flex items-center gap-2")}
+                  >
+                    <Phone className="size-4 shrink-0" aria-hidden />
+                    {CONTACT_PHONE_DISPLAY}
                   </a>
                 </li>
               </ul>

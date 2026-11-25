@@ -5,12 +5,12 @@ import {
   LANDING_CONTAINER,
   LANDING_SECTION_X,
 } from "@/components/landing/landing-layout";
-import { CONTACT_EMAIL } from "@/config/app";
+import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_DISPLAY } from "@/config/app";
 import { useTranslation } from "@/i18n/client";
 import { getDictionary } from "@/i18n/dictionaries";
 import { statusLabel } from "@/lib/navigation/nav-labels";
 import { cn } from "@/lib/utils";
-import { CheckIcon, MailIcon } from "lucide-react";
+import { CheckIcon, MailIcon, PhoneIcon } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 
@@ -56,15 +56,24 @@ export function FinalCtaSection() {
               {t("landing.finalCta.secondaryCta")}
             </Link>
           </div>
-          <div className="flex flex-col gap-3 border-t border-white/15 pt-6 sm:flex-row sm:items-center sm:gap-4">
+          <div className="flex flex-col gap-3 border-t border-white/15 pt-6">
             <p className="text-lg text-white/75">{t("landing.finalCta.contactPrompt")}</p>
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="inline-flex h-12 w-fit items-center gap-2.5 rounded-xl border border-white/25 px-5 font-heading text-base font-semibold text-white transition-colors hover:bg-white/10"
-            >
-              <MailIcon className="size-5" aria-hidden />
-              {CONTACT_EMAIL}
-            </a>
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="inline-flex h-12 w-fit items-center gap-2.5 rounded-xl border border-white/25 px-5 font-heading text-base font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                <MailIcon className="size-5" aria-hidden />
+                {CONTACT_EMAIL}
+              </a>
+              <a
+                href={`tel:${CONTACT_PHONE}`}
+                className="inline-flex h-12 w-fit items-center gap-2.5 rounded-xl border border-white/25 px-5 font-heading text-base font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                <PhoneIcon className="size-5" aria-hidden />
+                {CONTACT_PHONE_DISPLAY}
+              </a>
+            </div>
           </div>
         </div>
 
