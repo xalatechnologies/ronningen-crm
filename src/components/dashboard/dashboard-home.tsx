@@ -3,6 +3,7 @@
 import type { DashboardHomeData } from "@/components/dashboard/types";
 import { AppPageHeader } from "@/components/layout/app-page-header";
 import { buttonVariants } from "@/components/ui/button";
+import { SetupChecklistCard } from "@/features/setup-checklist/components/setup-checklist-card";
 import {
   Table,
   TableBody,
@@ -225,6 +226,8 @@ export function DashboardHome({ data }: { data: DashboardHomeData }) {
         surface="default"
         title={t("dashboard.title")}
       />
+
+      <SetupChecklistCard />
 
       {data.loadError ? (
         <div role="alert">

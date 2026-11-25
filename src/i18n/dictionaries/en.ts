@@ -834,6 +834,26 @@ export const en = {
     chartAxisMillions: "{value}M",
     chartAxisThousands: "{value}k",
     chartAxisZero: "0",
+    setup: {
+      title: "Get started",
+      subtitle: "Finish the setup to be able to take bookings.",
+      percentDone: "{percent}% done",
+      stepsDone: "{done} of {total} steps",
+      progressLabel: "Setup progress",
+      next: "Next step",
+      doIt: "Do this",
+      done: "Done",
+      steps: {
+        organization: { title: "Create your organization", description: "Your organization has been created." },
+        details: { title: "Fill in business details", description: "Organization number, address and contact details are used on invoices." },
+        venue: { title: "Register a venue", description: "Add the venue customers can book." },
+        pricing: { title: "Add prices", description: "Create at least one package or service with a price." },
+        payment: { title: "Add payment details", description: "Bank account or payment instructions shown on invoices." },
+        team: { title: "Invite a team member", description: "Bring in colleagues who will help out." },
+        firstBooking: { title: "Register your first inquiry or booking", description: "Try the flow with a real or a test inquiry." },
+        subscription: { title: "Activate your subscription", description: "Add payment before the trial ends." },
+      },
+    },
   },
   calendar: {
     weekdays: {

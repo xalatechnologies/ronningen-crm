@@ -1,6 +1,7 @@
 export const tenantQueryKeys = {
   all: ["tenant"] as const,
   dashboard: (orgId: string) => ["tenant", "dashboard", orgId] as const,
+  setupChecklist: (orgId: string) => ["tenant", "setup-checklist", orgId] as const,
   bookings: (orgId: string, role: string | null) =>
     ["tenant", "bookings", orgId, role] as const,
   inquiries: (orgId: string, role: string | null) =>
