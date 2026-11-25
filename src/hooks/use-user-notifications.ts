@@ -201,6 +201,23 @@ export function useUserNotifications() {
     return true;
   }, [scopedNotifications, supabase, user]);
 
+  /** Removes every notification the user can see for the current organization, for good. Only their own rows can be deleted. */
+  const deleteAllNotifications = useCallback(async () => {
+    if (!user) return false;
+    const ids = scopedNotifications.map((n) => n.id);
+    if (ids.length === 0) return true;
+
+    const { error } = await supabase.from("user_notifications").delete().in("id", ids).eq("user_id", user.id);
+
+    if (error) {
+      console.warn("[notifications] Kunne ikke fjerne alle varsler.", error.message);
+      return false;
+    }
+
+    setNotifications((prev) => prev.filter((n) => !ids.includes(n.id)));
+    return true;
+  }, [scopedNotifications, supabase, user]);
+
   const deleteNotification = useCallback(
     async (id: string) => {
       const { error } = await supabase.from("user_notifications").delete().eq("id", id);
@@ -226,5 +243,6 @@ export function useUserNotifications() {
     markRead,
     markAllRead,
     deleteNotification,
+    deleteAllNotifications,
   };
 }

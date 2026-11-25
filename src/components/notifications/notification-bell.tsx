@@ -17,9 +17,13 @@ import { useNotifications } from "@/providers/notification-provider";
 import { format } from "date-fns";
 import { getDateFnsLocale } from "@/i18n/formatters";
 import type { Locale } from "@/i18n/config";
-import { Bell } from "lucide-react";
+import { Bell, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 
 function formatWhen(iso: string, locale: Locale): string {
   return format(new Date(iso), "d. MMM HH:mm", { locale: getDateFnsLocale(locale) });
@@ -28,12 +32,24 @@ function formatWhen(iso: string, locale: Locale): string {
 export function NotificationBell() {
   const { t, locale } = useTranslation();
   const router = useRouter();
-  const { scopedNotifications, unreadCount, markRead, loading } =
+  const { scopedNotifications, unreadCount, markRead, deleteAllNotifications, loading } =
     useNotifications();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
+
+  async function clearAll() {
+    setClearing(true);
+    const ok = await deleteAllNotifications();
+    setClearing(false);
+    setConfirmOpen(false);
+    if (ok) toast.success(t("notifications.bell.cleared"));
+    else toast.error(t("notifications.bell.clearFailed"));
+  }
 
   const preview = scopedNotifications.slice(0, 8);
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
@@ -61,9 +77,20 @@ export function NotificationBell() {
         className="w-[min(100vw-1.5rem,22rem)] rounded-2xl border border-foreground/10 bg-popover p-2 shadow-lg"
       >
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="px-3 py-2 font-heading text-app-md font-bold text-foreground">
-            {t("notifications.inbox.title")}
-          </DropdownMenuLabel>
+          <div className="flex items-center justify-between gap-2">
+            <DropdownMenuLabel className="px-3 py-2 font-heading text-app-md font-bold text-foreground">
+              {t("notifications.inbox.title")}
+            </DropdownMenuLabel>
+            {scopedNotifications.length > 0 ? (
+              <DropdownMenuItem
+                className="min-h-0 w-auto shrink-0 cursor-pointer gap-1.5 rounded-lg px-2.5 py-1.5 font-heading text-app-xs font-semibold text-muted-foreground hover:text-destructive focus:text-destructive"
+                onSelect={() => setConfirmOpen(true)}
+              >
+                <Trash2 className="size-3.5" aria-hidden />
+                {t("notifications.bell.clearAll")}
+              </DropdownMenuItem>
+            ) : null}
+          </div>
           <DropdownMenuSeparator className="my-1 bg-border" />
           {preview.length === 0 ? (
             <p className="px-3 py-4 text-center text-app-sm text-muted-foreground">
@@ -122,5 +149,19 @@ export function NotificationBell() {
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
+    <ConfirmDeleteDialog
+      open={confirmOpen}
+      onOpenChange={setConfirmOpen}
+      title={t("notifications.bell.clearTitle")}
+      description={
+        scopedNotifications.length === 1
+          ? t("notifications.bell.clearDescriptionOne")
+          : t("notifications.bell.clearDescriptionMany", { count: scopedNotifications.length })
+      }
+      confirmLabel={t("notifications.bell.clearConfirm")}
+      busy={clearing}
+      onConfirm={clearAll}
+    />
+    </>
   );
 }
