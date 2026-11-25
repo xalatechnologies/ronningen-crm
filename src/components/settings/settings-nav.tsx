@@ -44,6 +44,7 @@ function SettingsNavLink({
   return (
     <Link
       href={section.href}
+      data-tour={`settings-${section.id}`}
       prefetch
       onMouseEnter={() => router.prefetch(section.href)}
       onFocus={() => router.prefetch(section.href)}

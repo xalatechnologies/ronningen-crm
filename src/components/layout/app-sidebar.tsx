@@ -143,6 +143,7 @@ export function AppSidebar({ className }: { className?: string }) {
             <Link
               key={item.href}
               href={item.href}
+              data-tour={`nav-${item.segment}`}
               prefetch
               onMouseEnter={() => prefetchRoute(item.href)}
               onClick={(event) => {

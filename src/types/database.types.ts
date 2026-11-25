@@ -1092,6 +1092,7 @@ export type Database = {
           id: string;
           is_platform_admin: boolean;
           role: string;
+          tips_seen_at: string | null;
           updated_at: string;
         };
         Insert: {
@@ -1103,6 +1104,7 @@ export type Database = {
           id: string;
           is_platform_admin?: boolean;
           role?: string;
+          tips_seen_at?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -1114,6 +1116,7 @@ export type Database = {
           id?: string;
           is_platform_admin?: boolean;
           role?: string;
+          tips_seen_at?: string | null;
           updated_at?: string;
         };
         Relationships: [];

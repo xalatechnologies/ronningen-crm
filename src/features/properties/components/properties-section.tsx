@@ -124,7 +124,7 @@ export function PropertiesSection({ properties, canManage, loadError, setupMode 
         description={setupMode ? t("properties.setupDescription") : t("properties.defaultDescription")}
         actions={
           canManage ? (
-            <Button type="button" onClick={openCreate} className={cn(buttonVariants({ variant: "success", size: "cta" }))}>
+            <Button type="button" data-tour="add-building" onClick={openCreate} className={cn(buttonVariants({ variant: "success", size: "cta" }))}>
               <Plus className="size-5" aria-hidden />
               {t("properties.newVenue")}
             </Button>

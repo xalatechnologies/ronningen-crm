@@ -1,5 +1,6 @@
 "use client";
 
+import { TourHelpButton } from "@/features/welcome-tour/components/tour-help-button";
 import { MobileNavLinks } from "@/components/layout/mobile-nav";
 import { Button } from "@/components/ui/button";
 import {
@@ -154,7 +155,10 @@ export function AppHeader({ children }: { children?: ReactNode }) {
           <LanguageSwitcher variant="header" />
           <ThemeToggle variant="header" />
         </div>
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">{children}</div>
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <TourHelpButton />
+          {children}
+        </div>
         <OrganizationSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger
