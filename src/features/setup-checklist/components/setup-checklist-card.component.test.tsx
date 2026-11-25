@@ -1,4 +1,5 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SetupChecklistCard } from "@/features/setup-checklist/components/setup-checklist-card";
@@ -7,9 +8,10 @@ import { getDictionary } from "@/i18n/dictionaries";
 import { createTranslator } from "@/i18n/translate";
 
 const state: { role: string | null; facts: SetupFacts | null | undefined } = { role: "owner", facts: undefined };
+const ORG = "org-1";
 
 vi.mock("@/i18n/client", () => ({ useTranslation: () => ({ t: createTranslator(getDictionary("nb")), locale: "nb" }) }));
-vi.mock("@/hooks/use-current-organization", () => ({ useCurrentOrganization: () => ({ currentRole: state.role }) }));
+vi.mock("@/hooks/use-current-organization", () => ({ useCurrentOrganization: () => ({ currentRole: state.role, currentOrganizationId: ORG }) }));
 vi.mock("@/hooks/use-tenant-page-queries", () => ({ useSetupFactsQuery: () => ({ data: state.facts }) }));
 vi.mock("@/lib/billing/constants", () => ({ isBillingEnabled: () => true }));
 
@@ -24,9 +26,21 @@ const empty: SetupFacts = {
   hasSubscription: false,
 };
 
+const allDone: SetupFacts = {
+  profile: { org_number: "1", address_line1: "a", city: "b", contact_email: "c", contact_phone: null, bank_account: "1", payment_instructions: null },
+  propertyCount: 1,
+  priceCount: 1,
+  memberCount: 2,
+  invitationCount: 0,
+  inquiryCount: 1,
+  bookingCount: 0,
+  hasSubscription: true,
+};
+
 beforeEach(() => {
   state.role = "owner";
   state.facts = empty;
+  window.localStorage.clear();
 });
 afterEach(cleanup);
 
@@ -59,17 +73,8 @@ describe("SetupChecklistCard", () => {
     expect(within(screen.getByRole("listitem", { current: "step" })).getByText("Legg inn priser")).toBeTruthy();
   });
 
-  it("disappears by itself when every step is done", () => {
-    state.facts = {
-      profile: { org_number: "1", address_line1: "a", city: "b", contact_email: "c", contact_phone: null, bank_account: "1", payment_instructions: null },
-      propertyCount: 1,
-      priceCount: 1,
-      memberCount: 2,
-      invitationCount: 0,
-      inquiryCount: 1,
-      bookingCount: 0,
-      hasSubscription: true,
-    };
+  it("shows nothing when every step was already done before this browser ever saw the checklist", () => {
+    state.facts = allDone;
     const { container } = render(<SetupChecklistCard />);
     expect(container.textContent).toBe("");
   });
@@ -84,5 +89,65 @@ describe("SetupChecklistCard", () => {
     state.facts = facts;
     const { container } = render(<SetupChecklistCard />);
     expect(container.textContent).toBe("");
+  });
+
+  describe("when the last step is done", () => {
+    it("replaces the checklist with a message once, for someone who saw it unfinished", async () => {
+      const { rerender } = render(<SetupChecklistCard />);
+      expect(screen.getByText("13 % ferdig")).toBeTruthy();
+      state.facts = allDone;
+      await act(async () => rerender(<SetupChecklistCard />));
+      expect(screen.getByRole("status", { name: "Oppsettet er ferdig" })).toBeTruthy();
+      expect(screen.queryByRole("progressbar")).toBeNull();
+    });
+
+    it("stays gone after the message is closed, also after a reload", async () => {
+      const user = userEvent.setup();
+      const { rerender, unmount } = render(<SetupChecklistCard />);
+      state.facts = allDone;
+      await act(async () => rerender(<SetupChecklistCard />));
+      await user.click(screen.getByRole("button", { name: "Lukk" }));
+      expect(screen.queryByRole("status")).toBeNull();
+      unmount();
+      const { container } = render(<SetupChecklistCard />);
+      expect(container.textContent).toBe("");
+    });
+
+    it("does not show the message to someone who never saw the checklist unfinished", () => {
+      state.facts = allDone;
+      render(<SetupChecklistCard />);
+      expect(screen.queryByRole("status")).toBeNull();
+    });
+
+    it("brings the checklist back, and not the message, if a step is undone again", async () => {
+      const { rerender } = render(<SetupChecklistCard />);
+      state.facts = allDone;
+      await act(async () => rerender(<SetupChecklistCard />));
+      state.facts = { ...allDone, propertyCount: 0 };
+      await act(async () => rerender(<SetupChecklistCard />));
+      expect(screen.getByRole("progressbar")).toBeTruthy();
+      expect(screen.queryByRole("status")).toBeNull();
+    });
+
+    it("does not break when the browser blocks storage", () => {
+      const original = Storage.prototype.setItem;
+      Storage.prototype.setItem = () => {
+        throw new Error("blocked");
+      };
+      try {
+        expect(() => render(<SetupChecklistCard />)).not.toThrow();
+        expect(screen.getByRole("progressbar")).toBeTruthy();
+      } finally {
+        Storage.prototype.setItem = original;
+      }
+    });
+
+    it("keeps the message per organization, so closing it for one does not close it for another", () => {
+      window.localStorage.setItem("setup-checklist:other-org:dismissed", "1");
+      window.localStorage.setItem(`setup-checklist:${ORG}:seenIncomplete`, "1");
+      state.facts = allDone;
+      render(<SetupChecklistCard />);
+      expect(screen.getByRole("status", { name: "Oppsettet er ferdig" })).toBeTruthy();
+    });
   });
 });

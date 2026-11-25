@@ -69,6 +69,9 @@ export const dashboardNb = {
     next: "Neste steg",
     doIt: "Gjør dette",
     done: "Ferdig",
+    completeTitle: "Oppsettet er ferdig",
+    completeBody: "Du er klar til å ta imot bookinger. Lykke til!",
+    dismiss: "Lukk",
     steps: {
       organization: { title: "Opprett organisasjon", description: "Organisasjonen din er opprettet." },
       details: { title: "Fyll ut virksomhetsinfo", description: "Organisasjonsnummer, adresse og kontaktinfo brukes på fakturaer." },

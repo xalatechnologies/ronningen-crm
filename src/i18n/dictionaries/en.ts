@@ -843,6 +843,9 @@ export const en = {
       next: "Next step",
       doIt: "Do this",
       done: "Done",
+      completeTitle: "Setup is complete",
+      completeBody: "You are ready to take bookings. Good luck!",
+      dismiss: "Close",
       steps: {
         organization: { title: "Create your organization", description: "Your organization has been created." },
         details: { title: "Fill in business details", description: "Organization number, address and contact details are used on invoices." },
