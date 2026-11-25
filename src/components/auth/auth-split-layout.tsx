@@ -12,13 +12,13 @@ type Props = {
 };
 
 /**
- * Two-column auth page: the form on a plain surface, and (from large screens) a calm brand panel
+ * Two-column auth page: a calm brand panel on the left (from large screens) and the form on a plain surface on the right
  * with what the product gives you. On small screens only the form and a small brand header show.
  */
 export function AuthSplitLayout({ heading, body, points, children }: Props) {
   return (
-    <main className="grid min-h-svh flex-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
-      <div className="flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-16 xl:px-24">
+    <main className="grid min-h-svh flex-1 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)]">
+      <div className="flex flex-col justify-center px-6 py-12 lg:order-2 sm:px-10 lg:px-16 xl:px-24">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-10 flex items-center gap-3 lg:hidden">
             <AuthBrandMark />
@@ -28,7 +28,7 @@ export function AuthSplitLayout({ heading, body, points, children }: Props) {
         </div>
       </div>
 
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-sidebar px-12 py-14 text-sidebar-foreground lg:flex xl:px-16">
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-sidebar px-12 py-14 text-sidebar-foreground lg:order-1 lg:flex xl:px-16">
         <div className="flex items-center gap-3">
           <AuthBrandMark />
           <span className="font-heading text-app-lg font-semibold text-white">{APP_NAME}</span>
