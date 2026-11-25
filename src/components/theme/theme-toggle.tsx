@@ -13,7 +13,7 @@ import {
 import { useTheme } from "@/hooks/use-theme";
 import { useTranslation } from "@/i18n/client";
 import { cn } from "@/lib/utils";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { ChevronUp, Monitor, Moon, Sun } from "lucide-react";
 
 const themeOptions: {
   value: ThemePreference;
@@ -54,7 +54,8 @@ export function ThemeToggle({
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            "inline-flex size-10 shrink-0 items-center justify-center rounded-xl border outline-none transition-colors",
+            "inline-flex shrink-0 items-center justify-center rounded-xl border outline-none transition-colors",
+            inSidebar ? "h-10 w-full gap-2 px-3 font-heading text-xs font-semibold" : "size-10",
             inSidebar
               ? "border-white/15 bg-white/10 text-white hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar data-popup-open:bg-white/20"
               : "border-foreground/20 bg-muted/60 hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background data-popup-open:bg-muted/30",
@@ -64,6 +65,12 @@ export function ThemeToggle({
           title={current.label}
         >
           <CurrentIcon className={cn("size-4 shrink-0", !inSidebar && "text-foreground")} aria-hidden />
+          {inSidebar ? (
+            <>
+              <span className="min-w-0 flex-1 truncate text-start">{current.label}</span>
+              <ChevronUp className="size-3.5 shrink-0 opacity-60" aria-hidden />
+            </>
+          ) : null}
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align={inSidebar ? "start" : "end"}

@@ -200,7 +200,7 @@ export function AppSidebar({ className }: { className?: string }) {
       >
         <div className="flex flex-col gap-3">
           <AdminContextSwitch active="app" />
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <LanguageSwitcher variant="sidebar" />
             <ThemeToggle variant="sidebar" />
           </div>

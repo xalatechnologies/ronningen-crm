@@ -48,7 +48,7 @@ describe("LanguageSwitcher", () => {
     it("is one button with an accessible name, dark styling for the side-bar and no light header styling", () => {
       render(<LanguageSwitcher variant="sidebar" />);
       const button = screen.getByRole("button", { name: "Language: Norwegian" });
-      expect(button.textContent).toBe("NO");
+      expect(button.textContent).toBe("Norwegian"); // the full name in the side-bar, not the short code
       expect(button.className).toContain("bg-white/10");
       expect(button.className).not.toContain("bg-muted/60");
     });

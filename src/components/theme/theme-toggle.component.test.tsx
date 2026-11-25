@@ -59,6 +59,7 @@ describe("ThemeToggle", () => {
       const button = screen.getByRole("button", { name: "Theme: Light" });
       expect(button.className).toContain("bg-white/10");
       expect(button.className).not.toContain("bg-muted/60");
+      expect(button.textContent).toBe("Light"); // shows the name, not only an icon
     });
 
     it("opens a menu and changes the theme", async () => {
