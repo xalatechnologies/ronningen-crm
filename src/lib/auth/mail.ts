@@ -1,7 +1,7 @@
 import { APP_NAME } from "@/config/app";
 import { sendEmail } from "@/lib/notifications/email-client";
 import type { Translator } from "@/i18n/types";
-import { LOGIN_CODE_TTL_MINUTES } from "./login-codes";
+import { LOGIN_CODE_TTL_MINUTES, type LoginCodePurpose } from "./login-codes";
 
 /** "@host #code" as the very last line lets iOS and Safari offer the code for autofill. Needs the public app URL. */
 function autofillLine(code: string): string {
@@ -14,9 +14,10 @@ function autofillLine(code: string): string {
   }
 }
 
-export async function sendLoginCodeEmail(input: { to: string; code: string; t: Translator }) {
+export async function sendLoginCodeEmail(input: { to: string; code: string; t: Translator; purpose?: LoginCodePurpose }) {
   const { t } = input;
-  const body = t("auth.otp.emailBody", { appName: APP_NAME });
+  const signup = input.purpose === "signup";
+  const body = t(signup ? "auth.otp.signupEmailBody" : "auth.otp.emailBody", { appName: APP_NAME });
   const footer = t("auth.otp.emailFooter", { minutes: LOGIN_CODE_TTL_MINUTES });
   const autofill = autofillLine(input.code);
   const html = `<!DOCTYPE html>
@@ -34,7 +35,7 @@ export async function sendLoginCodeEmail(input: { to: string; code: string; t: T
 </body></html>`;
   return sendEmail({
     to: input.to,
-    subject: t("auth.otp.emailSubject", { appName: APP_NAME }),
+    subject: t(signup ? "auth.otp.signupEmailSubject" : "auth.otp.emailSubject", { appName: APP_NAME }),
     html,
     text: `${body}\n\n${input.code}\n\n${footer}${autofill ? `\n\n${autofill}` : ""}`,
   });

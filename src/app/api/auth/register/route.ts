@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { recordAcceptances } from "@/features/legal/data/record-acceptances";
 import { getServerTranslation } from "@/i18n/server";
 import { mapAuthErrorToNorwegian } from "@/lib/auth/auth-error-messages";
+import { allowLoginCodeIp } from "@/lib/auth/login-code-ip";
+import { consumeSignupCode, emailHasAccount } from "@/lib/auth/login-codes";
 import { normalizeEmail } from "@/lib/auth/normalize-email";
 import { createSupabaseAdminClient } from "@/lib/admin/supabase-admin";
 import { resolvePostAuthRedirect } from "@/lib/organizations/tenant-setup-queries";
@@ -41,10 +44,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: firstIssue }, { status: 400 });
   }
 
+  const code = z.string().regex(/^\d{6}$/).safeParse((body as { code?: unknown } | null)?.code);
+  if (!code.success) {
+    return NextResponse.json({ error: t("auth.otp.invalid") }, { status: 401 });
+  }
+
   const email = normalizeEmail(parsed.data.email);
   const { password, fullName } = parsed.data;
 
+  if (!(await allowLoginCodeIp(request, "verify"))) {
+    return NextResponse.json({ error: t("auth.otp.tooMany") }, { status: 429 });
+  }
+
   try {
+    // Reject a taken e-mail before the code is spent, so the user is told why instead of losing the code.
+    if (await emailHasAccount(email)) {
+      return NextResponse.json({ error: t("serverErrors.auth.emailAlreadyRegistered"), exists: true }, { status: 409 });
+    }
+    // No account without proof that the mailbox is theirs.
+    if (!(await consumeSignupCode(email, code.data))) {
+      return NextResponse.json({ error: t("auth.otp.invalid") }, { status: 401 });
+    }
+
     const admin = createSupabaseAdminClient();
 
     const { data: created, error: createError } =

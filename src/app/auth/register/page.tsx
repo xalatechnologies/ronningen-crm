@@ -1,5 +1,6 @@
 "use client";
 
+import { SignupCodeStep } from "@/app/auth/register/signup-code-step";
 import { AuthSplitLayout } from "@/components/auth/auth-split-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ export default function RegisterPage() {
   const { t, locale } = useTranslation();
   const [formError, setFormError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [step, setStep] = useState<"form" | "code">("form");
   const registerSchema = useMemo(
     () => createRegisterSchema(validationMessagesForLocale(locale)),
     [locale],
@@ -56,13 +58,35 @@ export default function RegisterPage() {
     t("auth.pages.registerBenefits.portal"),
   ];
 
+  /** E-mails a code to the address. Resolves to an error message, or null when the code was sent. */
+  async function sendCode(email: string): Promise<string | null> {
+    const response = await fetch("/api/auth/register/code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    if (response.ok) return null;
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+    return payload?.error ?? t("auth.pages.signupCode.sendFailed");
+  }
+
+  /** Step 1: check the form, then prove the mailbox with an e-mailed code before any account exists. */
   async function onSubmit(values: RegisterInput) {
     setFormError(null);
+    const message = await sendCode(values.email);
+    if (message) {
+      setFormError(message);
+      return;
+    }
+    setStep("code");
+  }
 
+  /** Step 2: the code is checked on the server together with the signup. Resolves to an error message, or null. */
+  async function verifyAndRegister(code: string): Promise<string | null> {
     const response = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify({ ...form.getValues(), code }),
     });
 
     const payload = (await response.json().catch(() => null)) as {
@@ -70,12 +94,10 @@ export default function RegisterPage() {
       redirectTo?: string;
     } | null;
 
-    if (!response.ok) {
-      setFormError(payload?.error ?? t("auth.pages.registerFailed"));
-      return;
-    }
+    if (!response.ok) return payload?.error ?? t("auth.pages.registerFailed");
 
     window.location.assign(payload?.redirectTo ?? "/app/onboarding");
+    return null;
   }
 
   const fieldClass =
@@ -83,12 +105,27 @@ export default function RegisterPage() {
   const labelClass = "text-app-sm font-medium text-foreground";
   const errorClass = "text-app-sm text-destructive";
 
+  const layoutProps = {
+    heading: t("auth.pages.registerPanel.heading"),
+    body: t("auth.pages.registerPanel.body"),
+    points: benefits,
+  };
+
+  if (step === "code") {
+    return (
+      <AuthSplitLayout {...layoutProps}>
+        <SignupCodeStep
+          email={form.getValues("email")}
+          onVerify={verifyAndRegister}
+          onResend={() => sendCode(form.getValues("email"))}
+          onChangeEmail={() => setStep("form")}
+        />
+      </AuthSplitLayout>
+    );
+  }
+
   return (
-    <AuthSplitLayout
-      heading={t("auth.pages.registerPanel.heading")}
-      body={t("auth.pages.registerPanel.body")}
-      points={benefits}
-    >
+    <AuthSplitLayout {...layoutProps}>
       <div className="space-y-2">
         <h1 className="font-heading text-app-3xl font-bold tracking-tight text-foreground">
           {t("auth.createAccount")}
@@ -203,7 +240,7 @@ export default function RegisterPage() {
           disabled={form.formState.isSubmitting || !allAgreed}
           className="w-full"
         >
-          {form.formState.isSubmitting ? t("common.actions.loading") : t("auth.createAccount")}
+          {form.formState.isSubmitting ? t("auth.pages.signupCode.sending") : t("auth.createAccount")}
         </Button>
       </form>
 
