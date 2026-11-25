@@ -3,6 +3,7 @@ import { ProtectedLayout } from "@/components/layout/protected-layout";
 import { getImpersonationContext } from "@/lib/admin/impersonation";
 import { requireTenantAppAccess } from "@/lib/organizations/require-tenant-app-access";
 import { touchOrganizationActivity } from "@/lib/organizations/touch-organization-activity";
+import { TENANT_ONBOARDING_PATH } from "@/lib/subscriptions/subscription-utils";
 import { headers } from "next/headers";
 import { after } from "next/server";
 
@@ -28,7 +29,10 @@ export default async function AppSectionLayout({
       {impersonation ? (
         <ImpersonationBanner organizationName={impersonation.organizationName} />
       ) : null}
-      <ProtectedLayout impersonationOrgId={impersonation?.organizationId ?? null}>
+      <ProtectedLayout
+        impersonationOrgId={impersonation?.organizationId ?? null}
+        variant={pathname === TENANT_ONBOARDING_PATH ? "setup" : "app"}
+      >
         {children}
       </ProtectedLayout>
     </>

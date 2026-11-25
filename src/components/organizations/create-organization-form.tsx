@@ -68,24 +68,32 @@ export function CreateOrganizationForm() {
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="organization-name">{t("organizations.nameLabel")}</Label>
+    <form className="flex flex-col gap-5" onSubmit={(e) => void handleSubmit(e)}>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="organization-name" className="text-app-sm font-medium text-foreground">
+          {t("organizations.nameLabel")}
+        </Label>
         <Input
           id="organization-name"
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder={t("organizations.namePlaceholder")}
           autoComplete="organization"
+          aria-describedby="organization-name-hint"
+          autoFocus
           disabled={submitting}
+          className="h-11 rounded-lg border border-input bg-background text-app-base shadow-xs focus-visible:border-success focus-visible:ring-success/25"
         />
+        <p id="organization-name-hint" className="text-app-sm text-muted-foreground">
+          {t("appPages.onboarding.nameHint")}
+        </p>
       </div>
       <Button type="submit" size="cta" disabled={submitting || authLoading}>
         {submitting
           ? t("organizations.creating")
           : authLoading
             ? t("common.actions.loading")
-            : t("organizations.create")}
+            : t("appPages.onboarding.continue")}
       </Button>
       {isBillingEnabled() ? (
         <p className="text-app-sm text-muted-foreground">

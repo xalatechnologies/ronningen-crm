@@ -16,10 +16,21 @@ import type { ReactNode } from "react";
 export function ProtectedLayout({
   children,
   impersonationOrgId = null,
+  variant = "app",
 }: {
   children: ReactNode;
   impersonationOrgId?: string | null;
+  /** "setup" is the first-time setup: no menu, search or notifications, only what the setup page needs. */
+  variant?: "app" | "setup";
 }) {
+  if (variant === "setup") {
+    return (
+      <OrganizationProvider impersonationOrgId={impersonationOrgId}>
+        <OrganizationGate>{children}</OrganizationGate>
+      </OrganizationProvider>
+    );
+  }
+
   return (
     <OrganizationProvider impersonationOrgId={impersonationOrgId}>
       <OrganizationGate>
