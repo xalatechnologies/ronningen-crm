@@ -67,6 +67,10 @@ export const authNb = {
       oneplace: "Bookinger, kunder og økonomi samlet",
       portal: "Kundeportal for brudepar og arrangører",
     },
+    registerPanel: {
+      heading: "Alt du trenger for å drive lokalet",
+      body: "Fra første henvendelse til betalt faktura. Samlet på ett sted, for deg og kundene dine.",
+    },
     passwordHint: "Minst 8 tegn",
     agreements: {
       title: "Avtaler",

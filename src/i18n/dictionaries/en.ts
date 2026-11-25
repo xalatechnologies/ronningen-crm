@@ -324,6 +324,10 @@ export const en = {
         oneplace: "Bookings, customers and finance in one place",
         portal: "Customer portal for couples and organisers",
       },
+      registerPanel: {
+        heading: "Everything you need to run your venue",
+        body: "From the first enquiry to a paid invoice. All in one place, for you and your customers.",
+      },
       passwordHint: "At least 8 characters",
       agreements: {
         title: "Agreements",
