@@ -885,6 +885,19 @@ export const en = {
       createOrg: "Create organization",
       createOrgDescription:
         "Give your organization a name to get started. Then fill in business details and register venues under Settings.",
+      heading: "What is your business called?",
+      nameHint: "The name appears on invoices and to your customers. You can change it later.",
+      continue: "Continue",
+      stepOf: "Step {current} of {total}",
+      steps: {
+        organization: "Organization",
+        details: "Business details",
+        venues: "Venues",
+      },
+      panelHeading: "You are almost ready",
+      panelBody: "Three short steps, then your venue is ready for bookings, customers and invoices.",
+      wrongAccount: "Wrong account?",
+      logout: "Log out",
     },
     suspended: {
       title: "Access suspended",

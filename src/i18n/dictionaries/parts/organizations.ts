@@ -6,7 +6,6 @@ export const organizationsNb = {
   created: "Organisasjon opprettet.",
   createFailed: "Kunne ikke opprette organisasjon.",
   creating: "Oppretter…",
-  create: "Opprett organisasjon",
   trialHint:
     "Du får {days} dagers gratis prøveperiode uten betalingskort. Etter prøveperioden må du legge til betaling ({price} kr/mnd) under Innstillinger → Fakturering for å fortsette.",
   loadingBilling: "Laster fakturering",
@@ -29,7 +28,6 @@ export const organizationsEn = {
   created: "Organization created.",
   createFailed: "Could not create organization.",
   creating: "Creating…",
-  create: "Create organization",
   trialHint:
     "You get a {days}-day free trial without a payment card. After the trial you must add payment ({price} NOK/month) under Settings → Billing to continue.",
   loadingBilling: "Loading billing",
