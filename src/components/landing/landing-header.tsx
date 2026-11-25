@@ -264,7 +264,7 @@ export function LandingHeader() {
                         {t("landing.auth.login")}
                       </Link>
                       <Link
-                        href={LANDING_ROUTES.register}
+                        href={sectionHref(t("landing.navHrefs.pricing"))}
                         onClick={() => setMobileOpen(false)}
                         className={cn(
                           buttonVariants({ variant: "success", size: "cta" }),

@@ -35,4 +35,12 @@ describe("LandingHeader", () => {
     render(<LandingHeader />);
     expect(screen.getByRole("link", { name: "Logg inn" }).getAttribute("href")).toBe("/auth/login");
   });
+
+  it("sends the mobile menu's start button to the pricing section too", async () => {
+    const { default: userEvent } = await import("@testing-library/user-event");
+    render(<LandingHeader />);
+    await userEvent.setup().click(screen.getByRole("button", { name: /meny|menu/i }));
+    const cta = await screen.findByRole("link", { name: "Start gratis prøveperiode" });
+    expect(cta.getAttribute("href")).toBe("#priser");
+  });
 });
