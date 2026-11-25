@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { AuthBrandMark } from "@/components/auth/auth-brand-mark";
@@ -20,19 +21,19 @@ export function AuthSplitLayout({ heading, body, points, children }: Props) {
     <main className="grid min-h-svh flex-1 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)]">
       <div className="flex flex-col justify-center px-6 py-12 lg:order-2 sm:px-10 lg:px-16 xl:px-24">
         <div className="mx-auto w-full max-w-md">
-          <div className="mb-10 flex items-center gap-3 lg:hidden">
+          <Link href="/" className="mb-10 flex w-fit items-center gap-3 rounded-lg focus-visible:ring-2 focus-visible:ring-success/40 focus-visible:outline-none lg:hidden">
             <AuthBrandMark />
             <span className="font-heading text-app-lg font-semibold text-foreground">{APP_NAME}</span>
-          </div>
+          </Link>
           {children}
         </div>
       </div>
 
       <aside className="relative hidden flex-col justify-between overflow-hidden bg-sidebar px-12 py-14 text-sidebar-foreground lg:order-1 lg:flex xl:px-16">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex w-fit items-center gap-3 rounded-lg focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none">
           <AuthBrandMark />
           <span className="font-heading text-app-lg font-semibold text-white">{APP_NAME}</span>
-        </div>
+        </Link>
         <div className="max-w-md space-y-8">
           <div className="space-y-4">
             <h2 className="font-heading text-app-3xl leading-tight font-bold tracking-tight text-white">{heading}</h2>
