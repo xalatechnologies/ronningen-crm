@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, X } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { readCompletionFlag, writeCompletionFlag } from "@/features/setup-checklist/lib/completion-memory";
 import { buildSetupChecklist, type SetupChecklist } from "@/features/setup-checklist/lib/setup-checklist";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { useSetupFactsQuery } from "@/hooks/use-tenant-page-queries";
@@ -96,15 +97,66 @@ export function SetupChecklistView({ checklist }: { checklist: SetupChecklist })
   );
 }
 
+/** The short message shown once, when the last step is done. */
+export function SetupCompleteBanner({ onDismiss }: { onDismiss: () => void }) {
+  const { t } = useTranslation();
+
+  return (
+    <section
+      role="status"
+      aria-label={t("dashboard.setup.completeTitle")}
+      className={cn(RN_CARD_SHELL, "flex items-start gap-4 border border-success/40 bg-success/5 p-5 md:p-6")}
+    >
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success text-white" aria-hidden>
+        <Check className="size-4" strokeWidth={3} />
+      </span>
+      <div className="min-w-0 flex-1 space-y-1">
+        <h2 className="font-heading text-app-lg font-bold text-foreground">{t("dashboard.setup.completeTitle")}</h2>
+        <p className="text-app-base text-muted-foreground">{t("dashboard.setup.completeBody")}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onDismiss}
+        aria-label={t("dashboard.setup.dismiss")}
+        className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <X className="size-4" aria-hidden />
+      </button>
+    </section>
+  );
+}
+
 /**
- * Getting-started checklist for the dashboard. Shown to owners and admins until every step is done,
- * then it disappears by itself. Nothing is shown while loading or if the data cannot be read.
+ * Getting-started checklist for the dashboard. Shown to owners and admins until every step is done.
+ * When the last step is done, a short message replaces it once (only for people who saw it unfinished here),
+ * and after it is closed nothing is shown. Nothing is shown while loading or if the data cannot be read.
  */
 export function SetupChecklistCard() {
-  const { currentRole } = useCurrentOrganization();
+  const { currentRole, currentOrganizationId } = useCurrentOrganization();
   const { data: facts } = useSetupFactsQuery();
   const checklist = useMemo(() => (facts ? buildSetupChecklist(facts, { billingEnabled: isBillingEnabled() }) : null), [facts]);
+  const [closedNow, setClosedNow] = useState(false);
 
-  if (!canManageMembers(currentRole) || !checklist || checklist.complete) return null;
-  return <SetupChecklistView checklist={checklist} />;
+  // Remember that this browser has seen the checklist unfinished; that is what earns the message at the end.
+  const incomplete = checklist ? !checklist.complete : false;
+  useEffect(() => {
+    if (currentOrganizationId && incomplete) writeCompletionFlag(currentOrganizationId, "seenIncomplete");
+  }, [currentOrganizationId, incomplete]);
+
+  if (!canManageMembers(currentRole) || !checklist || !currentOrganizationId) return null;
+  if (!checklist.complete) return <SetupChecklistView checklist={checklist} />;
+
+  const showComplete =
+    !closedNow &&
+    readCompletionFlag(currentOrganizationId, "seenIncomplete") &&
+    !readCompletionFlag(currentOrganizationId, "dismissed");
+  if (!showComplete) return null;
+  return (
+    <SetupCompleteBanner
+      onDismiss={() => {
+        writeCompletionFlag(currentOrganizationId, "dismissed");
+        setClosedNow(true);
+      }}
+    />
+  );
 }
