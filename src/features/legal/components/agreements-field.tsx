@@ -26,16 +26,11 @@ export function AgreementsField({ values, errors, onToggle, onToggleAll }: Props
   const allChecked = LEGAL_DOCUMENTS.every((d) => values[FIELD_BY_DOCUMENT[d.key]]);
 
   return (
-    <fieldset className="space-y-4 rounded-xl border-2 border-rn-border-strong/50 bg-rn-surface-wash p-4 md:p-5">
+    <fieldset className="space-y-3 border-t border-border pt-5">
       <legend className="sr-only">{t("auth.pages.agreements.title")}</legend>
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <p className="font-heading text-app-base font-semibold text-foreground" aria-hidden>
-            {t("auth.pages.agreements.title")}
-          </p>
-          <p className="text-app-sm leading-relaxed text-muted-foreground">{t("auth.pages.agreements.intro")}</p>
-        </div>
-        <label className="flex shrink-0 cursor-pointer items-center gap-2 text-app-sm font-semibold text-success">
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-app-sm text-muted-foreground">{t("auth.pages.agreements.intro")}</p>
+        <label className="flex shrink-0 cursor-pointer items-center gap-2 text-app-sm font-medium text-foreground">
           <input
             type="checkbox"
             checked={allChecked}
@@ -46,7 +41,7 @@ export function AgreementsField({ values, errors, onToggle, onToggleAll }: Props
         </label>
       </div>
 
-      <ul className="space-y-3">
+      <ul className="space-y-2.5">
         {LEGAL_DOCUMENTS.map((doc) => {
           const field = FIELD_BY_DOCUMENT[doc.key];
           const id = `agreement-${doc.key}`;
@@ -63,9 +58,9 @@ export function AgreementsField({ values, errors, onToggle, onToggleAll }: Props
                   onChange={(e) => onToggle(field, e.target.checked)}
                   aria-invalid={errors[field] ? true : undefined}
                   aria-describedby={errors[field] ? errorId : undefined}
-                  className="mt-0.5 size-5 shrink-0 accent-success"
+                  className="mt-0.5 size-4 shrink-0 accent-success"
                 />
-                <label htmlFor={id} className="cursor-pointer text-app-base leading-snug text-foreground">
+                <label htmlFor={id} className="cursor-pointer text-app-sm leading-snug text-foreground">
                   {before}
                   <Link
                     href={doc.path}
@@ -81,7 +76,7 @@ export function AgreementsField({ values, errors, onToggle, onToggleAll }: Props
                 </label>
               </div>
               {errors[field] ? (
-                <p id={errorId} className="pl-8 text-app-sm text-destructive">
+                <p id={errorId} className="pl-7 text-app-sm text-destructive">
                   {errors[field]}
                 </p>
               ) : null}

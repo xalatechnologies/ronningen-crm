@@ -60,16 +60,60 @@ describe("RegisterPage agreements", () => {
     expect(screen.getByRole("link", { name: /databehandleravtalen/ }).getAttribute("href")).toBe("/databehandleravtale");
   });
 
-  it("sends the accepted agreements to the server with the signup", async () => {
+  it("asks for an e-mailed code first, and creates nothing until the code is entered", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
     const user = userEvent.setup();
     render(<RegisterPage />);
     await fillDetails(user);
     await user.click(screen.getByRole("checkbox", { name: "Godta alle" }));
     await user.click(submit());
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    const body = JSON.parse((fetchMock.mock.calls[0]![1] as { body: string }).body);
-    expect(body).toMatchObject({ acceptTerms: true, acceptPrivacy: true, acceptDpa: true, email: "kari@eksempel.no" });
-    expect(await screen.findByText("Stopp")).toBeTruthy();
+    expect(await screen.findByText("Bekreft e-posten din")).toBeTruthy();
+    expect(screen.getByText(/kari@eksempel\.no/)).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]![0]).toBe("/api/auth/register/code");
+    expect(JSON.parse((fetchMock.mock.calls[0]![1] as { body: string }).body)).toEqual({ email: "kari@eksempel.no" });
+  });
+
+  it("sends the code together with the details and agreements, and shows the server's error for a wrong code", async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "Koden er ugyldig" }) });
+    const user = userEvent.setup();
+    render(<RegisterPage />);
+    await fillDetails(user);
+    await user.click(screen.getByRole("checkbox", { name: "Godta alle" }));
+    await user.click(submit());
+    const codeField = (await screen.findByLabelText("Kode")) as HTMLInputElement;
+    await user.type(codeField, "12a345678");
+    expect(codeField.value).toBe("123456");
+    await user.click(screen.getByRole("button", { name: "Bekreft og opprett konto" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(fetchMock.mock.calls[1]![0]).toBe("/api/auth/register");
+    const body = JSON.parse((fetchMock.mock.calls[1]![1] as { body: string }).body);
+    expect(body).toMatchObject({ acceptTerms: true, acceptPrivacy: true, acceptDpa: true, email: "kari@eksempel.no", code: "123456" });
+    expect(await screen.findByText("Koden er ugyldig")).toBeTruthy();
+  });
+
+  it("stays on the form and shows the message when the e-mail already has an account", async () => {
+    fetchMock.mockResolvedValue({ ok: false, json: async () => ({ error: "Det finnes allerede en konto", exists: true }) });
+    const user = userEvent.setup();
+    render(<RegisterPage />);
+    await fillDetails(user);
+    await user.click(screen.getByRole("checkbox", { name: "Godta alle" }));
+    await user.click(submit());
+    expect(await screen.findByText("Det finnes allerede en konto")).toBeTruthy();
+    expect(screen.queryByText("Bekreft e-posten din")).toBeNull();
+  });
+
+  it("goes back to the form with the details kept when the user wants to change the e-mail", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
+    const user = userEvent.setup();
+    render(<RegisterPage />);
+    await fillDetails(user);
+    await user.click(screen.getByRole("checkbox", { name: "Godta alle" }));
+    await user.click(submit());
+    await user.click(await screen.findByRole("button", { name: "Endre e-post" }));
+    expect((screen.getByLabelText("E-post") as HTMLInputElement).value).toBe("kari@eksempel.no");
   });
 
   it("shows and hides the passwords together", async () => {

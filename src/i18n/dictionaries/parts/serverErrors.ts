@@ -5,6 +5,7 @@ export const serverErrorsNb = {
     accountCreatedSignInFailed:
       "Kontoen ble opprettet, men innlogging feilet. Prøv å logge inn manuelt.",
     registrationUnavailable: "Registrering er ikke tilgjengelig akkurat nå.",
+    emailAlreadyRegistered: "Det finnes allerede en konto med denne e-posten. Logg inn i stedet.",
     confirmLinkInvalid:
       "Bekreftelseslenken er ugyldig eller utløpt. Prøv å registrere deg eller logge inn på nytt.",
     mustBeLoggedIn: "Du må være innlogget.",
@@ -138,6 +139,7 @@ export const serverErrorsEn = {
     accountCreatedSignInFailed:
       "Account was created, but sign-in failed. Try signing in manually.",
     registrationUnavailable: "Registration is not available right now.",
+    emailAlreadyRegistered: "An account with this e-mail already exists. Log in instead.",
     confirmLinkInvalid:
       "The confirmation link is invalid or expired. Try registering again or sign in.",
     mustBeLoggedIn: "You must be signed in.",
