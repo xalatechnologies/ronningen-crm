@@ -16,6 +16,7 @@ vi.mock("@/providers/page-search-provider", () => ({ PageSearchProvider: passThr
 vi.mock("@/components/notifications/user-notification-listener", () => ({ UserNotificationListener: () => null }));
 vi.mock("@/components/notifications/notification-ack-dialog", () => ({ NotificationAckDialog: () => null }));
 vi.mock("@/components/notifications/notification-bell", () => ({ NotificationBell: () => <span>bell</span> }));
+vi.mock("@/features/welcome-tour/components/welcome-tour", () => ({ WelcomeTour: () => null }));
 vi.mock("@/components/layout/skip-link", () => ({ SkipLink: () => null }));
 vi.mock("@/components/layout/app-sidebar", () => ({ AppSidebar: () => <nav>sidebar</nav> }));
 vi.mock("@/components/layout/app-header", () => ({ AppHeader: ({ children }: { children?: ReactNode }) => <header>header{children}</header> }));
