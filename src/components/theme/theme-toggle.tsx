@@ -27,7 +27,8 @@ const themeOptions: {
 
 type ThemeToggleProps = {
   /** Compact icon row for app header */
-  variant?: "segment" | "menu" | "header";
+  /** "header" and "sidebar" are the single icon button; "sidebar" is made for the dark side-bar and opens upwards. */
+  variant?: "segment" | "menu" | "header" | "sidebar";
   className?: string;
 };
 
@@ -43,7 +44,8 @@ export function ThemeToggle({
     label: t(opt.labelKey),
   }));
 
-  if (variant === "header") {
+  if (variant === "header" || variant === "sidebar") {
+    const inSidebar = variant === "sidebar";
     const current =
       options.find((option) => option.value === theme) ?? options[0];
     const CurrentIcon = current.icon;
@@ -52,18 +54,20 @@ export function ThemeToggle({
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            "inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-foreground/20 bg-muted/60 outline-none transition-colors",
-            "hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-            "data-popup-open:bg-muted/30",
+            "inline-flex size-10 shrink-0 items-center justify-center rounded-xl border outline-none transition-colors",
+            inSidebar
+              ? "border-white/15 bg-white/10 text-white hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar data-popup-open:bg-white/20"
+              : "border-foreground/20 bg-muted/60 hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background data-popup-open:bg-muted/30",
             className,
           )}
           aria-label={`${t("common.theme.label")}: ${current.label}`}
           title={current.label}
         >
-          <CurrentIcon className="size-4 shrink-0 text-foreground" aria-hidden />
+          <CurrentIcon className={cn("size-4 shrink-0", !inSidebar && "text-foreground")} aria-hidden />
         </DropdownMenuTrigger>
         <DropdownMenuContent
-          align="end"
+          align={inSidebar ? "start" : "end"}
+          side={inSidebar ? "top" : "bottom"}
           sideOffset={8}
           className="min-w-48 rounded-2xl border border-foreground/10 bg-popover p-2 shadow-lg"
         >

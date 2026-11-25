@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const setLocaleMock = vi.fn();
@@ -25,6 +25,8 @@ vi.mock("@/i18n/client", () => ({
 import { LanguageSwitcher } from "@/components/language/language-switcher";
 
 describe("LanguageSwitcher", () => {
+  afterEach(cleanup);
+
   beforeEach(() => {
     setLocaleMock.mockClear();
   });
@@ -40,5 +42,30 @@ describe("LanguageSwitcher", () => {
     render(<LanguageSwitcher variant="compact" />);
     const norwegian = screen.getAllByRole("radio", { name: "Norwegian" });
     expect(norwegian[0]).toHaveAttribute("aria-checked", "true");
+  });
+
+  describe("sidebar variant", () => {
+    it("is one button with an accessible name, dark styling for the side-bar and no light header styling", () => {
+      render(<LanguageSwitcher variant="sidebar" />);
+      const button = screen.getByRole("button", { name: "Language: Norwegian" });
+      expect(button.textContent).toBe("NO");
+      expect(button.className).toContain("bg-white/10");
+      expect(button.className).not.toContain("bg-muted/60");
+    });
+
+    it("opens a menu and switches the language", async () => {
+      const user = userEvent.setup();
+      render(<LanguageSwitcher variant="sidebar" />);
+      await user.click(screen.getByRole("button", { name: "Language: Norwegian" }));
+      await user.click(await screen.findByRole("menuitemradio", { name: "English" }));
+      expect(setLocaleMock).toHaveBeenCalledWith("en");
+    });
+
+    it("keeps the header variant light", () => {
+      render(<LanguageSwitcher variant="header" />);
+      const button = screen.getByRole("button", { name: "Language: Norwegian" });
+      expect(button.className).toContain("bg-muted/60");
+      expect(button.className).not.toContain("bg-white/10");
+    });
   });
 });
