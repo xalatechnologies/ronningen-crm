@@ -79,7 +79,7 @@ export function AdminTrendChart({
     return points.map((point, index) => {
       const hasValue = point.value > 0;
       const rawPct = (point.value / scaleMax) * 100;
-      const heightPct = hasValue ? Math.max(14, rawPct) : 0;
+      const heightPct = hasValue ? Math.max(4, rawPct) : 0;
 
       return {
         key: `${point.label}-${index}`,
@@ -93,6 +93,7 @@ export function AdminTrendChart({
   }, [points]);
 
   const peakValue = Math.max(0, ...points.map((p) => p.value));
+  const isEmpty = peakValue === 0;
   const formatAxis =
     valueFormat === "nok" ? formatNokChartAxis : formatNumberChartAxis;
   const periodHint =
@@ -129,12 +130,20 @@ export function AdminTrendChart({
             {periodHint}
           </span>
           <span className="text-[11px] tabular-nums text-muted-foreground md:text-app-xs">
-            Høyeste: {formatTrendValue(peakValue, valueFormat)}
+            {t("admin.trend_peak", { value: formatTrendValue(peakValue, valueFormat) })}
           </span>
         </div>
 
+        {isEmpty ? (
+          <p className="flex h-40 items-center justify-center rounded-xl border border-dashed border-foreground/15 text-app-sm text-muted-foreground">
+            {t("admin.trend_empty")}
+          </p>
+        ) : null}
         <div
-          className="flex h-[min(16rem,calc(100vw-4rem))] min-h-[11rem] w-full items-stretch gap-0.5 sm:gap-1 md:gap-1.5"
+          className={cn(
+            "h-[min(16rem,calc(100vw-4rem))] min-h-[11rem] w-full items-stretch gap-0.5 sm:gap-1 md:gap-1.5",
+            isEmpty ? "hidden" : "flex",
+          )}
           role="img"
           aria-label={`${title}. ${points
             .map((point) => `${point.label}: ${formatTrendValue(point.value, valueFormat)}`)
@@ -153,7 +162,7 @@ export function AdminTrendChart({
                   )}
                   title={`${bar.label}: ${formatTrendValue(bar.value, valueFormat)}`}
                 >
-                  {formatAxis(bar.value)}
+                  {bar.hasValue && (bar.highlight || bar.value === peakValue) ? formatAxis(bar.value) : "\u00a0"}
                 </span>
                 <div className="relative flex min-h-[5rem] flex-1 flex-col justify-end border-b-2 border-foreground/20 sm:min-h-[6rem] md:min-h-[7rem]">
                   {bar.hasValue ? (
@@ -179,7 +188,10 @@ export function AdminTrendChart({
         </div>
 
         <div
-          className="mt-2.5 flex w-full justify-between gap-0.5 border-t border-dashed border-foreground/15 pt-2.5"
+          className={cn(
+            "mt-2.5 w-full justify-between gap-0.5 border-t border-dashed border-foreground/15 pt-2.5",
+            isEmpty ? "hidden" : "flex",
+          )}
           aria-hidden
         >
           {chartBars.map((bar) => (

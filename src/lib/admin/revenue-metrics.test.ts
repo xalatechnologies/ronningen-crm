@@ -41,6 +41,20 @@ describe("computeRevenueMetrics", () => {
   });
 });
 
+describe("churn", () => {
+  const old = "2025-01-01T00:00:00.000Z";
+
+  it("has no rate when nobody was paying 30 days ago", () => {
+    const metrics = computeRevenueMetrics([org("trialing", old)], 0, 0, 0);
+    expect(metrics.churnRate30d).toBeNull();
+  });
+
+  it("divides paying cancellations by customers paying at the start", () => {
+    const metrics = computeRevenueMetrics([org("active", old), org("active", old), org("active", old)], 1, 0, 0);
+    expect(metrics.churnRate30d).toBe(25);
+  });
+});
+
 describe("formatMonthOverMonth", () => {
   it("returns Ny when previous month had no revenue", () => {
     expect(formatMonthOverMonth(120_000, 0)).toBe("Ny");
