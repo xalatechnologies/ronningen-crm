@@ -50,7 +50,7 @@ const sectionPad =
   "px-5 py-5 sm:px-6 sm:py-6";
 
 const kpiTileClass =
-  "admin-overview-kpi-tile flex min-h-[length:var(--app-tap-target-min)] flex-col justify-start gap-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 dark:bg-white/[0.06] sm:p-6";
+  "admin-overview-kpi-tile row-span-3 grid grid-rows-[auto_auto_auto] [grid-template-rows:subgrid] gap-y-1 rounded-2xl bg-muted/40 p-5 ring-1 ring-foreground/10 dark:bg-white/[0.06] sm:p-6";
 
 const tableHeadClass = cn(
   "admin-overview-table-head",
@@ -126,7 +126,7 @@ function OverviewKpiTile({
         "group relative transition-colors hover:bg-muted/60 hover:ring-success/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
       )}
     >
-      <div className="mb-3 flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
         <span className="dashboard-kpi-label min-w-0 break-words !normal-case !tracking-normal">{label}</span>
         {compact ? (
           <Icon className="size-5 shrink-0 text-muted-foreground" aria-hidden />
@@ -136,16 +136,16 @@ function OverviewKpiTile({
           </div>
         )}
       </div>
-      <div className="min-w-0">
-        <p className={cn("dashboard-kpi-value break-words", compact && "!text-3xl", valueClassName)}>
-          {value}
+      <p className={cn("dashboard-kpi-value min-w-0 break-words pt-3", compact && "!text-3xl", valueClassName)}>
+        {value}
+      </p>
+      {hint ? (
+        <p className="dashboard-kpi-caption mt-2 min-w-0 text-muted-foreground dark:text-foreground/75">
+          {hint}
         </p>
-        {hint ? (
-          <p className="dashboard-kpi-caption mt-2 text-muted-foreground dark:text-foreground/75 sm:mt-3">
-            {hint}
-          </p>
-        ) : null}
-      </div>
+      ) : (
+        <span aria-hidden />
+      )}
       <span className="sr-only">{goToLabel}</span>
       <ChevronRight
         className="absolute right-3 bottom-3 size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
@@ -183,7 +183,7 @@ export default async function AdminOverviewPage() {
   const churn = revenue.churnRate30d;
 
   return (
-    <div className="admin-page-workspace admin-overview-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-6 pb-8">
+    <div className="admin-page-workspace admin-overview-dashboard @container mx-auto flex w-full min-w-0 max-w-full flex-col gap-6 pb-8">
       <AppPageHeader
         className="mb-0"
         surface="default"
@@ -192,11 +192,13 @@ export default async function AdminOverviewPage() {
         description={t("admin.saas_kpier_trender_og_koer_pa_tvers_av_alle_organisasjoner")}
       />
 
+      <div className="grid items-start gap-6 @5xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
+        <div className="@container flex min-w-0 flex-col gap-6">
       <OverviewSection
         title={t("admin.abonnement_og_inntekt")}
         description={t("admin.mrr_churn_og_konvertering_fra_prove_til_betalt")}
       >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 @md:grid-cols-2 @4xl:grid-cols-4">
           <OverviewKpiTile
             label={t("admin.mrr_est")}
             value={formatNok(mrrHeadline)}
@@ -238,41 +240,10 @@ export default async function AdminOverviewPage() {
       </OverviewSection>
 
       <OverviewSection
-        title={t("admin.overview_attention")}
-        description={t("admin.overview_attention_desc")}
-      >
-        <div className="grid grid-cols-1 gap-x-10 gap-y-8 md:grid-cols-2">
-          <AdminQueuePanel
-            embedded
-            title={t("admin.forfalt_betaling")}
-            items={stats.failedPaymentQueue}
-            emptyLabel={t("admin.ingen_organisasjoner_med_forfalt_status")}
-            viewAllHref={adminSubscriptionsHref("past_due")}
-          />
-          <AdminQueuePanel
-            embedded
-            title={t("admin.proveperiode_utloper_snart")}
-            items={stats.trialExpiringQueue}
-            emptyLabel={t("admin.ingen_proveperioder_utloper_innen_14_dager")}
-            viewAllHref={adminSubscriptionsHref("trialing")}
-          />
-          <div className="md:col-span-2">
-            <AdminQueuePanel
-              embedded
-              title={t("admin.suspenderte_organisasjoner")}
-              items={stats.suspendedOrganizations}
-              emptyLabel={t("admin.ingen_suspenderte_organisasjoner")}
-              viewAllHref={adminOrganizationsHref({ status: "suspended" })}
-            />
-          </div>
-        </div>
-      </OverviewSection>
-
-      <OverviewSection
         title={t("admin.plattformaktivitet")}
         description={t("admin.brukere_bookinger_og_nye_leietakere_siste_periode")}
       >
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 @md:grid-cols-2 @4xl:grid-cols-4">
           <OverviewKpiTile
             compact
             label={t("admin.brukere")}
@@ -344,8 +315,44 @@ export default async function AdminOverviewPage() {
         </div>
       </OverviewSection>
 
+        </div>
+        <aside className="flex min-w-0 flex-col gap-6 @5xl:sticky @5xl:top-20">
+      <OverviewSection
+        title={t("admin.overview_attention")}
+        description={t("admin.overview_attention_desc")}
+      >
+        <div className="grid grid-cols-1 gap-y-8">
+          <AdminQueuePanel
+            embedded
+            title={t("admin.forfalt_betaling")}
+            items={stats.failedPaymentQueue}
+            emptyLabel={t("admin.ingen_organisasjoner_med_forfalt_status")}
+            viewAllHref={adminSubscriptionsHref("past_due")}
+          />
+          <AdminQueuePanel
+            embedded
+            title={t("admin.proveperiode_utloper_snart")}
+            items={stats.trialExpiringQueue}
+            emptyLabel={t("admin.ingen_proveperioder_utloper_innen_14_dager")}
+            viewAllHref={adminSubscriptionsHref("trialing")}
+          />
+          <div>
+            <AdminQueuePanel
+              embedded
+              title={t("admin.suspenderte_organisasjoner")}
+              items={stats.suspendedOrganizations}
+              emptyLabel={t("admin.ingen_suspenderte_organisasjoner")}
+              viewAllHref={adminOrganizationsHref({ status: "suspended" })}
+            />
+          </div>
+        </div>
+      </OverviewSection>
+
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL, sectionPad)}>
         <AdminSubscriptionStatusPanel embedded statusCounts={stats.statusCounts} />
+      </div>
+
+        </aside>
       </div>
 
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>

@@ -37,7 +37,7 @@ export function AdminSubscriptionStatusPanel({
         className,
       )}
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <h2 className="app-section-title">{t("adminLabels.sections.subscriptionStatus")}</h2>
         <AdminLinkButton href={adminSubscriptionsHref()}>
           {t("adminLabels.sections.allSubscriptions")}
