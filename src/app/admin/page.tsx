@@ -322,7 +322,7 @@ export default async function AdminOverviewPage() {
 
       <OverviewSection
         title={t("admin.trender")}
-        description={t("admin.estimert_mrr_gjennom_aret_og_nye_leietakere_per_dag_siste_uk")}
+        description={t("admin.estimert_mrr_gjennom_aret_og_nye_leietakere_per_dag_valgt_maned")}
       >
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <AdminTrendChart
