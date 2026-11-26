@@ -48,7 +48,7 @@ export function FeatureListEditor({
                 onChange(features.map((f, i) => (i === index ? e.target.value : f)))
               }
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                   e.preventDefault();
                   const next = [...features];
                   next.splice(index + 1, 0, "");

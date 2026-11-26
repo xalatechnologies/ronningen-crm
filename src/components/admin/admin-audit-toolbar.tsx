@@ -76,7 +76,7 @@ export function AdminAuditToolbar({
   const hasAppliedPeriod = Boolean(appliedFrom || appliedTo);
 
   function handlePeriodKeyDown(event: React.KeyboardEvent) {
-    if (event.key === "Enter" && periodDirty) {
+    if (event.key === "Enter" && !event.nativeEvent.isComposing && periodDirty) {
       event.preventDefault();
       onApplyPeriod();
     }
