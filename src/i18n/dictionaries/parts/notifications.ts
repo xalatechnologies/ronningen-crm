@@ -51,6 +51,13 @@ export const notificationsNb = {
     unreadAria: "Varsler, {count} uleste",
     empty: "Ingen varsler ennå.",
     viewAll: "Se alle varsler",
+    clearAll: "Fjern alle",
+    clearTitle: "Fjerne alle varsler?",
+    clearDescriptionOne: "Det ene varselet fjernes for godt. Dette kan ikke angres.",
+    clearDescriptionMany: "Alle {count} varslene fjernes for godt. Dette kan ikke angres.",
+    clearConfirm: "Fjern alle",
+    cleared: "Varslene er fjernet.",
+    clearFailed: "Kunne ikke fjerne varslene. Prøv igjen.",
   },
 } as const;
 
@@ -107,5 +114,12 @@ export const notificationsEn = {
     unreadAria: "Notifications, {count} unread",
     empty: "No notifications yet.",
     viewAll: "View all notifications",
+    clearAll: "Clear all",
+    clearTitle: "Clear all notifications?",
+    clearDescriptionOne: "The notification will be removed for good. This cannot be undone.",
+    clearDescriptionMany: "All {count} notifications will be removed for good. This cannot be undone.",
+    clearConfirm: "Clear all",
+    cleared: "Notifications cleared.",
+    clearFailed: "Could not clear the notifications. Please try again.",
   },
 } as const;

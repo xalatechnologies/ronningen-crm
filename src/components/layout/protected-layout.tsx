@@ -8,6 +8,7 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 import { UserNotificationListener } from "@/components/notifications/user-notification-listener";
 import { OrganizationGate } from "@/components/organizations/organization-gate";
 import { InstallProvider } from "@/components/pwa/install-provider";
+import { WelcomeTour } from "@/features/welcome-tour/components/welcome-tour";
 import { NotificationProvider } from "@/providers/notification-provider";
 import { OrganizationProvider } from "@/providers/organization-provider";
 import { PageSearchProvider } from "@/providers/page-search-provider";
@@ -16,10 +17,21 @@ import type { ReactNode } from "react";
 export function ProtectedLayout({
   children,
   impersonationOrgId = null,
+  variant = "app",
 }: {
   children: ReactNode;
   impersonationOrgId?: string | null;
+  /** "setup" is the first-time setup: no menu, search or notifications, only what the setup page needs. */
+  variant?: "app" | "setup";
 }) {
+  if (variant === "setup") {
+    return (
+      <OrganizationProvider impersonationOrgId={impersonationOrgId}>
+        <OrganizationGate>{children}</OrganizationGate>
+      </OrganizationProvider>
+    );
+  }
+
   return (
     <OrganizationProvider impersonationOrgId={impersonationOrgId}>
       <OrganizationGate>
@@ -27,6 +39,7 @@ export function ProtectedLayout({
           <InstallProvider placement="app">
           <PageSearchProvider>
           <UserNotificationListener />
+          <WelcomeTour impersonating={impersonationOrgId !== null} />
           <NotificationAckDialog />
           <div className="flex min-h-svh bg-background text-foreground">
             <SkipLink />

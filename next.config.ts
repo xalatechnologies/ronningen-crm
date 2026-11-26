@@ -58,6 +58,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Development only: keeps the Next.js badge off the side-bar footer buttons.
+  devIndicators: { position: "bottom-right" },
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns"],
   },

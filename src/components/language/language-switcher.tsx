@@ -11,7 +11,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Globe } from "lucide-react";
+import { ChevronUp, Globe } from "lucide-react";
 
 const localeOptions = ["nb", "en"] as const;
 
@@ -35,30 +35,42 @@ export function LanguageSwitcher({
   variant = "menu",
 }: {
   className?: string;
-  variant?: "menu" | "compact" | "segment" | "header";
+  /** "header" and "sidebar" are the single trigger button; "sidebar" is made for the dark side-bar and opens upwards. */
+  variant?: "menu" | "compact" | "segment" | "header" | "sidebar";
 }) {
   const { locale, setLocale, t } = useTranslation();
   const compact = variant === "compact";
   const segmentStyle = variant === "segment";
 
-  if (variant === "header") {
+  if (variant === "header" || variant === "sidebar") {
+    const inSidebar = variant === "sidebar";
     return (
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl border border-foreground/20 bg-muted/60 px-3 font-heading text-xs font-semibold text-foreground outline-none transition-colors",
-            "hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-            "data-popup-open:bg-muted/30",
+            "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl border px-3 font-heading text-xs font-semibold outline-none transition-colors",
+            inSidebar && "w-full gap-2",
+            inSidebar
+              ? "border-white/15 bg-white/10 text-white hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar data-popup-open:bg-white/20"
+              : "border-foreground/20 bg-muted/60 text-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-success/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background data-popup-open:bg-muted/30",
             className,
           )}
           aria-label={`${t("common.language.label")}: ${localeLabel(locale, t, false)}`}
           title={localeLabel(locale, t, false)}
         >
           <Globe className="size-4 shrink-0" aria-hidden />
-          {localeLabel(locale, t, true)}
+          {inSidebar ? (
+            <>
+              <span className="min-w-0 flex-1 truncate text-start">{localeLabel(locale, t, false)}</span>
+              <ChevronUp className="size-3.5 shrink-0 opacity-60" aria-hidden />
+            </>
+          ) : (
+            localeLabel(locale, t, true)
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent
-          align="end"
+          align={inSidebar ? "start" : "end"}
+          side={inSidebar ? "top" : "bottom"}
           sideOffset={8}
           className="min-w-48 rounded-2xl border border-foreground/10 bg-popover p-2 shadow-lg"
         >

@@ -16,6 +16,19 @@ export const appPagesNb = {
     createOrg: "Opprett organisasjon",
     createOrgDescription:
       "Gi organisasjonen et navn for å starte. Deretter fyller du inn virksomhetsinfo og registrerer lokaler under Innstillinger.",
+    heading: "Hva heter virksomheten din?",
+    nameHint: "Navnet vises på fakturaer og for kundene dine. Du kan endre det senere.",
+    continue: "Fortsett",
+    stepOf: "Steg {current} av {total}",
+    steps: {
+      organization: "Organisasjon",
+      details: "Virksomhetsinfo",
+      venues: "Lokaler",
+    },
+    panelHeading: "Du er nesten i gang",
+    panelBody: "Tre korte steg, så er lokalet klart for bookinger, kunder og fakturaer.",
+    wrongAccount: "Feil konto?",
+    logout: "Logg ut",
   },
   suspended: {
     title: "Tilgang suspendert",

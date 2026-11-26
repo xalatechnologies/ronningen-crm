@@ -23,7 +23,7 @@ import type { User } from "@supabase/supabase-js";
 import { ArrowRightIcon, MenuIcon } from "lucide-react";
 import { BrandLockup } from "@/components/brand/brand-logo";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { AuthProfile } from "@/providers/auth-provider";
 
@@ -63,6 +63,9 @@ export function LandingHeader() {
   const { user, profile, loading, isAuthenticated } = useAuthUser();
   const supabase = useSupabase();
   const router = useRouter();
+  const pathname = usePathname();
+  // On the home page a section link is just "#section"; on other pages (the legal pages) it must lead back to the home page first.
+  const sectionHref = (hash: string) => (pathname === "/" ? hash : `/${hash}`);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Scroll-spy: the active link is the last nav section whose top has passed the header.
@@ -119,8 +122,9 @@ export function LandingHeader() {
           aria-label={t("landing.header.mainNavAria")}
         >
           {NAV_KEYS.map((item) => {
-            const href = t(`landing.navHrefs.${item.hrefKey}`);
-            const active = href.replace(/^#/, "") === activeId;
+            const hash = t(`landing.navHrefs.${item.hrefKey}`);
+            const href = sectionHref(hash);
+            const active = hash.replace(/^#/, "") === activeId;
             return (
               <a
                 key={item.key}
@@ -163,7 +167,7 @@ export function LandingHeader() {
               <Link href={LANDING_ROUTES.login} className={loginButtonClass}>
                 {t("landing.auth.login")}
               </Link>
-              <Link href={LANDING_ROUTES.register} className={registerButtonClass}>
+              <Link href={sectionHref(t("landing.navHrefs.pricing"))} className={registerButtonClass}>
                 {t("landing.auth.registerShort")}
               </Link>
             </>
@@ -199,7 +203,7 @@ export function LandingHeader() {
                 {NAV_KEYS.map((item) => (
                   <a
                     key={item.key}
-                    href={t(`landing.navHrefs.${item.hrefKey}`)}
+                    href={sectionHref(t(`landing.navHrefs.${item.hrefKey}`))}
                     onClick={() => setMobileOpen(false)}
                     aria-current={
                       t(`landing.navHrefs.${item.hrefKey}`).replace(/^#/, "") ===
@@ -260,7 +264,7 @@ export function LandingHeader() {
                         {t("landing.auth.login")}
                       </Link>
                       <Link
-                        href={LANDING_ROUTES.register}
+                        href={sectionHref(t("landing.navHrefs.pricing"))}
                         onClick={() => setMobileOpen(false)}
                         className={cn(
                           buttonVariants({ variant: "success", size: "cta" }),

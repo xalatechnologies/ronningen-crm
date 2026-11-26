@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const setThemeMock = vi.fn();
@@ -29,6 +29,8 @@ vi.mock("@/i18n/client", () => ({
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 describe("ThemeToggle", () => {
+  afterEach(cleanup);
+
   beforeEach(() => {
     setThemeMock.mockClear();
   });
@@ -49,5 +51,28 @@ describe("ThemeToggle", () => {
     const darkButtons = screen.getAllByRole("radio", { name: "Dark" });
     await user.click(darkButtons[0]!);
     expect(setThemeMock).toHaveBeenCalledWith("dark");
+  });
+
+  describe("sidebar variant", () => {
+    it("is one button naming the current theme, with dark styling for the side-bar", () => {
+      render(<ThemeToggle variant="sidebar" />);
+      const button = screen.getByRole("button", { name: "Theme: Light" });
+      expect(button.className).toContain("bg-white/10");
+      expect(button.className).not.toContain("bg-muted/60");
+      expect(button.textContent).toBe("Light"); // shows the name, not only an icon
+    });
+
+    it("opens a menu and changes the theme", async () => {
+      const user = userEvent.setup();
+      render(<ThemeToggle variant="sidebar" />);
+      await user.click(screen.getByRole("button", { name: "Theme: Light" }));
+      await user.click(await screen.findByRole("menuitemradio", { name: "Dark" }));
+      expect(setThemeMock).toHaveBeenCalledWith("dark");
+    });
+
+    it("keeps the header variant light", () => {
+      render(<ThemeToggle variant="header" />);
+      expect(screen.getByRole("button", { name: "Theme: Light" }).className).toContain("bg-muted/60");
+    });
   });
 });

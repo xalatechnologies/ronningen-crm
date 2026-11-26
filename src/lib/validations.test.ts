@@ -43,36 +43,33 @@ describe("validations", () => {
 
   describe("createRegisterSchema", () => {
     const schema = createRegisterSchema(msg);
+    const valid = {
+      fullName: "Test User",
+      email: "test@example.com",
+      password: "password1",
+      confirmPassword: "password1",
+      acceptTerms: true as const,
+      acceptPrivacy: true as const,
+      acceptDpa: true as const,
+    };
 
     it("rejects password mismatch", () => {
-      const result = schema.safeParse({
-        fullName: "Test User",
-        email: "test@example.com",
-        password: "password1",
-        confirmPassword: "password2",
-      });
-      expect(result.success).toBe(false);
+      expect(schema.safeParse({ ...valid, confirmPassword: "password2" }).success).toBe(false);
     });
 
-    it("accepts matching passwords", () => {
-      const result = schema.safeParse({
-        fullName: "Test User",
-        email: "test@example.com",
-        password: "password1",
-        confirmPassword: "password1",
-      });
-      expect(result.success).toBe(true);
+    it("accepts matching passwords with every agreement accepted", () => {
+      expect(schema.safeParse(valid).success).toBe(true);
     });
 
     it("requires full name", () => {
-      expect(
-        schema.safeParse({
-          fullName: "",
-          email: "test@example.com",
-          password: "password1",
-          confirmPassword: "password1",
-        }).success,
-      ).toBe(false);
+      expect(schema.safeParse({ ...valid, fullName: "" }).success).toBe(false);
+    });
+
+    it.each(["acceptTerms", "acceptPrivacy", "acceptDpa"])("rejects a missing or unticked %s", (field) => {
+      expect(schema.safeParse({ ...valid, [field]: false }).success).toBe(false);
+      const { [field as keyof typeof valid]: _omitted, ...rest } = valid;
+      void _omitted;
+      expect(schema.safeParse(rest).success).toBe(false);
     });
   });
 

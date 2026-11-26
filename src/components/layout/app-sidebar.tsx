@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 import { useSupabase } from "@/providers/supabase-provider";
 import { AppBrandLogo } from "@/components/brand/app-brand-logo";
 import { AdminContextSwitch } from "@/components/layout/admin-context-switch";
+import { LanguageSwitcher } from "@/components/language/language-switcher";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
@@ -143,6 +145,7 @@ export function AppSidebar({ className }: { className?: string }) {
             <Link
               key={item.href}
               href={item.href}
+              data-tour={`nav-${item.segment}`}
               prefetch
               onMouseEnter={() => prefetchRoute(item.href)}
               onClick={(event) => {
@@ -195,7 +198,13 @@ export function AppSidebar({ className }: { className?: string }) {
       <footer
         className="shrink-0 border-t border-sidebar-border px-[length:calc(var(--app-card-padding)*0.35)] py-4 md:px-[length:calc(var(--app-card-padding)*0.45)] md:py-5"
       >
-        <AdminContextSwitch active="app" />
+        <div className="flex flex-col gap-3">
+          <AdminContextSwitch active="app" />
+          <div className="grid grid-cols-2 gap-2">
+            <LanguageSwitcher variant="sidebar" />
+            <ThemeToggle variant="sidebar" />
+          </div>
+        </div>
       </footer>
     </aside>
   );

@@ -17,6 +17,7 @@ import { serverErrorsEn } from "@/i18n/dictionaries/parts/serverErrors";
 import { contractsEn } from "@/i18n/dictionaries/parts/contracts";
 import { portalEn } from "@/i18n/dictionaries/parts/portal";
 import { pwaEn } from "@/i18n/dictionaries/parts/pwa";
+import { tipsEn } from "@/i18n/dictionaries/parts/tips";
 
 export const en = {
   admin: adminEn,
@@ -280,6 +281,8 @@ export const en = {
       emailSubject: "Your {appName} sign-in code",
       emailBody: "Use this code to sign in to {appName}:",
       emailFooter: "The code is valid for {minutes} minutes. If you did not request it, you can ignore this e-mail.",
+      signupEmailSubject: "Confirm your e-mail for {appName}",
+      signupEmailBody: "Use this code to confirm your e-mail and create your {appName} account:",
     },
     resetPassword: "Reset password",
     email: "Email",
@@ -319,6 +322,46 @@ export const en = {
       supabaseNotConfigured: "Supabase is not configured.",
       registerTagline: "Register to use {appName}.",
       registerFailed: "Registration failed. Please try again.",
+      registerBenefits: {
+        trial: "Free trial period",
+        oneplace: "Bookings, customers and finance in one place",
+        portal: "Customer portal for couples and organisers",
+      },
+      signupCode: {
+        title: "Confirm your e-mail",
+        intro: "We sent a 6-digit code to {email}. It is valid for {minutes} minutes. Enter it to create your account.",
+        label: "Code",
+        submit: "Confirm and create account",
+        sending: "Sending code …",
+        resend: "Send a new code",
+        resent: "A new code has been sent.",
+        changeEmail: "Change e-mail",
+        sendFailed: "Could not send the code. Please try again.",
+        spamHint: "Can't see it? Check your spam folder.",
+      },
+      registerPanel: {
+        heading: "Everything you need to run your venue",
+        body: "From the first enquiry to a paid invoice. All in one place, for you and your customers.",
+      },
+      passwordHint: "At least 8 characters",
+      agreements: {
+        title: "Agreements",
+        intro: "Read and accept the agreements before you create an account. They open in a new tab.",
+        acceptAll: "Accept all",
+        terms: "I have read and accept the {link}",
+        privacy: "I have read the {link}",
+        dpa: "I accept the {link}",
+        termsLink: "terms of use",
+        privacyLink: "privacy policy",
+        dpaLink: "data processing agreement",
+        linkNewTab: "{name} (opens in a new tab)",
+      },
+      legal: {
+        back: "Back to the home page",
+        draft: "Draft. The text has not been legally reviewed yet.",
+        version: "Version {version}",
+        contents: "Contents",
+      },
       namePlaceholder: "First and last name",
       forgotTagline:
         "{appName} — enter your email. You will receive a link to set a new password if the account exists.",
@@ -429,6 +472,7 @@ export const en = {
       text: "Start with a clear dashboard for bookings, customers, payments, equipment and reports.",
       primaryCta: "Start free trial",
       secondaryCta: "Sign in",
+      contactPrompt: "Questions? Write or call us:",
     },
     footer: {
       description:
@@ -437,6 +481,15 @@ export const en = {
       account: "Account",
       productLinksAria: "Product links",
       accountLinksAria: "Account links",
+      contact: "Contact",
+      contactLinksAria: "Contact links",
+      contactEmailAria: "Send an e-mail to {email}",
+      contactPhoneAria: "Call {phone}",
+      legal: "Legal",
+      legalLinksAria: "Legal links",
+      legalTerms: "Terms of use",
+      legalPrivacy: "Privacy",
+      legalDpa: "Data processing agreement",
       forIt: "For IT departments",
       rights: "All rights reserved.",
       tagline:
@@ -902,6 +955,29 @@ export const en = {
     chartAxisMillions: "{value}M",
     chartAxisThousands: "{value}k",
     chartAxisZero: "0",
+    setup: {
+      title: "Get started",
+      subtitle: "Finish the setup to be able to take bookings.",
+      percentDone: "{percent}% done",
+      stepsDone: "{done} of {total} steps",
+      progressLabel: "Setup progress",
+      next: "Next step",
+      doIt: "Do this",
+      done: "Done",
+      completeTitle: "Setup is complete",
+      completeBody: "You are ready to take bookings. Good luck!",
+      dismiss: "Close",
+      steps: {
+        organization: { title: "Create your organization", description: "Your organization has been created." },
+        details: { title: "Fill in business details", description: "Organization number, address and contact details are used on invoices." },
+        venue: { title: "Register a venue", description: "Add the venue customers can book." },
+        pricing: { title: "Add prices", description: "Create at least one package or service with a price." },
+        payment: { title: "Add payment details", description: "Bank account or payment instructions shown on invoices." },
+        team: { title: "Invite a team member", description: "Bring in colleagues who will help out." },
+        firstBooking: { title: "Register your first inquiry or booking", description: "Try the flow with a real or a test inquiry." },
+        subscription: { title: "Activate your subscription", description: "Add payment before the trial ends." },
+      },
+    },
   },
   calendar: {
     weekdays: {
@@ -953,6 +1029,19 @@ export const en = {
       createOrg: "Create organization",
       createOrgDescription:
         "Give your organization a name to get started. Then fill in business details and register venues under Settings.",
+      heading: "What is your business called?",
+      nameHint: "The name appears on invoices and to your customers. You can change it later.",
+      continue: "Continue",
+      stepOf: "Step {current} of {total}",
+      steps: {
+        organization: "Organization",
+        details: "Business details",
+        venues: "Venues",
+      },
+      panelHeading: "You are almost ready",
+      panelBody: "Three short steps, then your venue is ready for bookings, customers and invoices.",
+      wrongAccount: "Wrong account?",
+      logout: "Log out",
     },
     suspended: {
       title: "Access suspended",
@@ -2278,4 +2367,5 @@ export const en = {
   contracts: contractsEn,
   portal: portalEn,
   pwa: pwaEn,
+  tips: tipsEn,
 } satisfies Dictionary;

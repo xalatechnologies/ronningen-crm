@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
+import { fetchSetupFacts } from "@/features/setup-checklist/data/fetch-setup-facts";
 import { useCurrentOrganization } from "@/hooks/use-current-organization";
 import { fetchAssetsPageData } from "@/lib/queries/fetch-assets";
 import { fetchBookingsPageData } from "@/lib/queries/fetch-bookings";
@@ -48,6 +49,17 @@ export function useDashboardQuery() {
     enabled: enabled && Boolean(orgId),
     staleTime: tenantStaleTimes.dashboard,
     queryFn: () => fetchDashboardData(supabase, orgId!),
+  });
+}
+
+/** What the organization has done so far, for the getting-started checklist. */
+export function useSetupFactsQuery() {
+  const { supabase, orgId, enabled } = useTenantQueryContext();
+  return useQuery({
+    queryKey: tenantQueryKeys.setupChecklist(orgId ?? ""),
+    enabled: enabled && Boolean(orgId),
+    staleTime: tenantStaleTimes.dashboard,
+    queryFn: () => fetchSetupFacts(supabase, orgId!),
   });
 }
 
