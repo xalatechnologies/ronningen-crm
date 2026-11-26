@@ -21,6 +21,7 @@ export type RevenueMetrics = {
   activeSubscriptions: number;
   trialingSubscriptions: number;
   pastDueSubscriptions: number;
-  churnRate30d: number;
+  /** Null when nobody was paying 30 days ago, so a rate is meaningless. */
+  churnRate30d: number | null;
   trialConversionRate30d: number;
 };

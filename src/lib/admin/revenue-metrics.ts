@@ -13,11 +13,6 @@ export function computeRevenueMetrics(
   convertedTrialsLast30d: number,
   trialingStartLast30d: number,
 ): RevenueMetrics {
-  const paying = orgs.filter(
-    (o) =>
-      !o.isSuspended &&
-      (o.subscriptionStatus === "active" || o.subscriptionStatus === "trialing"),
-  );
   const activeOnly = orgs.filter(
     (o) => !o.isSuspended && o.subscriptionStatus === "active",
   );
@@ -32,19 +27,20 @@ export function computeRevenueMetrics(
   const potentialMrrNok =
     (activeOnly.length + trialing.length) * SAAS_MONTHLY_PRICE_NOK;
 
-  const activeAtStart = orgs.filter((o) => {
-    const created = new Date(o.createdAt);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return (
-      created < thirtyDaysAgo &&
+  // Churn is measured against customers that were paying 30 days ago: still-paying orgs older than 30 days,
+  // plus the ones that cancelled in the window. Trials never count as a base.
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const stillPayingFromStart = orgs.filter(
+    (o) =>
       !o.isSuspended &&
-      o.subscriptionStatus !== "canceled"
-    );
-  }).length;
+      (o.subscriptionStatus === "active" || o.subscriptionStatus === "past_due") &&
+      new Date(o.createdAt) < thirtyDaysAgo,
+  ).length;
+  const payingAtStart = stillPayingFromStart + canceledLast30d;
 
   const churnRate30d =
-    activeAtStart > 0 ? (canceledLast30d / activeAtStart) * 100 : 0;
+    payingAtStart > 0 ? Math.round((canceledLast30d / payingAtStart) * 1000) / 10 : null;
 
   const trialConversionRate30d =
     trialingStartLast30d > 0
@@ -58,7 +54,7 @@ export function computeRevenueMetrics(
     activeSubscriptions: activeOnly.length,
     trialingSubscriptions: trialing.length,
     pastDueSubscriptions: pastDue.length,
-    churnRate30d: Math.round(churnRate30d * 10) / 10,
+    churnRate30d,
     trialConversionRate30d: Math.round(trialConversionRate30d * 10) / 10,
   };
 }

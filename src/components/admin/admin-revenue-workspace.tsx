@@ -175,13 +175,13 @@ export function AdminRevenueWorkspace({
             />
             <RevenueKpiTile
               label={t("admin.churn_30_d")}
-              value={`${metrics.churnRate30d}%`}
+              value={metrics.churnRate30d === null ? "—" : `${metrics.churnRate30d}%`}
               caption={t("admin.avsluttede_abonnement_siste_30_dager")}
               icon={TrendingDown}
               iconContainerClassName="rounded-xl bg-rn-danger-soft p-2"
               iconClassName="size-6 text-rn-danger-ink"
               valueClassName={
-                metrics.churnRate30d > 0 ? "text-destructive" : "text-success"
+                (metrics.churnRate30d ?? 0) > 0 ? "text-destructive" : "text-foreground"
               }
               href={adminSubscriptionsHref("canceled")}
             />

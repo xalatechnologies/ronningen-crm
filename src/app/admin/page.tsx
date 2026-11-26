@@ -34,6 +34,7 @@ import { format } from "date-fns";
 import {
   Building2,
   CalendarCheck,
+  ChevronRight,
   TrendingDown,
   TrendingUp,
   UserCheck,
@@ -74,6 +75,25 @@ function OverviewSectionIntro({
   );
 }
 
+function OverviewSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
+      <section className={sectionPad} aria-label={title}>
+        <OverviewSectionIntro title={title} description={description} />
+        <div className="mt-5">{children}</div>
+      </section>
+    </div>
+  );
+}
+
 function OverviewKpiTile({
   label,
   value,
@@ -84,7 +104,10 @@ function OverviewKpiTile({
   iconContainerClassName = "rounded-xl bg-accent p-2 dark:bg-white/10",
   iconClassName = "size-6 text-primary dark:text-white",
   valueClassName = "text-success",
+  compact = false,
 }: {
+  /** Secondary figures: smaller number, no icon block. */
+  compact?: boolean;
   label: string;
   value: string | number;
   hint?: ReactNode;
@@ -100,26 +123,34 @@ function OverviewKpiTile({
       href={href}
       className={cn(
         kpiTileClass,
-        "group transition-colors hover:bg-muted/60 hover:ring-success/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
+        "group relative transition-colors hover:bg-muted/60 hover:ring-success/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30",
       )}
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <span className="dashboard-kpi-label min-w-0 break-words !normal-case !tracking-normal">{label}</span>
-        <div className={cn(iconContainerClassName, "shrink-0")}>
-          <Icon className={iconClassName} aria-hidden />
-        </div>
+        {compact ? (
+          <Icon className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+        ) : (
+          <div className={cn(iconContainerClassName, "shrink-0")}>
+            <Icon className={iconClassName} aria-hidden />
+          </div>
+        )}
       </div>
       <div className="min-w-0">
-        <p className={cn("dashboard-kpi-value break-words", valueClassName)}>
+        <p className={cn("dashboard-kpi-value break-words", compact && "!text-3xl", valueClassName)}>
           {value}
         </p>
         {hint ? (
-          <p className="dashboard-kpi-caption mt-2 text-muted-foreground sm:mt-3">
+          <p className="dashboard-kpi-caption mt-2 text-muted-foreground dark:text-foreground/75 sm:mt-3">
             {hint}
           </p>
         ) : null}
       </div>
       <span className="sr-only">{goToLabel}</span>
+      <ChevronRight
+        className="absolute right-3 bottom-3 size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+        aria-hidden
+      />
     </Link>
   );
 }
@@ -136,25 +167,6 @@ export default async function AdminOverviewPage() {
   const currentMonthMrr =
     stats.revenueTrend[new Date().getMonth()]?.value ?? estimatedMrrNok;
 
-  const mrrHint =
-    revenue.mrrNok > 0 ? (
-      <span>
-        {t("admin.overview_mrr_realized", { amount: formatNok(revenue.mrrNok) })}
-        {trialingCount > 0
-          ? t("admin.overview_trialing_suffix", { count: trialingCount })
-          : ""}
-      </span>
-    ) : trialingCount > 0 ? (
-      <span>
-        {t("admin.overview_trialing_active_payers", {
-          trialing: trialingCount,
-          active: activeCount,
-        })}
-      </span>
-    ) : (
-      t("admin.ingen_aktive_eller_provende_abonnement")
-    );
-
   const orgHint =
     trialingCount > 0
       ? t("admin.overview_trialing_active", {
@@ -163,212 +175,88 @@ export default async function AdminOverviewPage() {
         })
       : t("admin.overview_active_subscriptions", { count: activeCount });
 
+  const mrrHeadline = revenue.mrrNok;
+  const mrrHint =
+    revenue.potentialMrrNok > revenue.mrrNok
+      ? t("admin.overview_mrr_potential", { amount: formatNok(revenue.potentialMrrNok) })
+      : t("admin.ingen_aktive_eller_provende_abonnement");
+  const churn = revenue.churnRate30d;
+
   return (
     <div className="admin-page-workspace admin-overview-dashboard mx-auto flex w-full min-w-0 max-w-full flex-col gap-6 pb-8">
-      <div
-        className={cn(
-          "dashboard-oversikt-card min-w-0 overflow-hidden",
-          RN_CARD_SHELL,
-        )}
+      <AppPageHeader
+        className="mb-0"
+        surface="default"
+        compact
+        title={t("admin.plattformoversikt")}
+        description={t("admin.saas_kpier_trender_og_koer_pa_tvers_av_alle_organisasjoner")}
+      />
+
+      <OverviewSection
+        title={t("admin.abonnement_og_inntekt")}
+        description={t("admin.mrr_churn_og_konvertering_fra_prove_til_betalt")}
       >
-        <div className="dashboard-oversikt-hero px-5 py-5 sm:px-6 lg:px-6">
-          <AppPageHeader
-            className="mb-0"
-            surface="default"
-            compact
-            title={t("admin.plattformoversikt")}
-            description={t("admin.saas_kpier_trender_og_koer_pa_tvers_av_alle_organisasjoner")}
-            actions={
-              <div className="flex flex-wrap items-center gap-2">
-                <AdminLinkButton href={adminRoutes.revenue}>{t("admin.inntekt")}</AdminLinkButton>
-                <AdminLinkButton href={adminSubscriptionsHref()}>{t("admin.abonnement")}</AdminLinkButton>
-                <AdminLinkButton href={adminOrganizationsHref()}>{t("admin.organisasjoner")}</AdminLinkButton>
-              </div>
-            }
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+          <OverviewKpiTile
+            label={t("admin.mrr_est")}
+            value={formatNok(mrrHeadline)}
+            href={adminRoutes.revenue}
+            hint={mrrHint}
+            goToLabel={goTo(t("admin.mrr_est"))}
+            icon={TrendingUp}
+            valueClassName={mrrHeadline > 0 ? "text-success" : "text-foreground"}
+          />
+          <OverviewKpiTile
+            label={t("admin.organisasjoner")}
+            value={stats.organizationCount}
+            href={adminOrganizationsHref()}
+            hint={orgHint}
+            goToLabel={goTo(t("admin.organisasjoner"))}
+            icon={Building2}
+            valueClassName="text-foreground"
+          />
+          <OverviewKpiTile
+            label={t("admin.churn_30_d")}
+            value={churn === null ? "\u2014" : `${churn}%`}
+            href={adminSubscriptionsHref("canceled")}
+            hint={churn === null ? t("admin.overview_churn_none") : undefined}
+            goToLabel={goTo(t("admin.churn_30_d"))}
+            icon={TrendingDown}
+            iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
+            iconClassName="size-6 text-rn-danger-ink"
+            valueClassName={churn !== null && churn > 0 ? "text-destructive" : "text-foreground"}
+          />
+          <OverviewKpiTile
+            label={t("admin.prove_betalt_30_d")}
+            value={`${revenue.trialConversionRate30d}%`}
+            href={adminSubscriptionsHref("trialing")}
+            goToLabel={goTo(t("admin.prove_betalt_30_d"))}
+            icon={UserCheck}
+            valueClassName="text-foreground"
           />
         </div>
-      </div>
+      </OverviewSection>
 
-      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <section
-          className={sectionPad}
-          aria-label={t("admin.abonnement_og_inntekt")}
-        >
-          <OverviewSectionIntro
-            title={t("admin.abonnement_og_inntekt")}
-            description={t("admin.mrr_churn_og_konvertering_fra_prove_til_betalt")}
-          />
-          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <OverviewKpiTile
-              label={t("admin.organisasjoner")}
-              value={stats.organizationCount}
-              href={adminOrganizationsHref()}
-              hint={orgHint}
-              goToLabel={goTo(t("admin.organisasjoner"))}
-              icon={Building2}
-            />
-            <OverviewKpiTile
-              label={t("admin.mrr_est")}
-              value={formatNok(estimatedMrrNok)}
-              href={adminRoutes.revenue}
-              hint={mrrHint}
-              goToLabel={goTo(t("admin.mrr_est"))}
-              icon={TrendingUp}
-              valueClassName={
-                estimatedMrrNok > 0 ? "text-success" : "text-foreground"
-              }
-            />
-            <OverviewKpiTile
-              label={t("admin.churn_30_d")}
-              value={`${revenue.churnRate30d}%`}
-              href={adminSubscriptionsHref("canceled")}
-              goToLabel={goTo(t("admin.churn_30_d"))}
-              icon={TrendingDown}
-              iconContainerClassName="rounded-md bg-rn-danger-soft p-2"
-              iconClassName="size-6 text-rn-danger-ink"
-              valueClassName={
-                revenue.churnRate30d > 0 ? "text-destructive" : "text-success"
-              }
-            />
-            <OverviewKpiTile
-              label={t("admin.prove_betalt_30_d")}
-              value={`${revenue.trialConversionRate30d}%`}
-              href={adminSubscriptionsHref("trialing")}
-              goToLabel={goTo(t("admin.prove_betalt_30_d"))}
-              icon={UserCheck}
-            />
-          </div>
-        </section>
-      </div>
-
-      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <section
-          className={sectionPad}
-          aria-label={t("admin.plattformaktivitet")}
-        >
-          <OverviewSectionIntro
-            title={t("admin.plattformaktivitet")}
-            description={t("admin.brukere_bookinger_og_nye_leietakere_siste_periode")}
-          />
-          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            <OverviewKpiTile
-              label={t("admin.brukere")}
-              value={stats.userCount}
-              href={adminRoutes.users}
-              goToLabel={goTo(t("admin.brukere"))}
-              icon={Users}
-            />
-            <OverviewKpiTile
-              label={t("admin.aktive_brukere_30_d")}
-              value={stats.activeUsers30d}
-              href={adminUsersHref()}
-              hint={t("admin.unike_innlogginger")}
-              goToLabel={goTo(t("admin.aktive_brukere_30_d"))}
-              icon={UserCheck}
-            />
-            <OverviewKpiTile
-              label={t("admin.bookinger_30_d")}
-              value={stats.bookingsLast30Days}
-              href={adminRoutes.revenue}
-              hint={t("admin.overview_inquiries_same_period", {
-                count: stats.inquiriesLast30Days,
-              })}
-              goToLabel={goTo(t("admin.bookinger_30_d"))}
-              icon={CalendarCheck}
-            />
-            <OverviewKpiTile
-              label={t("admin.nye_leietakere_7_d")}
-              value={stats.newOrganizationsLast7Days}
-              href={adminSubscriptionsHref("trialing")}
-              icon={Building2}
-              goToLabel={goTo(t("admin.nye_leietakere_7_d"))}
-              hint={
-                stats.suspendedCount > 0
-                  ? t("admin.overview_suspended_count", {
-                      count: stats.suspendedCount,
-                    })
-                  : t("admin.registrert_siste_7_dager")
-              }
-            />
-          </div>
-        </section>
-      </div>
-
-      <div className={cn("dashboard-oversikt-card min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <section
-          className={sectionPad}
-          aria-label={t("admin.trender")}
-        >
-          <OverviewSectionIntro
-            title={t("admin.trender")}
-            description={t("admin.estimert_mrr_gjennom_aret_og_nye_leietakere_per_dag_siste_uk")}
-          />
-          <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
-            <div className="rounded-2xl bg-muted/30 p-5 ring-1 ring-foreground/10">
-              <AdminTrendChart
-                className="admin-overview-trend-chart"
-                embedded
-                title={t("admin.inntektstrend_est_mrr")}
-                subtitle={t("admin.aktive_provende_og_forfalte_ekskl_suspenderte")}
-                periodHint={t("admin.overview_period_hint", {
-                  year: chartYear,
-                  amount: formatNok(currentMonthMrr),
-                })}
-                points={stats.revenueTrend}
-                valueFormat="nok"
-              />
-            </div>
-            <div className="rounded-2xl bg-muted/30 p-5 ring-1 ring-foreground/10">
-              <AdminTrendChart
-                className="admin-overview-trend-chart"
-                embedded
-                title={t("admin.nye_leietakere_7_d")}
-                subtitle={t("admin.organisasjoner_registrert_per_dag")}
-                periodHint={t("admin.overview_last_7_days_total", {
-                  count: stats.newOrganizationsLast7Days,
-                })}
-                points={stats.newTenantsTrend}
-              />
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <section
-        className="grid gap-6 lg:grid-cols-2"
-        aria-label={t("admin.abonnement_og_oppfolging")}
+      <OverviewSection
+        title={t("admin.overview_attention")}
+        description={t("admin.overview_attention_desc")}
       >
-          <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL, sectionPad)}>
-            <AdminSubscriptionStatusPanel embedded statusCounts={stats.statusCounts} />
-          </div>
-          <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL, sectionPad)}>
-            <AdminQueuePanel
-              embedded
-              title={t("admin.proveperiode_utloper_snart")}
-              items={stats.trialExpiringQueue}
-              emptyLabel={t("admin.ingen_proveperioder_utloper_innen_14_dager")}
-              viewAllHref={adminSubscriptionsHref("trialing")}
-            />
-          </div>
-      </section>
-
-      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>
-        <section className={sectionPad} aria-label={t("admin.koer_som_krever_handling")}>
-          <OverviewSectionIntro
-            title={t("admin.oppfolging")}
-            description={t("admin.organisasjoner_som_trenger_manuell_oppfolging")}
+        <div className="grid grid-cols-1 gap-x-10 gap-y-8 md:grid-cols-2">
+          <AdminQueuePanel
+            embedded
+            title={t("admin.forfalt_betaling")}
+            items={stats.failedPaymentQueue}
+            emptyLabel={t("admin.ingen_organisasjoner_med_forfalt_status")}
+            viewAllHref={adminSubscriptionsHref("past_due")}
           />
-          <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div className="rounded-2xl bg-muted/30 p-5 ring-1 ring-foreground/10">
-            <AdminQueuePanel
-              embedded
-              title={t("admin.forfalt_betaling")}
-              items={stats.failedPaymentQueue}
-              emptyLabel={t("admin.ingen_organisasjoner_med_forfalt_status")}
-              viewAllHref={adminSubscriptionsHref("past_due")}
-            />
-            </div>
-            <div className="rounded-2xl bg-muted/30 p-5 ring-1 ring-foreground/10">
+          <AdminQueuePanel
+            embedded
+            title={t("admin.proveperiode_utloper_snart")}
+            items={stats.trialExpiringQueue}
+            emptyLabel={t("admin.ingen_proveperioder_utloper_innen_14_dager")}
+            viewAllHref={adminSubscriptionsHref("trialing")}
+          />
+          <div className="md:col-span-2">
             <AdminQueuePanel
               embedded
               title={t("admin.suspenderte_organisasjoner")}
@@ -376,9 +264,88 @@ export default async function AdminOverviewPage() {
               emptyLabel={t("admin.ingen_suspenderte_organisasjoner")}
               viewAllHref={adminOrganizationsHref({ status: "suspended" })}
             />
-            </div>
           </div>
-        </section>
+        </div>
+      </OverviewSection>
+
+      <OverviewSection
+        title={t("admin.plattformaktivitet")}
+        description={t("admin.brukere_bookinger_og_nye_leietakere_siste_periode")}
+      >
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+          <OverviewKpiTile
+            compact
+            label={t("admin.brukere")}
+            value={stats.userCount}
+            href={adminRoutes.users}
+            goToLabel={goTo(t("admin.brukere"))}
+            icon={Users}
+            valueClassName="text-foreground"
+          />
+          <OverviewKpiTile
+            compact
+            label={t("admin.aktive_brukere_30_d")}
+            value={stats.activeUsers30d}
+            href={adminUsersHref()}
+            hint={t("admin.unike_innlogginger")}
+            goToLabel={goTo(t("admin.aktive_brukere_30_d"))}
+            icon={UserCheck}
+            valueClassName="text-foreground"
+          />
+          <OverviewKpiTile
+            compact
+            label={t("admin.bookinger_30_d")}
+            value={stats.bookingsLast30Days}
+            href={adminRoutes.revenue}
+            hint={t("admin.overview_inquiries_same_period", { count: stats.inquiriesLast30Days })}
+            goToLabel={goTo(t("admin.bookinger_30_d"))}
+            icon={CalendarCheck}
+            valueClassName="text-foreground"
+          />
+          <OverviewKpiTile
+            compact
+            label={t("admin.nye_leietakere_7_d")}
+            value={stats.newOrganizationsLast7Days}
+            href={adminSubscriptionsHref("trialing")}
+            icon={Building2}
+            goToLabel={goTo(t("admin.nye_leietakere_7_d"))}
+            valueClassName="text-foreground"
+            hint={
+              stats.suspendedCount > 0
+                ? t("admin.overview_suspended_count", { count: stats.suspendedCount })
+                : t("admin.registrert_siste_7_dager")
+            }
+          />
+        </div>
+      </OverviewSection>
+
+      <OverviewSection
+        title={t("admin.trender")}
+        description={t("admin.estimert_mrr_gjennom_aret_og_nye_leietakere_per_dag_siste_uk")}
+      >
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <AdminTrendChart
+            className="admin-overview-trend-chart"
+            embedded
+            title={t("admin.inntektstrend_est_mrr")}
+            subtitle={t("admin.aktive_provende_og_forfalte_ekskl_suspenderte")}
+            periodHint={t("admin.overview_period_hint", { year: chartYear, amount: formatNok(currentMonthMrr) })}
+            points={stats.revenueTrend}
+            valueFormat="nok"
+          />
+          <AdminTrendChart
+            className="admin-overview-trend-chart"
+            embedded
+            title={t("admin.nye_leietakere_7_d")}
+            subtitle={t("admin.organisasjoner_registrert_per_dag")}
+            periodHint={t("admin.overview_last_7_days_total", { count: stats.newOrganizationsLast7Days })}
+            points={stats.newTenantsTrend}
+          />
+        </div>
+      </OverviewSection>
+
+      <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL, sectionPad)}>
+        <AdminSubscriptionStatusPanel embedded statusCounts={stats.statusCounts} />
       </div>
 
       <div className={cn("min-w-0 overflow-hidden", RN_CARD_SHELL)}>

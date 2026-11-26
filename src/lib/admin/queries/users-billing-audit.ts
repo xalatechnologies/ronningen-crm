@@ -452,10 +452,7 @@ export async function fetchAdminSubscriptionAnalytics(): Promise<AdminSubscripti
       .from("platform_audit_log")
       .select("action, metadata, target_id, created_at")
       .gte("created_at", since)
-      .in("action", [
-        "organization.subscription_updated",
-        "organization.deleted",
-      ]),
+      .eq("action", "organization.subscription_updated"),
   ]);
 
   const convertedOrgIds = new Set<string>();
@@ -474,12 +471,13 @@ export async function fetchAdminSubscriptionAnalytics(): Promise<AdminSubscripti
       ) {
         convertedOrgIds.add(targetId);
       }
-      if (after?.subscription_status === "canceled") {
+      // Only a paying customer leaving counts as churn; a cancelled trial or a deleted test org does not.
+      if (
+        after?.subscription_status === "canceled" &&
+        (before?.subscription_status === "active" || before?.subscription_status === "past_due")
+      ) {
         canceledOrgIds.add(targetId);
       }
-    }
-    if (entry.action === "organization.deleted" && targetId) {
-      canceledOrgIds.add(targetId);
     }
   }
 
