@@ -3,9 +3,9 @@
  * a new acceptance; it is saved with every acceptance so we can show later exactly what was agreed to.
  */
 export const LEGAL_DOCUMENTS = [
-  { key: "terms", path: "/vilkar", version: "2026-11-24-2-draft" },
-  { key: "privacy", path: "/personvern", version: "2026-11-24-2-draft" },
-  { key: "dpa", path: "/databehandleravtale", version: "2026-11-24-2-draft" },
+  { key: "terms", path: "/vilkar", version: "2026-11-27" },
+  { key: "privacy", path: "/personvern", version: "2026-11-27" },
+  { key: "dpa", path: "/databehandleravtale", version: "2026-11-27" },
 ] as const;
 
 export type LegalDocumentKey = (typeof LEGAL_DOCUMENTS)[number]["key"];

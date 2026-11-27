@@ -100,7 +100,6 @@ export const authNb = {
     },
     legal: {
       back: "Tilbake til forsiden",
-      draft: "Utkast. Teksten er ikke juridisk gjennomgått ennå.",
       version: "Versjon {version}",
       contents: "Innhold",
     },

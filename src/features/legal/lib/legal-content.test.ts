@@ -14,9 +14,14 @@ describe("legal content", () => {
     }
   });
 
-  it("never leaves a real secret or personal value in the drafts", () => {
+  it("never leaves a real secret or personal value in the texts", () => {
     const all = LEGAL_DOCUMENT_KEYS.flatMap((k) => [legalContent(k, "nb"), legalContent(k, "en")]);
     expect(JSON.stringify(all)).not.toMatch(/sk_live|password:|@(?!xala\.no)\w+\.\w+/i);
+  });
+
+  it("is final text: no draft or to-do markers", () => {
+    const all = LEGAL_DOCUMENT_KEYS.flatMap((k) => [legalContent(k, "nb"), legalContent(k, "en")]);
+    expect(JSON.stringify(all)).not.toMatch(/utkast|draft|todo|tbd|lorem/i);
   });
 
   it("has no unfilled [placeholder] left, and names the company with its organisation number and website", () => {

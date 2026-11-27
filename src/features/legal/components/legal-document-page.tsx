@@ -12,7 +12,6 @@ export async function LegalDocumentPage({ documentKey }: { documentKey: LegalDoc
       version={version}
       labels={{
         back: t("auth.pages.legal.back"),
-        draft: t("auth.pages.legal.draft"),
         version: t("auth.pages.legal.version", { version }),
         contents: t("auth.pages.legal.contents"),
       }}

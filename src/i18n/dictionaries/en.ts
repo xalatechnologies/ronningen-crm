@@ -358,8 +358,7 @@ export const en = {
       },
       legal: {
         back: "Back to the home page",
-        draft: "Draft. The text has not been legally reviewed yet.",
-        version: "Version {version}",
+          version: "Version {version}",
         contents: "Contents",
       },
       namePlaceholder: "First and last name",

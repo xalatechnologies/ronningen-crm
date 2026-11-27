@@ -11,6 +11,10 @@ describe("legal documents", () => {
     }
   });
 
+  it("has final versions, not draft ones", () => {
+    for (const doc of LEGAL_DOCUMENTS) expect(doc.version).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
   it("finds a document by key", () => {
     expect(legalDocument("dpa").path).toBe("/databehandleravtale");
   });
