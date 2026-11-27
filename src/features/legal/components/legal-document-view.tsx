@@ -5,10 +5,10 @@ import type { LegalContent } from "@/features/legal/lib/legal-content";
 type Props = {
   content: LegalContent;
   version: string;
-  labels: { back: string; draft: string; version: string; contents: string };
+  labels: { back: string; version: string; contents: string };
 };
 
-/** One legal document as a readable page: title, draft notice, a table of contents and numbered sections. */
+/** One legal document as a readable page: title, version, a table of contents and numbered sections. */
 export function LegalDocumentView({ content, version, labels }: Props) {
   return (
     <article className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-12 md:py-16">
@@ -21,8 +21,7 @@ export function LegalDocumentView({ content, version, labels }: Props) {
         </h1>
         <p className="text-app-base leading-relaxed text-muted-foreground">{content.intro}</p>
         <div className="flex flex-wrap items-center gap-3 text-app-sm">
-          <span className="rounded-full bg-warning/15 px-3 py-1 font-semibold text-foreground">{labels.draft}</span>
-          <span className="text-muted-foreground">{labels.version}</span>
+          <span className="rounded-full bg-muted px-3 py-1 font-semibold text-foreground">{labels.version}</span>
           <span className="sr-only">{version}</span>
         </div>
       </div>
