@@ -86,6 +86,7 @@ export function SignupCodeStep({ email, onVerify, onResend, onChangeEmail }: Pro
             inputMode="numeric"
             autoComplete="one-time-code"
             maxLength={6}
+            placeholder="xxxxxx"
             autoFocus
             aria-invalid={error ? true : undefined}
             className="h-14 rounded-lg border border-input bg-background text-center font-mono text-2xl tracking-[0.5em] shadow-xs focus-visible:border-success focus-visible:ring-success/25"

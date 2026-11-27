@@ -170,6 +170,7 @@ export function CodeLogin({
             inputMode="numeric"
             autoComplete="one-time-code"
             maxLength={6}
+            placeholder="xxxxxx"
             autoFocus
             value={code}
             onChange={(e) => {
